@@ -1,6 +1,6 @@
 import '@narada/env/load'
+import { createHash } from 'node:crypto'
 import { defineCommand, runMain } from 'citty'
-import Enquirer from 'enquirer'
 import { eq } from 'drizzle-orm'
 
 import { auth } from '@narada/auth'
@@ -12,6 +12,7 @@ import {
   user as userTable,
   type SchoolDatabase,
 } from '@narada/db'
+import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
 import {
   requireSchool,
   upsertBatch,
@@ -33,8 +34,7 @@ const BATCH_ROLES = new Set<string>(['instructor', 'ta', 'student'])
 type SchoolSeedInput = {
   slug: string
   name: string
-  operatorEmail: string
-  operatorPassword: string
+  operatorPhone: string
   numTracks: number
   numChapters: number
   numBatches: number
@@ -54,12 +54,11 @@ const schoolCmd = defineCommand({
     students: { type: 'string', default: '5', description: 'Number of student users.' },
   },
   async run({ args }) {
-    const credentials = await promptCredentials()
+    const operatorPhone = await promptSuperAdminPhone()
     await seedSchool({
       slug: args.slug,
       name: args.name ?? toTitleCase(args.slug),
-      operatorEmail: credentials.email,
-      operatorPassword: credentials.password,
+      operatorPhone,
       numTracks: parseCount(args.tracks, '--tracks'),
       numChapters: parseCount(args.chapters, '--chapters'),
       numBatches: parseCount(args.batches, '--batches'),
@@ -74,6 +73,10 @@ const userCmd = defineCommand({
   args: {
     email: { type: 'string', required: true, description: 'User email.' },
     name: { type: 'string', required: true, description: 'User display name.' },
+    phoneNumber: {
+      type: 'string',
+      description: 'Optional phone number (E.164) to set on the user alongside their email.',
+    },
     role: {
       type: 'string',
       description:
@@ -89,10 +92,10 @@ const userCmd = defineCommand({
     },
   },
   async run({ args }) {
-    const credentials = await promptCredentials()
+    const operatorPhone = await promptSuperAdminPhone()
     try {
-      await authenticateSuperAdmin(credentials.email, credentials.password)
-      const user = await upsertUser(args.email, args.name)
+      await requireSuperAdminByPhone(operatorPhone)
+      const user = await upsertUser(args.email, args.name, undefined, args.phoneNumber)
 
       let assignment: Record<string, unknown> = {}
       if (args.role) {
@@ -140,6 +143,7 @@ const userCmd = defineCommand({
             id: user.id,
             email: args.email,
             name: args.name,
+            phoneNumber: args.phoneNumber ?? user.phoneNumber ?? null,
             password: SEED_PASSWORD,
             ...assignment,
           },
@@ -159,18 +163,30 @@ const superadminCmd = defineCommand({
     email: { type: 'string', required: true, description: 'Super-admin email.' },
     name: { type: 'string', required: true, description: 'Super-admin display name.' },
     password: { type: 'string', description: `Password (defaults to ${SEED_PASSWORD}).` },
+    phoneNumber: {
+      type: 'string',
+      description:
+        'Optional phone number (E.164) to set on the super-admin — needed for other CLI commands’ phone-based operator check to find them.',
+    },
   },
   async run({ args }) {
     try {
       const password = args.password ?? SEED_PASSWORD
-      const newUser = await upsertUser(args.email, args.name, password)
+      const newUser = await upsertUser(args.email, args.name, password, args.phoneNumber)
       await publicDb
         .update(userTable)
         .set({ isSuperAdmin: true })
         .where(eq(userTable.id, newUser.id))
       console.log(
         JSON.stringify(
-          { id: newUser.id, email: args.email, name: args.name, password, isSuperAdmin: true },
+          {
+            id: newUser.id,
+            email: args.email,
+            name: args.name,
+            phoneNumber: args.phoneNumber ?? newUser.phoneNumber ?? null,
+            password,
+            isSuperAdmin: true,
+          },
           null,
           2,
         ),
@@ -190,27 +206,33 @@ runMain(
 
 async function seedSchool(input: SchoolSeedInput) {
   try {
-    await authenticateSuperAdmin(input.operatorEmail, input.operatorPassword)
+    await requireSuperAdminByPhone(input.operatorPhone)
 
     const school = await upsertSchool(input.slug, input.name)
     const schoolDb = getScopedDatabase(school.id)
     const ownerEmail = `${input.slug}-owner@seed.test`
     const adminEmail = `${input.slug}-admin@seed.test`
-    const owner = await upsertUser(ownerEmail, 'Owner')
-    const admin = await upsertUser(adminEmail, 'Admin')
+    const ownerPhone = fictionalPhoneNumber(input.slug, 'owner', 0)
+    const adminPhone = fictionalPhoneNumber(input.slug, 'admin', 0)
+    const owner = await upsertUser(ownerEmail, 'Owner', undefined, ownerPhone)
+    const admin = await upsertUser(adminEmail, 'Admin', undefined, adminPhone)
     await upsertOrgMember(school.id, owner.id, 'owner')
     await upsertOrgMember(school.id, admin.id, 'admin')
     const ownerProfile = await upsertProfile(schoolDb, owner.id, 'Owner')
     const adminProfile = await upsertProfile(schoolDb, admin.id, 'Admin')
 
+    const instructorPhones = range(input.numInstructors).map(i =>
+      fictionalPhoneNumber(input.slug, 'instructor', i),
+    )
+    const studentPhones = range(input.numStudents).map(i => fictionalPhoneNumber(input.slug, 'student', i))
     const instructors = await Promise.all(
       range(input.numInstructors).map(i =>
-        upsertUser(`${input.slug}-instructor${i + 1}@seed.test`, `Instructor ${i + 1}`),
+        upsertUser(`${input.slug}-instructor${i + 1}@seed.test`, `Instructor ${i + 1}`, undefined, instructorPhones[i]),
       ),
     )
     const students = await Promise.all(
       range(input.numStudents).map(i =>
-        upsertUser(`${input.slug}-student${i + 1}@seed.test`, `Student ${i + 1}`),
+        upsertUser(`${input.slug}-student${i + 1}@seed.test`, `Student ${i + 1}`, undefined, studentPhones[i]),
       ),
     )
 
@@ -277,17 +299,19 @@ async function seedSchool(input: SchoolSeedInput) {
       JSON.stringify(
         {
           school: { id: school.id, slug: school.slug, name: school.name },
-          owner: { id: owner.id, email: ownerEmail, profileId: ownerProfile.id },
-          admin: { id: admin.id, email: adminEmail, profileId: adminProfile.id },
+          owner: { id: owner.id, email: ownerEmail, phoneNumber: ownerPhone, profileId: ownerProfile.id },
+          admin: { id: admin.id, email: adminEmail, phoneNumber: adminPhone, profileId: adminProfile.id },
           tracks: trackResults,
           instructors: instructors.map((u, i) => ({
             id: u.id,
             email: `${input.slug}-instructor${i + 1}@seed.test`,
+            phoneNumber: instructorPhones[i],
             profileId: instructorProfiles[i]!.id,
           })),
           students: students.map((u, i) => ({
             id: u.id,
             email: `${input.slug}-student${i + 1}@seed.test`,
+            phoneNumber: studentPhones[i],
             profileId: studentProfiles[i]!.id,
           })),
           password: SEED_PASSWORD,
@@ -301,21 +325,36 @@ async function seedSchool(input: SchoolSeedInput) {
   }
 }
 
-async function upsertUser(email: string, name: string, password = SEED_PASSWORD) {
+// Still creates users through the real email/password signup flow (auth.api.signUpEmail) —
+// that stays the only working login mechanism until the rest of phone-based auth lands. The
+// optional phoneNumber is set additively via a follow-up update, purely so locally-seeded data
+// exercises phone-keyed code paths ahead of time; it grants no login capability by itself.
+async function upsertUser(email: string, name: string, password = SEED_PASSWORD, phoneNumber?: string) {
+  let user: typeof userTable.$inferSelect
   try {
     const result = await auth.api.signUpEmail({
       body: { email, password, name },
     })
-
-    return result.user
+    user = result.user as unknown as typeof userTable.$inferSelect
   } catch {
     const row = await publicDb.query.user.findFirst({
       where: (t, { eq }) => eq(t.email, email),
     })
 
     if (!row) throw new Error(`Failed to create or find user: ${email}`)
-    return row
+    user = row
   }
+
+  if (phoneNumber && user.phoneNumber !== phoneNumber) {
+    const [updated] = await publicDb
+      .update(userTable)
+      .set({ phoneNumber })
+      .where(eq(userTable.id, user.id))
+      .returning()
+    if (updated) user = updated
+  }
+
+  return user
 }
 
 // Every seeded batch meets Mon/Wed/Fri at 6pm — a realistic default weekly cadence for the
@@ -339,31 +378,14 @@ async function upsertClassSlots(db: SchoolDatabase, batchId: string) {
     .returning()
 }
 
-async function authenticateSuperAdmin(email: string, password: string) {
-  const session = await auth.api.signInEmail({
-    body: { email, password },
-  })
-
-  if (!session.user.isSuperAdmin) throw new Error('Authenticated user must be a super-admin.')
-  return session.user
-}
-
-async function promptCredentials(): Promise<{ email: string; password: string }> {
-  return Enquirer.prompt<{ email: string; password: string }>([
-    {
-      type: 'input',
-      name: 'email',
-      message: 'Super-admin email',
-      required: true,
-      result: (v: string) => v.trim(),
-    },
-    {
-      type: 'password',
-      name: 'password',
-      message: 'Super-admin password',
-      required: true,
-    },
-  ])
+// Deterministic, syntactically-valid E.164 numbers using the 555 area code — not a real NANP
+// geographic area code, so these can never collide with a real WhatsApp-reachable number. Derived
+// per school+role+index so distinct schools/roles/indices get distinct numbers, but re-running the
+// seed for the same school reuses the same numbers (idempotent, matching upsertUser's lookup).
+function fictionalPhoneNumber(slug: string, role: string, index: number): string {
+  const hash = createHash('sha1').update(`${slug}:${role}:${index}`).digest('hex')
+  const digits = BigInt(`0x${hash.slice(0, 10)}`) % 10_000_000n
+  return `+1555${digits.toString().padStart(7, '0')}`
 }
 
 function toTitleCase(slug: string): string {
