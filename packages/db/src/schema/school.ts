@@ -35,6 +35,12 @@ export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])
 export const batchStatus = pgEnum('batchStatus', ['upcoming', 'active', 'completed'])
 export const enrollmentRole = pgEnum('enrollmentRole', ['instructor', 'ta', 'student'])
+export const enrollmentStatus = pgEnum('enrollmentStatus', [
+  'active',
+  'break',
+  'dropped',
+  'inactive',
+])
 export const proficiencyLevel = pgEnum('proficiencyLevel', [
   'absent',
   'notStarted',
@@ -121,7 +127,9 @@ export const enrollment = pgTable(
       .notNull()
       .references(() => batch.id, { onDelete: 'cascade' }),
     role: enrollmentRole('role').notNull(),
+    status: enrollmentStatus('status').notNull().default('active'),
     joinedAt: timestamp('joinedAt').defaultNow(),
+    leftDate: timestamp('leftDate'),
   },
   table => [
     primaryKey({ columns: [table.profileId, table.batchId] }),

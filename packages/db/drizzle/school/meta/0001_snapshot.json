@@ -1,6 +1,6 @@
 {
-  "id": "66934b82-5d3c-43f3-9126-544a55b60b81",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "0c68cc11-b082-4c65-9e35-299e63a89622",
+  "prevId": "66934b82-5d3c-43f3-9126-544a55b60b81",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -324,12 +324,26 @@
           "primaryKey": false,
           "notNull": true
         },
+        "status": {
+          "name": "status",
+          "type": "enrollmentStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
         "joinedAt": {
           "name": "joinedAt",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "leftDate": {
+          "name": "leftDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -784,6 +798,16 @@
         "instructor",
         "ta",
         "student"
+      ]
+    },
+    "public.enrollmentStatus": {
+      "name": "enrollmentStatus",
+      "schema": "public",
+      "values": [
+        "active",
+        "break",
+        "dropped",
+        "inactive"
       ]
     },
     "public.examStatus": {

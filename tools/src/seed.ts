@@ -5,28 +5,27 @@ import { eq } from 'drizzle-orm'
 
 import { auth } from '@narada/auth'
 import {
-  batch,
   batchClassSlot,
-  chapter,
-  dropSchoolSchema,
-  enrollment,
   getScopedDatabase,
-  member,
-  organization,
-  profile,
-  provisionSchool,
   publicDb,
   shutdownPools,
-  track,
   user as userTable,
-  uuidv7,
   type SchoolDatabase,
 } from '@narada/db'
+import {
+  requireSchool,
+  upsertBatch,
+  upsertChapter,
+  upsertEnrollment,
+  upsertOrgMember,
+  upsertProfile,
+  upsertSchool,
+  upsertTrack,
+  type BatchRole,
+  type OrgRole,
+} from './school-helpers'
 
 const SEED_PASSWORD = 'testing123'
-
-type OrgRole = 'owner' | 'admin' | 'member'
-type BatchRole = 'instructor' | 'ta' | 'student'
 
 const ORG_ROLES = new Set<string>(['owner', 'admin', 'member'])
 const BATCH_ROLES = new Set<string>(['instructor', 'ta', 'student'])
@@ -247,7 +246,10 @@ async function seedSchool(input: SchoolSeedInput) {
       )
       const batchResults = []
       for (let b = 1; b <= input.numBatches; b++) {
-        const batchRow = await upsertBatch(schoolDb, trackRow.id, `${input.slug}-t${t}-batch${b}`)
+        const batchCode = `${input.slug}-t${t}-batch${b}`
+        const batchRow = await upsertBatch(schoolDb, trackRow.id, batchCode, {
+          meetingUrl: `https://meet.google.com/${batchCode}`,
+        })
         await upsertClassSlots(schoolDb, batchRow.id)
         for (const user of pickForBatch(instructors, batchIndex, 2)) {
           const p = instructorProfileById.get(user.id)!
@@ -299,40 +301,6 @@ async function seedSchool(input: SchoolSeedInput) {
   }
 }
 
-async function requireSchool(slug: string) {
-  const school = await publicDb.query.organization.findFirst({
-    where: (t, { eq }) => eq(t.slug, slug),
-  })
-
-  if (!school) throw new Error(`School not found: ${slug}`)
-  return school
-}
-
-async function upsertSchool(slug: string, name: string) {
-  const existing = await publicDb.query.organization.findFirst({
-    where: (t, { eq }) => eq(t.slug, slug),
-  })
-
-  if (existing) return existing
-  const id = uuidv7()
-  const [school] = await publicDb
-    .insert(organization)
-    .values({ id, name, slug, createdAt: new Date() })
-    .returning()
-
-  try {
-    await provisionSchool(id)
-  } catch (error) {
-    await Promise.allSettled([
-      publicDb.delete(organization).where(eq(organization.id, id)),
-      dropSchoolSchema(id),
-    ])
-    throw error
-  }
-
-  return school!
-}
-
 async function upsertUser(email: string, name: string, password = SEED_PASSWORD) {
   try {
     const result = await auth.api.signUpEmail({
@@ -350,49 +318,9 @@ async function upsertUser(email: string, name: string, password = SEED_PASSWORD)
   }
 }
 
-async function upsertOrgMember(organizationId: string, userId: string, role: OrgRole) {
-  const existing = await publicDb.query.member.findFirst({
-    where: (t, { and, eq }) => and(eq(t.organizationId, organizationId), eq(t.userId, userId)),
-  })
-
-  if (existing) return existing
-  const [row] = await publicDb
-    .insert(member)
-    .values({ id: uuidv7(), organizationId, userId, role, createdAt: new Date() })
-    .returning()
-
-  return row!
-}
-
-async function upsertTrack(db: SchoolDatabase, name: string) {
-  const existing = await db.query.track.findFirst({
-    where: (t, { eq }) => eq(t.name, name),
-  })
-
-  if (existing) return existing
-  const currentTracks = await db.query.track.findMany({ columns: { order: true } })
-  const order = currentTracks.length > 0 ? Math.max(...currentTracks.map(r => r.order)) + 1 : 1
-  const [row] = await db.insert(track).values({ name, order }).returning()
-  if (!row) throw new Error(`Failed to create track: ${name}`)
-  return row
-}
-
-async function upsertBatch(db: SchoolDatabase, trackId: string, code: string) {
-  const existing = await db.query.batch.findFirst({
-    where: (t, { eq }) => eq(t.code, code),
-  })
-
-  if (existing) return existing
-  const [row] = await db
-    .insert(batch)
-    .values({ trackId, code, status: 'active', meetingUrl: `https://meet.google.com/${code}` })
-    .returning()
-  if (!row) throw new Error(`Failed to create batch: ${code}`)
-  return row
-}
-
 // Every seeded batch meets Mon/Wed/Fri at 6pm — a realistic default weekly cadence for the
-// "next class" feature, not meant to vary per batch.
+// "next class" feature, not meant to vary per batch. Kept local to seed.ts (not school-helpers.ts)
+// since it's fabricated test scheduling, not something the real Excel import has data for.
 const DEFAULT_CLASS_SLOTS = [
   { dayOfWeek: 1, time: '18:00', durationMinutes: 60 },
   { dayOfWeek: 3, time: '18:00', durationMinutes: 60 },
@@ -409,52 +337,6 @@ async function upsertClassSlots(db: SchoolDatabase, batchId: string) {
     .insert(batchClassSlot)
     .values(DEFAULT_CLASS_SLOTS.map(slot => ({ ...slot, batchId })))
     .returning()
-}
-
-async function upsertChapter(
-  db: SchoolDatabase,
-  trackId: string,
-  values: { code: string; title: string; order: number },
-) {
-  const existing = await db.query.chapter.findFirst({
-    where: (table, { and, eq }) => and(eq(table.trackId, trackId), eq(table.code, values.code)),
-  })
-
-  if (existing) return existing
-  const [row] = await db
-    .insert(chapter)
-    .values({ trackId, ...values, status: 'published', script: 'sa' })
-    .returning()
-  if (!row) throw new Error(`Failed to create chapter: ${values.code}`)
-  return row
-}
-
-async function upsertProfile(db: SchoolDatabase, userId: string, name: string) {
-  const existing = await db.query.profile.findFirst({
-    where: (t, { eq }) => eq(t.userId, userId),
-    orderBy: (t, { asc }) => [asc(t.createdAt)],
-  })
-
-  if (existing) return existing
-  const [row] = await db.insert(profile).values({ userId, name }).returning()
-  if (!row) throw new Error('Failed to create profile')
-  return row
-}
-
-async function upsertEnrollment(
-  db: SchoolDatabase,
-  batchId: string,
-  profileId: string,
-  role: BatchRole,
-) {
-  const existing = await db.query.enrollment.findFirst({
-    where: (t, { and, eq }) => and(eq(t.batchId, batchId), eq(t.profileId, profileId)),
-  })
-
-  if (existing) return existing
-  const [row] = await db.insert(enrollment).values({ batchId, profileId, role }).returning()
-  if (!row) throw new Error('Failed to create enrollment')
-  return row
 }
 
 async function authenticateSuperAdmin(email: string, password: string) {
