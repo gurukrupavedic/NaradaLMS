@@ -1,0 +1,1634 @@
+{
+  "droppedMetadata": "Registration-sheet columns with no home in the current schema (qualified status, upanayanam, parent info, consent flags, comments, etc.) were not carried into the DB-shaped output.",
+  "phoneCollisions": [
+    {
+      "phone": "919885981818",
+      "userId": "019fe75b-731d-74a7-bb7a-00f62da7d08d",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7a-065d8fa4dd25",
+          "name": "Praveen Daita"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a435-b04119f3b916",
+          "name": "Naga Swarith Daita"
+        }
+      ]
+    },
+    {
+      "phone": "919885030611",
+      "userId": "019fe75b-731d-74a7-bb7a-696bc8c471f9",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7a-6ff06163b21e",
+          "name": "Mallikarjun Kasibhatta"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c2-fcb1f30fec30",
+          "name": "Siva Ganesh Kartikeya Pranav Kasibhatta"
+        }
+      ]
+    },
+    {
+      "phone": "918978544100",
+      "userId": "019fe75b-731d-74a7-bb7a-701d8d933dde",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7a-750b76502f9a",
+          "name": "Malleshwara Sharma Samavedam"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c3-1420d4fe714c",
+          "name": "Samavedam Malleshwara Sharma"
+        }
+      ]
+    },
+    {
+      "phone": "919440631176",
+      "userId": "019fe75b-731d-74a7-bb7b-1061f304ecda",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7b-16a0f3dc4c8b",
+          "name": "Venkata Radha Krishna Murthy Mellacheruvu"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c3-1e3ded447361",
+          "name": "Venkata Radhakkrishna Murthy Mellacheruvu"
+        }
+      ]
+    },
+    {
+      "phone": "919494858601",
+      "userId": "019fe75b-731d-74a7-bb7b-5a9123144178",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7b-5ff0834daf7b",
+          "name": "Saamdeep Pradyumna Sistla"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a435-a571b65f6e14",
+          "name": "Krishna Gopal Bhamidipalli"
+        }
+      ]
+    },
+    {
+      "phone": "14702725998",
+      "userId": "019fe75b-731d-74a7-bb7b-f33c924e713b",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7b-f6c70b8361ac",
+          "name": "Kaarthikeya Sistla"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-f1f01b13777d",
+          "name": "Kasyapa Sistla"
+        }
+      ]
+    },
+    {
+      "phone": "919885096301",
+      "userId": "019fe75b-731d-74a7-bb7b-fa8533c3c05c",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7b-fc69b3e98aae",
+          "name": "Sashikanth Meduri"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c3-19a64ab3561b",
+          "name": "Siva Skandia Pradyumna Meduri"
+        }
+      ]
+    },
+    {
+      "phone": "919133779696",
+      "userId": "019fe75b-731d-74a7-bb7c-0866937f9380",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7c-0c9ec4c79401",
+          "name": "Venkata Subbaramaiah Mynampati"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a433-51e820954e64",
+          "name": "Karthikeya Mynampati"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a433-5db08e4e3b37",
+          "name": "Anish Mynampati"
+        }
+      ]
+    },
+    {
+      "phone": "917702648904",
+      "userId": "019fe75b-731d-74a7-bb7c-11c158e776e6",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7c-164411b0cbbd",
+          "name": "Satish Balantrapu"
+        },
+        {
+          "profileId": "019fe75b-731d-74a7-bb7c-19095e35caa1",
+          "name": "Sai Sri Vallabh Balantrapu"
+        }
+      ]
+    },
+    {
+      "phone": "919885913164",
+      "userId": "019fe75b-731d-74a7-bb7d-475b80f09941",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7d-4b82ad137ea4",
+          "name": "Durvasula Panini"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c2-cf98f4fe113f",
+          "name": "Panini Durvasula"
+        }
+      ]
+    },
+    {
+      "phone": "16104573193",
+      "userId": "019fe75b-731d-74a7-bb7d-7659484d8e53",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7d-790ad0565e70",
+          "name": "Medhas Sundaragiri"
+        },
+        {
+          "profileId": "019fe75b-731d-74a7-bb7e-6ab3da6ff2b6",
+          "name": "Venkata Raja Ravindra Sundaragiri"
+        }
+      ]
+    },
+    {
+      "phone": "919500054858",
+      "userId": "019fe75b-731d-74a7-bb7d-9f608718bac5",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7d-a2b29bdca52d",
+          "name": "Ramanatham Josyula"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-04bc63a573ca",
+          "name": "Josyula Ramanatham"
+        }
+      ]
+    },
+    {
+      "phone": "13477527257",
+      "userId": "019fe75b-731d-74a7-bb7e-1d0fdeea4f06",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7e-213f3493ce70",
+          "name": "Harikesa Bandhakavi"
+        },
+        {
+          "profileId": "019fe75b-731d-74a7-bb7e-266a5103ee6d",
+          "name": "Venkata Phani Bandhakavi"
+        }
+      ]
+    },
+    {
+      "phone": "919951753976",
+      "userId": "019fe75b-731d-74a7-bb7e-ce185e483912",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7e-d35cec04c6fb",
+          "name": "Rajesh Alukucha"
+        },
+        {
+          "profileId": "019fe75b-731d-74a7-bb7e-d50885513f89",
+          "name": "Sri Harsha Alukucha"
+        }
+      ]
+    },
+    {
+      "phone": "919177141449",
+      "userId": "019fe75b-731d-74a7-bb7f-223228f1c52c",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7f-26bcb03af4dd",
+          "name": "Vallinath Sripada"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-3dd395f71458",
+          "name": "Sripada Vallinath"
+        }
+      ]
+    },
+    {
+      "phone": "919849639880",
+      "userId": "019fe75b-731d-74a7-bb7f-3291bab97ad2",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731d-74a7-bb7f-36a4082ce16b",
+          "name": "Banda Chandrasekhar"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c3-fe7b0d636f75",
+          "name": "Chandrasekhar Banda"
+        }
+      ]
+    },
+    {
+      "phone": "919885084141",
+      "userId": "019fe75b-731e-762a-8bbe-9f6295394df9",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bbe-a117ff4f08eb",
+          "name": "Mallikharjuna Sharma Nuthalapati"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bbe-a772d22286ee",
+          "name": "Ashritha Sharma Nuthalapati"
+        }
+      ]
+    },
+    {
+      "phone": "13182434371",
+      "userId": "019fe75b-731e-762a-8bbf-097da19aba0c",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bbf-0c334fa691e0",
+          "name": "Atharv Mannava"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bbf-1138d5fbd19b",
+          "name": "Vahin Mannava"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bbf-14655aa54bcb",
+          "name": "Vinay Mannava"
+        }
+      ]
+    },
+    {
+      "phone": "18609048328",
+      "userId": "019fe75b-731e-762a-8bbf-4385045c63dd",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bbf-45c72211feec",
+          "name": "Vamsee Krishna Mellachervu"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc3-05e39c771af1",
+          "name": "Srikar Mellachervu"
+        }
+      ]
+    },
+    {
+      "phone": "14805932217",
+      "userId": "019fe75b-731e-762a-8bbf-926b7ef5ea99",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bbf-951ea4949946",
+          "name": "Surya Niraghatam"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c1-bf41da3cd2d3",
+          "name": "Sathvik Niraghatam"
+        }
+      ]
+    },
+    {
+      "phone": "918978973823",
+      "userId": "019fe75b-731e-762a-8bbf-c34972a43d2e",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bbf-c41c9d416f31",
+          "name": "Naresh Thirukovela"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db0-cf2615a1a6a4",
+          "name": "Thirukovela Naresh"
+        }
+      ]
+    },
+    {
+      "phone": "916305438951",
+      "userId": "019fe75b-731e-762a-8bbf-e344bb9ee89c",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bbf-e525d77c579a",
+          "name": "Saketh Ram Kuppa"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db0-f87fcdb749f9",
+          "name": "Saketh Ram"
+        }
+      ]
+    },
+    {
+      "phone": "919052550010",
+      "userId": "019fe75b-731e-762a-8bbf-f90e15ce933a",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bbf-ff1a390bfc57",
+          "name": "Krishna Sai Sudeep Sarma Mandapaka"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db0-921e198e485e",
+          "name": "Mandapaka Krishna Sai Sudeep Sarma"
+        }
+      ]
+    },
+    {
+      "phone": "13122598884",
+      "userId": "019fe75b-731e-762a-8bc0-1a38853e235d",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc0-1febdc1cf7f2",
+          "name": "Avyay Karthik Mulagala"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc0-21cb4307ff09",
+          "name": "Suryansh Mulagala"
+        }
+      ]
+    },
+    {
+      "phone": "12066587733",
+      "userId": "019fe75b-731e-762a-8bc0-4ed405a641dd",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc0-536fd4445596",
+          "name": "Saathvik Manikonda"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc0-5da6ae6e1ee9",
+          "name": "Pradeep Manikonda"
+        }
+      ]
+    },
+    {
+      "phone": "919986458997",
+      "userId": "019fe75b-731e-762a-8bc0-e080e4869d90",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc0-e76d89bd4296",
+          "name": "Naga Krishna Prasad Ayachitula"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc0-eadc61a59e68",
+          "name": "Hrishikesh Ayachitula"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc0-ef039ffedcbe",
+          "name": "Sriram Charan Ayachitula"
+        }
+      ]
+    },
+    {
+      "phone": "14257858843",
+      "userId": "019fe75b-731e-762a-8bc1-18756e51d133",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc1-1e996751661a",
+          "name": "Tejus Peri"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c2-2fc755f49066",
+          "name": "Satish Peri"
+        }
+      ]
+    },
+    {
+      "phone": "917618732999",
+      "userId": "019fe75b-731e-762a-8bc1-eac8356dac98",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc1-edb4ac3fafc7",
+          "name": "Narasimha Tangirala"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc1-f08770fb36e9",
+          "name": "Venkata Anjani Siva Rama Krishna Praveen Tangirala"
+        }
+      ]
+    },
+    {
+      "phone": "919177554442",
+      "userId": "019fe75b-731e-762a-8bc2-0cb368a73186",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc2-12d349aa7eae",
+          "name": "Sudheer Kumar Kindamadugu"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a432-d51889e5c6bc",
+          "name": "Sudheer Kumar Kondamadugu"
+        }
+      ]
+    },
+    {
+      "phone": "919966904769",
+      "userId": "019fe75b-731e-762a-8bc3-380a77edc2fa",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc3-3dd779855d14",
+          "name": "Srivatsa Gowtham Krishna"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc3-407025275158",
+          "name": "Arjun Krishna Bharadwaj"
+        }
+      ]
+    },
+    {
+      "phone": "919121549672",
+      "userId": "019fe75b-731e-762a-8bc3-a4e767245e32",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc3-a92f255bae07",
+          "name": "Ujwal Sai Shanmukh Kasiraju"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93bb-ef688d734444",
+          "name": "Sai Shanmukh Ujwal Kasiraju"
+        }
+      ]
+    },
+    {
+      "phone": "918147232263",
+      "userId": "019fe75b-731e-762a-8bc3-b43583b20fdc",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc3-ba40babba9f4",
+          "name": "Ganesh Karthik Tenjerla"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc3-be08ee55f650",
+          "name": "Sri Dhruva Mahesh Tenjerla"
+        }
+      ]
+    },
+    {
+      "phone": "12488021056",
+      "userId": "019fe75b-731e-762a-8bc3-e00d2b90c89c",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc3-e5fbaf6f38a4",
+          "name": "Jithamithra Vedula"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc3-e8a3881bfee9",
+          "name": "Sreenivas Vedula"
+        }
+      ]
+    },
+    {
+      "phone": "919848847831",
+      "userId": "019fe75b-731e-762a-8bc4-1e68a7b1e2d2",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc4-23decc365047",
+          "name": "Shanmukhaditya  Puranam"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc5-1787a766dfd7",
+          "name": "Srikanth Puranam"
+        }
+      ]
+    },
+    {
+      "phone": "61431228074",
+      "userId": "019fe75b-731e-762a-8bc4-a55193836a9b",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc4-abbdfb1e14df",
+          "name": "Vara Prasad Akella"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc4-ad6efc37f042",
+          "name": "Srikar Akella"
+        }
+      ]
+    },
+    {
+      "phone": "15135601785",
+      "userId": "019fe75b-731e-762a-8bc4-d175eed25bbb",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731e-762a-8bc4-d6d24aabc83e",
+          "name": "Naga Gowthama Sarma Mylavarapu"
+        },
+        {
+          "profileId": "019fe75b-731e-762a-8bc4-d80eed72f07e",
+          "name": "Advaith Mylavarapu"
+        }
+      ]
+    },
+    {
+      "phone": "15714467877",
+      "userId": "019fe75b-731f-7733-a430-cade162e6228",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a430-cfa555c5800c",
+          "name": "Sreenivas Tarigoppula"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a430-d07ce3b6494c",
+          "name": "Sriman Tarigoppula"
+        }
+      ]
+    },
+    {
+      "phone": "919985404530",
+      "userId": "019fe75b-731f-7733-a430-ee08fec35172",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a430-f129cece3996",
+          "name": "Venkata Satya Surya Abhiram Mutnuru"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a433-98362a6b48a0",
+          "name": "Aditya Sri Krishna Mutnuru"
+        }
+      ]
+    },
+    {
+      "phone": "918688328602",
+      "userId": "019fe75b-731f-7733-a430-febe9149bd90",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a431-01b47182f0a8",
+          "name": "Veda Rushi Kandukuri"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a431-05ed9b8f5ce8",
+          "name": "Poorna Sashi Kandukuri"
+        }
+      ]
+    },
+    {
+      "phone": "16099370666",
+      "userId": "019fe75b-731f-7733-a431-3a6d99418e44",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a431-3fb4752ab4b9",
+          "name": "Abhiram Burugula"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c3-636f136d7a06",
+          "name": "Anudeep Burugula"
+        }
+      ]
+    },
+    {
+      "phone": "13068804239",
+      "userId": "019fe75b-731f-7733-a432-91e0ad29cc1d",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a432-9550dddfc7f7",
+          "name": "Soumitri Murthinty"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a432-9b31e8b25d7d",
+          "name": "Venkata Shivark Murthinty"
+        }
+      ]
+    },
+    {
+      "phone": "919110595085",
+      "userId": "019fe75b-731f-7733-a433-78eb25ca451a",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a433-7ce0ef9c305e",
+          "name": "Venkata Krishna Chaitanya Tellapuri"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db2-0eca96652e5d",
+          "name": "Krishna Chaitanya Tellapuri"
+        }
+      ]
+    },
+    {
+      "phone": "12814338164",
+      "userId": "019fe75b-731f-7733-a434-6fe83f6e6930",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a434-7129c8d7d7f6",
+          "name": "Kishore Garimella"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c1-8275a7f60403",
+          "name": "Kesava Garimella"
+        }
+      ]
+    },
+    {
+      "phone": "17246126299",
+      "userId": "019fe75b-731f-7733-a434-7fbfa4f6de61",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a434-8225f1085da3",
+          "name": "Anil Doranala"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a434-84159187ff1e",
+          "name": "Shriketh Doranala"
+        }
+      ]
+    },
+    {
+      "phone": "919000377973",
+      "userId": "019fe75b-731f-7733-a434-e2a13088972c",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a434-e48889047c92",
+          "name": "Venkata Naga Purnananda Kumar Turlapati"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a435-433a69b440f2",
+          "name": "Lakshmi Maanas Turlapati"
+        }
+      ]
+    },
+    {
+      "phone": "919951531441",
+      "userId": "019fe75b-731f-7733-a436-077612f129a9",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a436-08178d2ceb73",
+          "name": "Annapurna Sri Sai Srirama Mandalika"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a436-0dcc7d307759",
+          "name": "Seshagiri Rao Mandalika"
+        }
+      ]
+    },
+    {
+      "phone": "919490993668",
+      "userId": "019fe75b-731f-7733-a436-ca71303f6c84",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a436-ce2b408ec91d",
+          "name": "Kalyana Chakravarti Vangipurapu"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a436-d215437b7eae",
+          "name": "Sai Pranav Vangipurapu"
+        }
+      ]
+    },
+    {
+      "phone": "15127738654",
+      "userId": "019fe75b-731f-7733-a437-0ebf8c16cdfe",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a437-105a8e08e2b3",
+          "name": "Raghavendra Vikas Dinavahi"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93bd-f2c463c5cf15",
+          "name": "Mayukh Dinavahi"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c1-768aba1530d9",
+          "name": "Srisenani Dinavahi"
+        }
+      ]
+    },
+    {
+      "phone": "14083293168",
+      "userId": "019fe75b-731f-7733-a437-3d1fa42b5278",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a437-40699b7fb4e7",
+          "name": "Srikanth Gorugantu"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93be-16a96f578ab3",
+          "name": "Saaketh Gorugantu"
+        }
+      ]
+    },
+    {
+      "phone": "18178296430",
+      "userId": "019fe75b-731f-7733-a437-4f5eedbd4500",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a437-53e993af5b37",
+          "name": "Keshav Padmasolala"
+        },
+        {
+          "profileId": "019fe75b-731f-7733-a437-57fc59fa622a",
+          "name": "Raghav Padmasolala"
+        }
+      ]
+    },
+    {
+      "phone": "918374599228",
+      "userId": "019fe75b-731f-7733-a438-3aaf7f08d8ec",
+      "profiles": [
+        {
+          "profileId": "019fe75b-731f-7733-a438-3faefd67aa4d",
+          "name": "Vijay Kumar Josyam"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c2-e9db76dec268",
+          "name": "Kedar Kritinand Josyam"
+        }
+      ]
+    },
+    {
+      "phone": "918142558444",
+      "userId": "019fe75b-7320-715a-93bc-8abc16ab4438",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93bc-8c3de357e167",
+          "name": "Sri Advaytha Simha Mudrakartha"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93bc-927555919763",
+          "name": "Vishnu Chittan Mudrakartha"
+        }
+      ]
+    },
+    {
+      "phone": "919849062337",
+      "userId": "019fe75b-7320-715a-93bc-bd935756a80e",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93bc-c3ad667d2b09",
+          "name": "Jagan Mohana Ramu Pendyala"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93bc-c664be1cee56",
+          "name": "Abhiram Pendyala"
+        }
+      ]
+    },
+    {
+      "phone": "15126569880",
+      "userId": "019fe75b-7320-715a-93be-23552b4eedd0",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93be-25dd09cb3399",
+          "name": "Aneesh Kolluri"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93be-286d8013d36b",
+          "name": "Krishna Kolluri"
+        }
+      ]
+    },
+    {
+      "phone": "18036293505",
+      "userId": "019fe75b-7320-715a-93be-84ff27abce6c",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93be-8a276c8572b1",
+          "name": "Nageshwara Kumar Potukuchi"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c3-f150918b2890",
+          "name": "Sivateja Potukuchi"
+        }
+      ]
+    },
+    {
+      "phone": "13369783300",
+      "userId": "019fe75b-7320-715a-93be-bf501c0cc502",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93be-c269df45db15",
+          "name": "Krishna S Telakapalli"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93be-c7e65f321671",
+          "name": "Ravi Telakapalli"
+        }
+      ]
+    },
+    {
+      "phone": "12409949102",
+      "userId": "019fe75b-7320-715a-93be-db5202e77e38",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93be-df136f910a8a",
+          "name": "Akshath Valiveti"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c2-38220d56b775",
+          "name": "Aswani Valiveti"
+        }
+      ]
+    },
+    {
+      "phone": "919885883979",
+      "userId": "019fe75b-7320-715a-93bf-4a8560b787ac",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93bf-4c8e78d9205c",
+          "name": "Venkata Dileep Bommakanti"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93bf-53a5c0f24c32",
+          "name": "Venkata Rama Sai Pavan Sharma Bommakanti"
+        }
+      ]
+    },
+    {
+      "phone": "919958562369",
+      "userId": "019fe75b-7320-715a-93bf-c671b78d95fa",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93bf-c85514d3066f",
+          "name": "Surya Abhiram Jagarlapudi"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93bf-cede52e14bf1",
+          "name": "Surya Venkata Srikanth Jagarlapudi"
+        }
+      ]
+    },
+    {
+      "phone": "918985971092",
+      "userId": "019fe75b-7320-715a-93c0-11af44277aa2",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93c0-1510003465ce",
+          "name": "Hanumath Shanmukh Kotamraju"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c0-1a7e8fbbee68",
+          "name": "Srinivasa Sarma Kotamraju"
+        }
+      ]
+    },
+    {
+      "phone": "919959292224",
+      "userId": "019fe75b-7320-715a-93c0-1da7b90ce99c",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93c0-21c606623710",
+          "name": "Medhansh Sarma Kotaru"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c0-24275c0a2f7d",
+          "name": "Raghunatha Sarma Kotaru"
+        }
+      ]
+    },
+    {
+      "phone": "918848970158",
+      "userId": "019fe75b-7320-715a-93c0-40b21f130d95",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93c0-46b5a3285598",
+          "name": "Ravi Shankar Kurada"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c0-4ad7cb0a403a",
+          "name": "Ravi Sankar Kurada"
+        }
+      ]
+    },
+    {
+      "phone": "919848362099",
+      "userId": "019fe75b-7320-715a-93c1-1561634f5906",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93c1-1b98c71d2cb9",
+          "name": "Nagabushana Sri Varen Turaga"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c1-1f6d87cbad44",
+          "name": "Narasimha Sri Vibhav Turaga"
+        }
+      ]
+    },
+    {
+      "phone": "16512356643",
+      "userId": "019fe75b-7320-715a-93c1-5a95f1437eb7",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93c1-5f26b236ce58",
+          "name": "Adhrith Chintakunta"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c1-606952d60cf7",
+          "name": "Aniruddha Chintakunta"
+        }
+      ]
+    },
+    {
+      "phone": "19094501286",
+      "userId": "019fe75b-7320-715a-93c2-00f2f42836f3",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93c2-0765596041aa",
+          "name": "Akhilesh Janapaty"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c2-083f726b4e82",
+          "name": "Nataraj Janapaty"
+        }
+      ]
+    },
+    {
+      "phone": "14256285454",
+      "userId": "019fe75b-7320-715a-93c2-54d26a0aebf0",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93c2-5b58abc51279",
+          "name": "Aditya Pillalamarri"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c3-ed43cae5cf41",
+          "name": "Sreekar Karthik Pillalamarri"
+        }
+      ]
+    },
+    {
+      "phone": "919966238978",
+      "userId": "019fe75b-7320-715a-93c3-0b5d698a5eb4",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7320-715a-93c3-0dc1af23d5c8",
+          "name": "Ganesha Vamsidhar Kuppa"
+        },
+        {
+          "profileId": "019fe75b-7320-715a-93c3-11c0efb66971",
+          "name": "Krishna Sashank Kuppa"
+        }
+      ]
+    },
+    {
+      "phone": "919441975657",
+      "userId": "019fe75b-7321-71fd-8db0-7c2f269103bf",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7321-71fd-8db0-80deaa45a195",
+          "name": "Atmaram Kavuri"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db0-87325c0f4a2b",
+          "name": "Sriram Kavuri"
+        }
+      ]
+    },
+    {
+      "phone": "919160750001",
+      "userId": "019fe75b-7321-71fd-8db1-09b121de0194",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-0ce22f0e7b14",
+          "name": "Madhu Prakash Remella"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-11c9de7d0e4e",
+          "name": "Srikar Sreshta Remella"
+        }
+      ]
+    },
+    {
+      "phone": "919866707774",
+      "userId": "019fe75b-7321-71fd-8db1-437e5900245a",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-44abfd90aa68",
+          "name": "Madhava Subramanya Varanasi"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-4917629e3b25",
+          "name": "Savarni Varanasi"
+        }
+      ]
+    },
+    {
+      "phone": "15126691143",
+      "userId": "019fe75b-7321-71fd-8db1-b675f8154629",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-b8750625868e",
+          "name": "Chaitanya Vemuri"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db1-bc05b14a2d4e",
+          "name": "Srinath Vemuri"
+        }
+      ]
+    },
+    {
+      "phone": "918297059956",
+      "userId": "019fe75b-7321-71fd-8db2-39eaa60114bc",
+      "profiles": [
+        {
+          "profileId": "019fe75b-7321-71fd-8db2-3ecd44b5b0b5",
+          "name": "Surya Karthikeya Peri"
+        },
+        {
+          "profileId": "019fe75b-7321-71fd-8db2-42c2c1acba2e",
+          "name": "Laksminarasimham Peri"
+        }
+      ]
+    }
+  ],
+  "missingPhoneProfiles": [],
+  "ambiguousStudentStatus": [],
+  "graduatedBatches": [
+    {
+      "batchCode": "VED-GRAD-2024-GR-1",
+      "batchId": "019fe75b-7340-7766-9bf8-9dd4475fbaef"
+    }
+  ],
+  "enrollmentRoleSkips": [
+    {
+      "profileId": "019fe75b-7325-7161-b956-ec4d9836a0a6",
+      "batchId": "019fe75b-7325-7161-b956-e414e8e470e8",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-7325-7161-b956-ec4d9836a0a6",
+      "batchId": "019fe75b-7325-7161-b956-e414e8e470e8",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-7325-7161-b956-ec4d9836a0a6",
+      "batchId": "019fe75b-7325-7161-b956-e414e8e470e8",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-7325-7161-b956-ec4d9836a0a6",
+      "batchId": "019fe75b-7325-7161-b956-e414e8e470e8",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-7325-7161-b956-ec4d9836a0a6",
+      "batchId": "019fe75b-7325-7161-b956-e414e8e470e8",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-7325-7161-b956-ec4d9836a0a6",
+      "batchId": "019fe75b-7325-7161-b956-e414e8e470e8",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-7329-713a-9464-3822696c38dd",
+      "batchId": "019fe75b-733b-7186-a3ac-8be87ec64f94",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-7329-713a-9464-3822696c38dd",
+      "batchId": "019fe75b-733b-7186-a3ad-d4cc9e8d5303",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-732b-709c-baa5-5a9e98df352a",
+      "batchId": "019fe75b-733b-7186-a3ad-d4cc9e8d5303",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    },
+    {
+      "profileId": "019fe75b-7325-7161-b956-ec4d9836a0a6",
+      "batchId": "019fe75b-7340-7766-9bf4-e69e4630473b",
+      "existingRole": "instructor",
+      "skippedRole": "ta"
+    }
+  ],
+  "duplicateRealEmails": [
+    {
+      "email": "rvskarthik.2011@gmail.com",
+      "keptForUserId": "019fe75b-731e-762a-8bc0-2c6960ffb43c",
+      "fellBackToSyntheticFor": "019fe75b-731e-762a-8bc1-0a2396c12239"
+    },
+    {
+      "email": "sridhartad@gmail.com",
+      "keptForUserId": "019fe75b-731e-762a-8bc3-47ca44061f11",
+      "fellBackToSyntheticFor": "019fe75b-731e-762a-8bc4-efce3c8f8b3a"
+    },
+    {
+      "email": "usha048691@gmail.com",
+      "keptForUserId": "019fe75b-731e-762a-8bc4-e5356705cb02",
+      "fellBackToSyntheticFor": "019fe75b-731e-762a-8bc5-2212e62571dc"
+    },
+    {
+      "email": "nvsrama@hotmail.com",
+      "keptForUserId": "019fe75b-731f-7733-a434-c104f3427598",
+      "fellBackToSyntheticFor": "019fe75b-731f-7733-a435-20e10164f17a"
+    },
+    {
+      "email": "sashikanth.pochimcharla@gmail.com",
+      "keptForUserId": "019fe75b-731f-7733-a434-74617e6e1e89",
+      "fellBackToSyntheticFor": "019fe75b-731f-7733-a435-33cb46d74dae"
+    },
+    {
+      "email": "ratnamkamesh4545@gmail.com",
+      "keptForUserId": "019fe75b-731f-7733-a435-846c43081a54",
+      "fellBackToSyntheticFor": "019fe75b-731f-7733-a436-1166b0a09e40"
+    },
+    {
+      "email": "remellaabhiram447@gmail.com",
+      "keptForUserId": "019fe75b-731f-7733-a431-28c8ee32204d",
+      "fellBackToSyntheticFor": "019fe75b-731f-7733-a436-7bef87ec10fb"
+    },
+    {
+      "email": "gaya3mahesh@gmail.com",
+      "keptForUserId": "019fe75b-731f-7733-a437-d1adcbb6b2e3",
+      "fellBackToSyntheticFor": "019fe75b-731f-7733-a437-d9b5fb0b4651"
+    },
+    {
+      "email": "durgasairam1979@gmail.com",
+      "keptForUserId": "019fe75b-731d-74a7-bb7a-c2782a53d097",
+      "fellBackToSyntheticFor": "019fe75b-7320-715a-93bc-20edac286e4c"
+    },
+    {
+      "email": "somayajulumangipudi@gmail.com",
+      "keptForUserId": "019fe75b-731f-7733-a434-ea4bd093e753",
+      "fellBackToSyntheticFor": "019fe75b-7320-715a-93bc-59630a221703"
+    },
+    {
+      "email": "veerananduri2@gmail.com",
+      "keptForUserId": "019fe75b-731f-7733-a437-72bf85f94f7a",
+      "fellBackToSyntheticFor": "019fe75b-7320-715a-93be-55552fdaeb4d"
+    },
+    {
+      "email": "bvdileep@gmail.com",
+      "keptForUserId": "019fe75b-731e-762a-8bc1-4855c266d850",
+      "fellBackToSyntheticFor": "019fe75b-7320-715a-93bf-4a8560b787ac"
+    },
+    {
+      "email": "jsuryasrinivas@gmail.com",
+      "keptForUserId": "019fe75b-731d-74a7-bb7c-556ef9e7b67b",
+      "fellBackToSyntheticFor": "019fe75b-7320-715a-93c1-9443a9b94306"
+    },
+    {
+      "email": "svelamuri1@gmail.com",
+      "keptForUserId": "019fe75b-7320-715a-93be-f021f8af43ee",
+      "fellBackToSyntheticFor": "019fe75b-7320-715a-93c1-e893218be5f0"
+    },
+    {
+      "email": "muthyamkanakadurga@gmail.com",
+      "keptForUserId": "019fe75b-731d-74a7-bb7b-8a46c1c73f60",
+      "fellBackToSyntheticFor": "019fe75b-7320-715a-93c2-da0800a60316"
+    },
+    {
+      "email": "kashyap.kuchipudi@gmail.com",
+      "keptForUserId": "019fe75b-731d-74a7-bb7d-e5226f2afb72",
+      "fellBackToSyntheticFor": "019fe75b-7321-71fd-8db0-95360cc9bd45"
+    }
+  ],
+  "batchStatusDefaults": [
+    {
+      "batchCode": "VED-01-2026-BR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-BR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-BR-4",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2026-BR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2026-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2026-BR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-07-2026-BR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-4",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-5",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-6",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-7",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-8",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2026-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2026-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2026-GR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2026-GR-4",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2026-GR-5",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2026-GR-6",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2026-GR-7",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2026-GR-8",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2026-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2026-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-04-2026-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-04-2026-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-04-2026-GR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-04-2026-GR-4",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-05-2026-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-05-2026-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-05-2026-GR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-05-2026-GR-4",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-05-2026-GR-5",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-06-2026-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-06-2026-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-07-2026-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-07-2026-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-08-2025-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-Rem-2025-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-Rem-2026-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2017-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2018-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2019-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2021-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2021-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2022-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2022-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2022-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2023-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2023-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2023-GR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2023-GR-4",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2023-GR-7",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2024-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2024-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2024-GR-12",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2024-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2024-GR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2024-GR-4",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2024-GR-9",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-11",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-12",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-13",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-3",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-4",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-5",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-6",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-7",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-8",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2025-GR-9",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-11",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-01-2026-GR-13",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2023-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2024-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-02-2025-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2022-BR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2022-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2022-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2024-BR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-03-2025-GR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-04-2025-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-05-2023-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-05-2024-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-05-2025-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-07-2026-BR-2",
+      "status": "active",
+      "reason": "has active student enrollments"
+    },
+    {
+      "batchCode": "VED-GRAD-2024-GR-1",
+      "status": "active",
+      "reason": "has active student enrollments"
+    }
+  ],
+  "droppedRowsMissingIdentity": []
+}
