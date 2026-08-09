@@ -1,9 +1,7 @@
 import '@narada/env/load'
 import { defineCommand, runMain } from 'citty'
-import Enquirer from 'enquirer'
 import { eq } from 'drizzle-orm'
 
-import { auth } from '@narada/auth'
 import {
   dropSchoolSchema,
   member,
@@ -13,6 +11,7 @@ import {
   shutdownPools,
   uuidv7,
 } from '@narada/db'
+import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
 
 const create = defineCommand({
   meta: { description: 'Create a school organization and provision its Postgres schema.' },
@@ -33,12 +32,11 @@ const create = defineCommand({
     },
   },
   async run({ args }) {
-    const credentials = await promptCredentials()
+    const operatorPhone = await promptSuperAdminPhone()
     await createSchool({
       name: args.name,
       slug: args.slug,
-      operatorEmail: credentials.email,
-      operatorPassword: credentials.password,
+      operatorPhone,
       ownerEmail: args.ownerEmail,
     })
   },
@@ -54,14 +52,16 @@ runMain(
 async function createSchool(input: {
   name: string
   slug: string
-  operatorEmail: string
-  operatorPassword: string
+  operatorPhone: string
   ownerEmail?: string
 }) {
   assertSlug(input.slug)
 
   try {
-    const operator = await authenticateSuperAdmin(input.operatorEmail, input.operatorPassword)
+    const operator = await requireSuperAdminByPhone(input.operatorPhone)
+    // Owner lookup deliberately stays email-based: it targets an arbitrary existing user (who may
+    // not have a phoneNumber set yet), unlike the operator check above, which only ever needs to
+    // find the person running this script.
     const ownerEmail = input.ownerEmail ?? operator.email
     const ownerUserId = await findUserIdByEmail(ownerEmail)
     const existing = await publicDb.query.organization.findFirst({
@@ -112,18 +112,6 @@ async function createSchool(input: {
   }
 }
 
-async function authenticateSuperAdmin(email: string, password: string) {
-  const session = await auth.api.signInEmail({
-    body: { email, password },
-  })
-
-  if (!session.user.isSuperAdmin) {
-    throw new Error('Authenticated user must be a super-admin.')
-  }
-
-  return session.user
-}
-
 async function findUserIdByEmail(email: string) {
   const row = await publicDb.query.user.findFirst({
     where: (t, { eq }) => eq(t.email, email),
@@ -135,24 +123,6 @@ async function findUserIdByEmail(email: string) {
   }
 
   return row.id
-}
-
-async function promptCredentials(): Promise<{ email: string; password: string }> {
-  return Enquirer.prompt<{ email: string; password: string }>([
-    {
-      type: 'input',
-      name: 'email',
-      message: 'Super-admin email',
-      required: true,
-      result: value => value.trim(),
-    },
-    {
-      type: 'password',
-      name: 'password',
-      message: 'Super-admin password',
-      required: true,
-    },
-  ])
 }
 
 function assertSlug(slug: string) {
