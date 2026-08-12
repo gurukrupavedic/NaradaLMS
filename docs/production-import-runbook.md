@@ -114,7 +114,7 @@ Prompts for the super-admin phone from Step 2. Omitting `--slug` migrates every 
 
 ```sh
 cd tools
-pnpm exec tsx src/import-excel-seed.ts --slug slmts --name "SLMTS"
+pnpm exec tsx src/import-school.ts data --slug slmts --name "SLMTS"
 ```
 
 (No `--commit` — this only validates and reports. **Nothing is written in this step.**)
@@ -143,7 +143,7 @@ Expect zero rows. If a row already exists, **stop** — re-running the importer 
 
 ```sh
 cd tools
-pnpm exec tsx src/import-excel-seed.ts --slug slmts --name "SLMTS" --commit
+pnpm exec tsx src/import-school.ts data --slug slmts --name "SLMTS" --commit
 ```
 
 **Expect:**
@@ -203,9 +203,31 @@ Prompts for the Step 2 super-admin phone. Use an email that already exists among
 
 ---
 
+## Step 9 — Grant a temporary login (stopgap until phone/OTP auth ships)
+
+Imported users have a `user` row but no `account` row — Step 6 writes directly to `user`, bypassing better-auth's own sign-up entirely, so nobody in the roster can actually log in yet (no password credential, and no OAuth link either). This is a deliberate stopgap: it hands out one **shared** temporary password to everyone still missing a login method, so people can use the app before `feat/whatsapp-otp-auth` lands.
+
+Dry-run first (read-only — reports who's affected, writes nothing):
+```sh
+cd tools
+pnpm exec tsx src/import-school.ts grant-passwords --schoolSlug slmts
+```
+Prompts for the Step 2 super-admin phone. Expect `N of <member count> members of "slmts" have no login method yet.` — `N` should be everyone except accounts that already have a login method from elsewhere (e.g. the Step 2 super-admin, or the owner from Step 8 if they already had one).
+
+Commit:
+```sh
+pnpm exec tsx src/import-school.ts grant-passwords --schoolSlug slmts --commit
+```
+Default password is `testing123` (override with `--password`). Re-running this command (dry or commit) is always safe — it only ever targets users who still have zero `account` rows, so it never overwrites or duplicates an existing credential.
+
+**This is not a real fix — it's a shared, unexpiring password across every imported account.** Treat it as sensitive, plan to retire it (delete the `account` rows with `providerId = 'credential'` created here, or force a password reset) once real phone/OTP auth is live, and don't advertise it more broadly than necessary.
+
+---
+
 ## Re-running this runbook / partial failures
 
 - **Steps 1–3** are idempotent — safe to re-run from a clean start at any point.
+- **Step 9 is idempotent** — safe to re-run (dry or commit) any number of times; see above.
 - **Step 6 is not safely re-runnable against the same org.** `profile` and `evaluation` have no natural unique constraint (by design), so a second `--commit` against a school that already has profiles risks duplicating data rather than cleanly resuming. If Step 6 fails partway:
   - User/membership inserts (before the school-scoped transaction) use `ON CONFLICT DO NOTHING` on `id` — safe to leave as-is.
   - The `track`/`chapter`/`batch`/`profile`/`enrollment`/`evaluation` writes are one transaction — a failure there rolls back cleanly, so nothing partial persists at the school-schema level.

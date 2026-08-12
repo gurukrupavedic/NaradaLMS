@@ -95,7 +95,11 @@ const userCmd = defineCommand({
     const operatorPhone = await promptSuperAdminPhone()
     try {
       await requireSuperAdminByPhone(operatorPhone)
+      const existedBefore = await publicDb.query.user.findFirst({
+        where: (t, { eq }) => eq(t.email, args.email),
+      })
       const user = await upsertUser(args.email, args.name, undefined, args.phoneNumber)
+      const credentialCreated = !existedBefore
 
       let assignment: Record<string, unknown> = {}
       if (args.role) {
@@ -144,7 +148,9 @@ const userCmd = defineCommand({
             email: args.email,
             name: args.name,
             phoneNumber: args.phoneNumber ?? user.phoneNumber ?? null,
-            password: SEED_PASSWORD,
+            ...(credentialCreated
+              ? { password: SEED_PASSWORD }
+              : { note: 'Existing account — no new password credential was created.' }),
             ...assignment,
           },
           null,
