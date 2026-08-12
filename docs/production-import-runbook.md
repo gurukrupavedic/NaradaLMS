@@ -10,11 +10,9 @@
 
 ## ⚠️ Do this part first, urgently
 
-If PRs #95–#100 are already merged to `main` and Railway auto-deploys on merge to `main`, **production may already be running API code that expects `user.phoneNumber` to exist**, even though nothing has added that column to the live database yet. Nothing in this codebase currently applies public-schema migrations automatically (no migration step in `apps/api/Dockerfile`, `pnpm db:push` is dev-only per the README) — that gap is exactly what PR #100 fixes.
+Nothing in this codebase currently applies public-schema migrations automatically (no migration step in `apps/api/Dockerfile`, `pnpm db:push` is dev-only per the README) — that gap is what PR #100 fixes. Whenever the API code that expects `user.phoneNumber` actually goes live in production — **confirmed manually deployed, not auto-deployed on merge to `main`** — every request that touches auth (sign-in, session checks) goes through better-auth's Drizzle adapter, which reads/writes the full `user` row shape. If the column is missing at that point, auth fails outright with a Postgres "column does not exist" error — i.e. **auth-wide breakage**, not a contained issue.
 
-Every request that touches auth (sign-in, session checks) goes through better-auth's Drizzle adapter, which reads/writes the full `user` row shape. If the column is missing, this fails with a Postgres "column does not exist" error — i.e. **auth-wide breakage**, not a contained issue.
-
-**So: confirm PR #100 is merged, then run Step 1 below immediately** — before working through the rest of this runbook in order.
+**Practical upshot: apply Step 1 below before (or as part of) whatever deploy step actually promotes the PR #95–#100 code to production** — not necessarily "right now" if that hasn't happened yet, but don't let the deploy get ahead of the migration. If you're not sure how/when production actually picks up new code (manual Railway redeploy? a separate trigger?), figure that out before this becomes an ordering problem instead of guessing.
 
 ---
 
@@ -41,7 +39,37 @@ pnpm exec tsx src/migrate-public.ts
 
 **Expect:** `Public schema migrations applied.` and exit code 0.
 
-**If it fails with `column "phoneNumber" of relation "user" already exists`:** stop — this means the column exists but drizzle's tracking table doesn't know about it (exactly the state I found and fixed in local dev while testing this same tool). `migrate()` runs in one transaction, so this failure is safe (no partial state), but don't just re-run it — first check why the column already exists (was it added by hand?) and reconcile the tracking table before retrying. Ask me if this happens; don't guess at the fix under time pressure.
+**If it fails with `relation "..." already exists`** (e.g. `relation "account" already exists`, or `column "phoneNumber" of relation "user" already exists`): this means drizzle's migration-tracking table (`drizzle.__drizzle_migrations`) doesn't reflect reality — either it's missing the row for a migration that's actually already applied, or it doesn't exist at all yet (the likely case if this environment's public schema was ever set up via `pnpm db:push`, which never writes to that table). `migrate()` runs in one transaction, so the failure itself is safe — nothing partial is left behind — but don't just re-run it blindly. Reconcile first:
+
+1. **Check current state** (safe, read-only):
+   ```sh
+   psql "$DATABASE_URL" -c "SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;"
+   ```
+   Expect either "relation does not exist" or zero rows if this environment predates any tracked migration. **If you see unexpected rows already there, stop and investigate before continuing** — don't backfill on top of an unknown state.
+
+2. **Backfill the tracking row(s) for whatever's genuinely already applied.** For the common case — this environment's tables already exist from an original `db:push` setup, so the whole `0000` genesis migration counts as already applied, and only `0001` (the `phoneNumber`/`phoneNumberVerified` columns from #96) is actually pending:
+   ```sh
+   psql "$DATABASE_URL" -c '
+   CREATE SCHEMA IF NOT EXISTS "drizzle";
+   CREATE TABLE IF NOT EXISTS "drizzle"."__drizzle_migrations" (
+     id SERIAL PRIMARY KEY,
+     hash text NOT NULL,
+     created_at bigint
+   );
+   INSERT INTO "drizzle"."__drizzle_migrations" (hash, created_at)
+   VALUES ('"'"'b5d361c0be6cb4d0bcd7eed656eaf7e30a21676b28d2094188faa7840d65744f'"'"', 1780374016543);
+   '
+   ```
+   That hash/timestamp pair is `0000_nebulous_the_liberteens.sql` as of this runbook — recompute it yourself if `packages/db/drizzle/public/` has moved on since (`sha256` of the raw `.sql` file content; the timestamp is that migration's `when` in `packages/db/drizzle/public/meta/_journal.json`), don't reuse a stale value from this doc without checking.
+
+3. **Verify exactly the row(s) you intended landed:**
+   ```sh
+   psql "$DATABASE_URL" -c "SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;"
+   ```
+
+4. **Re-run** `pnpm exec tsx src/migrate-public.ts` — it should now skip whatever you backfilled and apply only what's genuinely still pending.
+
+If the failure doesn't match this pattern (e.g. it's a *different* table/column than expected, or you're unsure what's already applied), stop and ask rather than guessing at a backfill under time pressure — an incorrect hash/timestamp here just makes `migrate()`'s bookkeeping wrong in a different way, not obviously wrong.
 
 **Verify:**
 ```sh
