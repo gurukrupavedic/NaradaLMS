@@ -8,6 +8,8 @@
     "env:encrypt": "tsx src/env.ts encrypt",
     "env:link": "tsx src/env.ts link",
     "schools:create": "tsx src/schools.ts create",
+    "schools:migrate": "tsx src/schools.ts migrate",
+    "db:migrate:public": "tsx src/migrate-public.ts",
     "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit",
     "parse:excel": "tsx src/parse-excel-to-json.ts",

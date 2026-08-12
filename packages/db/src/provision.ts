@@ -7,9 +7,14 @@ import path from 'path'
 import { env } from '@narada/env'
 import { sql } from 'drizzle-orm'
 
-const migrationsFolder = path.join(
+const schoolMigrationsFolder = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   '../drizzle/school',
+)
+
+const publicMigrationsFolder = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../drizzle/public',
 )
 
 export function schoolSchemaName(organizationId: string) {
@@ -76,8 +81,23 @@ export async function provisionSchool(organizationId: string) {
     // first school's migrations get recorded there, so every school after that skips migrating
     // (already-applied, as far as that shared tracking table is concerned) and ends up with an
     // empty schema. Scoping the tracking table to this tenant's own schema fixes that.
-    await migrate(drizzle(schoolPool), { migrationsFolder, migrationsSchema: schemaName })
+    await migrate(drizzle(schoolPool), { migrationsFolder: schoolMigrationsFolder, migrationsSchema: schemaName })
   } finally {
     await schoolPool.end()
+  }
+}
+
+// The public schema has no per-request provisioning step (there's only ever one), so nothing
+// currently calls drizzle's migrate() for it — deploys ship new code that expects new public
+// columns to exist with no automated step that actually adds them. This is that step: safe to
+// call repeatedly, applies only whatever's pending since the last recorded migration. Not
+// multi-tenant, so (unlike provisionSchool) no migrationsSchema override is needed — the default
+// tracking table is fine here.
+export async function migratePublicSchema() {
+  const pool = new Pool({ connectionString: env.DATABASE_URL })
+  try {
+    await migrate(drizzle(pool), { migrationsFolder: publicMigrationsFolder })
+  } finally {
+    await pool.end()
   }
 }
