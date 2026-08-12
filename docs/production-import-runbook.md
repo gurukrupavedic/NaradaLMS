@@ -41,15 +41,18 @@ pnpm exec tsx src/migrate-public.ts
 
 **If it fails with `relation "..." already exists`** (e.g. `relation "account" already exists`, or `column "phoneNumber" of relation "user" already exists`): this means drizzle's migration-tracking table (`drizzle.__drizzle_migrations`) doesn't reflect reality — either it's missing the row for a migration that's actually already applied, or it doesn't exist at all yet (the likely case if this environment's public schema was ever set up via `pnpm db:push`, which never writes to that table). `migrate()` runs in one transaction, so the failure itself is safe — nothing partial is left behind — but don't just re-run it blindly. Reconcile first:
 
+> **A note on the SQL below:** it's written as plain SQL to paste into an already-open `psql` session (e.g. Railway's console) — no shell involved, no shell-quoting needed. If you'd rather run it as a one-shot shell command instead (`psql "$DATABASE_URL" -c '...'`), that needs its own, different quoting to embed SQL string literals inside a shell argument — ask for that form rather than improvising it, since mixing the two conventions produces a confusing parse error rather than an obvious one.
+
 1. **Check current state** (safe, read-only):
    ```sh
    psql "$DATABASE_URL" -c "SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;"
    ```
    Expect either "relation does not exist" or zero rows if this environment predates any tracked migration. **If you see unexpected rows already there, stop and investigate before continuing** — don't backfill on top of an unknown state.
 
-2. **Backfill the tracking row(s) for whatever's genuinely already applied.** For the common case — this environment's tables already exist from an original `db:push` setup, so the whole `0000` genesis migration counts as already applied, and only `0001` (the `phoneNumber`/`phoneNumberVerified` columns from #96) is actually pending:
-   ```sh
-   psql "$DATABASE_URL" -c '
+2. **Backfill the tracking row(s) for whatever's genuinely already applied.** For the common case — this environment's tables already exist from an original `db:push` setup, so the whole `0000` genesis migration counts as already applied, and only `0001` (the `phoneNumber`/`phoneNumberVerified` columns from #96) is actually pending.
+
+   Open an interactive session (`psql "$DATABASE_URL"`, or however your provider's console gets you a `psql`/`=#` prompt) and paste this as **plain SQL** — don't wrap it in `psql -c '...'` from a shell, since the quoting needed for that is different and easy to get wrong when pasting into an already-open session (ask me if you want the shell-wrapped form instead):
+   ```sql
    CREATE SCHEMA IF NOT EXISTS "drizzle";
    CREATE TABLE IF NOT EXISTS "drizzle"."__drizzle_migrations" (
      id SERIAL PRIMARY KEY,
@@ -57,14 +60,13 @@ pnpm exec tsx src/migrate-public.ts
      created_at bigint
    );
    INSERT INTO "drizzle"."__drizzle_migrations" (hash, created_at)
-   VALUES ('"'"'b5d361c0be6cb4d0bcd7eed656eaf7e30a21676b28d2094188faa7840d65744f'"'"', 1780374016543);
-   '
+   VALUES ('b5d361c0be6cb4d0bcd7eed656eaf7e30a21676b28d2094188faa7840d65744f', 1780374016543);
    ```
    That hash/timestamp pair is `0000_nebulous_the_liberteens.sql` as of this runbook — recompute it yourself if `packages/db/drizzle/public/` has moved on since (`sha256` of the raw `.sql` file content; the timestamp is that migration's `when` in `packages/db/drizzle/public/meta/_journal.json`), don't reuse a stale value from this doc without checking.
 
-3. **Verify exactly the row(s) you intended landed:**
-   ```sh
-   psql "$DATABASE_URL" -c "SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;"
+3. **Verify exactly the row(s) you intended landed** (plain SQL, same session):
+   ```sql
+   SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;
    ```
 
 4. **Re-run** `pnpm exec tsx src/migrate-public.ts` — it should now skip whatever you backfilled and apply only what's genuinely still pending.
