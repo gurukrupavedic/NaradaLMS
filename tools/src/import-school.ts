@@ -3,8 +3,10 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
 import { defineCommand, runMain } from 'citty'
+import { hashPassword } from 'better-auth/crypto'
 
 import {
+  account,
   batch,
   chapter,
   enrollment,
@@ -15,16 +17,19 @@ import {
   shutdownPools,
   track,
   user as userTable,
+  uuidv7,
 } from '@narada/db'
 // Reusing the live API's own validators rather than re-deriving parallel checks: a bulk import
 // that bypasses the HTTP layer should still never write a row the real API would reject.
 import { enrollSchema } from '@narada/api/src/services/enrollment'
 import { createEvaluationSchema } from '@narada/api/src/services/evaluation'
-import { upsertOrgMember, upsertSchool } from './school-helpers'
+import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
+import { requireSchool, upsertOrgMember, upsertSchool } from './school-helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_DATA_DIR = path.join(__dirname, '../../seed-data')
 const CHUNK_SIZE = 1000
+const DEFAULT_TEMP_PASSWORD = 'testing123'
 
 type TrackRow = { id: string; name: string; order: number }
 type ChapterRow = {
@@ -118,7 +123,7 @@ function validate(users: UserRow[], enrollments: EnrollmentRow[], evaluations: E
   return errors
 }
 
-const importCmd = defineCommand({
+const dataCmd = defineCommand({
   meta: { description: 'Import parsed Excel seed data (seed-data/*.json) into a real school.' },
   args: {
     slug: { type: 'string', default: 'slmts', description: 'School org slug to import into.' },
@@ -166,14 +171,62 @@ const importCmd = defineCommand({
       const schoolDb = getScopedDatabase(school.id)
       console.log(`Importing into organization "${school.slug}" (${school.id})`)
 
+      // Roster rows can belong to people who already have a production account (own email/phone
+      // registered outside this import). Their user.id/email/phoneNumber are unique constraints, so
+      // inserting a second row for the same identity fails — the fix is to reuse the existing user's
+      // id rather than insert a duplicate.
+      const emails = users.map(u => u.email)
+      const phones = users.flatMap(u => (u.phoneNumber ? [u.phoneNumber] : []))
+      const existingUsers = await publicDb.query.user.findMany({
+        where: (t, { inArray, or }) => or(inArray(t.email, emails), inArray(t.phoneNumber, phones)),
+        columns: { id: true, email: true, phoneNumber: true, name: true },
+      })
+      const existingByEmail = new Map(existingUsers.map(u => [u.email, u]))
+      const existingByPhone = new Map(
+        existingUsers.filter(u => u.phoneNumber).map(u => [u.phoneNumber as string, u]),
+      )
+
+      const idRemap = new Map<string, string>()
+      for (const row of users) {
+        const emailMatch = existingByEmail.get(row.email)
+        const phoneMatch = row.phoneNumber ? existingByPhone.get(row.phoneNumber) : undefined
+        if (emailMatch && phoneMatch && emailMatch.id !== phoneMatch.id) {
+          throw new Error(
+            `user ${row.id} (${row.email} / ${row.phoneNumber}) matches two different existing ` +
+              `production users — by email: ${emailMatch.id}, by phone: ${phoneMatch.id}. Resolve manually.`,
+          )
+        }
+        const existing = emailMatch ?? phoneMatch
+        if (existing) idRemap.set(row.id, existing.id)
+      }
+
+      if (idRemap.size > 0) {
+        console.log(`⚠️  ${idRemap.size} roster user(s) already have a production account — reusing them:`)
+        for (const row of users) {
+          const existing = idRemap.get(row.id)
+          if (!existing) continue
+          const match = existingByEmail.get(row.email) ?? existingByPhone.get(row.phoneNumber ?? '')
+          console.log(`  - "${row.name}" <${row.email}> -> existing user ${existing} ("${match?.name}")`)
+        }
+      }
+
+      const usersToInsert = users.filter(u => !idRemap.has(u.id))
+      const remappedProfiles = profiles.map(p =>
+        idRemap.has(p.userId) ? { ...p, userId: idRemap.get(p.userId)! } : p,
+      )
+
       // publicDb: user, then org membership for every imported user.
-      for (const rows of chunk(users, CHUNK_SIZE)) {
+      for (const rows of chunk(usersToInsert, CHUNK_SIZE)) {
         await publicDb.insert(userTable).values(rows).onConflictDoNothing({ target: userTable.id })
       }
-      for (const u of users) {
-        await upsertOrgMember(school.id, u.id, 'member')
+      const memberUserIds = new Set(users.map(u => idRemap.get(u.id) ?? u.id))
+      for (const userId of memberUserIds) {
+        await upsertOrgMember(school.id, userId, 'member')
       }
-      console.log(`✅ Imported ${users.length} users + org memberships.`)
+      console.log(
+        `✅ Imported ${usersToInsert.length} new users (${idRemap.size} reused existing accounts) + ` +
+          `${memberUserIds.size} org memberships.`,
+      )
 
       // Scoped school DB, in FK dependency order, inside one transaction per school.
       await schoolDb.transaction(async tx => {
@@ -187,7 +240,7 @@ const importCmd = defineCommand({
           const values = rows.map(r => ({ ...r, startDate: r.startDate ? new Date(r.startDate) : null }))
           await tx.insert(batch).values(values).onConflictDoNothing({ target: batch.code })
         }
-        for (const rows of chunk(profiles, CHUNK_SIZE)) {
+        for (const rows of chunk(remappedProfiles, CHUNK_SIZE)) {
           await tx.insert(profile).values(rows).onConflictDoNothing({ target: profile.id })
         }
         for (const rows of chunk(enrollments, CHUNK_SIZE)) {
@@ -216,4 +269,85 @@ const importCmd = defineCommand({
   },
 })
 
-runMain(importCmd)
+// Stopgap until feat/whatsapp-otp-auth ships: imported roster users have a `user` row (from the
+// `data` subcommand) but no `account` row, since that import bypasses better-auth's own
+// signUpEmail entirely. signUpEmail can't be used to backfill one either — it tries to create a
+// new `user` row and fails on the email/phoneNumber unique constraints these people already
+// occupy. So this writes the `account` row directly, matching exactly what signUpEmail itself
+// writes (providerId "credential", accountId == userId, password hashed with better-auth's own
+// hasher) so `signInEmail` verifies it identically to a normal password account.
+const grantPasswordsCmd = defineCommand({
+  meta: {
+    description:
+      'Grant a shared temporary password to school members who have no login method yet ' +
+      '(no account row at all — password or OAuth). Re-run is safe: only touches users still missing one.',
+  },
+  args: {
+    schoolSlug: { type: 'string', default: 'slmts', description: 'Only grants to members of this school.' },
+    password: { type: 'string', default: DEFAULT_TEMP_PASSWORD, description: 'Temporary password to grant.' },
+    commit: {
+      type: 'boolean',
+      default: false,
+      description: 'Actually write to the database. Without this flag, only reports who would be affected.',
+    },
+  },
+  async run({ args }) {
+    const operatorPhone = await promptSuperAdminPhone()
+    try {
+      await requireSuperAdminByPhone(operatorPhone)
+
+      const school = await requireSchool(args.schoolSlug)
+      const members = await publicDb.query.member.findMany({
+        where: (t, { eq }) => eq(t.organizationId, school.id),
+        columns: { userId: true },
+      })
+      const memberUserIds = [...new Set(members.map(m => m.userId))]
+
+      const existingAccounts = await publicDb.query.account.findMany({
+        columns: { userId: true },
+      })
+      const hasAnyLoginMethod = new Set(existingAccounts.map(a => a.userId))
+
+      const targetUserIds = memberUserIds.filter(id => !hasAnyLoginMethod.has(id))
+
+      console.log(
+        `${targetUserIds.length} of ${memberUserIds.length} members of "${args.schoolSlug}" have no login method yet.`,
+      )
+
+      if (!args.commit) {
+        console.log('Dry run only — pass --commit to write to the database. No rows were inserted.')
+        return
+      }
+
+      let count = 0
+      for (const userId of targetUserIds) {
+        const hash = await hashPassword(args.password)
+        await publicDb.insert(account).values({
+          id: uuidv7(),
+          userId,
+          providerId: 'credential',
+          accountId: userId,
+          password: hash,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        count++
+        if (count % 200 === 0) console.log(`  ${count}/${targetUserIds.length}`)
+      }
+
+      console.log(`✅ Granted temporary password to ${count} users. Password: "${args.password}"`)
+    } finally {
+      await shutdownPools()
+    }
+  },
+})
+
+runMain(
+  defineCommand({
+    meta: {
+      name: 'import-school',
+      description: 'Import a school roster from parsed Excel data and manage its post-import access.',
+    },
+    subCommands: { data: dataCmd, 'grant-passwords': grantPasswordsCmd },
+  }),
+)

@@ -78,7 +78,7 @@ type EnrollmentRow = {
 }
 type EvaluationRow = { id: string; studentId: string; chapterId: string; level: string; evaluatorId: string }
 
-// Registration-sheet columns with no home in the current schema — not written by import-excel-seed.ts
+// Registration-sheet columns with no home in the current schema — not written by import-school.ts
 // and never touches the DB. Kept identity-matched to a profile now (rather than left only in the
 // raw spreadsheet) so whoever adds real columns for this later can join on profileId instead of
 // re-deriving the phone/YOB/name matching from scratch. One entry per profile, captured from
