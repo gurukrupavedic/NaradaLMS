@@ -177,8 +177,12 @@ const superadminCmd = defineCommand({
   },
   async run({ args }) {
     try {
+      const existedBefore = await publicDb.query.user.findFirst({
+        where: (t, { eq }) => eq(t.email, args.email),
+      })
       const password = args.password ?? SEED_PASSWORD
       const newUser = await upsertUser(args.email, args.name, password, args.phoneNumber)
+      const credentialCreated = !existedBefore
       await publicDb
         .update(userTable)
         .set({ isSuperAdmin: true })
@@ -190,7 +194,9 @@ const superadminCmd = defineCommand({
             email: args.email,
             name: args.name,
             phoneNumber: args.phoneNumber ?? newUser.phoneNumber ?? null,
-            password,
+            ...(credentialCreated
+              ? { password }
+              : { note: 'Existing account — password credential was left unchanged.' }),
             isSuperAdmin: true,
           },
           null,
