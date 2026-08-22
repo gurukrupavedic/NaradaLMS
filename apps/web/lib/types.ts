@@ -9,6 +9,11 @@ export type ApiProfile = {
   updatedAt: string
 }
 
+export type ApiAuthProfile = {
+  isSuperAdmin: boolean
+  memberships: { organizationId: string; organizationName: string; organizationSlug: string; role: string }[]
+}
+
 export type ApiPage<T> = {
   items: T[]
   nextCursor: string | null
