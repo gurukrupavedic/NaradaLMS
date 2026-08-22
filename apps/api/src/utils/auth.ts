@@ -201,8 +201,14 @@ export async function getBatchListAccess(
 // Grants a caller access to list a *different* profile's batches: school-wide (admin/owner or
 // super admin), the profile viewing its own batches, or an instructor/ta who currently or
 // previously shared a batch with that profile — the "you've taught this student before, so you
-// can see their full history" rule. Reuses BatchListAccess's 'enrolled' kind, since filtering
-// findBatches by an arbitrary profileId works the same as filtering by the caller's own.
+// can see their full history" rule.
+//
+// 'schoolWide' means "see every batch in the school" ONLY for a self-lookup (matches the
+// dashboard's admin-oversight behavior). Looking up a *different* profile's batches is always
+// scoped to that profile's own enrollments — school-wide access there only grants PERMISSION to
+// skip the shared-instructor-enrollment check, not license to ignore which profile was asked for.
+// Conflating the two used to make e.g. "view this student's past batches" return every batch in
+// the school for any admin/owner caller, instead of that student's actual history.
 export async function getProfileBatchListAccess(
   req: Request,
   db: SchoolDbExecutor,
@@ -211,8 +217,22 @@ export async function getProfileBatchListAccess(
   actorProfileId?: string | null,
 ): Promise<BatchListAccess | null> {
   const { user } = await getSession(req)
+
+  if (actorProfileId === targetProfileId) {
+    if (user.isSuperAdmin) {
+      return { kind: 'schoolWide' }
+    }
+
+    const canSeeAll = await hasPermission(req, {
+      scope: 'school',
+      permissions: claim.allBatchesPermission,
+    })
+
+    return canSeeAll ? { kind: 'schoolWide' } : { kind: 'enrolled', profileId: targetProfileId }
+  }
+
   if (user.isSuperAdmin) {
-    return { kind: 'schoolWide' }
+    return { kind: 'enrolled', profileId: targetProfileId }
   }
 
   const canSeeAll = await hasPermission(req, {
@@ -221,15 +241,11 @@ export async function getProfileBatchListAccess(
   })
 
   if (canSeeAll) {
-    return { kind: 'schoolWide' }
+    return { kind: 'enrolled', profileId: targetProfileId }
   }
 
   if (!actorProfileId) {
     return null
-  }
-
-  if (actorProfileId === targetProfileId) {
-    return { kind: 'enrolled', profileId: targetProfileId }
   }
 
   const shared = await hasSharedInstructorEnrollment(db, actorProfileId, targetProfileId)
