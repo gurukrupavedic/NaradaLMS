@@ -7,7 +7,7 @@ import { env } from '@narada/env/client'
 import { authFetch, applySetCookies, requestOrigin } from './auth'
 import { fetchApi } from './api'
 import { PROFILE_COOKIE } from './constants'
-import type { ApiProfile } from './types'
+import type { ApiAuthProfile, ApiProfile } from './types'
 
 export async function getProfiles(): Promise<ApiProfile[]> {
   return fetchApi<ApiProfile[]>('/profiles')
@@ -20,6 +20,15 @@ export async function getCurrentProfile(): Promise<ApiProfile | null> {
 
   const profiles = await getProfiles()
   return profiles.find(profile => profile.id === profileId) ?? null
+}
+
+export async function getAuthProfile(): Promise<ApiAuthProfile> {
+  return fetchApi<ApiAuthProfile>('/profile')
+}
+
+export async function hasSchoolWideAccess(): Promise<boolean> {
+  const authProfile = await getAuthProfile()
+  return authProfile.isSuperAdmin || authProfile.memberships.some(m => m.role === 'owner' || m.role === 'admin')
 }
 
 export async function selectProfile(profileId: string): Promise<void> {
