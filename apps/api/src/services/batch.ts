@@ -144,6 +144,100 @@ export async function findBatches(
   return paginateResponse(rows, limit, item => ({ startDate: item.startDate, id: item.id }))
 }
 
+export type BatchWithRole = BatchDetail & { role: BatchMember['role'] | null }
+
+// Same filtering as findBatches, but eager-loads each batch's roster, schedule, and the target
+// profile's own role in one query — for callers (the dashboard) that need every batch's detail
+// anyway, this avoids an N-request fan-out of findBatchByIdWithMembers per list item, which is
+// what was exhausting the DB connection pool once a profile's batch list stopped being small.
+export async function findBatchesWithDetail(
+  db: SchoolDbExecutor,
+  options: ListBatchesQuery & { access: BatchAccess; roleForProfileId: string },
+): Promise<{ items: BatchWithRole[]; nextCursor: string | null }> {
+  const { access, status, cursor, limit, roleForProfileId } = options
+
+  const conditions = []
+  if (access.kind === 'enrolled') {
+    const enrolledBatchIds = db
+      .select({ id: enrollment.batchId })
+      .from(enrollment)
+      .where(eq(enrollment.profileId, access.profileId))
+
+    conditions.push(inArray(batch.id, enrolledBatchIds))
+  } else if (access.kind === 'singleBatch') {
+    conditions.push(eq(batch.id, access.enrollment.batchId))
+  }
+
+  if (status) conditions.push(eq(batch.status, status))
+
+  function toBatchWithRole(row: {
+    enrollments: { profileId: string; role: BatchMember['role']; joinedAt: Date | null; profile: { name: string; phone: string | null; city: string | null } }[]
+    classSlots: (typeof batchClassSlot.$inferSelect)[]
+  } & Batch): BatchWithRole {
+    const { enrollments, classSlots, ...batchRow } = row
+    return {
+      ...batchRow,
+      members: enrollments.map(e => ({
+        profileId: e.profileId,
+        name: e.profile.name,
+        phone: e.profile.phone,
+        city: e.profile.city,
+        role: e.role,
+        joinedAt: e.joinedAt,
+      })),
+      classSlots: classSlots.map(toClassSlot),
+      role: enrollments.find(e => e.profileId === roleForProfileId)?.role ?? null,
+    }
+  }
+
+  if (cursor?.startDate === null) {
+    conditions.push(isNull(batch.startDate), gt(batch.id, cursor.id))
+    const rows = await db.query.batch.findMany({
+      where: and(...conditions),
+      orderBy: asc(batch.id),
+      limit: limit + 1,
+      with: { enrollments: { with: { profile: true } }, classSlots: true },
+    })
+
+    return paginateResponse(rows.map(toBatchWithRole), limit, item => ({
+      startDate: item.startDate,
+      id: item.id,
+    }))
+  }
+
+  const nonNullConditions = [...conditions, isNotNull(batch.startDate)]
+  if (cursor) {
+    const cursorWhere = or(
+      lt(batch.startDate, cursor.startDate),
+      and(eq(batch.startDate, cursor.startDate), gt(batch.id, cursor.id)),
+    )
+    if (cursorWhere) nonNullConditions.push(cursorWhere)
+  }
+
+  const rows = await db.query.batch.findMany({
+    where: and(...nonNullConditions),
+    orderBy: [sql`${batch.startDate} desc nulls last`, asc(batch.id)],
+    limit: limit + 1,
+    with: { enrollments: { with: { profile: true } }, classSlots: true },
+  })
+
+  if (rows.length <= limit) {
+    const nullRows = await db.query.batch.findMany({
+      where: and(...conditions, isNull(batch.startDate)),
+      orderBy: asc(batch.id),
+      limit: limit + 1 - rows.length,
+      with: { enrollments: { with: { profile: true } }, classSlots: true },
+    })
+
+    rows.push(...nullRows)
+  }
+
+  return paginateResponse(rows.map(toBatchWithRole), limit, item => ({
+    startDate: item.startDate,
+    id: item.id,
+  }))
+}
+
 export async function findBatchById(
   db: SchoolDbExecutor,
   batchId: string,

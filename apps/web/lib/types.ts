@@ -9,11 +9,6 @@ export type ApiProfile = {
   updatedAt: string
 }
 
-export type ApiAuthProfile = {
-  isSuperAdmin: boolean
-  memberships: { organizationId: string; organizationName: string; organizationSlug: string; role: string }[]
-}
-
 export type ApiPage<T> = {
   items: T[]
   nextCursor: string | null
@@ -68,6 +63,10 @@ export type ApiBatchDetail = ApiBatch & {
   members: ApiBatchMember[]
   classSlots: ApiClassSlot[]
 }
+
+// A batch detail annotated with the caller's own role in it — null when the caller has
+// school-wide (admin/owner) access but no personal enrollment row for that batch.
+export type ApiBatchWithRole = ApiBatchDetail & { role: EnrollmentRole | null }
 
 export type ApiEvaluation = {
   id: string
