@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 
 import { type ProficiencyLevel } from '@/lib/proficiency'
 import { PROFICIENCY_LEVELS, getProficiencyConfig } from '@/lib/proficiency'
-import { AppShell, type NavigationItem } from '@/components/app-shell'
+import { ADMIN_NAV_ITEM, AppShell, type NavigationItem } from '@/components/app-shell'
 import { type ChapterData } from '@/components/track-card'
 import { BatchSection } from '@/components/batch-section'
 import { ProficiencyBadge } from '@/components/proficiency-badge'
@@ -41,7 +41,6 @@ import {
   ArrowSquareOutIcon,
   ClockIcon,
   ExamIcon,
-  SettingsIcon,
 } from '@/components/ui/icons'
 
 const CONTINUE_COOKIE = 'narada-continue-chapter'
@@ -53,8 +52,6 @@ const navItems: NavigationItem[] = [
   { label: 'Learning', icon: BookOpenIcon },
   { label: 'Batches', icon: UsersIcon },
 ]
-
-const adminNavItem: NavigationItem = { label: 'Admin', icon: SettingsIcon, href: '/admin' }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -249,7 +246,7 @@ export default async function DashboardPage({
 
   const recentEvals = studentEvaluations.slice(0, 4)
 
-  const shellNavItems = isAdmin ? [...navItems, adminNavItem] : navItems
+  const shellNavItems = isAdmin ? [...navItems, ADMIN_NAV_ITEM] : navItems
 
   return (
     <AppShell navigationItems={shellNavItems} profile={profile}>
