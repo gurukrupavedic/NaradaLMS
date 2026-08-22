@@ -7,10 +7,15 @@ import { env } from '@narada/env/client'
 import { authFetch, applySetCookies, requestOrigin } from './auth'
 import { fetchApi } from './api'
 import { PROFILE_COOKIE } from './constants'
-import type { ApiProfile } from './types'
+import type { ApiAuthProfile, ApiProfile } from './types'
 
 export async function getProfiles(): Promise<ApiProfile[]> {
   return fetchApi<ApiProfile[]>('/profiles')
+}
+
+// The org-level role (owner/admin/member), distinct from a profile's per-batch EnrollmentRole.
+export async function getAuthProfile(): Promise<ApiAuthProfile> {
+  return fetchApi<ApiAuthProfile>('/profile')
 }
 
 export async function getCurrentProfile(): Promise<ApiProfile | null> {

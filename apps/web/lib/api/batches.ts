@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { fetchApi } from '@/lib/api'
 import { fetchAllPages } from '@/lib/api/pagination'
 import { PROFILE_COOKIE } from '@/lib/constants'
+import { getAuthProfile } from '@/lib/session'
 import type { ApiBatch, ApiBatchDetail, ApiPage, BatchStatus, EnrollmentRole } from '@/lib/types'
 
 export async function getBatches(params?: {
@@ -45,17 +46,30 @@ export type BatchMembership = {
 
 // The list response omits members, so resolving the current profile's role requires each batch's
 // detail. Keep the detail in the result so callers do not need to fetch teaching batches twice.
+//
+// GET /batches already returns every school batch to owners/admins (not just ones they belong
+// to), matching getBatchListAccess's 'schoolWide' access on the API. Mirror that here instead of
+// filtering everything down to personal enrollment, or owners/admins only ever see their own
+// batches even though the API handed back the full school-wide list.
 export async function getMyBatchMemberships(): Promise<BatchMembership[]> {
   const cookieStore = await cookies()
   const profileId = cookieStore.get(PROFILE_COOKIE)?.value
   if (!profileId) return []
 
-  const batches = await fetchAllPages(cursor => getBatches({ cursor }))
+  const [authProfile, batches] = await Promise.all([
+    getAuthProfile(),
+    fetchAllPages(cursor => getBatches({ cursor })),
+  ])
+  const hasSchoolWideAccess =
+    authProfile.isSuperAdmin || authProfile.memberships.some(m => m.role === 'owner' || m.role === 'admin')
+
   const details = await Promise.all(batches.map(batch => getBatch(batch.id)))
 
   return details.flatMap(detail => {
     const membership = detail.members.find(member => member.profileId === profileId)
-    if (!membership) return []
+    if (!membership) {
+      return hasSchoolWideAccess ? [{ batch: detail, role: 'instructor' as const }] : []
+    }
     return [{ batch: detail, role: membership.role }]
   })
 }
