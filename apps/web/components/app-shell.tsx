@@ -57,7 +57,7 @@ function NavButton({ item, isActive }: { item: NavigationItem; isActive: boolean
     <Button
       variant="ghost"
       className={buttonClass}
-      {...(item.href ? { render: <a href={item.href} /> } : {})}
+      {...(item.href ? { render: <a href={item.href} />, nativeButton: false } : {})}
     >
       <Icon className="size-3.5 shrink-0" />
       <span>{item.label}</span>
