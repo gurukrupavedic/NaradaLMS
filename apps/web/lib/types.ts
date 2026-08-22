@@ -9,6 +9,14 @@ export type ApiProfile = {
   updatedAt: string
 }
 
+// The org-level role (owner/admin/member), distinct from a profile's per-batch EnrollmentRole.
+// Only fetch this for one-off authorization checks (e.g. gating /admin) — never on a hot path
+// that runs on every dashboard load, which is what caused a production incident previously.
+export type ApiAuthProfile = {
+  isSuperAdmin: boolean
+  memberships: { organizationId: string; organizationName: string; organizationSlug: string; role: string }[]
+}
+
 export type ApiPage<T> = {
   items: T[]
   nextCursor: string | null

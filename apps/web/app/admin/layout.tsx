@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
+import { getSession, requestOrigin } from '@/lib/auth'
 import { cn } from '@/lib/utils'
+import { PROFILE_COOKIE } from '@/lib/constants'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Theme, ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
@@ -28,6 +31,16 @@ async function readStoredTheme(): Promise<Theme> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const headerStore = await headers()
+  const [session, cookieStore] = await Promise.all([
+    getSession(headerStore.get('cookie') ?? '', requestOrigin(headerStore)),
+    cookies(),
+  ])
+
+  if (!session || !cookieStore.get(PROFILE_COOKIE)) {
+    redirect('/login')
+  }
+
   const theme = await readStoredTheme()
 
   return (
