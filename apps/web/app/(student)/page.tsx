@@ -12,7 +12,7 @@ import { TeachingBatchSection } from '@/components/teacher/teaching-batch-sectio
 import { PROFILE_COOKIE } from '@/lib/constants'
 import { getDashboardData } from '@/lib/dashboard'
 import { getNextOccurrence } from '@/lib/schedule'
-import { getCurrentProfile } from '@/lib/session'
+import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
 import {
   getBatchProgress as getTaughtBatchProgress,
   getChapterLevel,
@@ -204,9 +204,10 @@ export default async function DashboardPage({
   const savedChapterId = cookieStore.get(CONTINUE_COOKIE)?.value
   const myProfileId = cookieStore.get(PROFILE_COOKIE)?.value
 
-  const [dashboard, profile] = await Promise.all([
+  const [dashboard, profile, isAdmin] = await Promise.all([
     getDashboardData(myProfileId),
     getCurrentProfile(),
+    hasSchoolWideAccess(),
   ])
   const {
     firstName,
@@ -257,9 +258,20 @@ export default async function DashboardPage({
           ॐ
         </span>
         <div className="relative mx-auto max-w-5xl">
-          <p className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">
-            Your progress
-          </p>
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">
+              Your progress
+            </p>
+            {isAdmin && (
+              <a
+                href="/admin"
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                Admin view
+                <ArrowSquareOutIcon className="size-3" />
+              </a>
+            )}
+          </div>
           <h1 className="font-serif text-5xl font-semibold leading-tight tracking-tight">
             Welcome back,
             <br />
