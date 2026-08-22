@@ -217,9 +217,13 @@ export default async function DashboardPage({
     teachingByBatchId,
     pastBatchesByStudentId,
   } = dashboard
-  const batches = memberships.map(item => item.batch)
+  // "Your batches" is a personal view — a school-wide admin/owner sees every batch in `memberships`
+  // (role === null there), but that belongs on an org-wide admin view, not mixed into this page's
+  // per-batch progress/schedule widgets, which assume a real personal enrollment.
+  const personalMemberships = memberships.filter(item => item.role !== null)
+  const batches = personalMemberships.map(item => item.batch)
   const roleByBatchId = new Map<string, EnrollmentRole>(
-    memberships.map(item => [item.batch.id, item.role]),
+    personalMemberships.map(item => [item.batch.id, item.role as EnrollmentRole]),
   )
 
   const chapterMap = buildChapterMap(tracks)

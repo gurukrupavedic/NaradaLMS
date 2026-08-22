@@ -30,7 +30,10 @@ export async function getDashboardData(profileId?: string): Promise<DashboardDat
   ])
 
   const studentMemberships = memberships.filter(item => item.role === 'student')
-  const teachingMemberships = memberships.filter(item => item.role !== 'student')
+  // Excludes role === null (a school-wide admin/owner's view of a batch they don't personally
+  // teach) — those don't get the per-batch evaluations/cross-batch student-history fetches below,
+  // since for an admin that set can be the entire school, not a handful of actual teaching batches.
+  const teachingMemberships = memberships.filter(item => item.role === 'instructor' || item.role === 'ta')
 
   const teachingStudentIds = [
     ...new Set(
