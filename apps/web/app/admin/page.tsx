@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { AppShell, type NavigationItem } from '@/components/app-shell'
+import { ADMIN_NAV_ITEM, AppShell, type NavigationItem } from '@/components/app-shell'
 import { AdminBatchList, type AdminBatchGroup } from '@/components/admin/batch-list'
 import { BookOpenIcon, HouseIcon, UsersIcon } from '@/components/ui/icons'
 import { getBatches } from '@/lib/api/batches'
@@ -12,7 +12,8 @@ import type { BatchStatus } from '@/lib/types'
 const navItems: NavigationItem[] = [
   { label: 'Dashboard', icon: HouseIcon, href: '/' },
   { label: 'Content', icon: BookOpenIcon },
-  { label: 'Batches', icon: UsersIcon, href: '/admin' },
+  { label: 'Batches', icon: UsersIcon },
+  ADMIN_NAV_ITEM,
 ]
 
 // Ordered by what an admin scanning the whole school cares about first.

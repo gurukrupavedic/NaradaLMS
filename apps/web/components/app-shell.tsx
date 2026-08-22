@@ -20,6 +20,7 @@ import {
   HamburgerIcon,
   LeaveIcon,
   MoonIcon,
+  SettingsIcon,
   SunIcon,
   XIcon,
 } from '@/components/ui/icons'
@@ -33,8 +34,14 @@ export interface NavigationItem {
   href?: string
 }
 
+// Shared so every page that conditionally shows it (behind hasSchoolWideAccess()) stays in sync —
+// forgetting to add it on one page is exactly the bug where the admin page itself had no way back.
+export const ADMIN_NAV_ITEM: NavigationItem = { label: 'Admin', icon: SettingsIcon, href: '/admin' }
+
 function isItemActive(item: NavigationItem, pathname: string): boolean {
-  return item.href !== undefined && item.href === pathname
+  if (!item.href) return false
+  if (item.href === '/') return pathname === '/'
+  return pathname === item.href || pathname.startsWith(`${item.href}/`)
 }
 
 function NavButton({ item, isActive }: { item: NavigationItem; isActive: boolean }) {
