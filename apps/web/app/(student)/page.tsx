@@ -41,6 +41,7 @@ import {
   ArrowSquareOutIcon,
   ClockIcon,
   ExamIcon,
+  SettingsIcon,
 } from '@/components/ui/icons'
 
 const CONTINUE_COOKIE = 'narada-continue-chapter'
@@ -48,10 +49,12 @@ const CONTINUE_COOKIE = 'narada-continue-chapter'
 // ── Nav ──────────────────────────────────────────────────────────────────────
 
 const navItems: NavigationItem[] = [
-  { label: 'Dashboard', icon: HouseIcon },
+  { label: 'Dashboard', icon: HouseIcon, href: '/' },
   { label: 'Learning', icon: BookOpenIcon },
   { label: 'Batches', icon: UsersIcon },
 ]
+
+const adminNavItem: NavigationItem = { label: 'Admin', icon: SettingsIcon, href: '/admin' }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -246,8 +249,10 @@ export default async function DashboardPage({
 
   const recentEvals = studentEvaluations.slice(0, 4)
 
+  const shellNavItems = isAdmin ? [...navItems, adminNavItem] : navItems
+
   return (
-    <AppShell navigationItems={navItems} profile={profile}>
+    <AppShell navigationItems={shellNavItems} profile={profile}>
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden border-b border-border px-4 py-12">
         <span
@@ -258,20 +263,9 @@ export default async function DashboardPage({
           ॐ
         </span>
         <div className="relative mx-auto max-w-5xl">
-          <div className="mb-3 flex items-center justify-between gap-4">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">
-              Your progress
-            </p>
-            {isAdmin && (
-              <a
-                href="/admin"
-                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                Admin view
-                <ArrowSquareOutIcon className="size-3" />
-              </a>
-            )}
-          </div>
+          <p className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">
+            Your progress
+          </p>
           <h1 className="font-serif text-5xl font-semibold leading-tight tracking-tight">
             Welcome back,
             <br />

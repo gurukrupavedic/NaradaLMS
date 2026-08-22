@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -29,16 +30,15 @@ import type { ApiProfile } from '@/lib/types'
 export interface NavigationItem {
   label: string
   icon: LucideIcon
+  href?: string
 }
 
-function isItemActive(_item: NavigationItem): boolean {
-  // TODO: determine active status from path.
-  return false
+function isItemActive(item: NavigationItem, pathname: string): boolean {
+  return item.href !== undefined && item.href === pathname
 }
 
-function NavButton({ item }: { item: NavigationItem }) {
+function NavButton({ item, isActive }: { item: NavigationItem; isActive: boolean }) {
   const Icon = item.icon
-  const isActive = isItemActive(item)
   const buttonClass = cn(
     'group flex items-center gap-2 rounded-none px-3 py-1.5 text-sm transition-colors',
     isActive
@@ -47,7 +47,11 @@ function NavButton({ item }: { item: NavigationItem }) {
   )
 
   return (
-    <Button variant="ghost" className={buttonClass}>
+    <Button
+      variant="ghost"
+      className={buttonClass}
+      {...(item.href ? { render: <a href={item.href} /> } : {})}
+    >
       <Icon className="size-3.5 shrink-0" />
       <span>{item.label}</span>
     </Button>
@@ -102,6 +106,7 @@ export function AppShell({ navigationItems, profile, children, className }: AppS
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isSigningOut, startSignOut] = useTransition()
   const { theme, toggleTheme } = useTheme()
+  const pathname = usePathname()
 
   function handleSignOut() {
     startSignOut(() => signOut())
@@ -123,7 +128,7 @@ export function AppShell({ navigationItems, profile, children, className }: AppS
             {/* Nav items — centered */}
             <nav className="hidden items-center gap-3 md:flex">
               {navigationItems.map(item => (
-                <NavButton key={item.label} item={item} />
+                <NavButton key={item.label} item={item} isActive={isItemActive(item, pathname)} />
               ))}
             </nav>
 
@@ -166,17 +171,20 @@ export function AppShell({ navigationItems, profile, children, className }: AppS
             <div className="border-t border-border/40 md:hidden">
               {navigationItems.map(item => {
                 const Icon = item.icon
-                const isActive = isItemActive(item)
-                return (
-                  <button
-                    key={item.label}
-                    className={cn(
-                      'flex w-full items-center gap-2 px-5 py-2.5 text-sm transition-colors',
-                      isActive
-                        ? 'bg-muted font-medium text-foreground'
-                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-                    )}
-                  >
+                const isActive = isItemActive(item, pathname)
+                const itemClass = cn(
+                  'flex w-full items-center gap-2 px-5 py-2.5 text-sm transition-colors',
+                  isActive
+                    ? 'bg-muted font-medium text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                )
+                return item.href ? (
+                  <a key={item.label} href={item.href} className={itemClass}>
+                    <Icon className="size-3.5 shrink-0" />
+                    {item.label}
+                  </a>
+                ) : (
+                  <button key={item.label} className={itemClass}>
                     <Icon className="size-3.5 shrink-0" />
                     {item.label}
                   </button>
