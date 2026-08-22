@@ -12,7 +12,7 @@ import { TeachingBatchSection } from '@/components/teacher/teaching-batch-sectio
 import { PROFILE_COOKIE } from '@/lib/constants'
 import { getDashboardData } from '@/lib/dashboard'
 import { getNextOccurrence } from '@/lib/schedule'
-import { getCurrentProfile } from '@/lib/session'
+import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
 import {
   getBatchProgress as getTaughtBatchProgress,
   getChapterLevel,
@@ -41,6 +41,7 @@ import {
   ArrowSquareOutIcon,
   ClockIcon,
   ExamIcon,
+  SettingsIcon,
 } from '@/components/ui/icons'
 
 const CONTINUE_COOKIE = 'narada-continue-chapter'
@@ -48,10 +49,12 @@ const CONTINUE_COOKIE = 'narada-continue-chapter'
 // ── Nav ──────────────────────────────────────────────────────────────────────
 
 const navItems: NavigationItem[] = [
-  { label: 'Dashboard', icon: HouseIcon },
+  { label: 'Dashboard', icon: HouseIcon, href: '/' },
   { label: 'Learning', icon: BookOpenIcon },
   { label: 'Batches', icon: UsersIcon },
 ]
+
+const adminNavItem: NavigationItem = { label: 'Admin', icon: SettingsIcon, href: '/admin' }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -204,9 +207,10 @@ export default async function DashboardPage({
   const savedChapterId = cookieStore.get(CONTINUE_COOKIE)?.value
   const myProfileId = cookieStore.get(PROFILE_COOKIE)?.value
 
-  const [dashboard, profile] = await Promise.all([
+  const [dashboard, profile, isAdmin] = await Promise.all([
     getDashboardData(myProfileId),
     getCurrentProfile(),
+    hasSchoolWideAccess(),
   ])
   const {
     firstName,
@@ -245,8 +249,10 @@ export default async function DashboardPage({
 
   const recentEvals = studentEvaluations.slice(0, 4)
 
+  const shellNavItems = isAdmin ? [...navItems, adminNavItem] : navItems
+
   return (
-    <AppShell navigationItems={navItems} profile={profile}>
+    <AppShell navigationItems={shellNavItems} profile={profile}>
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden border-b border-border px-4 py-12">
         <span
