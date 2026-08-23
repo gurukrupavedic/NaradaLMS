@@ -238,6 +238,36 @@ export async function findBatchesWithDetail(
   }))
 }
 
+// One query for "every batch any of these profiles has ever been enrolled in," keyed by
+// profileId — backs the dashboard's "past batches per taught student" panel, which used to be
+// one HTTP round-trip per student (exactly the fan-out shape that exhausted the connection pool
+// once already; see findBatchesWithDetail above). Bare Batch rows, not BatchWithRole — this is a
+// cross-reference list, not a roster view, so no members/classSlots eager-load needed here.
+export async function findBatchesForProfiles(
+  db: SchoolDbExecutor,
+  profileIds: string[],
+): Promise<Map<string, Batch[]>> {
+  const map = new Map<string, Batch[]>()
+  if (profileIds.length === 0) return map
+
+  const rows = await db
+    .select({ profileId: enrollment.profileId, batch })
+    .from(enrollment)
+    .innerJoin(batch, eq(batch.id, enrollment.batchId))
+    .where(inArray(enrollment.profileId, profileIds))
+
+  for (const row of rows) {
+    const list = map.get(row.profileId)
+    if (list) {
+      list.push(row.batch)
+    } else {
+      map.set(row.profileId, [row.batch])
+    }
+  }
+
+  return map
+}
+
 export async function findBatchById(
   db: SchoolDbExecutor,
   batchId: string,

@@ -9,7 +9,6 @@ import { BatchSection } from '@/components/batch-section'
 import { ProficiencyBadge } from '@/components/proficiency-badge'
 import { StudentHistoryContent } from '@/components/teacher/student-history-content'
 import { TeachingBatchSection } from '@/components/teacher/teaching-batch-section'
-import { PROFILE_COOKIE } from '@/lib/constants'
 import { getDashboardData } from '@/lib/dashboard'
 import { getNextOccurrence } from '@/lib/schedule'
 import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
@@ -191,10 +190,9 @@ export default async function DashboardPage({
 
   const cookieStore = await cookies()
   const savedChapterId = cookieStore.get(CONTINUE_COOKIE)?.value
-  const myProfileId = cookieStore.get(PROFILE_COOKIE)?.value
 
   const [dashboard, profile, isAdmin] = await Promise.all([
-    getDashboardData(myProfileId),
+    getDashboardData(),
     getCurrentProfile(),
     hasSchoolWideAccess(),
   ])

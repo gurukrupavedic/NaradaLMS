@@ -4,6 +4,7 @@ import { rateLimit } from 'express-rate-limit'
 import healthRouter from './health'
 import tracksRouter from './tracks'
 import chaptersRouter from './chapters'
+import meRouter from './me'
 import { publicProfileRouter } from './profile'
 import profilesRouter from './profiles'
 import batchesRouter from './batches'
@@ -28,6 +29,7 @@ export default function setupRoutes(router: Router) {
   router.use('/schools', schoolsRouter)
   router.use('/profile', publicProfileRouter)
   router
+    .use('/me', meRouter)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
     .use('/batches', batchesRouter)
