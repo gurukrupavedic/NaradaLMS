@@ -425,6 +425,7 @@ export default async function DashboardPage({
                 const evaluatorNameById = new Map(
                   batch.members.map(member => [member.profileId, member.name]),
                 )
+                const batchProgress = getTaughtBatchProgress(taught.evaluations, track.chapters, students)
 
                 return (
                   <TeachingBatchSection
@@ -434,7 +435,8 @@ export default async function DashboardPage({
                     status={batch.status}
                     trackName={track.name}
                     trackOrder={track.order}
-                    progress={getTaughtBatchProgress(taught.evaluations, track.chapters, students)}
+                    progress={batchProgress.progress}
+                    masteredProgress={batchProgress.masteredProgress}
                     role={role}
                     roster={buildTeachingRoster(track.chapters, taught.evaluations, students)}
                     historyContentByStudentId={buildHistoryContentByStudentId(

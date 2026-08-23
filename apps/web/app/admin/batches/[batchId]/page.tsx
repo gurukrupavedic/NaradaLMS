@@ -91,7 +91,7 @@ export default async function AdminBatchDetailPage({
   const instructors = batch.members.filter(m => m.role !== 'student')
   const students = batch.members.filter(m => m.role === 'student').map(toRosterStudent)
   const roster = buildRoster(track.chapters, evaluations, students)
-  const progress = getBatchProgress(evaluations, track.chapters, students)
+  const { progress, masteredProgress } = getBatchProgress(evaluations, track.chapters, students)
   const st = STATUS_CONFIG[batch.status]
 
   return (
@@ -119,7 +119,8 @@ export default async function AdminBatchDetailPage({
             </div>
             <div className="shrink-0 text-right">
               <p className="text-xs text-muted-foreground">{students.length} students</p>
-              <p className="mt-1 text-lg font-semibold tabular-nums">{Math.round(progress)}%</p>
+              <p className="mt-1 text-lg font-semibold tabular-nums">{progress}%</p>
+              <p className="text-xs text-muted-foreground tabular-nums">{masteredProgress}% mastered</p>
             </div>
           </div>
           <Progress value={progress} className="h-1 rounded-none" />
