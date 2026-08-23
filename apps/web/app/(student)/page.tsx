@@ -312,7 +312,7 @@ export default async function DashboardPage({
                 const chapter = chapterMap.get(ev.chapterId)
                 const batchCode = batches.find(b => b.trackId === chapter?.trackId)?.code
                 return (
-                  <div key={ev.id} className="flex items-center gap-3 px-4 py-3">
+                  <div key={ev.id} className="flex items-start gap-3 px-4 py-3">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
                         {chapter?.title ?? ev.chapterId}
@@ -321,6 +321,9 @@ export default async function DashboardPage({
                         {batchCode}&ensp;·&ensp;
                         {ev.evaluatedAt ? formatDate(ev.evaluatedAt) : '—'}
                       </p>
+                      {ev.notes && (
+                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{ev.notes}</p>
+                      )}
                     </div>
                     <ProficiencyBadge level={ev.level} compact />
                   </div>
