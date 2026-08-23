@@ -1,18 +1,26 @@
-import { cookies } from 'next/headers'
 import type { ReactNode } from 'react'
 
-import { type ProficiencyLevel } from '@/lib/proficiency'
-import { PROFICIENCY_LEVELS, getProficiencyConfig } from '@/lib/proficiency'
 import { AppShell } from '@/components/app-shell'
 import { getNavItems } from '@/lib/nav-items'
-import { type ChapterData } from '@/components/track-card'
-import { BatchSection } from '@/components/batch-section'
-import { ProficiencyBadge } from '@/components/proficiency-badge'
+import { Standing } from '@/components/dashboard/standing'
+import { Archive, Section } from '@/components/dashboard/section'
+import { LevelKey, TrackLadder } from '@/components/dashboard/track-ladder'
+import { TeachingList, type TeachingRowData } from '@/components/dashboard/teaching-list'
 import { StudentHistoryContent } from '@/components/teacher/student-history-content'
-import { TeachingBatchSection } from '@/components/teacher/teaching-batch-section'
 import { getDashboardData } from '@/lib/dashboard'
 import { getNextOccurrence } from '@/lib/schedule'
 import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
+import { type ProficiencyLevel } from '@/lib/proficiency'
+import {
+  buildChapterRows,
+  buildDashboardShape,
+  countUnevaluatedStudents,
+  findResumeChapter,
+  pluralize,
+  summarizeLearningTrack,
+  trackLabel,
+  type LearningTrack,
+} from '@/lib/dashboard-view'
 import {
   getBatchProgress as getTaughtBatchProgress,
   getChapterLevel,
@@ -32,93 +40,24 @@ import {
   type ApiTrack,
   type EnrollmentRole,
 } from '@/lib/types'
-import {
-  BookmarkSimpleIcon,
-  VideoCameraIcon,
-  ArrowSquareOutIcon,
-  ClockIcon,
-  ExamIcon,
-} from '@/components/ui/icons'
-
-const CONTINUE_COOKIE = 'narada-continue-chapter'
+import { ArrowSquareOutIcon, VideoCameraIcon } from '@/components/ui/icons'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-type ChapterWithTrackName = ApiChapter & { trackName: string }
-
-function buildChapterMap(tracks: ApiTrack[]): Map<string, ChapterWithTrackName> {
-  const map = new Map<string, ChapterWithTrackName>()
-  for (const track of tracks) {
-    for (const chapter of track.chapters) {
-      map.set(chapter.id, { ...chapter, trackName: track.name })
-    }
-  }
-  return map
-}
-
-// Evaluations arrive DESC; first occurrence per chapterId = most recent
 function buildProficiencyMap(
   evaluations: ApiEvaluation[],
 ): Map<string, { level: ProficiencyLevel; evaluatedAt: string | null }> {
+  // Evaluations arrive DESC; first occurrence per chapterId is the most recent.
   const map = new Map<string, { level: ProficiencyLevel; evaluatedAt: string | null }>()
-  for (const ev of evaluations) {
-    if (!map.has(ev.chapterId)) {
-      map.set(ev.chapterId, { level: ev.level, evaluatedAt: ev.evaluatedAt })
+  for (const evaluation of evaluations) {
+    if (!map.has(evaluation.chapterId)) {
+      map.set(evaluation.chapterId, {
+        level: evaluation.level,
+        evaluatedAt: evaluation.evaluatedAt ? formatDate(evaluation.evaluatedAt) : null,
+      })
     }
   }
   return map
-}
-
-function buildChapterData(
-  chapters: ApiChapter[],
-  profMap: Map<string, { level: ProficiencyLevel; evaluatedAt: string | null }>,
-): ChapterData[] {
-  return chapters.map(ch => {
-    const prof = profMap.get(ch.id)
-    return {
-      id: ch.id,
-      code: ch.code,
-      title: ch.title,
-      proficiency: prof?.level ?? 'notStarted',
-      evaluatedAt: prof?.evaluatedAt ? formatDate(prof.evaluatedAt) : undefined,
-    }
-  })
-}
-
-type NextClass = { batch: ApiBatchDetail; occursAt: Date | null }
-
-function findNextClass(batches: ApiBatchDetail[], now: Date): NextClass | null {
-  const eligible = batches.filter(b => b.status === 'active' && b.meetingUrl !== null)
-
-  const scheduled = eligible
-    .map(batch => ({ batch, occursAt: getNextOccurrence(batch.classSlots, now) }))
-    .filter((entry): entry is { batch: ApiBatchDetail; occursAt: Date } => entry.occursAt !== null)
-
-  if (scheduled.length > 0) {
-    return scheduled.reduce((soonest, entry) => (entry.occursAt < soonest.occursAt ? entry : soonest))
-  }
-
-  // No eligible batch has a schedule set yet — fall back to the join link alone, no time shown.
-  const first = eligible[0]
-  return first ? { batch: first, occursAt: null } : null
-}
-
-function findFirstPracticingChapter(
-  batches: ApiBatch[],
-  trackMap: Map<string, ApiTrack>,
-  profMap: Map<string, { level: ProficiencyLevel; evaluatedAt: string | null }>,
-): { chapter: ChapterWithTrackName; batch: ApiBatch } | null {
-  for (const batch of batches) {
-    if (batch.status !== 'active') continue
-    const track = trackMap.get(batch.trackId)
-    if (!track) continue
-    for (const chapter of track.chapters) {
-      if (profMap.get(chapter.id)?.level === 'practicing') {
-        return { chapter: { ...chapter, trackName: track.name }, batch }
-      }
-    }
-  }
-  return null
 }
 
 function formatDate(value: string | Date): string {
@@ -131,6 +70,26 @@ function formatDate(value: string | Date): string {
 
 function formatTime(value: string | Date): string {
   return new Date(value).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+}
+
+type NextClass = { batch: ApiBatchDetail; occursAt: Date | null }
+
+function findNextClass(batches: ApiBatchDetail[], now: Date): NextClass | null {
+  const eligible = batches.filter(batch => batch.status === 'active' && batch.meetingUrl !== null)
+
+  const scheduled = eligible
+    .map(batch => ({ batch, occursAt: getNextOccurrence(batch.classSlots, now) }))
+    .filter((entry): entry is { batch: ApiBatchDetail; occursAt: Date } => entry.occursAt !== null)
+
+  if (scheduled.length > 0) {
+    return scheduled.reduce((soonest, entry) =>
+      entry.occursAt < soonest.occursAt ? entry : soonest,
+    )
+  }
+
+  // No eligible batch has a schedule set yet — fall back to the join link alone, no time shown.
+  const first = eligible[0]
+  return first ? { batch: first, occursAt: null } : null
 }
 
 function buildTeachingRoster(
@@ -170,11 +129,7 @@ function buildHistoryContentByStudentId(
         historyRows={getStudentEvaluationHistory(evaluations, student.id)}
         chapterById={chapterById}
         evaluatorNameById={evaluatorNameById}
-        pastBatches={getPastBatches(
-          pastBatchesByStudentId.get(student.id) ?? [],
-          trackMap,
-          batchId,
-        )}
+        pastBatches={getPastBatches(pastBatchesByStudentId.get(student.id) ?? [], trackMap, batchId)}
       />,
     ]),
   )
@@ -189,309 +144,249 @@ export default async function DashboardPage({
 }) {
   const { batch: activeBatchId } = await searchParams
 
-  const cookieStore = await cookies()
-  const savedChapterId = cookieStore.get(CONTINUE_COOKIE)?.value
-
   const [dashboard, profile, isAdmin] = await Promise.all([
     getDashboardData(),
     getCurrentProfile(),
     hasSchoolWideAccess(),
   ])
-  const {
-    firstName,
-    memberships,
-    tracks,
-    studentEvaluations,
-    upcomingExams,
-    teachingByBatchId,
-    pastBatchesByStudentId,
-  } = dashboard
-  // "Your batches" is a personal view — a school-wide admin/owner sees every batch in `memberships`
-  // (role === null there), but that belongs on an org-wide admin view, not mixed into this page's
-  // per-batch progress/schedule widgets, which assume a real personal enrollment.
+  const { firstName, memberships, tracks, studentEvaluations, upcomingExams, teachingByBatchId, pastBatchesByStudentId } =
+    dashboard
+
+  // A school-wide admin/owner sees every batch in `memberships` with role === null. Those aren't
+  // personal enrollments and belong on the admin view, not in this page's own progress widgets.
   const personalMemberships = memberships.filter(item => item.role !== null)
-  const batches = personalMemberships.map(item => item.batch)
-  const roleByBatchId = new Map<string, EnrollmentRole>(
-    personalMemberships.map(item => [item.batch.id, item.role as EnrollmentRole]),
+  const trackMap = new Map(tracks.map(track => [track.id, track]))
+  const proficiencyMap = buildProficiencyMap(studentEvaluations)
+
+  const learningTracks: LearningTrack[] = personalMemberships
+    .filter(item => item.role === 'student')
+    .flatMap(item => {
+      const track = trackMap.get(item.batch.trackId)
+      if (!track) return []
+      return summarizeLearningTrack({
+        batchId: item.batch.id,
+        batchCode: item.batch.code,
+        status: item.batch.status,
+        track: trackLabel(track.order, track.name),
+        chapters: buildChapterRows(track.chapters, proficiencyMap),
+      })
+    })
+
+  const teachingBatches: TeachingRowData[] = personalMemberships
+    .filter(item => item.role !== null && item.role !== 'student')
+    .flatMap(item => {
+      const track = trackMap.get(item.batch.trackId)
+      const taught = teachingByBatchId.get(item.batch.id)
+      if (!track || !taught) return []
+
+      const students = item.batch.members
+        .filter(member => member.role === 'student')
+        .map(toRosterStudent)
+      const progress = getTaughtBatchProgress(taught.evaluations, track.chapters, students)
+
+      return {
+        batchId: item.batch.id,
+        batchCode: item.batch.code,
+        status: item.batch.status,
+        track: trackLabel(track.order, track.name),
+        role: item.role as EnrollmentRole,
+        studentCount: students.length,
+        progress: progress.progress,
+        masteredProgress: progress.masteredProgress,
+        unevaluatedCount: countUnevaluatedStudents(
+          students.map(student => student.id),
+          taught.evaluations,
+        ),
+        roster: buildTeachingRoster(track.chapters, taught.evaluations, students),
+        historyContentByStudentId: buildHistoryContentByStudentId(
+          item.batch.id,
+          track.chapters,
+          taught.evaluations,
+          students,
+          new Map(item.batch.members.map(member => [member.profileId, member.name])),
+          pastBatchesByStudentId,
+          trackMap,
+        ),
+      }
+    })
+
+  const shape = buildDashboardShape(learningTracks, teachingBatches)
+  const focusTrack = shape.learning.active[0] ?? null
+  const resumeChapter = focusTrack ? findResumeChapter(focusTrack) : null
+
+  const nextClass = findNextClass(
+    personalMemberships.map(item => item.batch),
+    new Date(),
   )
-
-  const chapterMap = buildChapterMap(tracks)
-  const trackMap = new Map(tracks.map(t => [t.id, t]))
-  const profMap = buildProficiencyMap(studentEvaluations)
-
-  // "Continue" target: cookie chapter → first practicing chapter
-  const savedChapter = savedChapterId ? chapterMap.get(savedChapterId) : undefined
-  const savedBatch = savedChapter
-    ? batches.find(b => b.trackId === savedChapter.trackId)
-    : undefined
-  const continueTarget =
-    savedChapter && savedBatch
-      ? { chapter: savedChapter, batch: savedBatch }
-      : findFirstPracticingChapter(batches, trackMap, profMap)
-
-  const nextClass = findNextClass(batches, new Date())
   const nextClassTrack = nextClass ? trackMap.get(nextClass.batch.trackId) : null
 
-  const recentEvals = studentEvaluations.slice(0, 4)
+  const learningSection = (shape.learning.active.length > 0 || shape.learning.archived.length > 0) && (
+    <Section
+      key="learning"
+      title="Your learning"
+      count={shape.learning.active.length > 0 ? undefined : 'complete'}
+    >
+      {shape.learning.active.length > 0 && (
+        <>
+          <LevelKey />
+          <div className="space-y-4">
+            {shape.learning.active.map(track => (
+              <TrackLadder
+                key={track.batchId}
+                track={track}
+                resumeChapterId={track.batchId === focusTrack?.batchId ? resumeChapter?.id : null}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
-  const shellNavItems = getNavItems(isAdmin)
+      {shape.learning.archived.length > 0 && (
+        <Archive label={`${pluralize(shape.learning.archived.length, 'completed track')}`}>
+          <div className="space-y-4">
+            {shape.learning.archived.map(track => (
+              <TrackLadder key={track.batchId} track={track} defaultOpen={false} />
+            ))}
+          </div>
+        </Archive>
+      )}
+    </Section>
+  )
+
+  const teachingSection = (shape.teaching.active.length > 0 || shape.teaching.archived.length > 0) && (
+    <Section
+      key="teaching"
+      title="Your teaching"
+      count={
+        shape.teaching.active.length > 0
+          ? pluralize(shape.teaching.active.length, 'active batch', 'active batches')
+          : undefined
+      }
+    >
+      {shape.teaching.active.length > 0 && (
+        <TeachingList batches={shape.teaching.active} defaultOpenBatchId={activeBatchId} />
+      )}
+
+      {shape.teaching.archived.length > 0 && (
+        <Archive label={`${pluralize(shape.teaching.archived.length, 'completed batch', 'completed batches')}`}>
+          <TeachingList batches={shape.teaching.archived} defaultOpenBatchId={activeBatchId} />
+        </Archive>
+      )}
+    </Section>
+  )
+
+  const sections =
+    shape.lead === 'teaching'
+      ? [teachingSection, learningSection]
+      : [learningSection, teachingSection]
 
   return (
-    <AppShell navigationItems={shellNavItems} profile={profile}>
-      {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden border-b border-border px-4 py-12">
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -right-8 -top-4 select-none font-serif leading-none text-foreground/4"
-          style={{ fontSize: '18rem' }}
-        >
-          ॐ
-        </span>
-        <div className="relative mx-auto max-w-5xl">
-          <p className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">
-            Your progress
-          </p>
-          <h1 className="font-serif text-5xl font-semibold leading-tight tracking-tight">
-            Welcome back,
-            <br />
-            {firstName}.
-          </h1>
-        </div>
-      </div>
+    <AppShell navigationItems={getNavItems(isAdmin)} profile={profile}>
+      <Standing {...buildStanding({ firstName, shape, resumeChapter, focusTrack })} />
 
-      {/* ── Main content ─────────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
-        {/* Continue learning — full-width hero */}
-        {continueTarget && (
-          <div className="border-l-2 border-primary bg-primary/5 p-6 ring-1 ring-primary/20">
-            <div className="mb-4 flex items-center gap-2">
-              <BookmarkSimpleIcon className="size-3.5 text-primary" />
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Continue learning
-              </p>
-            </div>
-            <div className="flex items-start justify-between gap-6">
-              <div className="min-w-0">
-                <p className="text-base font-semibold leading-snug">
-                  {continueTarget.chapter.title}
-                </p>
-                <p className="mt-2 text-xs uppercase tracking-wider text-muted-foreground">
-                  Chapter {continueTarget.chapter.code}&ensp;·&ensp;
-                  {continueTarget.batch.code}&ensp;·&ensp;
-                  {continueTarget.chapter.trackName}
-                </p>
+      <div className="mx-auto max-w-5xl space-y-10 px-4 py-8">
+        {(nextClass || upcomingExams.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-l-2 border-primary bg-primary/5 px-4 py-3">
+            {nextClass && nextClassTrack && (
+              <div className="flex min-w-0 items-center gap-2.5">
+                <VideoCameraIcon className="size-4 shrink-0 text-primary" />
+                <span className="text-sm">
+                  <span className="font-medium">Next class</span>
+                  <span className="text-muted-foreground">
+                    {' · '}
+                    {nextClass.batch.code}
+                    {nextClass.occursAt &&
+                      ` · ${formatDate(nextClass.occursAt)}, ${formatTime(nextClass.occursAt)}`}
+                  </span>
+                </span>
+                <a
+                  href={nextClass.batch.meetingUrl!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  Join
+                  <ArrowSquareOutIcon className="size-3" />
+                </a>
               </div>
-              <ProficiencyBadge
-                level={profMap.get(continueTarget.chapter.id)?.level ?? 'notStarted'}
-              />
-            </div>
+            )}
+
+            {upcomingExams.map(exam => (
+              <span key={exam.id} className="text-sm">
+                <span className="font-medium">Exam</span>
+                <span className="text-muted-foreground">
+                  {' · '}
+                  {exam.chapter.title} · {formatDate(exam.scheduledAt)}
+                </span>
+              </span>
+            ))}
           </div>
         )}
 
-        {/* Recent evaluations (left) + schedule sidebar (right) */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* Recent evaluations */}
-          <div className="bg-card overflow-hidden ring-1 ring-foreground/10">
-            <div className="flex items-center gap-2 border-b border-border/50 px-4 py-3">
-              <ClockIcon className="size-3.5 text-muted-foreground" />
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Recent evaluations
-              </p>
-            </div>
-            <div className="divide-y divide-border/30">
-              {recentEvals.length === 0 && (
-                <p className="px-4 py-3 text-xs text-muted-foreground">No evaluations yet.</p>
-              )}
-              {recentEvals.map(ev => {
-                const chapter = chapterMap.get(ev.chapterId)
-                const batchCode = batches.find(b => b.trackId === chapter?.trackId)?.code
-                return (
-                  <div key={ev.id} className="flex items-start gap-3 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {chapter?.title ?? ev.chapterId}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {batchCode}&ensp;·&ensp;
-                        {ev.evaluatedAt ? formatDate(ev.evaluatedAt) : '—'}
-                      </p>
-                      {ev.notes && (
-                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{ev.notes}</p>
-                      )}
-                    </div>
-                    <ProficiencyBadge level={ev.level} compact />
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+        {sections}
 
-          {/* Schedule sidebar: next class + upcoming exams */}
-          <div className="space-y-4">
-            {nextClass && nextClassTrack && (
-              <div className="bg-card overflow-hidden ring-1 ring-foreground/10">
-                <div className="flex items-center gap-2 border-b border-border/50 px-4 py-3">
-                  <VideoCameraIcon className="size-3.5 text-muted-foreground" />
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Next class
-                  </p>
-                </div>
-                <div className="p-4">
-                  <p className="mb-0.5 text-sm font-medium">{nextClass.batch.code}</p>
-                  <p className="mb-4 text-xs text-muted-foreground">Track {nextClassTrack.order}</p>
-                  <div className="flex items-center justify-between gap-3">
-                    {nextClass.occursAt ? (
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(nextClass.occursAt)}&ensp;·&ensp;{formatTime(nextClass.occursAt)}
-                      </p>
-                    ) : (
-                      <span />
-                    )}
-                    <a
-                      href={nextClass.batch.meetingUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                    >
-                      Join
-                      <ArrowSquareOutIcon className="size-3" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {upcomingExams.length > 0 && (
-              <div className="bg-card overflow-hidden ring-1 ring-foreground/10">
-                <div className="flex items-center gap-2 border-b border-border/50 px-4 py-3">
-                  <ExamIcon className="size-3.5 text-muted-foreground" />
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Upcoming exams
-                  </p>
-                </div>
-                <div className="divide-y divide-border/30">
-                  {upcomingExams.map(exam => {
-                    const track = trackMap.get(exam.chapter.trackId)
-                    const meetingUrl = batches.find(b => b.trackId === exam.chapter.trackId)
-                      ?.meetingUrl
-                    return (
-                      <div key={exam.id} className="px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{exam.chapter.title}</p>
-                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                              {exam.chapter.code}&ensp;·&ensp;{track?.name ?? '—'}
-                            </p>
-                          </div>
-                          <div className="shrink-0 text-right text-xs text-muted-foreground">
-                            <p>{formatDate(exam.scheduledAt)}</p>
-                            <p>{formatTime(exam.scheduledAt)}</p>
-                          </div>
-                        </div>
-                        {meetingUrl && (
-                          <a
-                            href={meetingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                          >
-                            Join
-                            <ArrowSquareOutIcon className="size-3" />
-                          </a>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Your batches */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <h2 className="shrink-0 font-serif text-2xl font-semibold">Your batches</h2>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-          <div className="space-y-4">
-            {batches.map(batch => {
-              const track = trackMap.get(batch.trackId)
-              if (!track) return null
-
-              const role = roleByBatchId.get(batch.id)
-              if (role && role !== 'student') {
-                const taught = teachingByBatchId.get(batch.id)
-                if (!taught) return null
-
-                const students = batch.members
-                  .filter(member => member.role === 'student')
-                  .map(toRosterStudent)
-                const evaluatorNameById = new Map(
-                  batch.members.map(member => [member.profileId, member.name]),
-                )
-                const batchProgress = getTaughtBatchProgress(taught.evaluations, track.chapters, students)
-
-                return (
-                  <TeachingBatchSection
-                    key={batch.id}
-                    batchId={batch.id}
-                    batchCode={batch.code}
-                    status={batch.status}
-                    trackName={track.name}
-                    trackOrder={track.order}
-                    progress={batchProgress.progress}
-                    masteredProgress={batchProgress.masteredProgress}
-                    role={role}
-                    roster={buildTeachingRoster(track.chapters, taught.evaluations, students)}
-                    historyContentByStudentId={buildHistoryContentByStudentId(
-                      batch.id,
-                      track.chapters,
-                      taught.evaluations,
-                      students,
-                      evaluatorNameById,
-                      pastBatchesByStudentId,
-                      trackMap,
-                    )}
-                    defaultOpen={batch.id === activeBatchId}
-                  />
-                )
-              }
-
-              const chapterData = buildChapterData(track.chapters, profMap)
-              return (
-                <BatchSection
-                  key={batch.id}
-                  batchCode={batch.code}
-                  batchStatus={batch.status}
-                  startDate={batch.startDate}
-                  trackOrder={track.order}
-                  trackName={track.name}
-                  chapters={chapterData}
-                />
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Proficiency legend */}
-        <div className="space-y-3 border-t border-border/50 pt-6">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            Proficiency levels
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {PROFICIENCY_LEVELS.filter(l => l !== 'absent').map(level => {
-              const config = getProficiencyConfig(level)
-              return (
-                <div key={level} className="flex items-center gap-1.5">
-                  <ProficiencyBadge level={level} compact />
-                  <span className="text-xs text-muted-foreground">{config.label}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        {shape.learning.active.length === 0 &&
+          shape.learning.archived.length === 0 &&
+          shape.teaching.active.length === 0 &&
+          shape.teaching.archived.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              You&apos;re not enrolled in any batches yet. Contact your administrator.
+            </p>
+          )}
       </div>
     </AppShell>
   )
+}
+
+// The headline answers whichever question this person actually arrived with — a teacher wants to
+// know where their attention is owed, a student wants to know what to practise next.
+function buildStanding({
+  firstName,
+  shape,
+  resumeChapter,
+  focusTrack,
+}: {
+  firstName: string
+  shape: ReturnType<typeof buildDashboardShape<LearningTrack, TeachingRowData>>
+  resumeChapter: ReturnType<typeof findResumeChapter>
+  focusTrack: LearningTrack | null
+}) {
+  if (shape.lead === 'teaching') {
+    const active = shape.teaching.active
+    const students = active.reduce((sum, batch) => sum + batch.studentCount, 0)
+    const waiting = active.reduce((sum, batch) => sum + batch.unevaluatedCount, 0)
+
+    return {
+      eyebrow: `${firstName} · teaching`,
+      headline: pluralize(active.length, 'active batch', 'active batches'),
+      meta: `${pluralize(students, 'student')}${waiting > 0 ? ` · ${waiting} awaiting a first evaluation` : ' · everyone has been evaluated'}`,
+      stats: [
+        { value: String(active.length), label: 'Batches' },
+        { value: String(students), label: 'Students' },
+      ],
+    }
+  }
+
+  if (focusTrack && resumeChapter) {
+    return {
+      eyebrow: `${firstName} · up next`,
+      headline: resumeChapter.title,
+      meta: `${focusTrack.track} · chapter ${resumeChapter.code} · ${focusTrack.batchCode}`,
+      stats: [
+        { value: `${focusTrack.started}/${focusTrack.total}`, label: 'Chapters' },
+        { value: String(focusTrack.mastered), label: 'Mastered' },
+      ],
+    }
+  }
+
+  const completed = shape.learning.archived.length
+  return {
+    eyebrow: `${firstName} · learning`,
+    headline: completed > 0 ? 'All tracks complete' : 'Nothing in progress',
+    meta:
+      completed > 0
+        ? `${pluralize(completed, 'completed track')} in your archive`
+        : 'You have no active chapters right now.',
+    stats: [],
+  }
 }
