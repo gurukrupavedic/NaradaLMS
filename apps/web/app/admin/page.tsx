@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
-import { AppShell, getNavItems } from '@/components/app-shell'
+import { AppShell } from '@/components/app-shell'
+import { getNavItems } from '@/lib/nav-items'
 import { AdminBatchList, type AdminBatchGroup } from '@/components/admin/batch-list'
 import { getBatches } from '@/lib/api/batches'
 import { fetchAllPages } from '@/lib/api/pagination'

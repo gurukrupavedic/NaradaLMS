@@ -46,6 +46,9 @@ export async function hasSchoolWideAccess(): Promise<boolean> {
   return authProfile.isSuperAdmin || authProfile.memberships.some(m => m.role === 'owner' || m.role === 'admin')
 }
 
+// Does not redirect itself — redirect() throws a control-flow error that a caller's
+// try/catch (as sign-in-form.tsx needs, to show a real failure as a toast) would
+// swallow, reporting a successful selection as a failure. Callers navigate on success.
 export async function selectProfile(profileId: string): Promise<void> {
   // BetterAuth's organization plugin gates every school-scoped permission check
   // (see apps/api/src/utils/auth.ts hasPermission) on the session having an active
@@ -66,6 +69,10 @@ export async function selectProfile(profileId: string): Promise<void> {
     },
   )
 
+  if (!response.ok) {
+    throw new Error(`Failed to set active organization: ${response.status}`)
+  }
+
   const cookieJar = await cookies()
   applySetCookies(cookieJar, response)
 
@@ -74,8 +81,6 @@ export async function selectProfile(profileId: string): Promise<void> {
     httpOnly: true,
     sameSite: 'lax',
   })
-
-  redirect('/')
 }
 
 export async function signOut(): Promise<void> {

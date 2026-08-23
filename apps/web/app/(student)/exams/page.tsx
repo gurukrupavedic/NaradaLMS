@@ -1,4 +1,5 @@
-import { AppShell, getNavItems } from '@/components/app-shell'
+import { AppShell } from '@/components/app-shell'
+import { getNavItems } from '@/lib/nav-items'
 import { ProficiencyBadge } from '@/components/proficiency-badge'
 import { ArrowSquareOutIcon } from '@/components/ui/icons'
 import { getMyBatchMemberships } from '@/lib/api/batches'
