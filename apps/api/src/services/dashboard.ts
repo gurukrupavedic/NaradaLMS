@@ -76,15 +76,10 @@ export async function getDashboardData(
   const chapterIdsForTrack = (trackId: string): string[] =>
     trackById.get(trackId)?.chapters.map(chapter => chapter.id) ?? []
 
-  const studentMemberships = memberships.filter(m => m.role === 'student')
   // Excludes role === null (a school-wide admin/owner's view of a batch they don't personally
   // teach) — an admin's "every batch in the school" access shouldn't turn into a per-batch fetch
   // here any more than it should have via the old HTTP fan-out.
   const teachingMemberships = memberships.filter(m => m.role === 'instructor' || m.role === 'ta')
-
-  const studentChapterIds = [
-    ...new Set(studentMemberships.flatMap(m => chapterIdsForTrack(m.trackId))),
-  ]
 
   const teachingChapterIds = [
     ...new Set(teachingMemberships.flatMap(m => chapterIdsForTrack(m.trackId))),
@@ -99,13 +94,15 @@ export async function getDashboardData(
 
   const [studentEvaluations, upcomingExams, teachingEvaluationsFlat, pastBatchesByStudentId] =
     await Promise.all([
-      studentChapterIds.length > 0
-        ? db.query.evaluation.findMany({
-            where: (t, { and, eq, inArray }) =>
-              and(eq(t.studentId, profileId), inArray(t.chapterId, studentChapterIds)),
-            orderBy: (t, { desc }) => desc(t.evaluatedAt),
-          })
-        : [],
+      // The caller's own marks, across every track rather than only currently-enrolled ones.
+      // Achievements outlive enrolment: a student who certified in tracks 1-8 over several years
+      // is enrolled in at most one of those batches today, and scoping to current enrolments
+      // reported them as certified in one track instead of eight. This is the caller's own row
+      // set and stays small (~140 rows for the heaviest student in the real roster).
+      db.query.evaluation.findMany({
+        where: (t, { eq }) => eq(t.studentId, profileId),
+        orderBy: (t, { desc }) => desc(t.evaluatedAt),
+      }),
       db.query.exam.findMany({
         where: (t, { and, eq }) => and(eq(t.studentId, profileId), eq(t.status, 'scheduled')),
         orderBy: (t, { asc }) => asc(t.scheduledAt),
