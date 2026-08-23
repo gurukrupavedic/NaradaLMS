@@ -1,15 +1,12 @@
 import { redirect } from 'next/navigation'
 
-import { ADMIN_NAV_ITEM, AppShell, type NavigationItem } from '@/components/app-shell'
+import { AppShell, getNavItems } from '@/components/app-shell'
 import { AdminBatchList, type AdminBatchGroup } from '@/components/admin/batch-list'
-import { HouseIcon } from '@/components/ui/icons'
 import { getBatches } from '@/lib/api/batches'
 import { fetchAllPages } from '@/lib/api/pagination'
 import { getTracks } from '@/lib/api/tracks'
 import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
 import type { BatchStatus } from '@/lib/types'
-
-const navItems: NavigationItem[] = [{ label: 'Dashboard', icon: HouseIcon, href: '/' }, ADMIN_NAV_ITEM]
 
 // Ordered by what an admin scanning the whole school cares about first.
 const STATUS_ORDER: BatchStatus[] = ['active', 'upcoming', 'completed']
@@ -52,7 +49,7 @@ export default async function AdminPage() {
   })).filter(group => group.batches.length > 0)
 
   return (
-    <AppShell navigationItems={navItems} profile={profile}>
+    <AppShell navigationItems={getNavItems(isAdmin)} profile={profile}>
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
         <div>
           <h1 className="font-serif text-2xl font-semibold">School batches</h1>

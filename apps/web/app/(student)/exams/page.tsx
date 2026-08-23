@@ -1,16 +1,11 @@
-import { AppShell, type NavigationItem } from '@/components/app-shell'
+import { AppShell, getNavItems } from '@/components/app-shell'
 import { ProficiencyBadge } from '@/components/proficiency-badge'
-import { ArrowSquareOutIcon, ExamIcon, HouseIcon } from '@/components/ui/icons'
+import { ArrowSquareOutIcon } from '@/components/ui/icons'
 import { getMyBatchMemberships } from '@/lib/api/batches'
 import { getExams } from '@/lib/api/exams'
 import { fetchAllPages } from '@/lib/api/pagination'
 import { getTracks } from '@/lib/api/tracks'
-import { getCurrentProfile } from '@/lib/session'
-
-const navItems: NavigationItem[] = [
-  { label: 'Dashboard', icon: HouseIcon, href: '/' },
-  { label: 'Exams', icon: ExamIcon, href: '/exams' },
-]
+import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -25,8 +20,9 @@ function formatTime(iso: string): string {
 }
 
 export default async function ExamsPage() {
-  const [profile, exams, tracks, memberships] = await Promise.all([
+  const [profile, isAdmin, exams, tracks, memberships] = await Promise.all([
     getCurrentProfile(),
+    hasSchoolWideAccess(),
     fetchAllPages(cursor => getExams({ cursor })),
     getTracks(),
     getMyBatchMemberships(),
@@ -50,7 +46,7 @@ export default async function ExamsPage() {
     .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())
 
   return (
-    <AppShell navigationItems={navItems} profile={profile}>
+    <AppShell navigationItems={getNavItems(isAdmin)} profile={profile}>
       <div className="mx-auto max-w-3xl space-y-10 px-4 py-8">
         <div>
           <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
