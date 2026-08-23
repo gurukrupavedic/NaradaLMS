@@ -1,4 +1,5 @@
 import {
+  getMasteredProgress,
   getProficiencyProgress,
   isStartedProficiency,
   type ProficiencyLevel,
@@ -84,20 +85,29 @@ export function getStudentProgress(
 ) {
   const levels = chapters.map(chapter => getChapterLevel(evaluations, studentId, chapter.id))
   const startedCount = levels.filter(isStartedProficiency).length
-  return { levels, startedCount, progress: getProficiencyProgress(levels) }
+  return {
+    levels,
+    startedCount,
+    progress: getProficiencyProgress(levels),
+    masteredProgress: getMasteredProgress(levels),
+  }
 }
 
+export type BatchProgress = { progress: number; masteredProgress: number }
+
+// Two separate numbers, not one: "progress" answers "how much has been touched," "masteredProgress"
+// answers "how much has actually been mastered" — a batch where everyone just started every
+// chapter should not read the same as one where everyone has finished it.
 export function getBatchProgress(
   evaluations: ApiEvaluation[],
   chapters: ApiChapter[],
   students: RosterStudent[],
-): number {
-  if (students.length === 0) return 0
-  const total = students.reduce(
-    (sum, student) => sum + getStudentProgress(evaluations, chapters, student.id).progress,
-    0,
-  )
-  return Math.round(total / students.length)
+): BatchProgress {
+  if (students.length === 0) return { progress: 0, masteredProgress: 0 }
+  const perStudent = students.map(student => getStudentProgress(evaluations, chapters, student.id))
+  const progress = perStudent.reduce((sum, s) => sum + s.progress, 0) / students.length
+  const masteredProgress = perStudent.reduce((sum, s) => sum + s.masteredProgress, 0) / students.length
+  return { progress: Math.round(progress), masteredProgress: Math.round(masteredProgress) }
 }
 
 // Evaluator names aren't in ApiEvaluation (just evaluatorId) — batch members double as the

@@ -73,6 +73,10 @@ export function isStartedProficiency(level: ProficiencyLevel): boolean {
   return level !== 'notStarted' && level !== 'absent'
 }
 
+export function isMasteredProficiency(level: ProficiencyLevel): boolean {
+  return level === 'level4'
+}
+
 export function getProficiencyProgress(levels: ProficiencyLevel[]): number {
   if (levels.length === 0) {
     return 0
@@ -80,4 +84,16 @@ export function getProficiencyProgress(levels: ProficiencyLevel[]): number {
 
   const startedLevels = levels.filter(isStartedProficiency)
   return (startedLevels.length / levels.length) * 100
+}
+
+// A chapter counts toward "progress" the moment it's started (practicing or above) — this
+// answers "how much has been touched," not "how much has been mastered." Pair with this
+// wherever progress is shown, rather than letting one number stand in for both.
+export function getMasteredProgress(levels: ProficiencyLevel[]): number {
+  if (levels.length === 0) {
+    return 0
+  }
+
+  const masteredLevels = levels.filter(isMasteredProficiency)
+  return (masteredLevels.length / levels.length) * 100
 }

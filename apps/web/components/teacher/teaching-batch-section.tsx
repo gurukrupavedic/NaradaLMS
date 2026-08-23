@@ -18,6 +18,7 @@ interface TeachingBatchSectionProps {
   trackName: string
   trackOrder: number
   progress: number
+  masteredProgress: number
   role: 'instructor' | 'ta'
   roster: RosterRow[]
   historyContentByStudentId: Record<string, ReactNode>
@@ -42,6 +43,7 @@ export function TeachingBatchSection({
   trackName,
   trackOrder,
   progress,
+  masteredProgress,
   role,
   roster,
   historyContentByStudentId,
@@ -88,7 +90,8 @@ export function TeachingBatchSection({
             {ROLE_LABEL[role]}
           </Badge>
           <p className="text-xs text-muted-foreground">{roster.length} students</p>
-          <p className="mt-1 text-sm font-semibold tabular-nums">{Math.round(progress)}%</p>
+          <p className="mt-1 text-sm font-semibold tabular-nums">{progress}%</p>
+          <p className="text-xs text-muted-foreground tabular-nums">{masteredProgress}% mastered</p>
         </div>
       </button>
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import { getProficiencyProgress, isStartedProficiency } from '@/lib/proficiency'
+import { getProficiencyProgress, isMasteredProficiency, isStartedProficiency } from '@/lib/proficiency'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ProficiencyBadge } from '@/components/proficiency-badge'
@@ -44,6 +44,7 @@ export function BatchSection({
   const [open, setOpen] = useState(true)
   const progress = getProficiencyProgress(chapters.map(ch => ch.proficiency))
   const startedCount = chapters.filter(ch => isStartedProficiency(ch.proficiency)).length
+  const masteredCount = chapters.filter(ch => isMasteredProficiency(ch.proficiency)).length
   const st = STATUS_CONFIG[batchStatus]
 
   return (
@@ -82,6 +83,9 @@ export function BatchSection({
             <span className="ml-1.5 text-xs font-normal text-muted-foreground">
               ({Math.round(progress)}%)
             </span>
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+            {masteredCount}/{chapters.length} mastered
           </p>
         </div>
       </button>
