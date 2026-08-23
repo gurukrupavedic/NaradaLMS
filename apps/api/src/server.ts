@@ -20,6 +20,22 @@ interface ServerOptions {
 const SHUTDOWN_TIMEOUT_MS = 10_000
 const CORS_METHODS = ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS']
 
+// TRUSTED_ORIGINS entries may contain "*" to match Vercel preview deployments
+// (e.g. "https://web-*-gurukrupa-vedic.vercel.app"), so origins are matched
+// against each entry as a glob rather than with a plain array (which the
+// `cors` package only matches exactly).
+function isTrustedOrigin(origin: string) {
+  return env.TRUSTED_ORIGINS.some(pattern => {
+    if (!pattern.includes('*')) return pattern === origin
+    const regex = new RegExp(`^${pattern.split('*').map(escapeRegExp).join('.*')}$`)
+    return regex.test(origin)
+  })
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 let shutdownStarted = false
 let shutdownExitStarted = false
 
@@ -33,7 +49,15 @@ const authRateLimit = rateLimit({
 export function createServer() {
   const router = Router()
   router.use(helmet())
-  router.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true, methods: CORS_METHODS }))
+  router.use(
+    cors({
+      origin(origin, callback) {
+        callback(null, !origin || isTrustedOrigin(origin))
+      },
+      credentials: true,
+      methods: CORS_METHODS,
+    }),
+  )
   router.use(attachRequestContext)
   router.use(logRequest)
 
