@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 
 import { ADMIN_NAV_ITEM, AppShell, type NavigationItem } from '@/components/app-shell'
+import { EnrollStudentDialog } from '@/components/admin/enroll-student-dialog'
 import { RosterMatrix } from '@/components/admin/roster-matrix'
 import { Badge } from '@/components/ui/badge'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
@@ -177,7 +178,10 @@ export default async function AdminBatchDetailPage({
 
         {/* Student matrix */}
         <div className="space-y-3">
-          <h2 className="font-serif text-lg font-semibold">Students</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-serif text-lg font-semibold">Students</h2>
+            <EnrollStudentDialog batchId={batch.id} />
+          </div>
           {roster.length === 0 ? (
             <p className="text-sm text-muted-foreground">No students enrolled.</p>
           ) : (

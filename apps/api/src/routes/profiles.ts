@@ -2,8 +2,15 @@ import { Router } from 'express'
 import { z } from 'zod'
 
 import { schoolRoute } from '../naradaRoute'
-import { notFound } from '../error'
-import { getProfileBatchListAccess, getSession, requireAccess, requireOrgMember, tryGetActorProfile } from '../utils/auth'
+import { forbidden, notFound } from '../error'
+import {
+  getProfileBatchListAccess,
+  getSession,
+  hasPermission,
+  requireAccess,
+  requireOrgMember,
+  tryGetActorProfile,
+} from '../utils/auth'
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
 import { findBatches, findBatchesWithDetail, listBatchesQuerySchema } from '../services/batch'
 import {
@@ -12,6 +19,8 @@ import {
   deleteProfile,
   findProfileById,
   findProfilesByUser,
+  searchProfiles,
+  searchProfilesQuerySchema,
   updateProfile,
   updateProfileSchema,
 } from '../services/schoolProfile'
@@ -23,6 +32,25 @@ router.get(
   schoolRoute(async ({ req, res, ctx }) => {
     const { user } = await getSession(req)
     const profiles = await findProfilesByUser(ctx.db, user.id)
+    res.status(200).json({ ok: true, data: profiles })
+  }),
+)
+
+// School-wide profile search — same permission that gates creating an enrollment, since that's
+// the only reason to search across every profile in the school rather than just your own.
+router.get(
+  '/search',
+  schoolRoute(async ({ req, res, ctx }) => {
+    const canSearch = await hasPermission(req, {
+      scope: 'school',
+      permissions: { enrollment: ['create'] },
+    })
+    if (!canSearch) {
+      throw forbidden()
+    }
+
+    const query = parseQuery(searchProfilesQuerySchema, req)
+    const profiles = await searchProfiles(ctx.db, query)
     res.status(200).json({ ok: true, data: profiles })
   }),
 )
