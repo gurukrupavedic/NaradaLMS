@@ -32,10 +32,14 @@ export type ChapterRow = {
 }
 
 export type LearningTrack = {
-  batchId: string
-  batchCode: string
-  status: BatchStatus
+  trackId: string
+  trackOrder: number
   track: string
+  // The batch this student sits in for this track, when there is one. Most study history has
+  // none: the roster spreadsheet records marks per student+chapter with no cohort dimension, so
+  // 710 of 711 students carry exactly one enrolment while holding marks in up to eight tracks.
+  // Driving this list off enrolments alone hid everything but their current batch.
+  batch: { id: string; code: string; status: BatchStatus } | null
   chapters: ChapterRow[]
   started: number
   mastered: number
@@ -127,12 +131,18 @@ export function hasUnfinishedWork(track: LearningTrack): boolean {
   return track.started < track.total
 }
 
+// A track is "live" only while a batch is still running for it. Prior study with no batch at all
+// counts as ended, same as a closed one.
+export function isLiveTrack(track: LearningTrack): boolean {
+  return track.batch !== null && !isArchived(track.batch.status)
+}
+
 export function splitLearning<L extends LearningTrack>(
   tracks: L[],
 ): { active: L[]; archived: L[] } {
   return {
-    active: tracks.filter(track => !isArchived(track.status) || hasUnfinishedWork(track)),
-    archived: tracks.filter(track => isArchived(track.status) && !hasUnfinishedWork(track)),
+    active: tracks.filter(track => isLiveTrack(track) || hasUnfinishedWork(track)),
+    archived: tracks.filter(track => !isLiveTrack(track) && !hasUnfinishedWork(track)),
   }
 }
 
@@ -148,14 +158,16 @@ export function sortTeachingByAttention<T extends TeachingBatch>(batches: T[]): 
   )
 }
 
-// Furthest-along-but-unfinished first: that's the track you're actually working on. Anything
-// untouched sorts after it, and the code tiebreak keeps the order stable.
+// The track with a running batch comes first — that's the one being taught right now. After
+// that, furthest along, then track order so the sequence stays stable and reads in curriculum
+// order.
 export function sortLearningByFocus<L extends LearningTrack>(tracks: L[]): L[] {
   return [...tracks].sort(
     (a, b) =>
+      Number(isLiveTrack(b)) - Number(isLiveTrack(a)) ||
       Number(b.started > 0) - Number(a.started > 0) ||
       b.progress - a.progress ||
-      a.batchCode.localeCompare(b.batchCode),
+      a.trackOrder - b.trackOrder,
   )
 }
 

@@ -52,15 +52,24 @@ export function TrackLadder({ track, resumeChapterId, defaultOpen = true }: Trac
           )}
         />
         <div className="min-w-0 flex-1">
-          <span className="font-mono text-sm font-semibold">{track.batchCode}</span>
-          {/* A closed batch can still hold unfinished chapters, so say so rather than leaving
-              the reader wondering why nothing is scheduled. */}
-          {track.status === 'completed' && (
+          <span className="text-sm font-semibold">{track.track}</span>
+          {/* A closed batch can still hold unfinished chapters, and most prior study has no
+              batch on record at all — say which, rather than leaving the reader wondering why
+              nothing is scheduled. */}
+          {track.batch === null ? (
             <span className="ml-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-              batch ended
+              prior study
             </span>
+          ) : (
+            track.batch.status === 'completed' && (
+              <span className="ml-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                batch ended
+              </span>
+            )
           )}
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{track.track}</p>
+          <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
+            {track.batch?.code ?? 'No batch on record'}
+          </p>
         </div>
         <div className="shrink-0 text-right">
           <p className="font-mono text-sm font-medium tabular-nums">

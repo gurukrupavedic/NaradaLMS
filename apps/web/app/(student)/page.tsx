@@ -158,16 +158,30 @@ export default async function DashboardPage({
   const trackMap = new Map(tracks.map(track => [track.id, track]))
   const proficiencyMap = buildProficiencyMap(studentEvaluations)
 
-  const learningTracks: LearningTrack[] = personalMemberships
-    .filter(item => item.role === 'student')
-    .flatMap(item => {
-      const track = trackMap.get(item.batch.trackId)
-      if (!track) return []
+  // Every track this student has actually studied — the ones they're enrolled in now, plus any
+  // they hold marks in. Enrolments only record the current batch (710 of 711 students have
+  // exactly one) while marks span up to eight tracks, so building this list from enrolments
+  // alone showed a single track and disagreed with the certification record on /exams.
+  const batchByTrackId = new Map(
+    personalMemberships
+      .filter(item => item.role === 'student')
+      .map(item => [item.batch.trackId, item.batch]),
+  )
+  const trackIdsWithMarks = new Set(
+    dashboard.tracks
+      .filter(track => track.chapters.some(chapter => proficiencyMap.has(chapter.id)))
+      .map(track => track.id),
+  )
+
+  const learningTracks: LearningTrack[] = dashboard.tracks
+    .filter(track => batchByTrackId.has(track.id) || trackIdsWithMarks.has(track.id))
+    .map(track => {
+      const batch = batchByTrackId.get(track.id)
       return summarizeLearningTrack({
-        batchId: item.batch.id,
-        batchCode: item.batch.code,
-        status: item.batch.status,
+        trackId: track.id,
+        trackOrder: track.order,
         track: trackLabel(track.order, track.name),
+        batch: batch ? { id: batch.id, code: batch.code, status: batch.status } : null,
         chapters: buildChapterRows(track.chapters, proficiencyMap),
       })
     })
@@ -232,9 +246,9 @@ export default async function DashboardPage({
           <div className="space-y-4">
             {shape.learning.active.map(track => (
               <TrackLadder
-                key={track.batchId}
+                key={track.trackId}
                 track={track}
-                resumeChapterId={track.batchId === focusTrack?.batchId ? resumeChapter?.id : null}
+                resumeChapterId={track.trackId === focusTrack?.trackId ? resumeChapter?.id : null}
               />
             ))}
           </div>
@@ -245,7 +259,7 @@ export default async function DashboardPage({
         <Archive label={`${pluralize(shape.learning.archived.length, 'completed track')}`}>
           <div className="space-y-4">
             {shape.learning.archived.map(track => (
-              <TrackLadder key={track.batchId} track={track} defaultOpen={false} />
+              <TrackLadder key={track.trackId} track={track} defaultOpen={false} />
             ))}
           </div>
         </Archive>
@@ -371,7 +385,9 @@ function buildStanding({
     return {
       eyebrow: `${firstName} · up next`,
       headline: resumeChapter.title,
-      meta: `${focusTrack.track} · chapter ${resumeChapter.code} · ${focusTrack.batchCode}`,
+      meta: [focusTrack.track, `chapter ${resumeChapter.code}`, focusTrack.batch?.code]
+        .filter(Boolean)
+        .join(' · '),
       stats: [
         { value: `${focusTrack.started}/${focusTrack.total}`, label: 'Chapters' },
         { value: String(focusTrack.mastered), label: 'Mastered' },
