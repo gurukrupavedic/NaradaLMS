@@ -1,6 +1,7 @@
 'use client'
 
 import { useId, useTransition, useReducer } from 'react'
+import { useRouter } from 'next/navigation'
 import { ArrowRightIcon, GraduationCapIcon } from '@phosphor-icons/react/dist/ssr'
 import { AnimatePresence, motion } from 'motion/react'
 import { toast } from 'sonner'
@@ -48,6 +49,7 @@ export function SignInForm({ initialProfiles }: { initialProfiles?: ApiProfile[]
       : { step: 'sign-in' as const, direction: 1 },
   )
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   function handleEmailSignIn(formData: FormData) {
     startTransition(async () => {
@@ -88,7 +90,9 @@ export function SignInForm({ initialProfiles }: { initialProfiles?: ApiProfile[]
         await selectProfile(profileId)
       } catch {
         toast.error('Failed to select profile. Please try again.')
+        return
       }
+      router.push('/')
     })
   }
 

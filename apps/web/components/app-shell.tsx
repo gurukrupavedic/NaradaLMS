@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react'
 import { usePathname } from 'next/navigation'
-import type { LucideIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -17,42 +16,16 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   CaretDownIcon,
-  ExamIcon,
   HamburgerIcon,
-  HouseIcon,
   LeaveIcon,
   MoonIcon,
-  SettingsIcon,
   SunIcon,
   XIcon,
 } from '@/components/ui/icons'
 import { useTheme } from '@/components/theme-provider'
 import { signOut } from '@/lib/session'
 import type { ApiProfile } from '@/lib/types'
-
-export interface NavigationItem {
-  label: string
-  icon: LucideIcon
-  href: string
-}
-
-const ADMIN_NAV_ITEM: NavigationItem = { label: 'Admin', icon: SettingsIcon, href: '/admin' }
-
-// The ONE place the nav item list is assembled. Every page used to hand-roll its own
-// `navItems` array — that's exactly how "Admin" and later "Exams" ended up present on some
-// pages and silently missing on others (the nav visibly changing shape as you navigate) since
-// nothing forced every page to stay in sync. Every page should call this instead of building
-// its own array.
-export function getNavItems(isAdmin: boolean): NavigationItem[] {
-  const items: NavigationItem[] = [
-    { label: 'Dashboard', icon: HouseIcon, href: '/' },
-    { label: 'Exams', icon: ExamIcon, href: '/exams' },
-  ]
-  if (isAdmin) {
-    items.push(ADMIN_NAV_ITEM)
-  }
-  return items
-}
+import type { NavigationItem } from '@/lib/nav-items'
 
 function isItemActive(item: NavigationItem, pathname: string): boolean {
   if (item.href === '/') return pathname === '/'

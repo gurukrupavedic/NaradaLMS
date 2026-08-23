@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 
-import { AppShell, getNavItems } from '@/components/app-shell'
+import { AppShell } from '@/components/app-shell'
+import { getNavItems } from '@/lib/nav-items'
 import { EnrollStudentDialog } from '@/components/admin/enroll-student-dialog'
 import { RosterMatrix } from '@/components/admin/roster-matrix'
 import { Badge } from '@/components/ui/badge'

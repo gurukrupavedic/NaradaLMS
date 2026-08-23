@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 
-import { AppShell, getNavItems } from '@/components/app-shell'
+import { AppShell } from '@/components/app-shell'
+import { getNavItems } from '@/lib/nav-items'
 import { StudentHistoryContent } from '@/components/teacher/student-history-content'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { getBatch, getBatchesForProfile } from '@/lib/api/batches'
