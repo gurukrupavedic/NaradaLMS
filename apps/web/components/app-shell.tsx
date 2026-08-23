@@ -31,7 +31,7 @@ import type { ApiProfile } from '@/lib/types'
 export interface NavigationItem {
   label: string
   icon: LucideIcon
-  href?: string
+  href: string
 }
 
 // Shared so every page that conditionally shows it (behind hasSchoolWideAccess()) stays in sync —
@@ -39,7 +39,6 @@ export interface NavigationItem {
 export const ADMIN_NAV_ITEM: NavigationItem = { label: 'Admin', icon: SettingsIcon, href: '/admin' }
 
 function isItemActive(item: NavigationItem, pathname: string): boolean {
-  if (!item.href) return false
   if (item.href === '/') return pathname === '/'
   return pathname === item.href || pathname.startsWith(`${item.href}/`)
 }
@@ -54,11 +53,7 @@ function NavButton({ item, isActive }: { item: NavigationItem; isActive: boolean
   )
 
   return (
-    <Button
-      variant="ghost"
-      className={buttonClass}
-      {...(item.href ? { render: <a href={item.href} />, nativeButton: false } : {})}
-    >
+    <Button variant="ghost" className={buttonClass} render={<a href={item.href} />} nativeButton={false}>
       <Icon className="size-3.5 shrink-0" />
       <span>{item.label}</span>
     </Button>
@@ -185,16 +180,11 @@ export function AppShell({ navigationItems, profile, children, className }: AppS
                     ? 'bg-muted font-medium text-foreground'
                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
                 )
-                return item.href ? (
+                return (
                   <a key={item.label} href={item.href} className={itemClass}>
                     <Icon className="size-3.5 shrink-0" />
                     {item.label}
                   </a>
-                ) : (
-                  <button key={item.label} className={itemClass}>
-                    <Icon className="size-3.5 shrink-0" />
-                    {item.label}
-                  </button>
                 )
               })}
               <Separator />
