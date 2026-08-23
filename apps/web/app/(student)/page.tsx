@@ -436,7 +436,6 @@ export default async function DashboardPage({
                     trackOrder={track.order}
                     progress={getTaughtBatchProgress(taught.evaluations, track.chapters, students)}
                     role={role}
-                    chapters={track.chapters}
                     roster={buildTeachingRoster(track.chapters, taught.evaluations, students)}
                     historyContentByStudentId={buildHistoryContentByStudentId(
                       batch.id,
