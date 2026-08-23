@@ -1,17 +1,12 @@
 import { notFound, redirect } from 'next/navigation'
 
-import { ADMIN_NAV_ITEM, AppShell, type NavigationItem } from '@/components/app-shell'
+import { AppShell, getNavItems } from '@/components/app-shell'
 import { EnrollStudentDialog } from '@/components/admin/enroll-student-dialog'
 import { RosterMatrix } from '@/components/admin/roster-matrix'
 import { Badge } from '@/components/ui/badge'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { Progress } from '@/components/ui/progress'
-import {
-  CalendarBlankIcon,
-  ClockIcon,
-  HouseIcon,
-  VideoCameraIcon,
-} from '@/components/ui/icons'
+import { CalendarBlankIcon, ClockIcon, VideoCameraIcon } from '@/components/ui/icons'
 import { getBatch } from '@/lib/api/batches'
 import { getBatchEvaluations } from '@/lib/api/evaluations'
 import { getTracks } from '@/lib/api/tracks'
@@ -25,8 +20,6 @@ import {
 } from '@/lib/roster'
 import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
 import type { ApiChapter, ApiEvaluation } from '@/lib/types'
-
-const navItems: NavigationItem[] = [{ label: 'Dashboard', icon: HouseIcon, href: '/' }, ADMIN_NAV_ITEM]
 
 const STATUS_CONFIG = {
   active: { label: 'Active', variant: 'default' as const },
@@ -96,7 +89,7 @@ export default async function AdminBatchDetailPage({
   const st = STATUS_CONFIG[batch.status]
 
   return (
-    <AppShell navigationItems={navItems} profile={profile}>
+    <AppShell navigationItems={getNavItems(isAdmin)} profile={profile}>
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
         <Breadcrumb
           items={[

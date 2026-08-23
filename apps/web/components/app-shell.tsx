@@ -17,7 +17,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   CaretDownIcon,
+  ExamIcon,
   HamburgerIcon,
+  HouseIcon,
   LeaveIcon,
   MoonIcon,
   SettingsIcon,
@@ -34,9 +36,23 @@ export interface NavigationItem {
   href: string
 }
 
-// Shared so every page that conditionally shows it (behind hasSchoolWideAccess()) stays in sync —
-// forgetting to add it on one page is exactly the bug where the admin page itself had no way back.
-export const ADMIN_NAV_ITEM: NavigationItem = { label: 'Admin', icon: SettingsIcon, href: '/admin' }
+const ADMIN_NAV_ITEM: NavigationItem = { label: 'Admin', icon: SettingsIcon, href: '/admin' }
+
+// The ONE place the nav item list is assembled. Every page used to hand-roll its own
+// `navItems` array — that's exactly how "Admin" and later "Exams" ended up present on some
+// pages and silently missing on others (the nav visibly changing shape as you navigate) since
+// nothing forced every page to stay in sync. Every page should call this instead of building
+// its own array.
+export function getNavItems(isAdmin: boolean): NavigationItem[] {
+  const items: NavigationItem[] = [
+    { label: 'Dashboard', icon: HouseIcon, href: '/' },
+    { label: 'Exams', icon: ExamIcon, href: '/exams' },
+  ]
+  if (isAdmin) {
+    items.push(ADMIN_NAV_ITEM)
+  }
+  return items
+}
 
 function isItemActive(item: NavigationItem, pathname: string): boolean {
   if (item.href === '/') return pathname === '/'

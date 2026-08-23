@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 
 import { type ProficiencyLevel } from '@/lib/proficiency'
 import { PROFICIENCY_LEVELS, getProficiencyConfig } from '@/lib/proficiency'
-import { ADMIN_NAV_ITEM, AppShell, type NavigationItem } from '@/components/app-shell'
+import { AppShell, getNavItems } from '@/components/app-shell'
 import { type ChapterData } from '@/components/track-card'
 import { BatchSection } from '@/components/batch-section'
 import { ProficiencyBadge } from '@/components/proficiency-badge'
@@ -33,7 +33,6 @@ import {
   type EnrollmentRole,
 } from '@/lib/types'
 import {
-  HouseIcon,
   BookmarkSimpleIcon,
   VideoCameraIcon,
   ArrowSquareOutIcon,
@@ -42,13 +41,6 @@ import {
 } from '@/components/ui/icons'
 
 const CONTINUE_COOKIE = 'narada-continue-chapter'
-
-// ── Nav ──────────────────────────────────────────────────────────────────────
-
-const navItems: NavigationItem[] = [
-  { label: 'Dashboard', icon: HouseIcon, href: '/' },
-  { label: 'Exams', icon: ExamIcon, href: '/exams' },
-]
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -243,7 +235,7 @@ export default async function DashboardPage({
 
   const recentEvals = studentEvaluations.slice(0, 4)
 
-  const shellNavItems = isAdmin ? [...navItems, ADMIN_NAV_ITEM] : navItems
+  const shellNavItems = getNavItems(isAdmin)
 
   return (
     <AppShell navigationItems={shellNavItems} profile={profile}>
