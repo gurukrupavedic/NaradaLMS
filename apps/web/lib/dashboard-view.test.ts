@@ -21,12 +21,19 @@ function chapter(code: string, level: ProficiencyLevel, title = `Chapter ${code}
   return { id: code, code, title, level, evaluatedAt: null, isCertification: false }
 }
 
-function learning(overrides: Partial<LearningTrack> & { batchCode: string }): LearningTrack {
+// `name` doubles as the track id so tests can assert on order readably. Pass `batch: null` for a
+// track the student studied with no batch on record — the common case in the real roster.
+function learning(
+  overrides: Partial<LearningTrack> & { name: string },
+): LearningTrack {
   return summarizeLearningTrack({
-    batchId: overrides.batchCode,
-    batchCode: overrides.batchCode,
-    status: overrides.status ?? 'active',
+    trackId: overrides.name,
+    trackOrder: overrides.trackOrder ?? 1,
     track: overrides.track ?? 'Track 1',
+    batch:
+      overrides.batch === undefined
+        ? { id: overrides.name, code: overrides.name, status: 'active' }
+        : overrides.batch,
     chapters: overrides.chapters ?? [],
   })
 }
@@ -79,7 +86,7 @@ describe('isCertificationChapter', () => {
 describe('summarizeLearningTrack', () => {
   it('counts started and mastered separately', () => {
     const track = learning({
-      batchCode: 'B',
+      name: 'B',
       chapters: [chapter('1.1', 'level2'), chapter('1.2', 'level4'), chapter('1.3', 'notStarted')],
     })
 
@@ -89,7 +96,7 @@ describe('summarizeLearningTrack', () => {
   })
 
   it('treats absent as not started', () => {
-    const track = learning({ batchCode: 'B', chapters: [chapter('1.1', 'absent')] })
+    const track = learning({ name: 'B', chapters: [chapter('1.1', 'absent')] })
 
     expect(track.started).toBe(0)
   })
@@ -133,7 +140,7 @@ describe('sortTeachingByAttention', () => {
 describe('findResumeChapter', () => {
   it('returns the earliest chapter that is not yet mastered', () => {
     const track = learning({
-      batchCode: 'B',
+      name: 'B',
       chapters: [chapter('1.1', 'level4'), chapter('1.2', 'level2'), chapter('1.3', 'notStarted')],
     })
 
@@ -144,7 +151,7 @@ describe('findResumeChapter', () => {
   // still the earliest outstanding work, so that is where they resume.
   it('prefers an earlier untouched chapter over a later started one', () => {
     const track = learning({
-      batchCode: 'B',
+      name: 'B',
       chapters: [chapter('3.1', 'notStarted'), chapter('3.2', 'notStarted'), chapter('3.3', 'level2')],
     })
 
@@ -152,7 +159,7 @@ describe('findResumeChapter', () => {
   })
 
   it('returns null once every chapter is mastered', () => {
-    const track = learning({ batchCode: 'B', chapters: [chapter('1.1', 'level4')] })
+    const track = learning({ name: 'B', chapters: [chapter('1.1', 'level4')] })
 
     expect(findResumeChapter(track)).toBeNull()
   })
@@ -165,15 +172,15 @@ describe('buildDashboardShape', () => {
     const shape = buildDashboardShape(
       [
         learning({
-          batchCode: 'CLOSED-BUT-UNFINISHED',
-          status: 'completed',
+          name: 'CLOSED-BUT-UNFINISHED',
+          batch: { id: 'b', code: 'b', status: 'completed' },
           chapters: [chapter('3.1', 'notStarted'), chapter('3.2', 'level2')],
         }),
       ],
       [],
     )
 
-    expect(shape.learning.active.map(t => t.batchCode)).toEqual(['CLOSED-BUT-UNFINISHED'])
+    expect(shape.learning.active.map(t => t.trackId)).toEqual(['CLOSED-BUT-UNFINISHED'])
     expect(shape.learning.archived).toHaveLength(0)
   })
 
@@ -181,23 +188,76 @@ describe('buildDashboardShape', () => {
     const shape = buildDashboardShape(
       [
         learning({
-          batchCode: 'DONE',
-          status: 'completed',
+          name: 'DONE',
+          batch: { id: 'b', code: 'b', status: 'completed' },
           chapters: [chapter('1.1', 'level2'), chapter('1.2', 'level2')],
         }),
       ],
       [],
     )
 
-    expect(shape.learning.archived.map(t => t.batchCode)).toEqual(['DONE'])
+    expect(shape.learning.archived.map(t => t.trackId)).toEqual(['DONE'])
     expect(shape.learning.active).toHaveLength(0)
+  })
+
+  // The roster records one current batch per student but marks spanning up to eight tracks, so
+  // prior study arrives with no batch at all. It still belongs on the page.
+  it('archives finished prior study that has no batch on record', () => {
+    const shape = buildDashboardShape(
+      [
+        learning({
+          name: 'PRIOR',
+          batch: null,
+          chapters: [chapter('1.1', 'level4'), chapter('1.2', 'level4')],
+        }),
+      ],
+      [],
+    )
+
+    expect(shape.learning.archived.map(t => t.trackId)).toEqual(['PRIOR'])
+  })
+
+  it('keeps unfinished prior study visible even with no batch on record', () => {
+    const shape = buildDashboardShape(
+      [
+        learning({
+          name: 'PRIOR-PARTIAL',
+          batch: null,
+          chapters: [chapter('1.1', 'level4'), chapter('1.2', 'notStarted')],
+        }),
+      ],
+      [],
+    )
+
+    expect(shape.learning.active.map(t => t.trackId)).toEqual(['PRIOR-PARTIAL'])
+  })
+
+  it('leads with the track that still has a running batch', () => {
+    const shape = buildDashboardShape(
+      [
+        learning({
+          name: 'PRIOR',
+          trackOrder: 1,
+          batch: null,
+          chapters: [chapter('1.1', 'level2'), chapter('1.2', 'notStarted')],
+        }),
+        learning({
+          name: 'CURRENT',
+          trackOrder: 5,
+          chapters: [chapter('5.1', 'notStarted')],
+        }),
+      ],
+      [],
+    )
+
+    expect(shape.learning.active.map(t => t.trackId)).toEqual(['CURRENT', 'PRIOR'])
   })
 
   it('separates completed batches from live ones on both sides', () => {
     const shape = buildDashboardShape(
       [
-        learning({ batchCode: 'L-OLD', status: 'completed' }),
-        learning({ batchCode: 'L-NOW', status: 'active' }),
+        learning({ name: 'L-OLD', batch: { id: 'b', code: 'b', status: 'completed' } }),
+        learning({ name: 'L-NOW' }),
       ],
       [
         teaching({ batchCode: 'T-OLD', status: 'completed' }),
@@ -205,15 +265,15 @@ describe('buildDashboardShape', () => {
       ],
     )
 
-    expect(shape.learning.active.map(t => t.batchCode)).toEqual(['L-NOW'])
-    expect(shape.learning.archived.map(t => t.batchCode)).toEqual(['L-OLD'])
+    expect(shape.learning.active.map(t => t.trackId)).toEqual(['L-NOW'])
+    expect(shape.learning.archived.map(t => t.trackId)).toEqual(['L-OLD'])
     expect(shape.teaching.active.map(t => t.batchCode)).toEqual(['T-NOW'])
     expect(shape.teaching.archived.map(t => t.batchCode)).toEqual(['T-OLD'])
   })
 
   it('leads with teaching when that is where the live work is', () => {
     const shape = buildDashboardShape(
-      [learning({ batchCode: 'L', status: 'active' })],
+      [learning({ name: 'L' })],
       [
         teaching({ batchCode: 'T1', status: 'active' }),
         teaching({ batchCode: 'T2', status: 'active' }),
@@ -225,7 +285,7 @@ describe('buildDashboardShape', () => {
 
   it('leads with learning when a teacher has no active batches left', () => {
     const shape = buildDashboardShape(
-      [learning({ batchCode: 'L', status: 'active' })],
+      [learning({ name: 'L' })],
       [teaching({ batchCode: 'T', status: 'completed' })],
     )
 
