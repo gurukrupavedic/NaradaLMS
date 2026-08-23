@@ -4,13 +4,28 @@ import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { env } from '@narada/env/client'
 
-import { authFetch, applySetCookies, requestOrigin } from './auth'
+import { authFetch, applySetCookies, getSession, requestOrigin } from './auth'
 import { fetchApi } from './api'
 import { PROFILE_COOKIE } from './constants'
 import type { ApiAuthProfile, ApiProfile } from './types'
 
 export async function getProfiles(): Promise<ApiProfile[]> {
   return fetchApi<ApiProfile[]>('/profiles')
+}
+
+// Shared by every route group that requires a signed-in profile — previously duplicated
+// verbatim in (student)/layout.tsx and admin/layout.tsx, with no mechanism keeping the two
+// copies in sync.
+export async function requireAuthenticatedProfile(): Promise<void> {
+  const headerStore = await headers()
+  const [session, cookieStore] = await Promise.all([
+    getSession(headerStore.get('cookie') ?? '', requestOrigin(headerStore)),
+    cookies(),
+  ])
+
+  if (!session || !cookieStore.get(PROFILE_COOKIE)) {
+    redirect('/login')
+  }
 }
 
 export async function getCurrentProfile(): Promise<ApiProfile | null> {
