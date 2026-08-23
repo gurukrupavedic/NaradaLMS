@@ -2,14 +2,14 @@
 
 import { useState, type ReactNode } from 'react'
 
-import { RosterGrid } from '@/components/teacher/roster-grid'
+import { RosterAccordion } from '@/components/teacher/roster-accordion'
 import { StudentHistoryDrawer } from '@/components/teacher/student-history-drawer'
 import { Badge } from '@/components/ui/badge'
 import { CaretDownIcon } from '@/components/ui/icons'
 import { Progress } from '@/components/ui/progress'
 import { type RosterRow } from '@/lib/roster'
 import { cn } from '@/lib/utils'
-import { type ApiChapter, type BatchStatus } from '@/lib/types'
+import { type BatchStatus } from '@/lib/types'
 
 interface TeachingBatchSectionProps {
   batchId: string
@@ -19,7 +19,6 @@ interface TeachingBatchSectionProps {
   trackOrder: number
   progress: number
   role: 'instructor' | 'ta'
-  chapters: ApiChapter[]
   roster: RosterRow[]
   historyContentByStudentId: Record<string, ReactNode>
   defaultOpen?: boolean
@@ -44,7 +43,6 @@ export function TeachingBatchSection({
   trackOrder,
   progress,
   role,
-  chapters,
   roster,
   historyContentByStudentId,
   defaultOpen = false,
@@ -96,17 +94,7 @@ export function TeachingBatchSection({
 
       <Progress value={progress} className="h-1 rounded-none" />
 
-      {/* Experimental: grid view. Revert by swapping back to
-          <RosterAccordion batchId={batchId} roster={roster} onOpenHistory={openHistory} /> —
-          same roster data and history-drawer wiring, no other changes needed. */}
-      {open && (
-        <RosterGrid
-          batchId={batchId}
-          chapters={chapters}
-          roster={roster}
-          onOpenHistory={openHistory}
-        />
-      )}
+      {open && <RosterAccordion batchId={batchId} roster={roster} onOpenHistory={openHistory} />}
 
       <StudentHistoryDrawer
         open={historyOpen}
