@@ -97,7 +97,13 @@ export default async function AdminBatchDetailPage({
   return (
     <AppShell navigationItems={navItems} profile={profile}>
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
-        <Breadcrumb items={[{ label: 'Admin', href: '/admin' }, { label: batch.code }]} />
+        <Breadcrumb
+          items={[
+            { label: 'Dashboard', href: '/' },
+            { label: 'Admin', href: '/admin' },
+            { label: batch.code },
+          ]}
+        />
 
         {/* Header */}
         <div className="bg-card ring-1 ring-foreground/10">
