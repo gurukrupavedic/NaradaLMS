@@ -45,7 +45,10 @@ const CONTINUE_COOKIE = 'narada-continue-chapter'
 
 // ── Nav ──────────────────────────────────────────────────────────────────────
 
-const navItems: NavigationItem[] = [{ label: 'Dashboard', icon: HouseIcon, href: '/' }]
+const navItems: NavigationItem[] = [
+  { label: 'Dashboard', icon: HouseIcon, href: '/' },
+  { label: 'Exams', icon: ExamIcon, href: '/exams' },
+]
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -377,23 +380,34 @@ export default async function DashboardPage({
                 </div>
                 <div className="divide-y divide-border/30">
                   {upcomingExams.map(exam => {
-                    const chapter = chapterMap.get(exam.chapterId)
-                    const track = chapter ? trackMap.get(chapter.trackId) : null
+                    const track = trackMap.get(exam.chapter.trackId)
+                    const meetingUrl = batches.find(b => b.trackId === exam.chapter.trackId)
+                      ?.meetingUrl
                     return (
-                      <div
-                        key={exam.id}
-                        className="flex items-center justify-between gap-3 px-4 py-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium">Track {track?.order ?? '—'}</p>
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                            {track?.name ?? '—'}
-                          </p>
+                      <div key={exam.id} className="px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{exam.chapter.title}</p>
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                              {exam.chapter.code}&ensp;·&ensp;{track?.name ?? '—'}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right text-xs text-muted-foreground">
+                            <p>{formatDate(exam.scheduledAt)}</p>
+                            <p>{formatTime(exam.scheduledAt)}</p>
+                          </div>
                         </div>
-                        <div className="shrink-0 text-right text-xs text-muted-foreground">
-                          <p>{formatDate(exam.scheduledAt)}</p>
-                          <p>{formatTime(exam.scheduledAt)}</p>
-                        </div>
+                        {meetingUrl && (
+                          <a
+                            href={meetingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                          >
+                            Join
+                            <ArrowSquareOutIcon className="size-3" />
+                          </a>
+                        )}
                       </div>
                     )
                   })}

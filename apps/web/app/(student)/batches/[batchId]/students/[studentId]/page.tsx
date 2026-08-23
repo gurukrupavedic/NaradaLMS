@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { AppShell, type NavigationItem } from '@/components/app-shell'
 import { StudentHistoryContent } from '@/components/teacher/student-history-content'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
-import { HouseIcon } from '@/components/ui/icons'
+import { ExamIcon, HouseIcon } from '@/components/ui/icons'
 import { getBatch, getBatchesForProfile } from '@/lib/api/batches'
 import { getStudentEvaluations } from '@/lib/api/evaluations'
 import { fetchAllPages } from '@/lib/api/pagination'
@@ -11,7 +11,10 @@ import { getTracks } from '@/lib/api/tracks'
 import { getCurrentChapter, getPastBatches, toRosterStudent } from '@/lib/roster'
 import { getCurrentProfile } from '@/lib/session'
 
-const navItems: NavigationItem[] = [{ label: 'Dashboard', icon: HouseIcon, href: '/' }]
+const navItems: NavigationItem[] = [
+  { label: 'Dashboard', icon: HouseIcon, href: '/' },
+  { label: 'Exams', icon: ExamIcon, href: '/exams' },
+]
 
 export default async function StudentHistoryPage({
   params,

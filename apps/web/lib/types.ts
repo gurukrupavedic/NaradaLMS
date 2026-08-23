@@ -96,4 +96,6 @@ export type ApiExam = {
   status: ExamStatus
   evaluationId: string | null
   performedAt: string | null
+  chapter: { id: string; code: string; title: string; trackId: string }
+  evaluation: { level: ProficiencyLevel; notes: string | null } | null
 }
