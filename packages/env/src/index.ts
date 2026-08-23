@@ -7,10 +7,12 @@ export const env = createEnv({
     API_BASE_URL: z.url(),
     API_VERSION: z.coerce.number(),
     DATABASE_URL: z.url(),
+    // Not validated as z.url() because staging allows wildcard host patterns
+    // (e.g. "https://web-*-gurukrupa-vedic.vercel.app") to match Vercel preview deployments.
     TRUSTED_ORIGINS: z
       .string()
       .transform(origins => origins.split(','))
-      .pipe(z.array(z.url()))
+      .pipe(z.array(z.string().min(1)))
       .default([]),
 
     AUTH_SECRET: z.string().min(32),
