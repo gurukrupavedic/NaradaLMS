@@ -1,11 +1,7 @@
 import 'server-only'
 
-import { getBatchesForProfile, getMyBatchMemberships, type BatchMembership } from '@/lib/api/batches'
-import { getExams } from '@/lib/api/exams'
-import { getBatchEvaluations, getStudentEvaluations } from '@/lib/api/evaluations'
-import { fetchAllPages } from '@/lib/api/pagination'
-import { getTracks } from '@/lib/api/tracks'
-import { getProfiles } from '@/lib/session'
+import { type BatchMembership } from '@/lib/api/batches'
+import { getDashboard } from '@/lib/api/dashboard'
 import type { ApiBatch, ApiEvaluation, ApiExam, ApiTrack } from '@/lib/types'
 
 export type TeachingBatchData = {
@@ -22,61 +18,30 @@ export type DashboardData = {
   pastBatchesByStudentId: Map<string, ApiBatch[]>
 }
 
-export async function getDashboardData(profileId?: string): Promise<DashboardData> {
-  const [profiles, tracks, memberships] = await Promise.all([
-    getProfiles(),
-    getTracks(),
-    getMyBatchMemberships(),
-  ])
+// A single GET /me/dashboard call now does everything this used to assemble from N HTTP
+// round-trips (one per taught batch, one per taught student) — see apps/api/src/services/
+// dashboard.ts for where that fan-out moved. This function is left as a thin reshape from the
+// API's flat/array response into the Maps this page already expects, so the page component
+// itself didn't need to change at all.
+export async function getDashboardData(): Promise<DashboardData> {
+  const dashboard = await getDashboard()
 
-  const studentMemberships = memberships.filter(item => item.role === 'student')
-  // Excludes role === null (a school-wide admin/owner's view of a batch they don't personally
-  // teach) — those don't get the per-batch evaluations/cross-batch student-history fetches below,
-  // since for an admin that set can be the entire school, not a handful of actual teaching batches.
-  const teachingMemberships = memberships.filter(item => item.role === 'instructor' || item.role === 'ta')
-
-  const teachingStudentIds = [
-    ...new Set(
-      teachingMemberships.flatMap(item =>
-        item.batch.members.filter(member => member.role === 'student').map(member => member.profileId),
-      ),
-    ),
-  ]
-
-  const [studentEvaluationGroups, teachingEvaluationGroups, visibleScheduledExams, pastBatchGroups] =
-    await Promise.all([
-      profileId
-        ? Promise.all(
-            studentMemberships.map(item => getStudentEvaluations(item.batch.id, profileId)),
-          )
-        : [],
-      Promise.all(teachingMemberships.map(item => getBatchEvaluations(item.batch.id))),
-      profileId ? fetchAllPages(cursor => getExams({ status: 'scheduled', cursor })) : [],
-      Promise.all(
-        teachingStudentIds.map(studentId =>
-          fetchAllPages(cursor => getBatchesForProfile(studentId, { cursor })),
-        ),
-      ),
-    ])
-
-  const byNewestEvaluation = (a: ApiEvaluation, b: ApiEvaluation) =>
-    new Date(b.evaluatedAt ?? 0).getTime() - new Date(a.evaluatedAt ?? 0).getTime()
+  const memberships: BatchMembership[] = dashboard.memberships.map(({ role, ...batch }) => ({
+    batch,
+    role,
+  }))
 
   return {
-    firstName: profiles.find(profile => profile.id === profileId)?.name.split(' ')[0] ?? 'there',
+    firstName: dashboard.firstName,
     memberships,
-    tracks,
-    studentEvaluations: studentEvaluationGroups.flat().sort(byNewestEvaluation),
-    // Teachers can see their students' exams too; the personal dashboard should not show those.
-    upcomingExams: visibleScheduledExams.filter(exam => exam.studentId === profileId),
+    tracks: dashboard.tracks,
+    studentEvaluations: dashboard.studentEvaluations,
+    upcomingExams: dashboard.upcomingExams,
     teachingByBatchId: new Map(
-      teachingMemberships.map((item, index) => [
-        item.batch.id,
-        { evaluations: teachingEvaluationGroups[index] ?? [] },
-      ]),
+      dashboard.teaching.map(({ batchId, evaluations }) => [batchId, { evaluations }]),
     ),
     pastBatchesByStudentId: new Map(
-      teachingStudentIds.map((studentId, index) => [studentId, pastBatchGroups[index] ?? []]),
+      dashboard.pastBatchesByStudent.map(({ studentId, batches }) => [studentId, batches]),
     ),
   }
 }

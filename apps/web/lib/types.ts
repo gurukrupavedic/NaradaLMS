@@ -99,3 +99,18 @@ export type ApiExam = {
   chapter: { id: string; code: string; title: string; trackId: string }
   evaluation: { level: ProficiencyLevel; notes: string | null } | null
 }
+
+// GET /me/dashboard's response — everything the dashboard needs, assembled server-side in one
+// request instead of one HTTP round-trip per batch/student. `memberships` is flat
+// (ApiBatchWithRole), matching GET /profiles/:id/batches?withDetail=true's shape; `teaching` and
+// `pastBatchesByStudent` are arrays (not maps) since Maps don't survive JSON — reconstruct on the
+// client.
+export type ApiDashboard = {
+  firstName: string
+  memberships: ApiBatchWithRole[]
+  tracks: ApiTrack[]
+  studentEvaluations: ApiEvaluation[]
+  upcomingExams: ApiExam[]
+  teaching: { batchId: string; evaluations: ApiEvaluation[] }[]
+  pastBatchesByStudent: { studentId: string; batches: ApiBatch[] }[]
+}
