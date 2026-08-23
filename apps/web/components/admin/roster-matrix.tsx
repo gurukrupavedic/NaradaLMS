@@ -1,11 +1,14 @@
+import { RemoveStudentAction } from '@/components/admin/remove-student-action'
 import { ArrowUpRightIcon } from '@/components/ui/icons'
 import { getProficiencyConfig } from '@/lib/proficiency'
 import { type RosterRow } from '@/lib/roster'
 import { cn } from '@/lib/utils'
 import { type ApiChapter } from '@/lib/types'
 
-// Read-only — cells link out to the existing per-student history page instead of opening an
-// evaluate dialog. Admin oversight is about visibility, not editing another instructor's marks.
+// Chapter cells are read-only — they link out to the existing per-student history page instead
+// of opening an evaluate dialog, since admin oversight is about visibility, not editing another
+// instructor's marks. Batch membership (the student column) is different: who's enrolled at all
+// is exactly what an admin manages here.
 export function RosterMatrix({
   batchId,
   chapters,
@@ -38,19 +41,28 @@ export function RosterMatrix({
             {roster.map(row => (
               <tr key={row.student.id} className="transition-colors hover:bg-muted/10">
                 <td className="sticky left-0 z-10 border-r border-b border-border/50 bg-card p-0">
-                  <a
-                    href={`/batches/${batchId}/students/${row.student.id}`}
-                    title={`View ${row.student.name}'s history`}
-                    className="flex w-full items-center justify-between gap-2 px-4 py-2 text-left transition-colors hover:bg-muted/50"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{row.student.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {row.student.city}
+                  <div className="flex w-full items-center gap-1 pr-1">
+                    <a
+                      href={`/batches/${batchId}/students/${row.student.id}`}
+                      title={`View ${row.student.name}'s history`}
+                      className="flex min-w-0 flex-1 items-center gap-2 px-4 py-2 text-left transition-colors hover:bg-muted/50"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">
+                          {row.student.name}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {row.student.city}
+                        </span>
                       </span>
-                    </span>
-                    <ArrowUpRightIcon className="size-3.5 shrink-0 text-muted-foreground" />
-                  </a>
+                      <ArrowUpRightIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                    </a>
+                    <RemoveStudentAction
+                      batchId={batchId}
+                      studentId={row.student.id}
+                      studentName={row.student.name}
+                    />
+                  </div>
                 </td>
                 {row.chapterMarks.map(mark => {
                   const config = getProficiencyConfig(mark.level)

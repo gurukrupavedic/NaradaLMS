@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 
-import { profile, type SchoolDbExecutor, type SchoolProfile } from '@narada/db'
+import { enrollment, profile, type SchoolDbExecutor, type SchoolProfile } from '@narada/db'
 import { forbidden, internalError, notFound } from '../error'
 import { requireNonEmpty } from '../utils/validate'
 
@@ -12,6 +12,42 @@ export const createProfileSchema = z.object({
   phone: z.string().optional(),
   city: z.string().optional(),
 })
+
+export const searchProfilesQuerySchema = z.object({
+  query: z.string().trim().min(1).optional(),
+  excludeBatchId: z.uuid().optional(),
+})
+
+export type SearchProfilesQuery = z.infer<typeof searchProfilesQuerySchema>
+
+const SEARCH_LIMIT = 25
+
+// Backs the admin "enroll a student" search — there was previously no way to list/search
+// profiles across the whole school at all (findProfilesByUser is scoped to one user's own
+// profiles, for the login profile-picker). excludeBatchId filters out students already
+// enrolled in the batch being searched for, at the query level so LIMIT stays meaningful.
+export async function searchProfiles(
+  db: SchoolDbExecutor,
+  options: SearchProfilesQuery,
+): Promise<SchoolProfile[]> {
+  const alreadyEnrolled = options.excludeBatchId
+    ? db
+        .select({ id: enrollment.profileId })
+        .from(enrollment)
+        .where(eq(enrollment.batchId, options.excludeBatchId))
+    : null
+
+  return db.query.profile.findMany({
+    where: (t, { ilike, and, notInArray }) => {
+      const conditions = []
+      if (options.query) conditions.push(ilike(t.name, `%${options.query}%`))
+      if (alreadyEnrolled) conditions.push(notInArray(t.id, alreadyEnrolled))
+      return conditions.length > 0 ? and(...conditions) : undefined
+    },
+    orderBy: (t, { asc }) => asc(t.name),
+    limit: SEARCH_LIMIT,
+  })
+}
 
 export const updateProfileSchema = requireNonEmpty(
   z.object({
