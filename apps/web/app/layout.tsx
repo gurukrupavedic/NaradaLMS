@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Crimson_Pro } from 'next/font/google'
+import { IBM_Plex_Mono, Source_Sans_3, Source_Serif_4 } from 'next/font/google'
 
 import { cn } from '@/lib/utils'
 import { THEME_COOKIE } from '@/lib/constants'
@@ -10,9 +10,13 @@ import { Toaster } from '@/components/ui/sonner'
 
 import './globals.css'
 
-const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
-const crimsonPro = Crimson_Pro({
+const sourceSans = Source_Sans_3({ variable: '--font-sans', subsets: ['latin'] })
+const plexMono = IBM_Plex_Mono({
+  variable: '--font-plex-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+})
+const sourceSerif = Source_Serif_4({
   variable: '--font-display',
   subsets: ['latin'],
   style: ['normal', 'italic'],
@@ -33,9 +37,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html
       lang="en"
       className={cn(
-        geistSans.variable,
-        geistMono.variable,
-        crimsonPro.variable,
+        sourceSans.variable,
+        plexMono.variable,
+        sourceSerif.variable,
         theme === 'dark' && 'dark',
         'h-full antialiased',
       )}
