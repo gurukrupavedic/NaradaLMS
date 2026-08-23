@@ -2,19 +2,14 @@ import { redirect } from 'next/navigation'
 
 import { ADMIN_NAV_ITEM, AppShell, type NavigationItem } from '@/components/app-shell'
 import { AdminBatchList, type AdminBatchGroup } from '@/components/admin/batch-list'
-import { BookOpenIcon, HouseIcon, UsersIcon } from '@/components/ui/icons'
+import { HouseIcon } from '@/components/ui/icons'
 import { getBatches } from '@/lib/api/batches'
 import { fetchAllPages } from '@/lib/api/pagination'
 import { getTracks } from '@/lib/api/tracks'
 import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
 import type { BatchStatus } from '@/lib/types'
 
-const navItems: NavigationItem[] = [
-  { label: 'Dashboard', icon: HouseIcon, href: '/' },
-  { label: 'Content', icon: BookOpenIcon },
-  { label: 'Batches', icon: UsersIcon },
-  ADMIN_NAV_ITEM,
-]
+const navItems: NavigationItem[] = [{ label: 'Dashboard', icon: HouseIcon, href: '/' }, ADMIN_NAV_ITEM]
 
 // Ordered by what an admin scanning the whole school cares about first.
 const STATUS_ORDER: BatchStatus[] = ['active', 'upcoming', 'completed']

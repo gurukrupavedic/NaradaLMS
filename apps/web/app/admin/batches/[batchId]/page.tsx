@@ -6,11 +6,9 @@ import { Badge } from '@/components/ui/badge'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { Progress } from '@/components/ui/progress'
 import {
-  BookOpenIcon,
   CalendarBlankIcon,
   ClockIcon,
   HouseIcon,
-  UsersIcon,
   VideoCameraIcon,
 } from '@/components/ui/icons'
 import { getBatch } from '@/lib/api/batches'
@@ -27,12 +25,7 @@ import {
 import { getCurrentProfile, hasSchoolWideAccess } from '@/lib/session'
 import type { ApiChapter, ApiEvaluation } from '@/lib/types'
 
-const navItems: NavigationItem[] = [
-  { label: 'Dashboard', icon: HouseIcon, href: '/' },
-  { label: 'Content', icon: BookOpenIcon },
-  { label: 'Batches', icon: UsersIcon },
-  ADMIN_NAV_ITEM,
-]
+const navItems: NavigationItem[] = [{ label: 'Dashboard', icon: HouseIcon, href: '/' }, ADMIN_NAV_ITEM]
 
 const STATUS_CONFIG = {
   active: { label: 'Active', variant: 'default' as const },

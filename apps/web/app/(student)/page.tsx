@@ -33,9 +33,7 @@ import {
   type EnrollmentRole,
 } from '@/lib/types'
 import {
-  BookOpenIcon,
   HouseIcon,
-  UsersIcon,
   BookmarkSimpleIcon,
   VideoCameraIcon,
   ArrowSquareOutIcon,
@@ -47,11 +45,7 @@ const CONTINUE_COOKIE = 'narada-continue-chapter'
 
 // ── Nav ──────────────────────────────────────────────────────────────────────
 
-const navItems: NavigationItem[] = [
-  { label: 'Dashboard', icon: HouseIcon, href: '/' },
-  { label: 'Learning', icon: BookOpenIcon },
-  { label: 'Batches', icon: UsersIcon },
-]
+const navItems: NavigationItem[] = [{ label: 'Dashboard', icon: HouseIcon, href: '/' }]
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
