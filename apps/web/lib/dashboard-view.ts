@@ -25,9 +25,9 @@ export type ChapterRow = {
   title: string
   level: ProficiencyLevel
   evaluatedAt: string | null
-  // The final chapter of each track is the certification exam ("TRACK 3 CERTIFICATION EXAM
-  // STATUS"). It's the outcome the whole track builds toward, so it shouldn't render as just
-  // another row.
+  // Each track carries a certification chapter ("TRACK 3 CERTIFICATION EXAM STATUS"). It's the
+  // outcome the whole track builds toward, so it shouldn't render as just another row. Matched
+  // by title, not position — track 8's sits at 8.12 of 43 chapters, not at the end.
   isCertification: boolean
 }
 
