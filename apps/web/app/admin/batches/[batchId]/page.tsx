@@ -2,12 +2,14 @@ import { notFound, redirect } from 'next/navigation'
 
 import { AppShell } from '@/components/app-shell'
 import { getNavItems } from '@/lib/nav-items'
+import { Standing } from '@/components/dashboard/standing'
+import { Section } from '@/components/dashboard/section'
 import { EnrollStudentDialog } from '@/components/admin/enroll-student-dialog'
 import { RosterMatrix } from '@/components/admin/roster-matrix'
 import { Badge } from '@/components/ui/badge'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
-import { Progress } from '@/components/ui/progress'
 import { CalendarBlankIcon, ClockIcon, VideoCameraIcon } from '@/components/ui/icons'
+import { pluralize, trackLabel } from '@/lib/dashboard-view'
 import { getBatch } from '@/lib/api/batches'
 import { getBatchEvaluations } from '@/lib/api/evaluations'
 import { getTracks } from '@/lib/api/tracks'
@@ -91,7 +93,17 @@ export default async function AdminBatchDetailPage({
 
   return (
     <AppShell navigationItems={getNavItems(isAdmin)} profile={profile}>
-      <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+      <Standing
+        eyebrow={`${st.label} batch · ${trackLabel(track.order, track.name)}`}
+        headline={batch.code}
+        meta={pluralize(students.length, 'student')}
+        stats={[
+          { value: `${progress}%`, label: 'Started' },
+          { value: `${masteredProgress}%`, label: 'Mastered' },
+        ]}
+      />
+
+      <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
         <Breadcrumb
           items={[
             { label: 'Dashboard', href: '/' },
@@ -100,80 +112,57 @@ export default async function AdminBatchDetailPage({
           ]}
         />
 
-        {/* Header */}
-        <div className="bg-card ring-1 ring-foreground/10">
-          <div className="flex items-start justify-between gap-4 px-5 py-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="font-mono text-lg font-semibold">{batch.code}</h1>
-                <Badge variant={st.variant}>{st.label}</Badge>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Track {track.order} — {track.name}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-xs text-muted-foreground">{students.length} students</p>
-              <p className="mt-1 text-lg font-semibold tabular-nums">{progress}%</p>
-              <p className="text-xs text-muted-foreground tabular-nums">{masteredProgress}% mastered</p>
-            </div>
-          </div>
-          <Progress value={progress} className="h-1 rounded-none" />
-          {(batch.startDate || batch.meetingUrl || track.chapters.length > 0) && (
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/50 px-5 py-3 text-xs text-muted-foreground">
-              {batch.startDate && (
-                <span className="flex items-center gap-1.5">
-                  <CalendarBlankIcon className="size-3.5" />
-                  {formatDate(batch.startDate)}
-                </span>
-              )}
-              {batch.meetingUrl && (
-                <a
-                  href={batch.meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-primary hover:underline"
-                >
-                  <VideoCameraIcon className="size-3.5" />
-                  Meeting link
-                </a>
-              )}
-              {batch.classSlots.length > 0 && (
-                <span className="flex items-center gap-1.5">
-                  <ClockIcon className="size-3.5" />
-                  {batch.classSlots
-                    .map(slot => `${DAY_NAMES[slot.dayOfWeek]} ${formatTime(slot.time)}`)
-                    .join(', ')}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Instructors & TAs */}
-        {instructors.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="font-serif text-lg font-semibold">Instructors &amp; TAs</h2>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {instructors.map(member => (
-                <div
-                  key={member.profileId}
-                  className="bg-card flex items-center justify-between gap-2 px-4 py-2.5 ring-1 ring-foreground/10"
-                >
-                  <span className="text-sm font-medium">{member.name}</span>
-                  <Badge variant="outline" className="shrink-0 capitalize">
-                    {member.role}
-                  </Badge>
-                </div>
-              ))}
-            </div>
+        {/* Schedule and join details, when the batch has any set. Most don't. */}
+        {(batch.startDate || batch.meetingUrl || batch.classSlots.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-l-2 border-primary bg-primary/5 px-4 py-3 text-xs text-muted-foreground">
+            {batch.startDate && (
+              <span className="flex items-center gap-1.5">
+                <CalendarBlankIcon className="size-3.5" />
+                {formatDate(batch.startDate)}
+              </span>
+            )}
+            {batch.classSlots.length > 0 && (
+              <span className="flex items-center gap-1.5">
+                <ClockIcon className="size-3.5" />
+                {batch.classSlots
+                  .map(slot => `${DAY_NAMES[slot.dayOfWeek]} ${formatTime(slot.time)}`)
+                  .join(', ')}
+              </span>
+            )}
+            {batch.meetingUrl && (
+              <a
+                href={batch.meetingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 font-medium text-primary hover:underline"
+              >
+                <VideoCameraIcon className="size-3.5" />
+                Join link
+              </a>
+            )}
           </div>
         )}
 
-        {/* Student matrix */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="font-serif text-lg font-semibold">Students</h2>
+        {instructors.length > 0 && (
+          <Section title="Teaching staff" count={pluralize(instructors.length, 'person', 'people')}>
+            <ol className="divide-y divide-border/40 bg-card ring-1 ring-foreground/10">
+              {instructors.map(member => (
+                <li
+                  key={member.profileId}
+                  className="flex items-center justify-between gap-2 px-4 py-2.5"
+                >
+                  <span className="min-w-0 truncate text-sm">{member.name}</span>
+                  <Badge variant="outline" className="shrink-0 capitalize">
+                    {member.role}
+                  </Badge>
+                </li>
+              ))}
+            </ol>
+          </Section>
+        )}
+
+        <Section title="Students" count={pluralize(roster.length, 'student')}>
+          <div className="flex justify-end">
             <EnrollStudentDialog batchId={batch.id} />
           </div>
           {roster.length === 0 ? (
@@ -181,7 +170,7 @@ export default async function AdminBatchDetailPage({
           ) : (
             <RosterMatrix batchId={batch.id} chapters={track.chapters} roster={roster} />
           )}
-        </div>
+        </Section>
       </div>
     </AppShell>
   )
