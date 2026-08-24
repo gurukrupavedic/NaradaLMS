@@ -1,0 +1,71 @@
+name: Deploy API to Railway (staging)
+
+# Staging should always match main. It previously drifted because `railway up`
+# uploads the working tree rather than a git ref, so a local deploy left staging
+# running code that was never committed.
+#
+# Triggered by CI finishing rather than by the push itself: pushing to main
+# starts CI and this workflow in parallel, which would let a failing build reach
+# staging first. Waiting on the CI run means only code that passed lint, build
+# and test is deployed.
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main]
+  # Manual re-deploy, e.g. to recover staging after someone has run `railway up`
+  # locally against it.
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api-staging
+  # Deploys queue rather than cancel: `railway up` hands off to a Railway-side
+  # build that a cancelled job would not stop, so overlapping runs could race.
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # workflow_run fires for failed CI runs too, so the conclusion has to be
+    # checked explicitly. Always allow a manual dispatch through.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # workflow_run checks out the default branch by default, not the commit
+          # that triggered CI. Pin it explicitly — `railway up` ships whatever is
+          # in the working tree, so the wrong ref here deploys the wrong code.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      # No --detach: the command streams the build and exits non-zero if it
+      # fails, so a broken image shows up as a failed action rather than a green
+      # tick over a staging environment that never came up.
+      - name: Deploy API to Railway
+        run: railway up --service "$RAILWAY_SERVICE" --environment staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_ID }}
+
+      - name: Verify staging is serving
+        run: |
+          for attempt in $(seq 1 10); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$STAGING_HEALTH_URL" || true)
+            if [ "$code" = "200" ]; then
+              echo "staging healthy (HTTP $code) after $attempt attempt(s)"
+              exit 0
+            fi
+            echo "attempt $attempt: HTTP ${code:-no response}; retrying in 15s"
+            sleep 15
+          done
+          echo "staging did not return 200 within the retry budget"
+          exit 1
+        env:
+          # Set the STAGING_API_URL repository variable to override, so a
+          # rebuilt staging environment doesn't need a workflow edit.
+          STAGING_HEALTH_URL: ${{ vars.STAGING_API_URL || 'https://api-staging-dd81.up.railway.app' }}/v1/health
