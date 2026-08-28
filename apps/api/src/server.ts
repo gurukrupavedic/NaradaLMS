@@ -3,7 +3,7 @@ import express, { Router } from 'express'
 import type { Express, Request, Response, NextFunction } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
-import { rateLimit } from 'express-rate-limit'
+import { rateLimit, ipKeyGenerator } from 'express-rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 
 import { auth } from '@narada/auth'
@@ -46,6 +46,21 @@ const authRateLimit = rateLimit({
   legacyHeaders: false,
 })
 
+// Sending a Twilio Verify OTP costs money per message, so IP-based limiting alone isn't enough —
+// an attacker can rotate IPs but not phone numbers. Keyed by the phone number in the request body
+// (falling back to IP if it's missing/malformed) so repeated sends to the same number are capped
+// regardless of source IP.
+const sendOtpRateLimit = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 3,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  keyGenerator: req => {
+    const phoneNumber = (req as Request).body?.phoneNumber
+    return typeof phoneNumber === 'string' ? phoneNumber : ipKeyGenerator(req.ip ?? '')
+  },
+})
+
 export function createServer() {
   const router = Router()
   router.use(helmet())
@@ -61,8 +76,11 @@ export function createServer() {
   router.use(attachRequestContext)
   router.use(logRequest)
 
-  // BetterAuth requires access to the raw body stream, and thus,
-  // must be mounted before the `express.json()` middleware.
+  // BetterAuth requires access to the raw body stream, and thus, must be mounted before the
+  // `express.json()` middleware — except send-otp, which needs the parsed phone number to key
+  // its rate limit. better-auth's node handler falls back to re-serializing `req.body` when the
+  // raw stream has already been consumed, so parsing it here first is safe.
+  router.post('/auth/phone-number/send-otp', express.json(), authRateLimit, sendOtpRateLimit, toNodeHandler(auth))
   router.all('/auth/*splat', authRateLimit, toNodeHandler(auth))
   router.use(express.json())
   setupRoutes(router)

@@ -1,35 +1,46 @@
 'use client'
 
-import { useId, useTransition, useReducer } from 'react'
+import { useEffect, useId, useState, useTransition, useReducer } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRightIcon, GraduationCapIcon } from '@phosphor-icons/react/dist/ssr'
 import { AnimatePresence, motion } from 'motion/react'
 import { toast } from 'sonner'
 
-import { signIn } from '@narada/auth/client'
+import { authClient, signIn } from '@narada/auth/client'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { getProfiles, selectProfile } from '@/lib/session'
 import type { ApiProfile } from '@/lib/types'
 
+// Matches the server's phoneNumberValidator in packages/auth/src/index.ts.
+const PHONE_REGEX = /^\+[1-9]\d{7,14}$/
+const OTP_RESEND_COOLDOWN_SECONDS = 60
+
 type LoginState =
-  | { step: 'sign-in'; direction: number }
+  | { step: 'phone-entry'; direction: number }
+  | { step: 'otp-entry'; phoneNumber: string; direction: number }
   | { step: 'profiles'; profiles: ApiProfile[]; selected: string | null; direction: number }
 
 type LoginAction =
+  | { type: 'code_sent'; phoneNumber: string }
+  | { type: 'change_number' }
   | { type: 'show_profiles'; profiles: ApiProfile[] }
   | { type: 'select'; id: string }
   | { type: 'reset' }
 
 function loginReducer(state: LoginState, action: LoginAction): LoginState {
   switch (action.type) {
+    case 'code_sent':
+      return { step: 'otp-entry', phoneNumber: action.phoneNumber, direction: 1 }
+    case 'change_number':
+      return { step: 'phone-entry', direction: -1 }
     case 'show_profiles':
       return { step: 'profiles', profiles: action.profiles, selected: null, direction: 1 }
     case 'select':
       if (state.step !== 'profiles') return state
       return { ...state, selected: action.id }
     case 'reset':
-      return { step: 'sign-in', direction: -1 }
+      return { step: 'phone-entry', direction: -1 }
   }
 }
 
@@ -46,27 +57,39 @@ export function SignInForm({ initialProfiles }: { initialProfiles?: ApiProfile[]
     loginReducer,
     initialProfiles
       ? { step: 'profiles' as const, profiles: initialProfiles, selected: null, direction: 1 }
-      : { step: 'sign-in' as const, direction: 1 },
+      : { step: 'phone-entry' as const, direction: 1 },
   )
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
-  function handleEmailSignIn(formData: FormData) {
+  async function loadProfiles() {
+    try {
+      const profiles = await getProfiles()
+      dispatch({ type: 'show_profiles', profiles })
+    } catch {
+      toast.error('Signed in, but failed to load profiles. Please refresh.')
+    }
+  }
+
+  function handleSendOtp(phoneNumber: string) {
     startTransition(async () => {
-      const { error } = await signIn.email({
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
-      })
+      const { error } = await authClient.phoneNumber.sendOtp({ phoneNumber })
       if (error) {
-        toast.error(error.message ?? 'Failed to sign in. Please try again.')
+        toast.error(error.message ?? 'Failed to send code. Please try again.')
         return
       }
-      try {
-        const profiles = await getProfiles()
-        dispatch({ type: 'show_profiles', profiles })
-      } catch {
-        toast.error('Signed in, but failed to load profiles. Please refresh.')
+      dispatch({ type: 'code_sent', phoneNumber })
+    })
+  }
+
+  function handleVerifyOtp(phoneNumber: string, code: string) {
+    startTransition(async () => {
+      const { error } = await authClient.phoneNumber.verify({ phoneNumber, code })
+      if (error) {
+        toast.error(error.message ?? 'Invalid or expired code. Please try again.')
+        return
       }
+      await loadProfiles()
     })
   }
 
@@ -156,11 +179,19 @@ export function SignInForm({ initialProfiles }: { initialProfiles?: ApiProfile[]
                 exit="exit"
                 transition={TRANSITION}
               >
-                {state.step === 'sign-in' ? (
-                  <SignInStep
+                {state.step === 'phone-entry' ? (
+                  <PhoneEntryStep
                     isPending={isPending}
-                    onEmailSignIn={handleEmailSignIn}
+                    onSendOtp={handleSendOtp}
                     onGoogleSignIn={handleGoogleSignIn}
+                  />
+                ) : state.step === 'otp-entry' ? (
+                  <OtpEntryStep
+                    phoneNumber={state.phoneNumber}
+                    isPending={isPending}
+                    onVerify={code => handleVerifyOtp(state.phoneNumber, code)}
+                    onResend={() => handleSendOtp(state.phoneNumber)}
+                    onChangeNumber={() => dispatch({ type: 'change_number' })}
                   />
                 ) : (
                   <ProfileStep
@@ -203,15 +234,29 @@ function GoogleIcon() {
   )
 }
 
-function SignInStep({
+function PhoneEntryStep({
   isPending,
-  onEmailSignIn,
+  onSendOtp,
   onGoogleSignIn,
 }: {
   isPending: boolean
-  onEmailSignIn: (formData: FormData) => void
+  onSendOtp: (phoneNumber: string) => void
   onGoogleSignIn: () => void
 }) {
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [validationError, setValidationError] = useState<string | null>(null)
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = phoneNumber.trim()
+    if (!PHONE_REGEX.test(trimmed)) {
+      setValidationError('Enter a valid phone number in international format, e.g. +15551234567.')
+      return
+    }
+    setValidationError(null)
+    onSendOtp(trimmed)
+  }
+
   return (
     <>
       <div className="mb-9">
@@ -241,15 +286,21 @@ function SignInStep({
         <div className="h-px flex-1 bg-border" />
       </div>
 
-      <form action={onEmailSignIn} className="space-y-6">
-        <Field label="Email address" name="email" type="email" autoComplete="email" required />
-        <Field
-          label="Password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-        />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <Field
+            label="Phone number"
+            name="phoneNumber"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="+15551234567"
+            required
+            value={phoneNumber}
+            onChange={e => setPhoneNumber(e.target.value)}
+          />
+          {validationError && <p className="mt-2 text-xs text-destructive">{validationError}</p>}
+        </div>
         <Button
           type="submit"
           size="default"
@@ -257,7 +308,7 @@ function SignInStep({
           loading={isPending}
           disabled={isPending}
         >
-          Sign in
+          Send code
         </Button>
       </form>
 
@@ -265,6 +316,102 @@ function SignInStep({
         Don&apos;t have an account?{' '}
         <span className="font-medium text-foreground">Contact your instructor.</span>
       </p>
+    </>
+  )
+}
+
+function OtpEntryStep({
+  phoneNumber,
+  isPending,
+  onVerify,
+  onResend,
+  onChangeNumber,
+}: {
+  phoneNumber: string
+  isPending: boolean
+  onVerify: (code: string) => void
+  onResend: () => void
+  onChangeNumber: () => void
+}) {
+  const [code, setCode] = useState('')
+  const [cooldown, setCooldown] = useState(OTP_RESEND_COOLDOWN_SECONDS)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = setInterval(() => setCooldown(seconds => seconds - 1), 1000)
+    return () => clearInterval(timer)
+  }, [cooldown])
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    onVerify(code.trim())
+  }
+
+  function handleResend() {
+    setCode('')
+    setCooldown(OTP_RESEND_COOLDOWN_SECONDS)
+    onResend()
+  }
+
+  return (
+    <>
+      <div className="mb-9">
+        <p className="mb-2.5 text-xs uppercase tracking-widest text-muted-foreground">
+          Verification code
+        </p>
+        <h2 className="font-serif text-4xl font-semibold leading-tight tracking-tight text-foreground">
+          Enter the code
+          <br />
+          we sent you
+        </h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Sent via SMS to <span className="font-medium text-foreground">{phoneNumber}</span>
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Field
+          label="6-digit code"
+          name="code"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          pattern="\d{6}"
+          placeholder="000000"
+          required
+          value={code}
+          onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        />
+        <Button
+          type="submit"
+          size="default"
+          className="w-full"
+          loading={isPending}
+          disabled={isPending || code.length !== 6}
+        >
+          Verify
+        </Button>
+      </form>
+
+      <div className="mt-6 flex items-center justify-between text-xs">
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={onChangeNumber}
+          className="font-medium text-foreground underline-offset-4 hover:underline disabled:pointer-events-none disabled:opacity-50"
+        >
+          Change number
+        </button>
+        <button
+          type="button"
+          disabled={isPending || cooldown > 0}
+          onClick={handleResend}
+          className="font-medium text-foreground underline-offset-4 hover:underline disabled:pointer-events-none disabled:opacity-50"
+        >
+          {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}
+        </button>
+      </div>
     </>
   )
 }
