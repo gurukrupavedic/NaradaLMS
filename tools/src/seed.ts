@@ -3,13 +3,13 @@ import { createHash } from 'node:crypto'
 import { defineCommand, runMain } from 'citty'
 import { eq } from 'drizzle-orm'
 
-import { auth } from '@narada/auth'
 import {
   batchClassSlot,
   getScopedDatabase,
   publicDb,
   shutdownPools,
   user as userTable,
+  uuidv7,
   type SchoolDatabase,
 } from '@narada/db'
 import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
@@ -25,8 +25,6 @@ import {
   type BatchRole,
   type OrgRole,
 } from './school-helpers'
-
-const SEED_PASSWORD = 'testing123'
 
 const ORG_ROLES = new Set<string>(['owner', 'admin', 'member'])
 const BATCH_ROLES = new Set<string>(['instructor', 'ta', 'student'])
@@ -95,11 +93,7 @@ const userCmd = defineCommand({
     const operatorPhone = await promptSuperAdminPhone()
     try {
       await requireSuperAdminByPhone(operatorPhone)
-      const existedBefore = await publicDb.query.user.findFirst({
-        where: (t, { eq }) => eq(t.email, args.email),
-      })
-      const user = await upsertUser(args.email, args.name, undefined, args.phoneNumber)
-      const credentialCreated = !existedBefore
+      const user = await upsertUser(args.email, args.name, args.phoneNumber)
 
       let assignment: Record<string, unknown> = {}
       if (args.role) {
@@ -148,9 +142,6 @@ const userCmd = defineCommand({
             email: args.email,
             name: args.name,
             phoneNumber: args.phoneNumber ?? user.phoneNumber ?? null,
-            ...(credentialCreated
-              ? { password: SEED_PASSWORD }
-              : { note: 'Existing account — no new password credential was created.' }),
             ...assignment,
           },
           null,
@@ -168,7 +159,6 @@ const superadminCmd = defineCommand({
   args: {
     email: { type: 'string', required: true, description: 'Super-admin email.' },
     name: { type: 'string', required: true, description: 'Super-admin display name.' },
-    password: { type: 'string', description: `Password (defaults to ${SEED_PASSWORD}).` },
     phoneNumber: {
       type: 'string',
       description:
@@ -177,12 +167,7 @@ const superadminCmd = defineCommand({
   },
   async run({ args }) {
     try {
-      const existedBefore = await publicDb.query.user.findFirst({
-        where: (t, { eq }) => eq(t.email, args.email),
-      })
-      const password = args.password ?? SEED_PASSWORD
-      const newUser = await upsertUser(args.email, args.name, password, args.phoneNumber)
-      const credentialCreated = !existedBefore
+      const newUser = await upsertUser(args.email, args.name, args.phoneNumber)
       await publicDb
         .update(userTable)
         .set({ isSuperAdmin: true })
@@ -194,9 +179,6 @@ const superadminCmd = defineCommand({
             email: args.email,
             name: args.name,
             phoneNumber: args.phoneNumber ?? newUser.phoneNumber ?? null,
-            ...(credentialCreated
-              ? { password }
-              : { note: 'Existing account — password credential was left unchanged.' }),
             isSuperAdmin: true,
           },
           null,
@@ -226,8 +208,8 @@ async function seedSchool(input: SchoolSeedInput) {
     const adminEmail = `${input.slug}-admin@seed.test`
     const ownerPhone = fictionalPhoneNumber(input.slug, 'owner', 0)
     const adminPhone = fictionalPhoneNumber(input.slug, 'admin', 0)
-    const owner = await upsertUser(ownerEmail, 'Owner', undefined, ownerPhone)
-    const admin = await upsertUser(adminEmail, 'Admin', undefined, adminPhone)
+    const owner = await upsertUser(ownerEmail, 'Owner', ownerPhone)
+    const admin = await upsertUser(adminEmail, 'Admin', adminPhone)
     await upsertOrgMember(school.id, owner.id, 'owner')
     await upsertOrgMember(school.id, admin.id, 'admin')
     const ownerProfile = await upsertProfile(schoolDb, owner.id, 'Owner')
@@ -239,12 +221,12 @@ async function seedSchool(input: SchoolSeedInput) {
     const studentPhones = range(input.numStudents).map(i => fictionalPhoneNumber(input.slug, 'student', i))
     const instructors = await Promise.all(
       range(input.numInstructors).map(i =>
-        upsertUser(`${input.slug}-instructor${i + 1}@seed.test`, `Instructor ${i + 1}`, undefined, instructorPhones[i]),
+        upsertUser(`${input.slug}-instructor${i + 1}@seed.test`, `Instructor ${i + 1}`, instructorPhones[i]),
       ),
     )
     const students = await Promise.all(
       range(input.numStudents).map(i =>
-        upsertUser(`${input.slug}-student${i + 1}@seed.test`, `Student ${i + 1}`, undefined, studentPhones[i]),
+        upsertUser(`${input.slug}-student${i + 1}@seed.test`, `Student ${i + 1}`, studentPhones[i]),
       ),
     )
 
@@ -326,7 +308,6 @@ async function seedSchool(input: SchoolSeedInput) {
             phoneNumber: studentPhones[i],
             profileId: studentProfiles[i]!.id,
           })),
-          password: SEED_PASSWORD,
         },
         null,
         2,
@@ -337,23 +318,21 @@ async function seedSchool(input: SchoolSeedInput) {
   }
 }
 
-// Still creates users through the real email/password signup flow (auth.api.signUpEmail) —
-// that stays the only working login mechanism until the rest of phone-based auth lands. The
-// optional phoneNumber is set additively via a follow-up update, purely so locally-seeded data
-// exercises phone-keyed code paths ahead of time; it grants no login capability by itself.
-async function upsertUser(email: string, name: string, password = SEED_PASSWORD, phoneNumber?: string) {
-  let user: typeof userTable.$inferSelect
-  try {
-    const result = await auth.api.signUpEmail({
-      body: { email, password, name },
-    })
-    user = result.user as unknown as typeof userTable.$inferSelect
-  } catch {
-    const row = await publicDb.query.user.findFirst({
-      where: (t, { eq }) => eq(t.email, email),
-    })
+// Sign-in is phone OTP (or Google) only, and both create their `user` row implicitly on first
+// verification — there's no signup endpoint left for this CLI to call through. This inserts the
+// row directly instead, which is exactly as legitimate a way to create a user as auth.api ever
+// was; it just never creates a credential, since none of our sign-in methods use one.
+async function upsertUser(email: string, name: string, phoneNumber?: string) {
+  let user = await publicDb.query.user.findFirst({
+    where: (t, { eq }) => eq(t.email, email),
+  })
 
-    if (!row) throw new Error(`Failed to create or find user: ${email}`)
+  if (!user) {
+    const [row] = await publicDb
+      .insert(userTable)
+      .values({ id: uuidv7(), email, name, phoneNumber })
+      .returning()
+    if (!row) throw new Error(`Failed to create user: ${email}`)
     user = row
   }
 

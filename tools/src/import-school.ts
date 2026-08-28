@@ -3,10 +3,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
 import { defineCommand, runMain } from 'citty'
-import { hashPassword } from 'better-auth/crypto'
 
 import {
-  account,
   batch,
   chapter,
   enrollment,
@@ -17,13 +15,11 @@ import {
   shutdownPools,
   track,
   user as userTable,
-  uuidv7,
 } from '@narada/db'
 // Reusing the live API's own validators rather than re-deriving parallel checks: a bulk import
 // that bypasses the HTTP layer should still never write a row the real API would reject.
 import { enrollSchema } from '@narada/api/src/services/enrollment'
 import { createEvaluationSchema } from '@narada/api/src/services/evaluation'
-import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
 import { requireSchool, upsertOrgMember, upsertSchool } from './school-helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -89,8 +85,8 @@ function readJson<T>(dataDir: string, fileName: string): T {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T
 }
 
-// Matches the phoneNumber plugin's validator on feat/whatsapp-otp-auth (packages/auth/src/index.ts)
-// — kept in sync manually since that plugin isn't wired into this schema/branch yet.
+// Matches the phoneNumber plugin's validator in packages/auth/src/index.ts — kept in sync
+// manually rather than imported, since that's server auth config and this is an offline CLI import.
 const E164_PATTERN = /^\+[1-9]\d{7,14}$/
 
 function validate(users: UserRow[], enrollments: EnrollmentRow[], evaluations: EvaluationRow[]): string[] {
@@ -269,18 +265,19 @@ const dataCmd = defineCommand({
   },
 })
 
-// Stopgap until feat/whatsapp-otp-auth ships: imported roster users have a `user` row (from the
-// `data` subcommand) but no `account` row, since that import bypasses better-auth's own
-// signUpEmail entirely. signUpEmail can't be used to backfill one either — it tries to create a
-// new `user` row and fails on the email/phoneNumber unique constraints these people already
-// occupy. So this writes the `account` row directly, matching exactly what signUpEmail itself
-// writes (providerId "credential", accountId == userId, password hashed with better-auth's own
-// hasher) so `signInEmail` verifies it identically to a normal password account.
+// Retired by the Twilio OTP rollout (packages/auth/src/index.ts sets emailAndPassword.enabled to
+// false): even if this still wrote a working "credential" account row, better-auth no longer
+// registers a /sign-in/email endpoint to authenticate it against, so a granted password would
+// silently do nothing. Left registered (rather than deleted outright) so `grant-passwords` fails
+// loudly instead of 404ing, since roster members with no phone number yet — the case this
+// existed for — still have no login path; that replacement is a product decision for the team,
+// not something to improvise here.
 const grantPasswordsCmd = defineCommand({
   meta: {
     description:
-      'Grant a shared temporary password to school members who have no login method yet ' +
-      '(no account row at all — password or OAuth). Re-run is safe: only touches users still missing one.',
+      'REMOVED: email/password sign-in no longer exists (Twilio OTP auth replaced it). ' +
+      'Roster members without a phone number on file have no login method — decide how to ' +
+      'collect one before re-enabling anything here.',
   },
   args: {
     schoolSlug: { type: 'string', default: 'slmts', description: 'Only grants to members of this school.' },
@@ -291,54 +288,12 @@ const grantPasswordsCmd = defineCommand({
       description: 'Actually write to the database. Without this flag, only reports who would be affected.',
     },
   },
-  async run({ args }) {
-    const operatorPhone = await promptSuperAdminPhone()
-    try {
-      await requireSuperAdminByPhone(operatorPhone)
-
-      const school = await requireSchool(args.schoolSlug)
-      const members = await publicDb.query.member.findMany({
-        where: (t, { eq }) => eq(t.organizationId, school.id),
-        columns: { userId: true },
-      })
-      const memberUserIds = [...new Set(members.map(m => m.userId))]
-
-      const existingAccounts = await publicDb.query.account.findMany({
-        columns: { userId: true },
-      })
-      const hasAnyLoginMethod = new Set(existingAccounts.map(a => a.userId))
-
-      const targetUserIds = memberUserIds.filter(id => !hasAnyLoginMethod.has(id))
-
-      console.log(
-        `${targetUserIds.length} of ${memberUserIds.length} members of "${args.schoolSlug}" have no login method yet.`,
-      )
-
-      if (!args.commit) {
-        console.log('Dry run only — pass --commit to write to the database. No rows were inserted.')
-        return
-      }
-
-      let count = 0
-      for (const userId of targetUserIds) {
-        const hash = await hashPassword(args.password)
-        await publicDb.insert(account).values({
-          id: uuidv7(),
-          userId,
-          providerId: 'credential',
-          accountId: userId,
-          password: hash,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        count++
-        if (count % 200 === 0) console.log(`  ${count}/${targetUserIds.length}`)
-      }
-
-      console.log(`✅ Granted temporary password to ${count} users. Password: "${args.password}"`)
-    } finally {
-      await shutdownPools()
-    }
+  async run() {
+    throw new Error(
+      'grant-passwords is retired: email/password sign-in was removed when Twilio OTP auth ' +
+        'landed, so a granted password can no longer be used to sign in. Members with no phone ' +
+        'number on file currently have no login method — see packages/auth/src/index.ts.',
+    )
   },
 })
 

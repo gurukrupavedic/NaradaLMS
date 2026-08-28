@@ -233,8 +233,7 @@ const PREFERRED_EMAIL_OWNERS: Record<string, string> = {
 }
 
 // Matches the phoneNumberValidator on the OTP-auth `phoneNumber` plugin config
-// (packages/auth/src/index.ts on feat/whatsapp-otp-auth) exactly, so nothing this importer writes
-// today would fail validation once that plugin goes live.
+// (packages/auth/src/index.ts) exactly, so nothing this importer writes fails validation at sign-in.
 const E164_PATTERN = /^\+[1-9]\d{7,14}$/
 
 function toE164(digitsOnly: string): string | null {
