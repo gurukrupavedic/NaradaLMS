@@ -22,10 +22,14 @@
   },
   "peerDependencies": {
     "@narada/db": "workspace:*",
-    "@narada/env": "workspace:*"
+    "@narada/env": "workspace:*",
+    "@narada/otp": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@narada/db": {
+      "optional": true
+    },
+    "@narada/otp": {
       "optional": true
     }
   },

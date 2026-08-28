@@ -16,6 +16,7 @@
     "@narada/auth": "workspace:*",
     "@narada/db": "workspace:*",
     "@narada/env": "workspace:*",
+    "@narada/otp": "workspace:*",
     "@narada/storage": "workspace:*",
     "better-auth": "1.6.22",
     "cors": "^2.8.6",
