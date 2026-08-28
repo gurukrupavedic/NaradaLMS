@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 import { fetchApi } from '@/lib/api'
 import { fetchAllPages } from '@/lib/api/pagination'
 import { PROFILE_COOKIE } from '@/lib/constants'
-import type { ApiBatch, ApiBatchDetail, ApiPage, BatchStatus, EnrollmentRole } from '@/lib/types'
+import type { ApiBatch, ApiBatchDetail, ApiBatchWithRole, ApiPage, BatchStatus, EnrollmentRole } from '@/lib/types'
 
 export async function getBatches(params?: {
   status?: BatchStatus
@@ -40,22 +40,31 @@ export async function getBatchesForProfile(
 
 export type BatchMembership = {
   batch: ApiBatchDetail
-  role: EnrollmentRole
+  // null for a batch a school-wide admin/owner can see but has no personal enrollment in — the
+  // caller decides whether/how to surface those; they should NOT be treated as "this profile
+  // teaches this batch" (see getDashboardData, which fetches evaluations and cross-batch student
+  // history per teaching membership — doing that for every school batch on an admin's dashboard
+  // is what fans out into hundreds of concurrent requests and exhausts the DB connection pool).
+  role: EnrollmentRole | null
 }
 
-// The list response omits members, so resolving the current profile's role requires each batch's
-// detail. Keep the detail in the result so callers do not need to fetch teaching batches twice.
+async function getMyBatchesWithRole(
+  profileId: string,
+  params?: { cursor?: string },
+): Promise<ApiPage<ApiBatchWithRole>> {
+  const query = new URLSearchParams({ withDetail: 'true' })
+  if (params?.cursor) query.set('cursor', params.cursor)
+  return fetchApi<ApiPage<ApiBatchWithRole>>(`/profiles/${profileId}/batches?${query.toString()}`)
+}
+
+// The server already resolves the correct batch set for this profile — its own enrollments, or
+// every school batch for an admin/owner — and annotates each one with the profile's role in it,
+// in a single query.
 export async function getMyBatchMemberships(): Promise<BatchMembership[]> {
   const cookieStore = await cookies()
   const profileId = cookieStore.get(PROFILE_COOKIE)?.value
   if (!profileId) return []
 
-  const batches = await fetchAllPages(cursor => getBatches({ cursor }))
-  const details = await Promise.all(batches.map(batch => getBatch(batch.id)))
-
-  return details.flatMap(detail => {
-    const membership = detail.members.find(member => member.profileId === profileId)
-    if (!membership) return []
-    return [{ batch: detail, role: membership.role }]
-  })
+  const batches = await fetchAllPages(cursor => getMyBatchesWithRole(profileId, { cursor }))
+  return batches.map(({ role, ...batch }) => ({ batch, role }))
 }

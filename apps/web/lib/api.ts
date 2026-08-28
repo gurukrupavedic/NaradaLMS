@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { cookies, headers } from 'next/headers'
-import { env } from '@narada/env'
+import { env } from '@narada/env/client'
 
 import { PROFILE_COOKIE } from './constants'
 
@@ -22,6 +22,10 @@ export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> 
 
   if (!response.ok) {
     throw new Error(`API error ${response.status} on ${path}`)
+  }
+
+  if (response.status === 204) {
+    return undefined as T
   }
 
   const { data } = await response.json()

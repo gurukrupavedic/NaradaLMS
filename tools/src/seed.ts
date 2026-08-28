@@ -1,32 +1,30 @@
 import '@narada/env/load'
+import { createHash } from 'node:crypto'
 import { defineCommand, runMain } from 'citty'
-import Enquirer from 'enquirer'
 import { eq } from 'drizzle-orm'
 
-import { auth } from '@narada/auth'
 import {
-  batch,
   batchClassSlot,
-  chapter,
-  dropSchoolSchema,
-  enrollment,
   getScopedDatabase,
-  member,
-  organization,
-  profile,
-  provisionSchool,
   publicDb,
   shutdownPools,
-  track,
   user as userTable,
   uuidv7,
   type SchoolDatabase,
 } from '@narada/db'
-
-const SEED_PASSWORD = 'testing123'
-
-type OrgRole = 'owner' | 'admin' | 'member'
-type BatchRole = 'instructor' | 'ta' | 'student'
+import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
+import {
+  requireSchool,
+  upsertBatch,
+  upsertChapter,
+  upsertEnrollment,
+  upsertOrgMember,
+  upsertProfile,
+  upsertSchool,
+  upsertTrack,
+  type BatchRole,
+  type OrgRole,
+} from './school-helpers'
 
 const ORG_ROLES = new Set<string>(['owner', 'admin', 'member'])
 const BATCH_ROLES = new Set<string>(['instructor', 'ta', 'student'])
@@ -34,8 +32,7 @@ const BATCH_ROLES = new Set<string>(['instructor', 'ta', 'student'])
 type SchoolSeedInput = {
   slug: string
   name: string
-  operatorEmail: string
-  operatorPassword: string
+  operatorPhone: string
   numTracks: number
   numChapters: number
   numBatches: number
@@ -55,12 +52,11 @@ const schoolCmd = defineCommand({
     students: { type: 'string', default: '5', description: 'Number of student users.' },
   },
   async run({ args }) {
-    const credentials = await promptCredentials()
+    const operatorPhone = await promptSuperAdminPhone()
     await seedSchool({
       slug: args.slug,
       name: args.name ?? toTitleCase(args.slug),
-      operatorEmail: credentials.email,
-      operatorPassword: credentials.password,
+      operatorPhone,
       numTracks: parseCount(args.tracks, '--tracks'),
       numChapters: parseCount(args.chapters, '--chapters'),
       numBatches: parseCount(args.batches, '--batches'),
@@ -75,6 +71,10 @@ const userCmd = defineCommand({
   args: {
     email: { type: 'string', required: true, description: 'User email.' },
     name: { type: 'string', required: true, description: 'User display name.' },
+    phoneNumber: {
+      type: 'string',
+      description: 'Optional phone number (E.164) to set on the user alongside their email.',
+    },
     role: {
       type: 'string',
       description:
@@ -90,10 +90,10 @@ const userCmd = defineCommand({
     },
   },
   async run({ args }) {
-    const credentials = await promptCredentials()
+    const operatorPhone = await promptSuperAdminPhone()
     try {
-      await authenticateSuperAdmin(credentials.email, credentials.password)
-      const user = await upsertUser(args.email, args.name)
+      await requireSuperAdminByPhone(operatorPhone)
+      const user = await upsertUser(args.email, args.name, args.phoneNumber)
 
       let assignment: Record<string, unknown> = {}
       if (args.role) {
@@ -141,7 +141,7 @@ const userCmd = defineCommand({
             id: user.id,
             email: args.email,
             name: args.name,
-            password: SEED_PASSWORD,
+            phoneNumber: args.phoneNumber ?? user.phoneNumber ?? null,
             ...assignment,
           },
           null,
@@ -159,19 +159,28 @@ const superadminCmd = defineCommand({
   args: {
     email: { type: 'string', required: true, description: 'Super-admin email.' },
     name: { type: 'string', required: true, description: 'Super-admin display name.' },
-    password: { type: 'string', description: `Password (defaults to ${SEED_PASSWORD}).` },
+    phoneNumber: {
+      type: 'string',
+      description:
+        'Optional phone number (E.164) to set on the super-admin — needed for other CLI commands’ phone-based operator check to find them.',
+    },
   },
   async run({ args }) {
     try {
-      const password = args.password ?? SEED_PASSWORD
-      const newUser = await upsertUser(args.email, args.name, password)
+      const newUser = await upsertUser(args.email, args.name, args.phoneNumber)
       await publicDb
         .update(userTable)
         .set({ isSuperAdmin: true })
         .where(eq(userTable.id, newUser.id))
       console.log(
         JSON.stringify(
-          { id: newUser.id, email: args.email, name: args.name, password, isSuperAdmin: true },
+          {
+            id: newUser.id,
+            email: args.email,
+            name: args.name,
+            phoneNumber: args.phoneNumber ?? newUser.phoneNumber ?? null,
+            isSuperAdmin: true,
+          },
           null,
           2,
         ),
@@ -191,27 +200,33 @@ runMain(
 
 async function seedSchool(input: SchoolSeedInput) {
   try {
-    await authenticateSuperAdmin(input.operatorEmail, input.operatorPassword)
+    await requireSuperAdminByPhone(input.operatorPhone)
 
     const school = await upsertSchool(input.slug, input.name)
     const schoolDb = getScopedDatabase(school.id)
     const ownerEmail = `${input.slug}-owner@seed.test`
     const adminEmail = `${input.slug}-admin@seed.test`
-    const owner = await upsertUser(ownerEmail, 'Owner')
-    const admin = await upsertUser(adminEmail, 'Admin')
+    const ownerPhone = fictionalPhoneNumber(input.slug, 'owner', 0)
+    const adminPhone = fictionalPhoneNumber(input.slug, 'admin', 0)
+    const owner = await upsertUser(ownerEmail, 'Owner', ownerPhone)
+    const admin = await upsertUser(adminEmail, 'Admin', adminPhone)
     await upsertOrgMember(school.id, owner.id, 'owner')
     await upsertOrgMember(school.id, admin.id, 'admin')
     const ownerProfile = await upsertProfile(schoolDb, owner.id, 'Owner')
     const adminProfile = await upsertProfile(schoolDb, admin.id, 'Admin')
 
+    const instructorPhones = range(input.numInstructors).map(i =>
+      fictionalPhoneNumber(input.slug, 'instructor', i),
+    )
+    const studentPhones = range(input.numStudents).map(i => fictionalPhoneNumber(input.slug, 'student', i))
     const instructors = await Promise.all(
       range(input.numInstructors).map(i =>
-        upsertUser(`${input.slug}-instructor${i + 1}@seed.test`, `Instructor ${i + 1}`),
+        upsertUser(`${input.slug}-instructor${i + 1}@seed.test`, `Instructor ${i + 1}`, instructorPhones[i]),
       ),
     )
     const students = await Promise.all(
       range(input.numStudents).map(i =>
-        upsertUser(`${input.slug}-student${i + 1}@seed.test`, `Student ${i + 1}`),
+        upsertUser(`${input.slug}-student${i + 1}@seed.test`, `Student ${i + 1}`, studentPhones[i]),
       ),
     )
 
@@ -247,7 +262,10 @@ async function seedSchool(input: SchoolSeedInput) {
       )
       const batchResults = []
       for (let b = 1; b <= input.numBatches; b++) {
-        const batchRow = await upsertBatch(schoolDb, trackRow.id, `${input.slug}-t${t}-batch${b}`)
+        const batchCode = `${input.slug}-t${t}-batch${b}`
+        const batchRow = await upsertBatch(schoolDb, trackRow.id, batchCode, {
+          meetingUrl: `https://meet.google.com/${batchCode}`,
+        })
         await upsertClassSlots(schoolDb, batchRow.id)
         for (const user of pickForBatch(instructors, batchIndex, 2)) {
           const p = instructorProfileById.get(user.id)!
@@ -275,20 +293,21 @@ async function seedSchool(input: SchoolSeedInput) {
       JSON.stringify(
         {
           school: { id: school.id, slug: school.slug, name: school.name },
-          owner: { id: owner.id, email: ownerEmail, profileId: ownerProfile.id },
-          admin: { id: admin.id, email: adminEmail, profileId: adminProfile.id },
+          owner: { id: owner.id, email: ownerEmail, phoneNumber: ownerPhone, profileId: ownerProfile.id },
+          admin: { id: admin.id, email: adminEmail, phoneNumber: adminPhone, profileId: adminProfile.id },
           tracks: trackResults,
           instructors: instructors.map((u, i) => ({
             id: u.id,
             email: `${input.slug}-instructor${i + 1}@seed.test`,
+            phoneNumber: instructorPhones[i],
             profileId: instructorProfiles[i]!.id,
           })),
           students: students.map((u, i) => ({
             id: u.id,
             email: `${input.slug}-student${i + 1}@seed.test`,
+            phoneNumber: studentPhones[i],
             profileId: studentProfiles[i]!.id,
           })),
-          password: SEED_PASSWORD,
         },
         null,
         2,
@@ -299,100 +318,39 @@ async function seedSchool(input: SchoolSeedInput) {
   }
 }
 
-async function requireSchool(slug: string) {
-  const school = await publicDb.query.organization.findFirst({
-    where: (t, { eq }) => eq(t.slug, slug),
+// Sign-in is phone OTP (or Google) only, and both create their `user` row implicitly on first
+// verification — there's no signup endpoint left for this CLI to call through. This inserts the
+// row directly instead, which is exactly as legitimate a way to create a user as auth.api ever
+// was; it just never creates a credential, since none of our sign-in methods use one.
+async function upsertUser(email: string, name: string, phoneNumber?: string) {
+  let user = await publicDb.query.user.findFirst({
+    where: (t, { eq }) => eq(t.email, email),
   })
 
-  if (!school) throw new Error(`School not found: ${slug}`)
-  return school
-}
-
-async function upsertSchool(slug: string, name: string) {
-  const existing = await publicDb.query.organization.findFirst({
-    where: (t, { eq }) => eq(t.slug, slug),
-  })
-
-  if (existing) return existing
-  const id = uuidv7()
-  const [school] = await publicDb
-    .insert(organization)
-    .values({ id, name, slug, createdAt: new Date() })
-    .returning()
-
-  try {
-    await provisionSchool(id)
-  } catch (error) {
-    await Promise.allSettled([
-      publicDb.delete(organization).where(eq(organization.id, id)),
-      dropSchoolSchema(id),
-    ])
-    throw error
+  if (!user) {
+    const [row] = await publicDb
+      .insert(userTable)
+      .values({ id: uuidv7(), email, name, phoneNumber })
+      .returning()
+    if (!row) throw new Error(`Failed to create user: ${email}`)
+    user = row
   }
 
-  return school!
-}
-
-async function upsertUser(email: string, name: string, password = SEED_PASSWORD) {
-  try {
-    const result = await auth.api.signUpEmail({
-      body: { email, password, name },
-    })
-
-    return result.user
-  } catch {
-    const row = await publicDb.query.user.findFirst({
-      where: (t, { eq }) => eq(t.email, email),
-    })
-
-    if (!row) throw new Error(`Failed to create or find user: ${email}`)
-    return row
+  if (phoneNumber && user.phoneNumber !== phoneNumber) {
+    const [updated] = await publicDb
+      .update(userTable)
+      .set({ phoneNumber })
+      .where(eq(userTable.id, user.id))
+      .returning()
+    if (updated) user = updated
   }
-}
 
-async function upsertOrgMember(organizationId: string, userId: string, role: OrgRole) {
-  const existing = await publicDb.query.member.findFirst({
-    where: (t, { and, eq }) => and(eq(t.organizationId, organizationId), eq(t.userId, userId)),
-  })
-
-  if (existing) return existing
-  const [row] = await publicDb
-    .insert(member)
-    .values({ id: uuidv7(), organizationId, userId, role, createdAt: new Date() })
-    .returning()
-
-  return row!
-}
-
-async function upsertTrack(db: SchoolDatabase, name: string) {
-  const existing = await db.query.track.findFirst({
-    where: (t, { eq }) => eq(t.name, name),
-  })
-
-  if (existing) return existing
-  const currentTracks = await db.query.track.findMany({ columns: { order: true } })
-  const order = currentTracks.length > 0 ? Math.max(...currentTracks.map(r => r.order)) + 1 : 1
-  const [row] = await db.insert(track).values({ name, order }).returning()
-  if (!row) throw new Error(`Failed to create track: ${name}`)
-  return row
-}
-
-async function upsertBatch(db: SchoolDatabase, trackId: string, code: string) {
-  const existing = await db.query.batch.findFirst({
-    where: (t, { eq }) => eq(t.code, code),
-  })
-
-  if (existing) return existing
-  const [row] = await db
-    .insert(batch)
-    .values({ trackId, code, status: 'active', meetingUrl: `https://meet.google.com/${code}` })
-    .returning()
-  if (!row) throw new Error(`Failed to create batch: ${code}`)
-  return row
+  return user
 }
 
 // Every seeded batch meets Mon/Wed/Fri at 6pm — a realistic default weekly cadence for the
-// "next class" feature, not meant to vary per batch.
+// "next class" feature, not meant to vary per batch. Kept local to seed.ts (not school-helpers.ts)
+// since it's fabricated test scheduling, not something the real Excel import has data for.
 const DEFAULT_CLASS_SLOTS = [
   { dayOfWeek: 1, time: '18:00', durationMinutes: 60 },
   { dayOfWeek: 3, time: '18:00', durationMinutes: 60 },
@@ -411,77 +369,14 @@ async function upsertClassSlots(db: SchoolDatabase, batchId: string) {
     .returning()
 }
 
-async function upsertChapter(
-  db: SchoolDatabase,
-  trackId: string,
-  values: { code: string; title: string; order: number },
-) {
-  const existing = await db.query.chapter.findFirst({
-    where: (table, { and, eq }) => and(eq(table.trackId, trackId), eq(table.code, values.code)),
-  })
-
-  if (existing) return existing
-  const [row] = await db
-    .insert(chapter)
-    .values({ trackId, ...values, status: 'published', script: 'sa' })
-    .returning()
-  if (!row) throw new Error(`Failed to create chapter: ${values.code}`)
-  return row
-}
-
-async function upsertProfile(db: SchoolDatabase, userId: string, name: string) {
-  const existing = await db.query.profile.findFirst({
-    where: (t, { eq }) => eq(t.userId, userId),
-    orderBy: (t, { asc }) => [asc(t.createdAt)],
-  })
-
-  if (existing) return existing
-  const [row] = await db.insert(profile).values({ userId, name }).returning()
-  if (!row) throw new Error('Failed to create profile')
-  return row
-}
-
-async function upsertEnrollment(
-  db: SchoolDatabase,
-  batchId: string,
-  profileId: string,
-  role: BatchRole,
-) {
-  const existing = await db.query.enrollment.findFirst({
-    where: (t, { and, eq }) => and(eq(t.batchId, batchId), eq(t.profileId, profileId)),
-  })
-
-  if (existing) return existing
-  const [row] = await db.insert(enrollment).values({ batchId, profileId, role }).returning()
-  if (!row) throw new Error('Failed to create enrollment')
-  return row
-}
-
-async function authenticateSuperAdmin(email: string, password: string) {
-  const session = await auth.api.signInEmail({
-    body: { email, password },
-  })
-
-  if (!session.user.isSuperAdmin) throw new Error('Authenticated user must be a super-admin.')
-  return session.user
-}
-
-async function promptCredentials(): Promise<{ email: string; password: string }> {
-  return Enquirer.prompt<{ email: string; password: string }>([
-    {
-      type: 'input',
-      name: 'email',
-      message: 'Super-admin email',
-      required: true,
-      result: (v: string) => v.trim(),
-    },
-    {
-      type: 'password',
-      name: 'password',
-      message: 'Super-admin password',
-      required: true,
-    },
-  ])
+// Deterministic, syntactically-valid E.164 numbers using the 555 area code — not a real NANP
+// geographic area code, so these can never collide with a real WhatsApp-reachable number. Derived
+// per school+role+index so distinct schools/roles/indices get distinct numbers, but re-running the
+// seed for the same school reuses the same numbers (idempotent, matching upsertUser's lookup).
+function fictionalPhoneNumber(slug: string, role: string, index: number): string {
+  const hash = createHash('sha1').update(`${slug}:${role}:${index}`).digest('hex')
+  const digits = BigInt(`0x${hash.slice(0, 10)}`) % 10_000_000n
+  return `+1555${digits.toString().padStart(7, '0')}`
 }
 
 function toTitleCase(slug: string): string {

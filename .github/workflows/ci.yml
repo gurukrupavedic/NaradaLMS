@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Placeholder values that satisfy @narada/env's zod schema at build/test time.
+# Not real credentials — the API and web apps don't run against a live
+# database or external services during lint/build/test.
+env:
+  PORT: '3000'
+  API_BASE_URL: http://localhost:3000
+  API_VERSION: '1'
+  DATABASE_URL: postgresql://user:password@localhost:5432/narada
+  TRUSTED_ORIGINS: http://localhost:3000
+  AUTH_SECRET: ci-build-placeholder-secret-value-not-real-12345
+  GOOGLE_CLIENT_ID: ci-placeholder
+  GOOGLE_CLIENT_SECRET: ci-placeholder
+  R2_ACCOUNT_ID: ci-placeholder
+  R2_ACCESS_KEY_ID: ci-placeholder
+  R2_SECRET_ACCESS_KEY: ci-placeholder
+  R2_BUCKET_NAME: ci-placeholder
+  NEXT_PUBLIC_API_URL: http://localhost:3000
+  NEXT_PUBLIC_SCHOOL_SLUG: ci
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm test

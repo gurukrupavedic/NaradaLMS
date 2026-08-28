@@ -9,9 +9,14 @@ import path from 'path'
 import { env } from '@narada/env'
 import { sql } from 'drizzle-orm'
 
-const migrationsFolder = path.join(
+const schoolMigrationsFolder = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   '../drizzle/school',
+)
+
+const publicMigrationsFolder = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../drizzle/public',
 )
 
 export function schoolSchemaName(organizationId: string) {
@@ -84,12 +89,27 @@ export async function provisionSchool(organizationId: string) {
     // Tracking each school's applied migrations inside its own schema makes every provisioning
     // call independent of every other school's history.
     await migrate(drizzle(schoolPool), {
-      migrationsFolder,
+      migrationsFolder: schoolMigrationsFolder,
       migrationsSchema: schemaName,
       migrationsTable: '__drizzle_migrations',
     })
   } finally {
     await schoolPool.end()
+  }
+}
+
+// The public schema has no per-request provisioning step (there's only ever one), so nothing
+// currently calls drizzle's migrate() for it — deploys ship new code that expects new public
+// columns to exist with no automated step that actually adds them. This is that step: safe to
+// call repeatedly, applies only whatever's pending since the last recorded migration. Not
+// multi-tenant, so (unlike provisionSchool) no migrationsSchema override is needed — the default
+// tracking table is fine here.
+export async function migratePublicSchema() {
+  const pool = new Pool({ connectionString: env.DATABASE_URL })
+  try {
+    await migrate(drizzle(pool), { migrationsFolder: publicMigrationsFolder })
+  } finally {
+    await pool.end()
   }
 }
 
@@ -145,7 +165,7 @@ export async function backfillLegacyMigrationTracking(organizationId: string): P
 
   const schemaName = schoolSchemaName(organizationId)
   const journal = JSON.parse(
-    fs.readFileSync(path.join(migrationsFolder, 'meta/_journal.json'), 'utf8'),
+    fs.readFileSync(path.join(schoolMigrationsFolder, 'meta/_journal.json'), 'utf8'),
   ) as { entries: { tag: string; when: number }[] }
 
   const firstMigration = journal.entries[0]
@@ -153,7 +173,10 @@ export async function backfillLegacyMigrationTracking(organizationId: string): P
     throw new Error('school migrations folder has no journal entries to backfill from')
   }
 
-  const migrationSql = fs.readFileSync(path.join(migrationsFolder, `${firstMigration.tag}.sql`), 'utf8')
+  const migrationSql = fs.readFileSync(
+    path.join(schoolMigrationsFolder, `${firstMigration.tag}.sql`),
+    'utf8',
+  )
   const hash = crypto.createHash('sha256').update(migrationSql).digest('hex')
 
   const quotedSchema = quotePgIdentifier(schemaName)

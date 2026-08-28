@@ -1,6 +1,6 @@
 {
-  "id": "039e31d8-8535-4355-ae70-c0ebd6c76caf",
-  "prevId": "4b16dd31-39ae-48da-a4c2-0f7a29eac6ba",
+  "id": "0c68cc11-b082-4c65-9e35-299e63a89622",
+  "prevId": "66934b82-5d3c-43f3-9126-544a55b60b81",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -324,12 +324,26 @@
           "primaryKey": false,
           "notNull": true
         },
+        "status": {
+          "name": "status",
+          "type": "enrollmentStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
         "joinedAt": {
           "name": "joinedAt",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "leftDate": {
+          "name": "leftDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -438,12 +452,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
-        },
-        "batchId": {
-          "name": "batchId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -458,27 +466,6 @@
             },
             {
               "expression": "chapterId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "evaluation_batchId_studentId_idx": {
-          "name": "evaluation_batchId_studentId_idx",
-          "columns": [
-            {
-              "expression": "batchId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "studentId",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -528,19 +515,6 @@
             "id"
           ],
           "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
-        "evaluation_batchId_batch_id_fk": {
-          "name": "evaluation_batchId_batch_id_fk",
-          "tableFrom": "evaluation",
-          "tableTo": "batch",
-          "columnsFrom": [
-            "batchId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -597,12 +571,6 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
-        },
-        "batchId": {
-          "name": "batchId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -624,27 +592,6 @@
         "exam_studentId_idx": {
           "name": "exam_studentId_idx",
           "columns": [
-            {
-              "expression": "studentId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "exam_batchId_studentId_idx": {
-          "name": "exam_batchId_studentId_idx",
-          "columns": [
-            {
-              "expression": "batchId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
             {
               "expression": "studentId",
               "isExpression": false,
@@ -697,19 +644,6 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        },
-        "exam_batchId_batch_id_fk": {
-          "name": "exam_batchId_batch_id_fk",
-          "tableFrom": "exam",
-          "tableTo": "batch",
-          "columnsFrom": [
-            "batchId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -749,12 +683,6 @@
         "city": {
           "name": "city",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deletedAt": {
-          "name": "deletedAt",
-          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
@@ -870,6 +798,16 @@
         "instructor",
         "ta",
         "student"
+      ]
+    },
+    "public.enrollmentStatus": {
+      "name": "enrollmentStatus",
+      "schema": "public",
+      "values": [
+        "active",
+        "break",
+        "dropped",
+        "inactive"
       ]
     },
     "public.examStatus": {

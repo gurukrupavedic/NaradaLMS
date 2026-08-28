@@ -1,5 +1,5 @@
 {
-  "id": "2fc54e06-483d-41e0-8fec-bb9e00ce61d4",
+  "id": "7c0a7fd6-6882-40e0-b96c-cd9438da97ed",
   "prevId": "e6f4222a-e9bd-48b4-b4f1-a44351ebbd6d",
   "version": "7",
   "dialect": "postgresql",
@@ -284,23 +284,17 @@
         }
       },
       "indexes": {
-        "member_organizationId_userId_uidx": {
-          "name": "member_organizationId_userId_uidx",
+        "member_organizationId_idx": {
+          "name": "member_organizationId_idx",
           "columns": [
             {
               "expression": "organizationId",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
-            },
-            {
-              "expression": "userId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -563,6 +557,18 @@
           "notNull": true,
           "default": false
         },
+        "phoneNumber": {
+          "name": "phoneNumber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phoneNumberVerified": {
+          "name": "phoneNumberVerified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
         "image": {
           "name": "image",
           "type": "text",
@@ -600,6 +606,13 @@
           "nullsNotDistinct": false,
           "columns": [
             "email"
+          ]
+        },
+        "user_phoneNumber_unique": {
+          "name": "user_phoneNumber_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "phoneNumber"
           ]
         }
       },

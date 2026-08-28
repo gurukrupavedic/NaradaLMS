@@ -2,16 +2,25 @@ import { Router } from 'express'
 import { z } from 'zod'
 
 import { schoolRoute } from '../naradaRoute'
-import { notFound } from '../error'
-import { getProfileBatchListAccess, getSession, requireAccess, requireOrgMember, tryGetActorProfile } from '../utils/auth'
+import { forbidden, notFound } from '../error'
+import {
+  getProfileBatchListAccess,
+  getSession,
+  hasPermission,
+  requireAccess,
+  requireOrgMember,
+  tryGetActorProfile,
+} from '../utils/auth'
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
-import { findBatches, listBatchesQuerySchema } from '../services/batch'
+import { findBatches, findBatchesWithDetail, listBatchesQuerySchema } from '../services/batch'
 import {
   createProfile,
   createProfileSchema,
   deleteProfile,
   findProfileById,
   findProfilesByUser,
+  searchProfiles,
+  searchProfilesQuerySchema,
   updateProfile,
   updateProfileSchema,
 } from '../services/schoolProfile'
@@ -27,6 +36,25 @@ router.get(
   }),
 )
 
+// School-wide profile search — same permission that gates creating an enrollment, since that's
+// the only reason to search across every profile in the school rather than just your own.
+router.get(
+  '/search',
+  schoolRoute(async ({ req, res, ctx }) => {
+    const canSearch = await hasPermission(req, {
+      scope: 'school',
+      permissions: { enrollment: ['create'] },
+    })
+    if (!canSearch) {
+      throw forbidden()
+    }
+
+    const query = parseQuery(searchProfilesQuerySchema, req)
+    const profiles = await searchProfiles(ctx.db, query)
+    res.status(200).json({ ok: true, data: profiles })
+  }),
+)
+
 router.post(
   '/',
   schoolRoute(async ({ req, res, ctx }) => {
@@ -38,11 +66,18 @@ router.post(
   }),
 )
 
+const profileBatchesQuerySchema = listBatchesQuerySchema.extend({
+  // Eagerly includes each batch's roster, schedule, and the target profile's own enrollment role
+  // in the same query, for callers (the dashboard) that need every batch's detail anyway — avoids
+  // fanning out a GET /batches/:id per item, which is what was exhausting the DB connection pool.
+  withDetail: z.coerce.boolean().optional().default(false),
+})
+
 router.get(
   '/:profileId/batches',
   schoolRoute(async ({ req, res, ctx }) => {
     const { profileId } = parseParams(z.object({ profileId: z.uuid() }), req)
-    const query = parseQuery(listBatchesQuerySchema, req)
+    const query = parseQuery(profileBatchesQuerySchema, req)
     const { profile } = await tryGetActorProfile(req, ctx.db)
 
     const target = await findProfileById(ctx.db, profileId)
@@ -60,7 +95,9 @@ router.get(
       ),
     )
 
-    const result = await findBatches(ctx.db, { ...query, access })
+    const result = query.withDetail
+      ? await findBatchesWithDetail(ctx.db, { ...query, access, roleForProfileId: profileId })
+      : await findBatches(ctx.db, { ...query, access })
     res.status(200).json({ ok: true, data: result })
   }),
 )

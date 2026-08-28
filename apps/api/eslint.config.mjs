@@ -1,22 +1,30 @@
 import tseslint from 'typescript-eslint'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
-export default tseslint.config(tseslint.configs.recommended, eslintConfigPrettier, {
-  languageOptions: {
-    parserOptions: {
-      tsconfigRootDir: import.meta.dirname,
+export default tseslint.config(
+  {
+    // .draft-backend is a prototype area, not part of the deployed API.
+    ignores: ['.draft-backend/**'],
+  },
+  tseslint.configs.recommended,
+  eslintConfigPrettier,
+  {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      'linebreak-style': ['error', 'unix'],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_.*',
+          varsIgnorePattern: '^_.*',
+          caughtErrorsIgnorePattern: '^_.*',
+        },
+      ],
     },
   },
-  rules: {
-    'linebreak-style': ['error', 'unix'],
-    'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': [
-      'warn',
-      {
-        argsIgnorePattern: '^_.*',
-        varsIgnorePattern: '^_.*',
-        caughtErrorsIgnorePattern: '^_.*',
-      },
-    ],
-  },
-})
+)

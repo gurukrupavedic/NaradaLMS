@@ -9,6 +9,14 @@ export type ApiProfile = {
   updatedAt: string
 }
 
+// The org-level role (owner/admin/member), distinct from a profile's per-batch EnrollmentRole.
+// Only fetch this for one-off authorization checks (e.g. gating /admin) — never on a hot path
+// that runs on every dashboard load, which is what caused a production incident previously.
+export type ApiAuthProfile = {
+  isSuperAdmin: boolean
+  memberships: { organizationId: string; organizationName: string; organizationSlug: string; role: string }[]
+}
+
 export type ApiPage<T> = {
   items: T[]
   nextCursor: string | null
@@ -64,6 +72,10 @@ export type ApiBatchDetail = ApiBatch & {
   classSlots: ApiClassSlot[]
 }
 
+// A batch detail annotated with the caller's own role in it — null when the caller has
+// school-wide (admin/owner) access but no personal enrollment row for that batch.
+export type ApiBatchWithRole = ApiBatchDetail & { role: EnrollmentRole | null }
+
 export type ApiEvaluation = {
   id: string
   studentId: string
@@ -84,4 +96,21 @@ export type ApiExam = {
   status: ExamStatus
   evaluationId: string | null
   performedAt: string | null
+  chapter: { id: string; code: string; title: string; trackId: string }
+  evaluation: { level: ProficiencyLevel; notes: string | null } | null
+}
+
+// GET /me/dashboard's response — everything the dashboard needs, assembled server-side in one
+// request instead of one HTTP round-trip per batch/student. `memberships` is flat
+// (ApiBatchWithRole), matching GET /profiles/:id/batches?withDetail=true's shape; `teaching` and
+// `pastBatchesByStudent` are arrays (not maps) since Maps don't survive JSON — reconstruct on the
+// client.
+export type ApiDashboard = {
+  firstName: string
+  memberships: ApiBatchWithRole[]
+  tracks: ApiTrack[]
+  studentEvaluations: ApiEvaluation[]
+  upcomingExams: ApiExam[]
+  teaching: { batchId: string; evaluations: ApiEvaluation[] }[]
+  pastBatchesByStudent: { studentId: string; batches: ApiBatch[] }[]
 }

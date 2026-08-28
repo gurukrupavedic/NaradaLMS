@@ -43,11 +43,20 @@ export type UpdateExamData = z.infer<typeof updateExamSchema>
 export type ListExamsQuery = z.infer<typeof listExamsQuerySchema>
 export type RecordResultData = z.infer<typeof recordResultSchema>
 
+// The list views (a student's own exams, or everything an instructor/admin can see) need enough
+// to render on their own — a bare Exam row has only chapterId and evaluationId, no chapter title
+// or result. exam.chapterId → chapter and exam.evaluationId → evaluation are both already
+// declared in relations.ts, so this is one eager-loaded query, not a fan-out.
+export type ExamWithDetail = Exam & {
+  chapter: Pick<typeof chapter.$inferSelect, 'id' | 'code' | 'title' | 'trackId'>
+  evaluation: Pick<typeof evaluation.$inferSelect, 'level' | 'notes'> | null
+}
+
 export async function findVisibleExamsForProfile(
   db: SchoolDbExecutor,
   profileId: string,
   options: ListExamsQuery,
-): Promise<{ items: Exam[]; nextCursor: string | null }> {
+): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
   const visibleBatchIds = await manageableBatchIds(db, profileId)
   if (visibleBatchIds.length === 0) {
     return findManyExams(db, [eq(exam.studentId, profileId)], options)
@@ -79,7 +88,7 @@ export async function findVisibleExamsForProfile(
 export async function findAllExams(
   db: SchoolDbExecutor,
   options: ListExamsQuery,
-): Promise<{ items: Exam[]; nextCursor: string | null }> {
+): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
   return findManyExams(db, [], options)
 }
 
@@ -87,7 +96,7 @@ async function findManyExams(
   db: SchoolDbExecutor,
   baseConditions: ReturnType<typeof eq>[],
   options: ListExamsQuery,
-): Promise<{ items: Exam[]; nextCursor: string | null }> {
+): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
   const { status, cursor, limit } = options
   const conditions = [...baseConditions]
 
@@ -105,6 +114,10 @@ async function findManyExams(
     where: and(...conditions),
     orderBy: [asc(exam.scheduledAt), asc(exam.id)],
     limit: limit + 1,
+    with: {
+      chapter: { columns: { id: true, code: true, title: true, trackId: true } },
+      evaluation: { columns: { level: true, notes: true } },
+    },
   })
 
   return paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
