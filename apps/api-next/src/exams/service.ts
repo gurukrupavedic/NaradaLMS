@@ -1,6 +1,7 @@
 import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound, unprocessable } from '../error'
+import { resolveQualifyingBatch } from '../enrollment/service'
 import type { ExamReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
@@ -52,9 +53,12 @@ export async function createExam(context: ExamServiceContext, data: CreateExamDa
   return row
 }
 
-// A student can only be examined on a chapter belonging to a track they're
-// enrolled in as a student, and that enrollment must be unambiguous — the
-// resolved batch is stored on the exam as immutable assessment context (DD-012).
+// A student can only be examined on a chapter belonging to a track they're enrolled in as a
+// student, and that enrollment must be unambiguous — the resolved batch is stored on the exam as
+// immutable assessment context (DD-012). The enrollment-ambiguity check itself lives in the
+// enrollment domain (`resolveQualifyingBatch`) so it can't drift from the same check on direct
+// evaluation creation (PARITY_PLAN.md §10.5); this function only adds the chapter lookup, which
+// is exam/evaluation-specific, not an enrollment concern.
 async function assertValidExamAssignment(
   db: SchoolDb,
   studentId: string,
@@ -65,21 +69,7 @@ async function assertValidExamAssignment(
     throw unprocessable('chapter not found')
   }
 
-  const enrolled = await repository.findStudentEnrollmentForTrack(db, studentId, chapterRow.trackId)
-  if (enrolled.length === 0) {
-    throw unprocessable('student is not enrolled in a batch for this chapter')
-  }
-
-  if (enrolled.length > 1) {
-    throw unprocessable("student is enrolled in multiple batches for this chapter's track")
-  }
-
-  const [only] = enrolled
-  if (!only) {
-    throw internalError()
-  }
-
-  return only.batchId
+  return resolveQualifyingBatch(db, studentId, chapterRow.trackId)
 }
 
 /**

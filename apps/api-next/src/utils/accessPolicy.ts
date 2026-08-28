@@ -6,7 +6,7 @@ import {
   type SchoolDbClient,
   type SchoolProfile,
 } from '@narada/db'
-import { hasBatchPermission, type BatchPermissions } from '@narada/auth/permissions'
+import { hasBatchPermission as roleHasBatchPermission, type BatchPermissions } from '@narada/auth/permissions'
 
 import { forbidden } from '../error'
 import type { Exam } from '../exams/schema'
@@ -42,7 +42,7 @@ export class AccessPolicy {
     private readonly userId: string,
     private readonly profileId: string | null,
     private readonly schoolRole: SchoolRole,
-    private readonly batchRoles: Array<{ batchId: string; role: BatchRole }>,
+    private readonly batchRoles: Map<string, BatchRole>,
     private readonly isSuperAdmin: boolean,
   ) {}
 
@@ -57,7 +57,7 @@ export class AccessPolicy {
     user,
     profile,
   }: AccessPolicySource): Promise<AccessPolicy> {
-    const [membership, batchRoles] = await Promise.all([
+    const [membership, batchRoleRows] = await Promise.all([
       publicDb.query.member.findFirst({
         where: (t, { and, eq }) => and(eq(t.organizationId, school.id), eq(t.userId, user.id)),
         columns: { role: true },
@@ -78,7 +78,7 @@ export class AccessPolicy {
       user.id,
       profile?.id ?? null,
       normalizeSchoolRole(membership?.role),
-      batchRoles,
+      new Map(batchRoleRows.map(row => [row.batchId, row.role])),
       user.isSuperAdmin,
     )
   }
@@ -95,15 +95,21 @@ export class AccessPolicy {
     return this.isSuperAdmin || this.schoolRole === 'owner' || this.schoolRole === 'admin'
   }
 
+  /**
+   * Whether the actor's own enrollment role in `batchId` (if any — not the school-admin bypass,
+   * callers combine that separately via `isSchoolAdmin()`) satisfies `permission`. The single
+   * choke point for per-batch permission checks so new domains (exams, evaluations) ask this
+   * instead of re-deriving "find my role in this batch, then check it" themselves.
+   */
+  public hasBatchPermission(batchId: string, permission: BatchPermissions): boolean {
+    const role = this.batchRoles.get(batchId)
+    return role !== undefined && roleHasBatchPermission(role, permission)
+  }
+
   // -- Batches --------------------------------------------------------------
 
   public requireCanReadBatch(batchId: string): void {
-    if (this.isSchoolAdmin()) {
-      return
-    }
-
-    const role = this.batchRoles.find(batchRole => batchRole.batchId === batchId)?.role
-    if (role && hasBatchPermission(role, BATCH_READ_PERMISSION)) {
+    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, BATCH_READ_PERMISSION)) {
       return
     }
 
@@ -131,9 +137,11 @@ export class AccessPolicy {
   }
 
   // -- Exams ------------------------------------------------------------------
-  // TODO: instructor/TA exam authorization needs to resolve a student's batch
-  // from a chapter (see exams/service.ts:assertValidExamAssignment); until
-  // that lands, these stay school-admin-only (plus self-read for students).
+  // TODO: instructor/TA exam authorization — `enrollment/service.ts::resolveQualifyingBatch`
+  // now resolves a student's batch from a chapter (shared with exam creation, DD-012), and
+  // `hasBatchPermission` above is ready to check the actor's role in that batch. These methods
+  // just haven't been switched over to use them yet; until then they stay school-admin-only
+  // (plus self-read for students).
 
   public requireCanReadExam(exam: Exam): void {
     if (this.isSchoolAdmin() || exam.studentId === this.profileId) {
@@ -187,13 +195,17 @@ export class AccessPolicy {
   }
 }
 
-// Compatibility baseline (PARITY_PLAN.md DD-010 is not yet approved): a missing or unrecognized
-// role is normalized down to plain `member` rather than rejected. Do not change this to a
-// fail-closed/deny behavior without that decision being approved first.
+// DD-010 (approved 2026-08-28): a *missing* membership row is not this function's concern — it's
+// already rejected in `load()` before this runs, except for a super admin, for whom the return
+// value here is never actually consulted (isSchoolAdmin()/requireSchoolMember() both short-circuit
+// on isSuperAdmin first). A *present* role value outside owner/admin/member fails closed instead
+// of being silently downgraded to `member` — the old backend already fails closed here
+// structurally (BetterAuth's hasPermission has no matching statement for an unrecognized role),
+// so this matches parity rather than deviating from it.
 function normalizeSchoolRole(role: typeof member.$inferSelect.role | undefined): SchoolRole {
-  if (role === 'owner' || role === 'admin') {
-    return role
+  if (role === undefined || role === 'owner' || role === 'admin' || role === 'member') {
+    return role ?? 'member'
   }
 
-  return 'member'
+  throw forbidden()
 }

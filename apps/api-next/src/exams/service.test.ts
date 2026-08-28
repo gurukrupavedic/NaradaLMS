@@ -5,16 +5,23 @@ import type { SchoolDbClient } from '@narada/db'
 import { DbConstraint } from '../utils/dbError'
 import { createExam, recordExamResult } from './service'
 import * as repository from './repository'
+import * as enrollmentService from '../enrollment/service'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
 vi.mock('./repository', () => ({
   findChapterTrackId: vi.fn(),
-  findStudentEnrollmentForTrack: vi.fn(),
   insert: vi.fn(),
   findById: vi.fn(),
   insertEvaluation: vi.fn(),
   complete: vi.fn(),
+}))
+
+// The enrollment-ambiguity check itself is owned and tested by the enrollment domain
+// (`enrollment/service.test.ts`) — these tests only prove createExam calls it correctly and
+// propagates its result/errors, not the ambiguity logic itself.
+vi.mock('../enrollment/service', () => ({
+  resolveQualifyingBatch: vi.fn(),
 }))
 
 describe('createExam', () => {
@@ -24,7 +31,7 @@ describe('createExam', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(repository.findChapterTrackId).mockResolvedValue({ trackId: 'track-1' })
-    vi.mocked(repository.findStudentEnrollmentForTrack).mockResolvedValue([{ batchId: 'batch-1' }])
+    vi.mocked(enrollmentService.resolveQualifyingBatch).mockResolvedValue('batch-1')
   })
 
   it.each([DbConstraint.examStudentIdFk, DbConstraint.examChapterIdFk])(
@@ -74,28 +81,35 @@ describe('createExam', () => {
     })
   })
 
-  it('rejects with a 422 when the student is enrolled in more than one qualifying batch', async () => {
-    vi.mocked(repository.findStudentEnrollmentForTrack).mockResolvedValue([
-      { batchId: 'batch-1' },
-      { batchId: 'batch-2' },
-    ])
-
-    await expect(
-      createExam(context, {
-        studentId: 'student-1',
-        chapterId: 'chapter-1',
-        scheduledAt: new Date(),
-      }),
-    ).rejects.toMatchObject({
-      statusCode: 422,
-      message: "student is enrolled in multiple batches for this chapter's track",
+  it('calls resolveQualifyingBatch with the chapter-resolved trackId and propagates its result', async () => {
+    vi.mocked(repository.insert).mockResolvedValue({
+      id: 'exam-1',
+      chapterId: 'chapter-1',
+      studentId: 'student-1',
+      batchId: 'batch-1',
+      scheduledAt: new Date(),
+      status: 'scheduled',
+      evaluationId: null,
+      performedAt: null,
     })
 
-    expect(repository.insert).not.toHaveBeenCalled()
+    await createExam(context, {
+      studentId: 'student-1',
+      chapterId: 'chapter-1',
+      scheduledAt: new Date(),
+    })
+
+    expect(enrollmentService.resolveQualifyingBatch).toHaveBeenCalledWith(
+      db,
+      'student-1',
+      'track-1',
+    )
   })
 
-  it('rejects with a 422 when the student has no qualifying batch', async () => {
-    vi.mocked(repository.findStudentEnrollmentForTrack).mockResolvedValue([])
+  it('propagates a rejection from resolveQualifyingBatch (e.g. ambiguous or no qualifying batch) without inserting', async () => {
+    vi.mocked(enrollmentService.resolveQualifyingBatch).mockRejectedValue(
+      new Error("student is enrolled in multiple batches for this chapter's track"),
+    )
 
     await expect(
       createExam(context, {
@@ -103,10 +117,7 @@ describe('createExam', () => {
         chapterId: 'chapter-1',
         scheduledAt: new Date(),
       }),
-    ).rejects.toMatchObject({
-      statusCode: 422,
-      message: 'student is not enrolled in a batch for this chapter',
-    })
+    ).rejects.toThrow("student is enrolled in multiple batches for this chapter's track")
 
     expect(repository.insert).not.toHaveBeenCalled()
   })

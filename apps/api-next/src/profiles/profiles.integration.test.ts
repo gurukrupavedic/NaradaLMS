@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { destroyTestWorld } from '../testing/cleanup'
-import * as examRepository from '../exams/repository'
+import * as enrollmentRepository from '../enrollment/repository'
 import {
   createBatch,
   createChapter,
@@ -125,7 +125,7 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
       expect(stillEnrolled).toBeDefined()
 
       // ...but it must no longer qualify the (now-deactivated) student for a new exam.
-      const qualifying = await examRepository.findStudentEnrollmentForTrack(
+      const qualifying = await enrollmentRepository.findQualifyingBatches(
         world.schoolDb,
         studentProfile.id,
         trackRow.id,
