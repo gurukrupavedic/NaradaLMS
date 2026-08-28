@@ -33,16 +33,14 @@ router.get(
   }),
 )
 
-// TODO: gate create/update/results by the exam ACL (instructor/ta for the
-// student's batch) once we have a clean way to resolve a student's batch
-// from a chapter. School admin only for now.
-
+// createExam itself calls access.requireCanCreateExam once it has resolved the qualifying batch
+// — see the doc comment on createExam for why that check can't happen here, before the body (and
+// therefore the student/chapter) is even parsed.
 router.post(
   '/',
   profileRoute(async ({ req, res, db, access }) => {
-    await access.requireCanCreateExam()
     const data = await parse(CreateExamSchema, req.body)
-    const exam = await createExam({ db }, data)
+    const exam = await createExam({ db, access }, data)
     res.status(201).json({ data: exam })
   }),
 )

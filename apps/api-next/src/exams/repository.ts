@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, isNull, or, type SQL } from 'drizzle-orm'
+import { and, asc, eq, gt, inArray, isNull, or, type SQL } from 'drizzle-orm'
 
 import { evaluation, exam, type SchoolDb } from '@narada/db'
 
@@ -17,6 +17,12 @@ export async function findMany(
   const conditions: SQL[] = []
   if (scope.kind === 'own') {
     conditions.push(eq(exam.studentId, scope.profileId))
+  } else if (scope.kind === 'manageable') {
+    // `batchIds` is guaranteed non-empty by `AccessPolicy.getExamVisibility` (an empty-permission
+    // actor gets 'own' instead), so `inArray` never has to handle a zero-length list here.
+    conditions.push(
+      or(eq(exam.studentId, scope.profileId), inArray(exam.batchId, scope.batchIds))!,
+    )
   }
 
   if (status) {

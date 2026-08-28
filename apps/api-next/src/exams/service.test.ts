@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SchoolDbClient } from '@narada/db'
 
 import { DbConstraint } from '../utils/dbError'
+import type { AccessPolicy } from '../utils/accessPolicy'
 import { createExam, recordExamResult } from './service'
 import * as repository from './repository'
 import * as enrollmentService from '../enrollment/service'
@@ -26,7 +27,9 @@ vi.mock('../enrollment/service', () => ({
 
 describe('createExam', () => {
   const db = {} as SchoolDbClient
-  const context = { db }
+  const requireCanCreateExam = vi.fn()
+  const access = { requireCanCreateExam } as unknown as AccessPolicy
+  const context = { db, access }
 
   beforeEach(() => {
     vi.resetAllMocks()
@@ -79,6 +82,46 @@ describe('createExam', () => {
       scheduledAt,
       batchId: 'batch-1',
     })
+  })
+
+  it('authorizes against the resolved batchId, after resolution and before inserting', async () => {
+    vi.mocked(repository.insert).mockResolvedValue({
+      id: 'exam-1',
+      chapterId: 'chapter-1',
+      studentId: 'student-1',
+      batchId: 'batch-1',
+      scheduledAt: new Date(),
+      status: 'scheduled',
+      evaluationId: null,
+      performedAt: null,
+    })
+
+    await createExam(context, {
+      studentId: 'student-1',
+      chapterId: 'chapter-1',
+      scheduledAt: new Date(),
+    })
+
+    expect(requireCanCreateExam).toHaveBeenCalledWith('batch-1')
+    expect(requireCanCreateExam.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(repository.insert).mock.invocationCallOrder[0]!,
+    )
+  })
+
+  it('propagates a rejection from access.requireCanCreateExam without inserting', async () => {
+    requireCanCreateExam.mockImplementation(() => {
+      throw new Error('forbidden')
+    })
+
+    await expect(
+      createExam(context, {
+        studentId: 'student-1',
+        chapterId: 'chapter-1',
+        scheduledAt: new Date(),
+      }),
+    ).rejects.toThrow('forbidden')
+
+    expect(repository.insert).not.toHaveBeenCalled()
   })
 
   it('calls resolveQualifyingBatch with the chapter-resolved trackId and propagates its result', async () => {

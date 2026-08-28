@@ -19,9 +19,15 @@ type BatchRole = typeof enrollment.$inferSelect.role
 // AccessPolicy is the single owner of the read-scope vocabulary; domain
 // services accept these types as parameters rather than defining their own.
 export type BatchReadScope = { kind: 'all' } | { kind: 'enrolled'; profileId: string }
-// 'own' is everyone except school admins until batch-scoped visibility is
-// wired up (see the exam TODO below).
-export type ExamReadScope = { kind: 'all' } | { kind: 'own'; profileId: string }
+// 'own' is a profile with no batch where they hold exam:read (e.g. a plain student) — every exam
+// visible to them has studentId === profileId. 'manageable' adds every batch where they do hold
+// exam:read (instructor/TA): studentId === profileId OR batchId is one of `batchIds`. `batchIds`
+// is always non-empty for 'manageable' — an empty-permission actor gets 'own' instead, so
+// repository code never has to special-case an empty SQL IN-list.
+export type ExamReadScope =
+  | { kind: 'all' }
+  | { kind: 'own'; profileId: string }
+  | { kind: 'manageable'; profileId: string; batchIds: string[] }
 
 type AccessPolicySource = {
   db: SchoolDbClient
@@ -31,6 +37,9 @@ type AccessPolicySource = {
 }
 
 const BATCH_READ_PERMISSION: BatchPermissions = { enrollment: ['read'] }
+const EXAM_READ_PERMISSION: BatchPermissions = { exam: ['read'] }
+const EXAM_CREATE_PERMISSION: BatchPermissions = { exam: ['create'] }
+const EXAM_UPDATE_PERMISSION: BatchPermissions = { exam: ['update'] }
 
 /**
  * The single authorization vocabulary for domain services (HARDENING_PLAN.md §4.4). Holds an
@@ -106,6 +115,14 @@ export class AccessPolicy {
     return role !== undefined && roleHasBatchPermission(role, permission)
   }
 
+  /** Every batchId where the actor's own enrollment role satisfies `permission` — backs the
+   * 'manageable' read scopes (e.g. `getExamVisibility`). */
+  private batchIdsWithPermission(permission: BatchPermissions): string[] {
+    return [...this.batchRoles.entries()]
+      .filter(([, role]) => roleHasBatchPermission(role, permission))
+      .map(([batchId]) => batchId)
+  }
+
   // -- Batches --------------------------------------------------------------
 
   public requireCanReadBatch(batchId: string): void {
@@ -137,36 +154,53 @@ export class AccessPolicy {
   }
 
   // -- Exams ------------------------------------------------------------------
-  // TODO: instructor/TA exam authorization — `enrollment/service.ts::resolveQualifyingBatch`
-  // now resolves a student's batch from a chapter (shared with exam creation, DD-012), and
-  // `hasBatchPermission` above is ready to check the actor's role in that batch. These methods
-  // just haven't been switched over to use them yet; until then they stay school-admin-only
-  // (plus self-read for students).
+  // Instructor/TA exam authorization (DD-003/DD-005/DD-006, approved 2026-08-28) is scoped
+  // per-batch via `hasBatchPermission`, matching the enrollment role the actor actually holds in
+  // the exam's batch — not "school admin or nothing." An exam's `batchId` is resolved once, at
+  // creation, by `enrollment/service.ts::resolveQualifyingBatch` (DD-012); every check below
+  // reuses that stored value rather than re-resolving it.
 
   public requireCanReadExam(exam: Exam): void {
-    if (this.isSchoolAdmin() || exam.studentId === this.profileId) {
+    if (
+      this.isSchoolAdmin() ||
+      exam.studentId === this.profileId ||
+      (exam.batchId !== null && this.hasBatchPermission(exam.batchId, EXAM_READ_PERMISSION))
+    ) {
       return
     }
 
     throw forbidden()
   }
 
-  public requireCanCreateExam(): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
+  /**
+   * Unlike the other exam checks, this one runs *before* the exam row (and thus its `batchId`)
+   * exists — the caller (`exams/service.ts::createExam`) resolves the qualifying batch via
+   * `resolveQualifyingBatch` first and passes it here, so authorization and the batch stored on
+   * the new row are always the exact same resolution, never two independent ones.
+   */
+  public requireCanCreateExam(batchId: string): void {
+    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, EXAM_CREATE_PERMISSION)) {
+      return
     }
+
+    throw forbidden()
   }
 
-  public requireCanUpdateExam(_exam: Exam): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
+  public requireCanUpdateExam(exam: Exam): void {
+    if (
+      this.isSchoolAdmin() ||
+      (exam.batchId !== null && this.hasBatchPermission(exam.batchId, EXAM_UPDATE_PERMISSION))
+    ) {
+      return
     }
+
+    throw forbidden()
   }
 
-  public requireCanRecordEvaluation(_exam: Exam): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
+  // Recording a result is a status-changing update to the exam (PARITY_PLAN.md §11.6), so it's
+  // gated by the same exam:update permission as requireCanUpdateExam, not a separate action.
+  public requireCanRecordEvaluation(exam: Exam): void {
+    this.requireCanUpdateExam(exam)
   }
 
   public getExamVisibility(): ExamReadScope {
@@ -174,7 +208,9 @@ export class AccessPolicy {
       return { kind: 'all' }
     }
 
-    return { kind: 'own', profileId: this.requireProfileId() }
+    const profileId = this.requireProfileId()
+    const batchIds = this.batchIdsWithPermission(EXAM_READ_PERMISSION)
+    return batchIds.length > 0 ? { kind: 'manageable', profileId, batchIds } : { kind: 'own', profileId }
   }
 
   // -- Profiles ---------------------------------------------------------------

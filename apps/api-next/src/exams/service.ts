@@ -2,7 +2,7 @@ import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound, unprocessable } from '../error'
 import { resolveQualifyingBatch } from '../enrollment/service'
-import type { ExamReadScope } from '../utils/accessPolicy'
+import type { AccessPolicy, ExamReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
 import type {
@@ -35,9 +35,20 @@ export async function findById(context: ExamServiceContext, id: string): Promise
   return row
 }
 
-/** Validates the student/chapter assignment invariant before inserting; see {@link assertValidExamAssignment}. */
-export async function createExam(context: ExamServiceContext, data: CreateExamData): Promise<Exam> {
+/**
+ * Validates the student/chapter assignment invariant before inserting; see
+ * {@link assertValidExamAssignment}. Authorization runs *after* that resolution, not before it,
+ * so `access.requireCanCreateExam` checks the actor's permission in the exact batch the new exam
+ * will be stored against — a route-level check (before the qualifying batch is known) would risk
+ * authorizing against a different batch than the one actually written.
+ */
+export async function createExam(
+  context: ExamServiceContext & { access: AccessPolicy },
+  data: CreateExamData,
+): Promise<Exam> {
   const batchId = await assertValidExamAssignment(context.db, data.studentId, data.chapterId)
+  context.access.requireCanCreateExam(batchId)
+
   const row = await withConstraintMapping(
     () => repository.insert(context.db, { ...data, batchId }),
     {
