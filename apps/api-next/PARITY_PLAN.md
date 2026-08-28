@@ -32,6 +32,91 @@ request logging, and a number of already-present draft behaviors that are not ac
 
 ---
 
+## 0. Resync addendum — 2026-08-28
+
+The reference implementation moved after the 2026-07-17 audit above was written (the rewrite
+branch had drifted 18 commits behind `main`). This addendum reconciles it; the numbered sections
+below remain as originally audited except where a note in this addendum says otherwise. Do not
+re-derive "current behavior" from anything before this date without checking `apps/api/src`
+directly — treat this addendum as authoritative over the numbered sections wherever they conflict.
+
+**Corrected baseline, not just new surface area:** §7.2's recommended `GET
+/profiles/:profileId/batches` policy — "all batches for super/owner/admin" regardless of which
+profile was requested — was transcribing a bug in the reference implementation at audit time, not
+its intended behavior. `apps/api/src/utils/auth.ts`'s `getProfileBatchListAccess` has since been
+fixed (`9deacb11`): school-wide (`schoolWide`) access is now granted only when the caller is
+looking up **their own** profile's batches. A lookup of a *different* profile is always scoped to
+that target's own enrollments (via `{ kind: 'enrolled', profileId: targetProfileId }`), whether
+the caller is a super admin, owner, admin, or a shared instructor/TA — school-wide permission only
+buys the caller the right to skip the shared-history check, not license to see every batch in the
+school. Implement the corrected rule, not the one written in §7.2 step 4. Test explicitly: an
+admin without a profile viewing student X's batches gets X's batches, not the full school list.
+
+**New/changed contract surface since the audit:**
+
+1. **`GET /me/dashboard`** (new, missing from the original route matrix). `profileRoute`-gated
+   (requires an active profile). Returns one aggregated payload —
+   `{ firstName, memberships, tracks, studentEvaluations, upcomingExams, teaching,
+   pastBatchesByStudent }` — assembled server-side in a fixed number of queries
+   (`apps/api/src/services/dashboard.ts`) to replace what used to be a per-panel HTTP fan-out from
+   the Next.js server. This replaced the batch-list N+1 that was exhausting the DB connection pool
+   (see [[project_batch_n1_incident]]). Treat this as required parity surface, not an optional
+   extension: `apps/web`'s dashboard now depends on it exclusively.
+
+2. **`GET /profiles/search`** (new, missing from the original route matrix). School-scoped, gated
+   by the same permission as creating an enrollment (`{ scope: 'school', permissions: {
+   enrollment: ['create'] } }`) — there is no broader "read any profile" permission check here by
+   design, since the only caller is the admin "enroll a student" flow. Query: optional `query`
+   (name substring, case-insensitive) and optional `excludeBatchId` (filters out profiles already
+   enrolled in that batch, applied in SQL so `LIMIT 25` stays meaningful). Returns up to 25
+   profiles ordered by name.
+
+3. **`GET /profiles/:profileId/batches`** gained an optional `withDetail=true` query flag
+   (`profileBatchesQuerySchema` in `apps/api/src/routes/profiles.ts`). When set, each returned
+   batch is eager-loaded with its full roster (`members: { profileId, name, phone, city, role,
+   joinedAt }[]`) and `classSlots`, plus the target profile's own `role` in that batch — i.e. the
+   same detail shape as `GET /batches/:batchId` (§9.2), but for every item in the list in one
+   query (`findBatchesWithDetail` in `services/batch.ts`). Without the flag, behavior is unchanged
+   from the original §7.2 spec (bare `Batch` rows). The draft should implement both response
+   shapes behind the same flag rather than only the bare-row form.
+
+4. **Exam list/detail responses are no longer bare `Exam` rows.** `apps/api/src/services/exam.ts`
+   now returns `ExamWithDetail = Exam & { chapter: Pick<Chapter, 'id'|'code'|'title'|'trackId'>,
+   evaluation: Pick<Evaluation, 'level'|'notes'> | null }` from every list/read path
+   (`findVisibleExamsForProfile`, `findAllExams`), eager-loaded via the existing `chapter`/
+   `evaluation` relations (not a new fan-out). Update §11.2's list contract and the route matrix's
+   `GET /exams` row accordingly: the draft's response schema must include the nested `chapter` and
+   `evaluation` projections, not just the bare exam row it currently returns.
+
+5. **CORS origin matching now supports globs**, not just exact strings
+   (`apps/api/src/server.ts`'s `isTrustedOrigin`) — a `TRUSTED_ORIGINS` entry containing `*` (e.g.
+   `https://web-*-gurukrupa-vedic.vercel.app`, for Vercel preview deployments) is matched as a
+   glob via a generated `RegExp`; entries without `*` still match exactly. §13.1's CORS middleware
+   description should be read as "glob-capable trusted-origin matching," not a plain array/string
+   comparison.
+
+6. **Authentication is now phone-OTP only.** Email/password sign-in was removed from
+   `@narada/auth` entirely (`8e6b67d7`); `/auth/*splat` still wildcard-mounts BetterAuth exactly as
+   §13.1 describes, but the set of operations it exposes changed (no email/password endpoints).
+   This doesn't change the draft's mounting mechanics, but any Phase 8 web-smoke test that assumes
+   an email/password flow is testing a path that no longer exists. A new workspace package,
+   `packages/otp` (Twilio Verify client), backs this — `apps/api-next`'s `server.ts` will need it
+   as a dependency once Phase 8 (runtime/auth mounting parity) is implemented; it did not exist in
+   the rewrite branch before this resync.
+
+7. **Two new school-schema columns exist with no API surface yet**: `enrollment.status` (enum:
+   `active | break | dropped | inactive`, default `active`) and `enrollment.leftDate`
+   (`packages/db/src/schema/school.ts`, migration `school/0001_lowly_star_brand.sql`). As of this
+   resync, `apps/api/src` does not read or write either column through any route — they exist in
+   the schema but aren't part of the compatibility baseline yet. Don't build draft API surface for
+   them; note them here so a future audit isn't surprised to find unused columns.
+
+8. **Docker**: `apps/api/Dockerfile`'s deps stage now copies `packages/otp`'s manifest
+   (`69780f2f`). `apps/api-next/Dockerfile` will need the equivalent addition before Phase 9
+   promotion — flagging now so it isn't missed later.
+
+---
+
 ## 1. What “true parity” means
 
 Parity is reached only when the draft can replace `apps/api/src` without an **unapproved**
@@ -192,9 +277,11 @@ contract.
 | `GET /schools`                                 | Missing                       | Add public-db service, super-admin policy, response projection, and route.                                         |
 | `PATCH /schools/:schoolId`                     | Missing                       | Add validation, super-admin policy, existence/conflict behavior, and response projection.                          |
 | `GET /profile`                                 | Missing                       | Add authenticated public bootstrap response with super-admin flag and organization memberships.                    |
+| `GET /me/dashboard`                            | Missing                       | New since 2026-07-17 audit — see addendum §0.1. Add aggregated dashboard service and route; required, not optional.|
 | `GET /profiles`                                | Present / parity work         | Add `ok: true`; verify school/session semantics and exact response fields.                                         |
+| `GET /profiles/search`                         | Missing                       | New since 2026-07-17 audit — see addendum §0.2. Add enrollment-create-gated search route.                          |
 | `POST /profiles`                               | Present / parity work         | Align input nullability, membership authorization, response envelope, and errors.                                  |
-| `GET /profiles/:profileId/batches`             | Missing                       | Add target lookup, own/admin/shared-instructor scope, batch pagination, and route.                                 |
+| `GET /profiles/:profileId/batches`             | Missing                       | Add target lookup, own/admin/shared-instructor scope, batch pagination, and `withDetail` route — see addendum §0 (corrected school-wide rule; new eager-loaded detail mode). |
 | `PATCH /profiles/:profileId`                   | Present / parity work         | Align input schema, ownership semantics, response envelope, and error distinctions.                                |
 | `DELETE /profiles/:profileId`                  | Present / parity work         | Align ownership semantics and 204 behavior.                                                                        |
 | `GET /tracks`                                  | Missing                       | Add content-read policy, ordered tracks, ordered/visibility-filtered chapters.                                     |
@@ -210,15 +297,16 @@ contract.
 | `GET /batches/:batchId/evaluations`            | Missing                       | Add admin/instructor/TA batch history with compound cursor.                                                        |
 | `GET /batches/:batchId/evaluations/:studentId` | Missing                       | Add own-student read vs educator/admin read policy and pagination.                                                 |
 | `POST /batches/:batchId/evaluations`           | Missing                       | Add evaluator policy, student-role and chapter-track invariants, append-only insert.                               |
-| `GET /exams`                                   | Present / parity work         | Add educator visibility, optional-profile administrator flow, and correlated visibility semantics.                 |
+| `GET /exams`                                   | Present / parity work         | Add educator visibility, optional-profile administrator flow, correlated visibility semantics, and the nested `chapter`/`evaluation` projection — see addendum §0.4 (`ExamWithDetail`). |
 | `POST /exams`                                  | Present / parity work         | Add instructor/TA ACL while retaining stricter draft assignment validation.                                        |
 | `PATCH /exams/:examId`                         | Present / parity work         | Add instructor/TA ACL and keep transition/concurrency hardening.                                                   |
 | `POST /exams/:examId/results`                  | Present / parity work         | Add instructor/TA ACL and keep single-result transaction hardening.                                                |
-| `GET /exams/:examId`                           | Present / extension           | Retain only with list-equivalent object visibility and contract tests.                                             |
+| `GET /exams/:examId`                           | Present / extension           | Retain only with list-equivalent object visibility, contract tests, and the same `ExamWithDetail` projection.       |
 
-There are 27 current non-auth application endpoints, plus BetterAuth's mounted handler surface.
-Only health is behaviorally close to complete. “Batches, exams, profiles are present” must not be
-treated as meaning those domains are at parity.
+There are 29 current non-auth application endpoints (27 at the original audit, plus `GET
+/me/dashboard` and `GET /profiles/search` added since — see addendum §0), plus BetterAuth's
+mounted handler surface. Only health is behaviorally close to complete. “Batches, exams, profiles
+are present” must not be treated as meaning those domains are at parity.
 
 ---
 
