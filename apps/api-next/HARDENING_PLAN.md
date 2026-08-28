@@ -200,12 +200,12 @@ Do not implement a gated behavior until its note has a completed manual approval
 | ID to create/update             | Decision                               | Recommended alternative                                              | Gate                                |
 | ------------------------------- | -------------------------------------- | -------------------------------------------------------------------- | ----------------------------------- |
 | [DD-001](./decisions/DD-001.md) | Database-error translation             | Domain/constraint-aware mapping with a safe global fallback          | Approved 2026-07-19                 |
-| [DD-002](./decisions/DD-002.md) | Exam transition/result concurrency     | Exact-status compare-and-set plus transactional rollback             | Agent-approved 2026-07-19, pending human review |
-| [DD-011](./decisions/DD-011.md) | Profile lifecycle and record retention | Soft-delete profile, revoke active participation, retain assessments | Agent-approved 2026-07-19, pending human review (needs product/privacy sign-off — see note §8) |
-| [DD-012](./decisions/DD-012.md) | Persist assessment batch context       | Store `batchId` on exams/evaluations and authorize against it        | Agent-approved 2026-07-19, pending human review (scoped to schema+write-path only — backfill deferred, needs real data — see note §3) |
-| [DD-013](./decisions/DD-013.md) | HTTP datetime and meeting-URL policy   | Offset-bearing ISO instants and HTTPS-only meeting URLs              | Agent-approved 2026-07-19, pending human review |
-| [DD-014](./decisions/DD-014.md) | Request failure precedence             | Header presence → authentication → school lookup → profile/policy    | Agent-approved 2026-07-19, pending human review |
-| [DD-015](./decisions/DD-015.md) | Tenant connection budget               | Explicit per-instance pool budget, timeouts, metrics, bounded cache  | Agent-approved 2026-07-19, pending human review (placeholder budget numbers — see note) |
+| [DD-002](./decisions/DD-002.md) | Exam transition/result concurrency     | Exact-status compare-and-set plus transactional rollback             | Approved (Revanth Pothukuchi, 2026-08-28) |
+| [DD-011](./decisions/DD-011.md) | Profile lifecycle and record retention | Soft-delete profile, revoke active participation, retain assessments | Approved (Revanth Pothukuchi, 2026-07-28 and 2026-08-02) |
+| [DD-012](./decisions/DD-012.md) | Persist assessment batch context       | Store `batchId` on exams/evaluations and authorize against it        | Approved (Revanth Pothukuchi, 2026-08-28) (scoped to schema+write-path only — backfill deferred, needs real data — see note §3) |
+| [DD-013](./decisions/DD-013.md) | HTTP datetime and meeting-URL policy   | Offset-bearing ISO instants and HTTPS-only meeting URLs              | Approved (Revanth Pothukuchi, 2026-08-28) |
+| [DD-014](./decisions/DD-014.md) | Request failure precedence             | Header presence → authentication → school lookup → profile/policy    | Approved (Revanth Pothukuchi, 2026-08-28) |
+| [DD-015](./decisions/DD-015.md) | Tenant connection budget               | Explicit per-instance pool budget, timeouts, metrics, bounded cache  | Approved (Revanth Pothukuchi, 2026-08-28) (placeholder budget numbers, still provisional — see note §8) |
 
 ### 3.1 Required audits before approval
 
