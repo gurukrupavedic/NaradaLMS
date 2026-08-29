@@ -131,11 +131,52 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
   const examIn = (batchId: string | null, studentId = 'someone-else') =>
     ({ studentId, batchId }) as Exam
 
-  it('getExamVisibility returns "all" for a school admin', async () => {
+  it('getExamVisibility returns "all" for a school admin with no active profile', async () => {
     mockMembership('admin')
     const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
 
     expect(access.getExamVisibility()).toEqual({ kind: 'all' })
+  })
+
+  it('getExamVisibility denies a plain member with no active profile (no school evaluation:read)', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+
+    expect(() => access.getExamVisibility()).toThrow()
+  })
+
+  it('getExamVisibility switches even a school admin to scoped visibility once a profile is supplied', async () => {
+    mockMembership('admin')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    // Admin status alone no longer grants 'all' once a profile is active — matches
+    // apps/api/src/routes/exams.ts's `else if (profile) { scoped }` branch, which runs for a
+    // school admin too (only isSuperAdmin skips it).
+    expect(access.getExamVisibility()).toMatchObject({ kind: 'manageable', profileId: 'profile-1' })
+  })
+
+  it('getExamVisibility always returns "all" for a super admin, profile or not', async () => {
+    mockMembership('member')
+    const withProfile = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'student' }]),
+      school,
+      user: user({ isSuperAdmin: true }),
+      profile,
+    })
+    expect(withProfile.getExamVisibility()).toEqual({ kind: 'all' })
+
+    mockMembership('member')
+    const withoutProfile = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+    })
+    expect(withoutProfile.getExamVisibility()).toEqual({ kind: 'all' })
   })
 
   it('getExamVisibility returns "own" for a profile with no exam:read batch permission', async () => {
@@ -197,6 +238,26 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
     expect(() => access.requireCanCreateExam('batch-2')).toThrow()
   })
 
+  it('requireCanCreateExam has no school-admin fallback — only super admin or a batch exam:create role', async () => {
+    mockMembership('admin')
+    const adminAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+    expect(() => adminAccess.requireCanCreateExam('batch-1')).toThrow()
+
+    mockMembership('member')
+    const superAdminAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+      profile,
+    })
+    expect(() => superAdminAccess.requireCanCreateExam('batch-1')).not.toThrow()
+  })
+
   it('requireCanUpdateExam and requireCanRecordEvaluation both gate on exam:update in the exam\'s batch', async () => {
     mockMembership('member')
     const access = await AccessPolicy.load({
@@ -213,6 +274,19 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
     expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).not.toThrow()
     // students hold exam:read, not exam:update, in their own batch
     expect(() => access.requireCanUpdateExam(examIn('batch-2'))).toThrow()
+  })
+
+  it('requireCanUpdateExam has no school-admin fallback — a plain owner/admin needs their own batch exam:update role', async () => {
+    mockMembership('owner')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(() => access.requireCanUpdateExam(examIn('batch-1'))).toThrow()
+    expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).toThrow()
   })
 })
 

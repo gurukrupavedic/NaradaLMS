@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
-import { profileRoute } from '../naradaRoute'
+import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateBatchSchema, FindBatchesSchema, UpdateBatchSchema } from './schema'
 import { createBatch, findAllAccessible, findById, updateBatch } from './service'
@@ -10,7 +10,7 @@ const router = Router()
 
 router.get(
   '/',
-  profileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access }) => {
     const query = await parse(FindBatchesSchema, req.query)
     const visibility = await access.getBatchVisibility()
     const batches = await findAllAccessible({ db }, query, visibility)
@@ -20,7 +20,7 @@ router.get(
 
 router.get(
   '/:batchId',
-  profileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access }) => {
     const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
     await access.requireCanReadBatch(batchId)
     const batch = await findById({ db }, batchId)
@@ -30,7 +30,7 @@ router.get(
 
 router.post(
   '/',
-  profileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access }) => {
     await access.requireCanCreateBatch()
     const data = await parse(CreateBatchSchema, req.body)
     const batch = await createBatch({ db }, data)
@@ -40,7 +40,7 @@ router.post(
 
 router.patch(
   '/:batchId',
-  profileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access }) => {
     const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
     await access.requireCanUpdateBatch(batchId)
     const data = await parse(UpdateBatchSchema, req.body)

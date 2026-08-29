@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
-import { profileRoute } from '../naradaRoute'
+import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateEvaluationSchema, FindEvaluationsSchema } from './schema'
 import { createEvaluation, findByBatch, findByStudent } from './service'
@@ -15,7 +15,7 @@ const StudentParamsSchema = BatchParamsSchema.extend({ studentId: z.uuid() })
 
 router.get(
   '/',
-  profileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access }) => {
     const { batchId } = await parse(BatchParamsSchema, req.params)
     access.requireCanReadBatchEvaluations(batchId)
     const query = await parse(FindEvaluationsSchema, req.query)

@@ -23,7 +23,7 @@ vi.mock('./utils/accessPolicy', () => ({
 import { getSchoolDb, publicDb } from '@narada/db'
 
 import { unauthorized } from './error'
-import { profileRoute, schoolRoute, userRoute } from './naradaRoute'
+import { optionalProfileRoute, profileRoute, schoolRoute, userRoute } from './naradaRoute'
 import { SessionService } from './session'
 import { AccessPolicy } from './utils/accessPolicy'
 
@@ -145,6 +145,64 @@ describe('userRoute', () => {
         user: { id: 'user-1' },
       }),
     )
+  })
+})
+
+// optionalProfileRoute shares resolveOptionalProfile with profileRoute's resolveProfile — the
+// only behavioral difference is what happens when X-Profile-Id is simply absent (undefined vs.
+// 400), so these tests focus on that difference; validation of a *present* header (ownership,
+// deactivation) is already covered by profileRoute's tests below since it's the same code path.
+describe('optionalProfileRoute', () => {
+  const findFirst = vi.fn()
+
+  beforeEach(() => {
+    vi.mocked(getSchoolDb).mockReturnValue({ query: { profile: { findFirst } } } as never)
+    vi.mocked(AccessPolicy.load).mockResolvedValue({} as never)
+  })
+
+  it('passes profile: undefined through to the handler and AccessPolicy.load when the header is absent', async () => {
+    const handler = vi.fn(async () => {})
+
+    await optionalProfileRoute(handler)(makeRequest('known'), res, next)
+
+    expect(findFirst).not.toHaveBeenCalled()
+    expect(AccessPolicy.load).toHaveBeenCalledWith(
+      expect.objectContaining({ profile: undefined }),
+    )
+    expect(handler).toHaveBeenCalledWith(expect.objectContaining({ profile: undefined }))
+  })
+
+  it('still resolves and validates a supplied profile, same as profileRoute', async () => {
+    findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1', deletedAt: null })
+    const handler = vi.fn(async () => {})
+
+    await optionalProfileRoute(handler)(makeRequest('known', 'profile-1'), res, next)
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({ profile: expect.objectContaining({ id: 'profile-1' }) }),
+    )
+  })
+
+  it('still rejects a profile owned by another user with 403', async () => {
+    findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-2', deletedAt: null })
+    const handler = vi.fn(async () => {})
+
+    await expect(
+      optionalProfileRoute(handler)(makeRequest('known', 'profile-1'), res, next),
+    ).rejects.toMatchObject({ statusCode: 403 })
+
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('still rejects a soft-deleted profile with 403', async () => {
+    findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1', deletedAt: new Date() })
+    const handler = vi.fn(async () => {})
+
+    await expect(
+      optionalProfileRoute(handler)(makeRequest('known', 'profile-1'), res, next),
+    ).rejects.toMatchObject({ statusCode: 403 })
+
+    expect(handler).not.toHaveBeenCalled()
   })
 })
 

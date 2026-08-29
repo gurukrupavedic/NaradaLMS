@@ -287,17 +287,17 @@ contract.
 | `GET /tracks`                                  | Missing                       | Add content-read policy, ordered tracks, ordered/visibility-filtered chapters.                                     |
 | `GET /tracks/:trackId`                         | Missing                       | Add the same content view plus 404 behavior.                                                                       |
 | `GET /chapters/:chapterId`                     | Missing                       | Add content view, draft hiding, and 404 behavior.                                                                  |
-| `GET /batches`                                 | Present / parity work         | Restore optional-profile admin flow, compound ordering/cursor, envelope, and exact filter schema.                  |
-| `GET /batches/:batchId`                        | Present / parity work         | Return roster and class slots, not a bare batch; restore optional-profile admin flow.                              |
-| `POST /batches`                                | Present / parity work         | Do not require an active profile; align schema and envelope.                                                       |
-| `PATCH /batches/:batchId`                      | Present / parity work         | Remove draft-only `trackId` update, align schema/profile semantics/envelope.                                       |
+| `GET /batches`                                 | Present / parity work         | Optional-profile admin flow restored (2026-08-28, `optionalProfileRoute`). Still missing: compound ordering/cursor and exact filter schema.                  |
+| `GET /batches/:batchId`                        | Present / parity work         | Optional-profile admin flow restored (2026-08-28). Still missing: roster and class slots — currently returns a bare batch.                                  |
+| `POST /batches`                                | Present / parity work         | Active profile no longer required (2026-08-28, `optionalProfileRoute`). Still needs schema/envelope alignment.                                                       |
+| `PATCH /batches/:batchId`                      | Present / parity work         | Active profile no longer required (2026-08-28). Still needs: remove draft-only `trackId` update, align schema/envelope.                                       |
 | `PUT /batches/:batchId/schedule`               | Missing                       | Add atomic replace-set service, schema, admin ACL, route, and CORS support.                                        |
 | `POST /batches/:batchId/members`               | Missing                       | Add instructor/school enrollment ACL, validation, conflict handling, and route.                                    |
 | `DELETE /batches/:batchId/members/:profileId`  | Missing                       | Add instructor/school removal ACL, 204/404 behavior, and route.                                                    |
-| `GET /batches/:batchId/evaluations`            | Present (2026-08-28)          | `evaluations` domain added — admin/instructor/TA batch-wide list with the full null-aware compound cursor (§10.2), ported directly from `apps/api/src`'s reference pagination logic. Not yet verified against a real database (Docker unavailable in the implementing session) — recommend running `test:integration` once possible. |
+| `GET /batches/:batchId/evaluations`            | Present (2026-08-28)          | `evaluations` domain added — admin/instructor/TA batch-wide list with the full null-aware compound cursor (§10.2), ported directly from `apps/api/src`'s reference pagination logic, and mounted on `optionalProfileRoute` (§10.3: "resolve optional actor profile"). Not yet verified against a real database (Docker unavailable in the implementing session) — recommend running `test:integration` once possible. |
 | `GET /batches/:batchId/evaluations/:studentId` | Present (2026-08-28)          | Own-student read vs educator/admin read policy implemented via `AccessPolicy.requireCanReadStudentEvaluations`. Same pagination-verification caveat as the row above. |
 | `POST /batches/:batchId/evaluations`           | Present (2026-08-28)          | Evaluator policy (`requireCanCreateEvaluation`, no school-admin fallback per §10.5), student-role invariant (`enrollment/service.ts::assertStudentEnrolledInBatch`) and chapter-track invariant implemented; append-only insert.                               |
-| `GET /exams`                                   | Present / parity work         | Educator (`manageable`) visibility and correlated (per-batch, not cross-product) semantics implemented via `AccessPolicy.getExamVisibility`/`hasBatchPermission` (2026-08-28, DD-005). Still missing: optional-profile administrator flow (needs `optionalProfileRoute`, not yet built — §6 foundation work) and the nested `chapter`/`evaluation` projection — see addendum §0.4 (`ExamWithDetail`). |
+| `GET /exams`                                   | Present / parity work         | Educator (`manageable`) visibility, correlated (per-batch, not cross-product) semantics, and the optional-profile administrator flow all implemented (2026-08-28, DD-005, `optionalProfileRoute`) — including the profile-supplied-downgrades-even-an-admin nuance verified against `apps/api/src/routes/exams.ts`. Still missing: the nested `chapter`/`evaluation` projection — see addendum §0.4 (`ExamWithDetail`). |
 | `POST /exams`                                  | Present / parity work         | Instructor/TA ACL implemented (2026-08-28, DD-003/DD-006) via `access.requireCanCreateExam(batchId)`, checked after `resolveQualifyingBatch` resolves the same batch the exam is stored against. Draft assignment validation (ambiguous/no qualifying batch) retained. |
 | `PATCH /exams/:examId`                         | Present / parity work         | Instructor/TA ACL implemented (2026-08-28) via `access.requireCanUpdateExam(exam)` against the exam's stored `batchId`; transition/concurrency hardening (H3/DD-002) retained. |
 | `POST /exams/:examId/results`                  | Present / parity work         | Instructor/TA ACL implemented (2026-08-28) — `requireCanRecordEvaluation` delegates to `requireCanUpdateExam` per §11.6; single-result transaction hardening retained.       |
@@ -337,8 +337,21 @@ Add transport-level tests for:
 
 ### 3.2 Route wrappers and profile optionality
 
-The draft routes every batch and exam operation through `profileRoute`. That incorrectly makes
-`X-Profile-Id` mandatory for school-wide administrators on:
+**Implemented 2026-08-28.** `optionalProfileRoute` now exists (`naradaRoute.ts`) and batch
+list/detail/create/update, exam list/detail, and the batch-wide evaluations list are mounted on
+it instead of `profileRoute`. Building this surfaced two real correctness gaps beyond the missing
+wrapper itself, both fixed along with it: `AccessPolicy.getExamVisibility`/`requireCanReadExam`
+were treating any school admin as seeing "all" exams unconditionally, when the reference
+implementation (`apps/api/src/routes/exams.ts`) only gives unconditional "all" to a *super*
+admin — a school owner/admin who supplies a profile gets scoped visibility just like anyone else;
+and `requireCanCreateExam`/`requireCanUpdateExam`/`requireCanRecordEvaluation` had a school-admin
+bypass that the reference implementation's `canManageExam` never had at all (only `isSuperAdmin`
+bypasses there — a plain owner/admin with no batch role is denied). Batches and evaluations
+didn't have this nuance (verified against `apps/api/src/utils/auth.ts`'s `getBatchListAccess`/
+`getBatchAccess`, which grant admin bypass unconditionally, profile or not).
+
+The draft previously routed every batch and exam operation through `profileRoute`, which
+incorrectly made `X-Profile-Id` mandatory for school-wide administrators on:
 
 - batch list/detail/create/update;
 - exam list;

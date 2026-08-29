@@ -167,16 +167,21 @@ export class AccessPolicy {
   // `exam:update`. Using `read` here would let a student see every other student's exam in a
   // batch they merely happen to also be enrolled in.
 
+  // requireCanReadExam delegates to getExamVisibility so list and detail visibility can never
+  // drift apart by construction (PARITY_PLAN.md §11.3: "a record hidden in list must not become
+  // readable by guessing its ID").
   public requireCanReadExam(exam: Exam): void {
-    if (
-      this.isSchoolAdmin() ||
-      exam.studentId === this.profileId ||
-      (exam.batchId !== null && this.hasBatchPermission(exam.batchId, EXAM_UPDATE_PERMISSION))
-    ) {
-      return
-    }
+    const scope = this.getExamVisibility()
+    const visible =
+      scope.kind === 'all' ||
+      (scope.kind === 'own' && exam.studentId === scope.profileId) ||
+      (scope.kind === 'manageable' &&
+        (exam.studentId === scope.profileId ||
+          (exam.batchId !== null && scope.batchIds.includes(exam.batchId))))
 
-    throw forbidden()
+    if (!visible) {
+      throw forbidden()
+    }
   }
 
   /**
@@ -184,18 +189,24 @@ export class AccessPolicy {
    * exists — the caller (`exams/service.ts::createExam`) resolves the qualifying batch via
    * `resolveQualifyingBatch` first and passes it here, so authorization and the batch stored on
    * the new row are always the exact same resolution, never two independent ones.
+   *
+   * No school-admin fallback (PARITY_PLAN.md §11.4): a plain owner/admin who isn't also enrolled
+   * as instructor/TA in the qualifying batch cannot create an exam here. Verified directly against
+   * `apps/api/src/routes/exams.ts`: only `isSuperAdmin` bypasses `canManageExam`, which is itself
+   * a pure batch-role check with no school-permission path at all.
    */
   public requireCanCreateExam(batchId: string): void {
-    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, EXAM_CREATE_PERMISSION)) {
+    if (this.isSuperAdmin || this.hasBatchPermission(batchId, EXAM_CREATE_PERMISSION)) {
       return
     }
 
     throw forbidden()
   }
 
+  // Same "no school-admin fallback" rule as requireCanCreateExam — see its doc comment.
   public requireCanUpdateExam(exam: Exam): void {
     if (
-      this.isSchoolAdmin() ||
+      this.isSuperAdmin ||
       (exam.batchId !== null && this.hasBatchPermission(exam.batchId, EXAM_UPDATE_PERMISSION))
     ) {
       return
@@ -210,14 +221,30 @@ export class AccessPolicy {
     this.requireCanUpdateExam(exam)
   }
 
+  /**
+   * A super admin always sees every exam, profile or not. A school admin (owner/admin) sees
+   * every exam ONLY when no profile is supplied — supplying one switches even an admin to scoped
+   * (own + manageable) visibility. Verified directly against `apps/api/src/routes/exams.ts`:
+   * `if (isSuperAdmin) all; else if (profile) scoped; else (school evaluation:read gate) all` —
+   * profile presence, not admin status, decides scoped vs. all for everyone but a super admin.
+   */
   public getExamVisibility(): ExamReadScope {
-    if (this.isSchoolAdmin()) {
+    if (this.isSuperAdmin) {
       return { kind: 'all' }
     }
 
-    const profileId = this.requireProfileId()
+    if (!this.profileId) {
+      if (this.isSchoolAdmin()) {
+        return { kind: 'all' }
+      }
+
+      throw forbidden()
+    }
+
     const batchIds = this.batchIdsWithPermission(EXAM_UPDATE_PERMISSION)
-    return batchIds.length > 0 ? { kind: 'manageable', profileId, batchIds } : { kind: 'own', profileId }
+    return batchIds.length > 0
+      ? { kind: 'manageable', profileId: this.profileId, batchIds }
+      : { kind: 'own', profileId: this.profileId }
   }
 
   // -- Evaluations --------------------------------------------------------------

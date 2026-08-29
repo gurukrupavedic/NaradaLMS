@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
-import { profileRoute } from '../naradaRoute'
+import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import {
   CreateExamSchema,
@@ -15,7 +15,7 @@ const router = Router()
 
 router.get(
   '/',
-  profileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access }) => {
     const query = await parse(FindExamsSchema, req.query)
     const visibility = await access.getExamVisibility()
     const exams = await findExams({ db }, query, visibility)
@@ -25,7 +25,7 @@ router.get(
 
 router.get(
   '/:examId',
-  profileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access }) => {
     const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
     const exam = await findById({ db }, examId)
     await access.requireCanReadExam(exam)

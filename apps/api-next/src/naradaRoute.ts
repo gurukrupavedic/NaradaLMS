@@ -39,6 +39,11 @@ export type UserRouteArgs = SchoolRouteArgs & {
   user: User
 }
 
+export type OptionalProfileRouteArgs = UserRouteArgs & {
+  access: AccessPolicy
+  profile: SchoolProfile | undefined
+}
+
 export type ProfileRouteArgs = UserRouteArgs & {
   access: AccessPolicy
   profile: SchoolProfile
@@ -67,6 +72,28 @@ export function userRoute(handler: (args: UserRouteArgs) => Promise<void>): Requ
     const { db, school } = await resolveSchool(req)
 
     await handler({ req, res, db, school, user })
+  }
+}
+
+/**
+ * Wraps a handler that requires a valid school and authenticated user, and resolves the caller's
+ * own active profile if `X-Profile-Id` is supplied — but does not require it. For school-wide
+ * capabilities (PARITY_PLAN.md §3.2: batch list/detail/create/update, exam list/detail), a school
+ * admin doesn't need an active profile at all; `AccessPolicy`'s own checks already handle
+ * `profile: undefined` correctly (`isSchoolAdmin()` doesn't consult it), so this wrapper's only
+ * job is to stop *forcing* one where the old backend never required it.
+ */
+export function optionalProfileRoute(
+  handler: (args: OptionalProfileRouteArgs) => Promise<void>,
+): RequestHandler {
+  return async (req, res) => {
+    requireSchoolSlug(req)
+    const user = await SessionService.getCurrentUser(req)
+    const { db, school } = await resolveSchool(req)
+    const profile = await resolveOptionalProfile(req, db, user)
+
+    const access = await AccessPolicy.load({ db, school, user, profile })
+    await handler({ req, res, db, school, user, profile, access })
   }
 }
 
@@ -119,15 +146,21 @@ function resolveSchool(req: Request): Promise<{ db: SchoolDbClient; school: Scho
 }
 
 /**
- * Resolves the required `X-Profile-Id` header to a profile in this school, rejecting a profile
- * that doesn't exist, belongs to a different user (never trust a caller-supplied profile ID), or
- * has been deactivated (DD-011) — the single choke point that keeps a soft-deleted profile out of
- * every `profileRoute`-gated read and write.
+ * Resolves `X-Profile-Id` to a profile in this school if the header is present, rejecting a
+ * profile that doesn't exist, belongs to a different user (never trust a caller-supplied profile
+ * ID), or has been deactivated (DD-011) — the single choke point that keeps a soft-deleted
+ * profile out of every `optionalProfileRoute`/`profileRoute`-gated read and write. Returns
+ * `undefined`, rather than throwing, when the header is simply absent — `optionalProfileRoute`'s
+ * whole point.
  */
-async function resolveProfile(req: Request, db: SchoolDb, user: User) {
+async function resolveOptionalProfile(
+  req: Request,
+  db: SchoolDb,
+  user: User,
+): Promise<SchoolProfile | undefined> {
   const profileId = req.headers['x-profile-id']
   if (!profileId || typeof profileId !== 'string') {
-    throw badRequest('X-Profile-Id header is required')
+    return undefined
   }
 
   const profile = await db.query.profile.findFirst({
@@ -136,6 +169,21 @@ async function resolveProfile(req: Request, db: SchoolDb, user: User) {
 
   if (!profile || profile.userId !== user.id || profile.deletedAt !== null) {
     throw forbidden()
+  }
+
+  return profile
+}
+
+/**
+ * Same as {@link resolveOptionalProfile}, but requires the header instead of treating its
+ * absence as "no profile" — `resolveOptionalProfile` only ever returns `undefined` when the
+ * header is missing (every other invalid case already throws), so that's the only case left to
+ * reject here.
+ */
+async function resolveProfile(req: Request, db: SchoolDb, user: User): Promise<SchoolProfile> {
+  const profile = await resolveOptionalProfile(req, db, user)
+  if (!profile) {
+    throw badRequest('X-Profile-Id header is required')
   }
 
   return profile
