@@ -7,7 +7,7 @@ import * as examRepository from '../exams/repository'
 import { destroyTestWorld } from '../testing/cleanup'
 import { pgErrorCode } from '../testing/concurrency'
 import { createBatch, createChapter, createProfile, createTestSchool, createTrack, enroll, type TestWorld } from '../testing/fixtures'
-import { findAccessible } from './repository'
+import { findAccessible, findByIdWithMembers } from './repository'
 
 let world: TestWorld | undefined
 
@@ -184,5 +184,56 @@ describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
     )
 
     expect(page.items.map(b => b.id)).toEqual([enrolledBatch.id])
+  })
+})
+
+describe('findByIdWithMembers (batch detail with roster)', () => {
+  it('returns the batch with every enrolled member, including name/phone/city/role/joinedAt', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    const instructorProfile = await createProfile(world, { name: 'Ada Instructor', phone: '555-0100' })
+    const studentProfile = await createProfile(world, { name: 'Bea Student', city: 'Metropolis' })
+    await enroll(world, instructorProfile, batchRow, 'instructor')
+    await enroll(world, studentProfile, batchRow, 'student')
+
+    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+
+    expect(detail?.id).toBe(batchRow.id)
+    expect(detail?.members).toHaveLength(2)
+    expect(detail?.members).toContainEqual(
+      expect.objectContaining({
+        profileId: instructorProfile.id,
+        name: 'Ada Instructor',
+        phone: '555-0100',
+        city: null,
+        role: 'instructor',
+      }),
+    )
+    expect(detail?.members).toContainEqual(
+      expect.objectContaining({
+        profileId: studentProfile.id,
+        name: 'Bea Student',
+        phone: null,
+        city: 'Metropolis',
+        role: 'student',
+      }),
+    )
+  })
+
+  it('returns an empty roster, not an error, for a batch with no members', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+
+    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+
+    expect(detail?.members).toEqual([])
+  })
+
+  it('returns undefined for a nonexistent batch', async () => {
+    world = await createTestSchool()
+
+    await expect(findByIdWithMembers(world.schoolDb, crypto.randomUUID())).resolves.toBeUndefined()
   })
 })

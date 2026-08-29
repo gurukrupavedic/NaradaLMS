@@ -2,6 +2,7 @@ import { rateLimit } from 'express-rate-limit'
 import type { Router } from 'express'
 
 import batchesRouter from './batches'
+import enrollmentRouter from './enrollment'
 import evaluationsRouter from './evaluations'
 import examsRouter from './exams'
 import healthRouter from './health'
@@ -20,6 +21,7 @@ export default function setupRoutes(router: Router) {
     .use(apiRateLimit)
     .use('/profiles', profilesRouter)
     .use('/batches', batchesRouter)
+    .use('/batches/:batchId/members', enrollmentRouter)
     .use('/batches/:batchId/evaluations', evaluationsRouter)
     .use('/exams', examsRouter)
 }

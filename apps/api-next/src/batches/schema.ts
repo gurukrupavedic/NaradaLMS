@@ -1,6 +1,6 @@
 import * as z from 'zod'
 
-import { batchStatus } from '@narada/db'
+import { batchStatus, enrollmentRole } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
 import { httpsUrl, isoInstant, requireNonEmpty } from '../utils/validate'
@@ -8,6 +8,7 @@ import { httpsUrl, isoInstant, requireNonEmpty } from '../utils/validate'
 const PAGE_SIZE = 20
 
 export const batchStatusSchema = z.enum(batchStatus.enumValues)
+export const batchMemberRoleSchema = z.enum(enrollmentRole.enumValues)
 
 export type Batch = z.infer<typeof BatchSchema>
 export const BatchSchema = z.object({
@@ -17,6 +18,25 @@ export const BatchSchema = z.object({
   status: batchStatusSchema,
   startDate: isoInstant.nullable(),
   meetingUrl: httpsUrl.nullable(),
+})
+
+// "View a batch" includes "see who's in it" — this is a capability, not just a richer response
+// shape, so it lives on the same GET /batches/:batchId a caller already uses (see PARITY_PLAN.md
+// §1.2: no reason this needs to be a separate endpoint just because apps/api/src also happens to
+// inline it here).
+export type BatchMember = z.infer<typeof BatchMemberSchema>
+export const BatchMemberSchema = z.object({
+  profileId: z.uuid(),
+  name: z.string(),
+  phone: z.string().nullable(),
+  city: z.string().nullable(),
+  role: batchMemberRoleSchema,
+  joinedAt: isoInstant.nullable(),
+})
+
+export type BatchDetail = z.infer<typeof BatchDetailSchema>
+export const BatchDetailSchema = BatchSchema.extend({
+  members: z.array(BatchMemberSchema),
 })
 
 export type FindBatchesData = z.infer<typeof FindBatchesSchema>

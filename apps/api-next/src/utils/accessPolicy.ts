@@ -37,6 +37,8 @@ type AccessPolicySource = {
 }
 
 const BATCH_READ_PERMISSION: BatchPermissions = { enrollment: ['read'] }
+const ENROLLMENT_CREATE_PERMISSION: BatchPermissions = { enrollment: ['create'] }
+const ENROLLMENT_REMOVE_PERMISSION: BatchPermissions = { enrollment: ['remove'] }
 const EXAM_CREATE_PERMISSION: BatchPermissions = { exam: ['create'] }
 const EXAM_UPDATE_PERMISSION: BatchPermissions = { exam: ['update'] }
 const EVALUATION_READ_PERMISSION: BatchPermissions = { evaluation: ['read'] }
@@ -152,6 +154,28 @@ export class AccessPolicy {
     }
 
     return { kind: 'enrolled', profileId: this.requireProfileId() }
+  }
+
+  // -- Enrollment (batch roster) ----------------------------------------------
+  // Only instructor (not ta, not student) holds enrollment:create/remove at the batch level —
+  // verified against packages/auth/src/permissions/batch.ts. School admin bypasses both
+  // unconditionally, matching apps/api/src/routes/enrollment.ts's getBatchAccess calls, which
+  // pass the same schoolPermission for both create and remove.
+
+  public requireCanCreateEnrollment(batchId: string): void {
+    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, ENROLLMENT_CREATE_PERMISSION)) {
+      return
+    }
+
+    throw forbidden()
+  }
+
+  public requireCanRemoveEnrollment(batchId: string): void {
+    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, ENROLLMENT_REMOVE_PERMISSION)) {
+      return
+    }
+
+    throw forbidden()
   }
 
   // -- Exams ------------------------------------------------------------------

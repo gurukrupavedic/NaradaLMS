@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SchoolDbClient } from '@narada/db'
 
 import { DbConstraint } from '../utils/dbError'
-import { createBatch, updateBatch } from './service'
+import { createBatch, findByIdWithMembers, updateBatch } from './service'
 import * as repository from './repository'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
@@ -11,6 +11,7 @@ import * as repository from './repository'
 vi.mock('./repository', () => ({
   insert: vi.fn(),
   update: vi.fn(),
+  findByIdWithMembers: vi.fn(),
 }))
 
 const db = {} as SchoolDbClient
@@ -68,6 +69,44 @@ describe('updateBatch', () => {
     await expect(updateBatch(context, 'batch-1', { code: 'DUP' })).rejects.toMatchObject({
       statusCode: 409,
       message: 'a batch with this code already exists',
+    })
+  })
+})
+
+describe('findByIdWithMembers', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('returns the batch with its roster', async () => {
+    const detail = {
+      id: 'batch-1',
+      trackId: 'track-1',
+      code: 'B1',
+      status: 'active' as const,
+      startDate: null,
+      meetingUrl: null,
+      members: [
+        {
+          profileId: 'profile-1',
+          name: 'Student One',
+          phone: null,
+          city: null,
+          role: 'student' as const,
+          joinedAt: new Date(),
+        },
+      ],
+    }
+    vi.mocked(repository.findByIdWithMembers).mockResolvedValue(detail)
+
+    await expect(findByIdWithMembers(context, 'batch-1')).resolves.toEqual(detail)
+  })
+
+  it('throws 404 when the batch does not exist', async () => {
+    vi.mocked(repository.findByIdWithMembers).mockResolvedValue(undefined)
+
+    await expect(findByIdWithMembers(context, 'batch-1')).rejects.toMatchObject({
+      statusCode: 404,
     })
   })
 })

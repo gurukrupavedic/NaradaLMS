@@ -6,6 +6,7 @@ import { CreateBatchSchema, UpdateBatchSchema } from './schema'
 // `@narada/db` at import time and trigger real env-var validation — never loads.
 vi.mock('@narada/db', () => ({
   batchStatus: { enumValues: ['upcoming', 'active', 'completed'] },
+  enrollmentRole: { enumValues: ['instructor', 'ta', 'student'] },
 }))
 
 const trackId = crypto.randomUUID()

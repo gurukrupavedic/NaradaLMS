@@ -1,7 +1,9 @@
 import type { SchoolDb } from '@narada/db'
 
-import { internalError, unprocessable } from '../error'
+import { conflict, internalError, notFound, unprocessable } from '../error'
 import * as repository from './repository'
+import type { CreateEnrollmentData } from './schema'
+import type { Enrollment } from './repository'
 
 export { hasSharedInstructorEnrollment } from './repository'
 
@@ -45,5 +47,35 @@ export async function assertStudentEnrolledInBatch(
   const enrollment = await repository.findEnrollment(db, studentId, batchId)
   if (!enrollment || enrollment.role !== 'student') {
     throw unprocessable('student is not enrolled in this batch')
+  }
+}
+
+/** Adds a profile to a batch's roster. 404 if the target profile doesn't exist; 409 if already enrolled. */
+export async function enroll(
+  db: SchoolDb,
+  batchId: string,
+  data: CreateEnrollmentData,
+): Promise<Enrollment> {
+  if (!(await repository.profileExists(db, data.profileId))) {
+    throw notFound()
+  }
+
+  if (await repository.findEnrollment(db, data.profileId, batchId)) {
+    throw conflict('profile is already enrolled in this batch')
+  }
+
+  const row = await repository.insertEnrollment(db, batchId, data)
+  if (!row) {
+    throw internalError()
+  }
+
+  return row
+}
+
+/** Removes a profile from a batch's roster. 404 if no such enrollment exists. */
+export async function unenroll(db: SchoolDb, batchId: string, profileId: string): Promise<void> {
+  const removed = await repository.deleteEnrollment(db, batchId, profileId)
+  if (!removed) {
+    throw notFound()
   }
 }

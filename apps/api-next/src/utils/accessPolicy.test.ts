@@ -127,6 +127,57 @@ describe('AccessPolicy#hasBatchPermission / requireCanReadBatch', () => {
   })
 })
 
+describe('AccessPolicy — enrollment (batch roster)', () => {
+  it('an instructor can create and remove enrollments in their own batch, but not another', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(() => access.requireCanCreateEnrollment('batch-1')).not.toThrow()
+    expect(() => access.requireCanRemoveEnrollment('batch-1')).not.toThrow()
+    expect(() => access.requireCanCreateEnrollment('batch-2')).toThrow()
+    expect(() => access.requireCanRemoveEnrollment('batch-2')).toThrow()
+  })
+
+  it('a TA or student cannot create or remove enrollments, even in their own batch', async () => {
+    mockMembership('member')
+    const taAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'ta' }]),
+      school,
+      user: user(),
+      profile,
+    })
+    expect(() => taAccess.requireCanCreateEnrollment('batch-1')).toThrow()
+    expect(() => taAccess.requireCanRemoveEnrollment('batch-1')).toThrow()
+
+    mockMembership('member')
+    const studentAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'student' }]),
+      school,
+      user: user(),
+      profile,
+    })
+    expect(() => studentAccess.requireCanCreateEnrollment('batch-1')).toThrow()
+    expect(() => studentAccess.requireCanRemoveEnrollment('batch-1')).toThrow()
+  })
+
+  it('a school admin can manage enrollment in any batch, unconditionally', async () => {
+    mockMembership('admin')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+
+    expect(() => access.requireCanCreateEnrollment('batch-1')).not.toThrow()
+    expect(() => access.requireCanRemoveEnrollment('batch-1')).not.toThrow()
+  })
+})
+
 describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
   const examIn = (batchId: string | null, studentId = 'someone-else') =>
     ({ studentId, batchId }) as Exam

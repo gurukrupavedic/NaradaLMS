@@ -4,7 +4,7 @@ import { batch, enrollment, type SchoolDb } from '@narada/db'
 
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
-import type { Batch, CreateBatchData, FindBatchesData, UpdateBatchData } from './schema'
+import type { Batch, BatchDetail, CreateBatchData, FindBatchesData, UpdateBatchData } from './schema'
 
 /**
  * Lists batches visible under `scope`, ordered `(startDate desc nulls last, id asc)` with a
@@ -83,6 +83,31 @@ export async function findById(db: SchoolDb, id: string): Promise<Batch | undefi
   return db.query.batch.findFirst({
     where: (t, { eq }) => eq(t.id, id),
   })
+}
+
+/** Batch detail plus its roster — one relational query, not a fan-out per member. */
+export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<BatchDetail | undefined> {
+  const row = await db.query.batch.findFirst({
+    where: (t, { eq }) => eq(t.id, id),
+    with: { enrollments: { with: { profile: true } } },
+  })
+
+  if (!row) {
+    return undefined
+  }
+
+  const { enrollments, ...batchRow } = row
+  return {
+    ...batchRow,
+    members: enrollments.map(e => ({
+      profileId: e.profileId,
+      name: e.profile.name,
+      phone: e.profile.phone,
+      city: e.profile.city,
+      role: e.role,
+      joinedAt: e.joinedAt,
+    })),
+  }
 }
 
 export async function insert(db: SchoolDb, data: CreateBatchData): Promise<Batch | undefined> {

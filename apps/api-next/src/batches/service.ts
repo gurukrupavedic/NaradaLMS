@@ -4,7 +4,7 @@ import { conflict, internalError, notFound, unprocessable } from '../error'
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
-import type { Batch, CreateBatchData, FindBatchesData, UpdateBatchData } from './schema'
+import type { Batch, BatchDetail, CreateBatchData, FindBatchesData, UpdateBatchData } from './schema'
 
 /** Holds the tenant-scoped client so this service can pass it straight through to repository.ts. */
 type BatchServiceContext = { db: SchoolDbClient }
@@ -19,6 +19,18 @@ export async function findAllAccessible(
 
 export async function findById(context: BatchServiceContext, id: string): Promise<Batch> {
   const row = await repository.findById(context.db, id)
+  if (!row) {
+    throw notFound()
+  }
+
+  return row
+}
+
+export async function findByIdWithMembers(
+  context: BatchServiceContext,
+  id: string,
+): Promise<BatchDetail> {
+  const row = await repository.findByIdWithMembers(context.db, id)
   if (!row) {
     throw notFound()
   }

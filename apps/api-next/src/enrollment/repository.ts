@@ -2,6 +2,10 @@ import { and, eq, inArray, isNull } from 'drizzle-orm'
 
 import { batch, enrollment, profile, type SchoolDb } from '@narada/db'
 
+import type { CreateEnrollmentData } from './schema'
+
+export type Enrollment = typeof enrollment.$inferSelect
+
 // Deliberately returns every qualifying batch rather than `.limit(1)`-ing to one — the caller
 // (`resolveQualifyingBatch`) must reject ambiguity when a student qualifies for more than one
 // batch, not silently pick one (DD-012 §1).
@@ -39,6 +43,42 @@ export async function findEnrollment(
     where: (t, { and, eq }) => and(eq(t.profileId, profileId), eq(t.batchId, batchId)),
     columns: { role: true },
   })
+}
+
+export async function profileExists(db: SchoolDb, profileId: string): Promise<boolean> {
+  const row = await db.query.profile.findFirst({
+    where: (t, { eq }) => eq(t.id, profileId),
+    columns: { id: true },
+  })
+
+  return row !== undefined
+}
+
+export async function insertEnrollment(
+  db: SchoolDb,
+  batchId: string,
+  data: CreateEnrollmentData,
+): Promise<Enrollment | undefined> {
+  const rows = await db
+    .insert(enrollment)
+    .values({ batchId, profileId: data.profileId, role: data.role })
+    .returning()
+
+  return rows.at(0)
+}
+
+/** Returns whether a row was actually deleted — the service turns `false` into a 404. */
+export async function deleteEnrollment(
+  db: SchoolDb,
+  batchId: string,
+  profileId: string,
+): Promise<boolean> {
+  const rows = await db
+    .delete(enrollment)
+    .where(and(eq(enrollment.batchId, batchId), eq(enrollment.profileId, profileId)))
+    .returning({ profileId: enrollment.profileId })
+
+  return rows.length > 0
 }
 
 // True when instructorProfileId currently holds an instructor/ta enrollment in a batch that

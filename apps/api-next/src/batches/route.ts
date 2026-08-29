@@ -4,7 +4,7 @@ import * as z from 'zod'
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateBatchSchema, FindBatchesSchema, UpdateBatchSchema } from './schema'
-import { createBatch, findAllAccessible, findById, updateBatch } from './service'
+import { createBatch, findAllAccessible, findByIdWithMembers, updateBatch } from './service'
 
 const router = Router()
 
@@ -23,7 +23,7 @@ router.get(
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
     await access.requireCanReadBatch(batchId)
-    const batch = await findById({ db }, batchId)
+    const batch = await findByIdWithMembers({ db }, batchId)
     res.status(200).json({ data: batch })
   }),
 )
