@@ -26,7 +26,7 @@ export const FindBatchesSchema = BatchSchema.pick({
   .partial()
   .safeExtend({
     limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
-    cursor: asCursor(z.object({ id: z.uuid() })),
+    cursor: asCursor(z.object({ startDate: z.coerce.date().nullable(), id: z.uuid() })),
   })
 
 export type CreateBatchData = z.infer<typeof CreateBatchSchema>

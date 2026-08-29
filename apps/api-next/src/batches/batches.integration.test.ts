@@ -6,7 +6,8 @@ import { track } from '@narada/db'
 import * as examRepository from '../exams/repository'
 import { destroyTestWorld } from '../testing/cleanup'
 import { pgErrorCode } from '../testing/concurrency'
-import { createBatch, createChapter, createProfile, createTestSchool, createTrack, type TestWorld } from '../testing/fixtures'
+import { createBatch, createChapter, createProfile, createTestSchool, createTrack, enroll, type TestWorld } from '../testing/fixtures'
+import { findAccessible } from './repository'
 
 let world: TestWorld | undefined
 
@@ -103,4 +104,85 @@ describe('track deletion constraint behavior (matrix item 9)', () => {
       expect(chapterStillThere).toBeDefined()
     },
   )
+})
+
+describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
+  it('orders non-null startDate desc, then null-startDate batches last by id asc, across pages', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+
+    const d1 = new Date('2024-01-01T00:00:00Z')
+    const d2 = new Date('2024-02-01T00:00:00Z')
+    const d3 = new Date('2024-03-01T00:00:00Z')
+
+    const b1 = await createBatch(world, trackRow, { startDate: d1 })
+    const b2 = await createBatch(world, trackRow, { startDate: d2 })
+    const b3 = await createBatch(world, trackRow, { startDate: d3 })
+    const nulls = [
+      await createBatch(world, trackRow, { startDate: null }),
+      await createBatch(world, trackRow, { startDate: null }),
+    ].sort((a, b) => (a.id < b.id ? -1 : 1))
+
+    const page1 = await findAccessible(
+      world.schoolDb,
+      { limit: 2, status: undefined, cursor: undefined },
+      { kind: 'all' },
+    )
+    expect(page1.items.map(b => b.id)).toEqual([b3.id, b2.id])
+    expect(page1.nextCursor).not.toBeNull()
+
+    const page2 = await findAccessible(
+      world.schoolDb,
+      { limit: 2, status: undefined, cursor: { startDate: d2, id: b2.id } },
+      { kind: 'all' },
+    )
+    expect(page2.items.map(b => b.id)).toEqual([b1.id, nulls[0]!.id])
+    expect(page2.nextCursor).not.toBeNull()
+
+    const page3 = await findAccessible(
+      world.schoolDb,
+      { limit: 2, status: undefined, cursor: { startDate: null, id: nulls[0]!.id } },
+      { kind: 'all' },
+    )
+    expect(page3.items.map(b => b.id)).toEqual([nulls[1]!.id])
+    expect(page3.nextCursor).toBeNull()
+  })
+
+  it('ties on startDate break by id ascending', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const tiedDate = new Date('2024-05-01T00:00:00Z')
+
+    const created = await Promise.all([
+      createBatch(world, trackRow, { startDate: tiedDate }),
+      createBatch(world, trackRow, { startDate: tiedDate }),
+      createBatch(world, trackRow, { startDate: tiedDate }),
+    ])
+    const sorted = [...created].sort((a, b) => (a.id < b.id ? -1 : 1))
+
+    const page = await findAccessible(
+      world.schoolDb,
+      { limit: 100, status: undefined, cursor: undefined },
+      { kind: 'all' },
+    )
+
+    expect(page.items.map(b => b.id)).toEqual(sorted.map(b => b.id))
+  })
+
+  it('an "enrolled" scope only returns batches the given profile is enrolled in', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const enrolledBatch = await createBatch(world, trackRow)
+    await createBatch(world, trackRow) // not enrolled — must not appear
+    const studentProfile = await createProfile(world)
+    await enroll(world, studentProfile, enrolledBatch, 'student')
+
+    const page = await findAccessible(
+      world.schoolDb,
+      { limit: 100, status: undefined, cursor: undefined },
+      { kind: 'enrolled', profileId: studentProfile.id },
+    )
+
+    expect(page.items.map(b => b.id)).toEqual([enrolledBatch.id])
+  })
 })
