@@ -30,6 +30,17 @@ export async function findQualifyingBatches(
     )
 }
 
+export async function findEnrollment(
+  db: SchoolDb,
+  profileId: string,
+  batchId: string,
+): Promise<{ role: typeof enrollment.$inferSelect.role } | undefined> {
+  return db.query.enrollment.findFirst({
+    where: (t, { and, eq }) => and(eq(t.profileId, profileId), eq(t.batchId, batchId)),
+    columns: { role: true },
+  })
+}
+
 // True when instructorProfileId currently holds an instructor/ta enrollment in a batch that
 // studentProfileId is also (or was also) enrolled in — the gate for letting a teacher view a
 // student's full batch history rather than just the roster of a batch they share right now.

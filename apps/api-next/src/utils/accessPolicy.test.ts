@@ -13,6 +13,7 @@ import { publicDb, type SchoolDbClient, type SchoolProfile } from '@narada/db'
 
 import { AccessPolicy } from './accessPolicy'
 import type { User } from '../session'
+import type { Exam } from '../exams/schema'
 
 const school = { id: 'school-1' } as Parameters<typeof AccessPolicy.load>[0]['school']
 
@@ -123,5 +124,154 @@ describe('AccessPolicy#hasBatchPermission / requireCanReadBatch', () => {
     })
 
     expect(() => access.requireCanReadBatch('batch-1')).not.toThrow()
+  })
+})
+
+describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
+  const examIn = (batchId: string | null, studentId = 'someone-else') =>
+    ({ studentId, batchId }) as Exam
+
+  it('getExamVisibility returns "all" for a school admin', async () => {
+    mockMembership('admin')
+    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+
+    expect(access.getExamVisibility()).toEqual({ kind: 'all' })
+  })
+
+  it('getExamVisibility returns "own" for a profile with no exam:read batch permission', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'student' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(access.getExamVisibility()).toEqual({ kind: 'own', profileId: 'profile-1' })
+  })
+
+  it('getExamVisibility returns "manageable" with every batch the actor holds exam:read in', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([
+        { batchId: 'batch-1', role: 'instructor' },
+        { batchId: 'batch-2', role: 'student' },
+        { batchId: 'batch-3', role: 'ta' },
+      ]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    const visibility = access.getExamVisibility()
+    expect(visibility.kind).toBe('manageable')
+    expect(visibility).toMatchObject({ profileId: 'profile-1' })
+    expect((visibility as { batchIds: string[] }).batchIds.sort()).toEqual(['batch-1', 'batch-3'])
+  })
+
+  it('requireCanReadExam allows the exam\'s own student, an admin, or a manageable batch role', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(() => access.requireCanReadExam(examIn('batch-1'))).not.toThrow()
+    expect(() => access.requireCanReadExam(examIn('batch-2', 'profile-1'))).not.toThrow()
+    expect(() => access.requireCanReadExam(examIn('batch-2'))).toThrow()
+    expect(() => access.requireCanReadExam(examIn(null))).toThrow()
+  })
+
+  it('requireCanCreateExam checks the resolved batchId, not the exam row (none exists yet)', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(() => access.requireCanCreateExam('batch-1')).not.toThrow()
+    expect(() => access.requireCanCreateExam('batch-2')).toThrow()
+  })
+
+  it('requireCanUpdateExam and requireCanRecordEvaluation both gate on exam:update in the exam\'s batch', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([
+        { batchId: 'batch-1', role: 'instructor' },
+        { batchId: 'batch-2', role: 'student' },
+      ]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(() => access.requireCanUpdateExam(examIn('batch-1'))).not.toThrow()
+    expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).not.toThrow()
+    // students hold exam:read, not exam:update, in their own batch
+    expect(() => access.requireCanUpdateExam(examIn('batch-2'))).toThrow()
+  })
+})
+
+describe('AccessPolicy — evaluations (§10.3–§10.5)', () => {
+  it('requireCanReadBatchEvaluations allows a school admin or a batch evaluation:create role, denies a plain student', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([
+        { batchId: 'batch-1', role: 'instructor' },
+        { batchId: 'batch-2', role: 'student' },
+      ]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(() => access.requireCanReadBatchEvaluations('batch-1')).not.toThrow()
+    expect(() => access.requireCanReadBatchEvaluations('batch-2')).toThrow()
+  })
+
+  it('requireCanReadStudentEvaluations: self needs evaluation:read, another student needs evaluation:create', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'student' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(() => access.requireCanReadStudentEvaluations('batch-1', 'profile-1')).not.toThrow()
+    expect(() => access.requireCanReadStudentEvaluations('batch-1', 'someone-else')).toThrow()
+  })
+
+  it('requireCanCreateEvaluation has no school-admin fallback — only super admin or a batch evaluation:create role', async () => {
+    mockMembership('admin')
+    const adminAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+    expect(() => adminAccess.requireCanCreateEvaluation('batch-1')).toThrow()
+
+    mockMembership('member')
+    const superAdminAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+      profile,
+    })
+    expect(() => superAdminAccess.requireCanCreateEvaluation('batch-1')).not.toThrow()
+
+    mockMembership('member')
+    const instructorAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
+      school,
+      user: user(),
+      profile,
+    })
+    expect(() => instructorAccess.requireCanCreateEvaluation('batch-1')).not.toThrow()
   })
 })

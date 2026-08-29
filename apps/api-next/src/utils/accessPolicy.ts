@@ -37,9 +37,10 @@ type AccessPolicySource = {
 }
 
 const BATCH_READ_PERMISSION: BatchPermissions = { enrollment: ['read'] }
-const EXAM_READ_PERMISSION: BatchPermissions = { exam: ['read'] }
 const EXAM_CREATE_PERMISSION: BatchPermissions = { exam: ['create'] }
 const EXAM_UPDATE_PERMISSION: BatchPermissions = { exam: ['update'] }
+const EVALUATION_READ_PERMISSION: BatchPermissions = { evaluation: ['read'] }
+const EVALUATION_CREATE_PERMISSION: BatchPermissions = { evaluation: ['create'] }
 
 /**
  * The single authorization vocabulary for domain services (HARDENING_PLAN.md §4.4). Holds an
@@ -159,12 +160,18 @@ export class AccessPolicy {
   // the exam's batch — not "school admin or nothing." An exam's `batchId` is resolved once, at
   // creation, by `enrollment/service.ts::resolveQualifyingBatch` (DD-012); every check below
   // reuses that stored value rather than re-resolving it.
+  //
+  // The "can see every exam in this batch" checks below deliberately test EXAM_UPDATE_PERMISSION,
+  // not EXAM_READ_PERMISSION: the batch ACL grants `exam:read` to students too (so they can read
+  // their OWN exam — already covered by the studentId check), but only instructor/ta hold
+  // `exam:update`. Using `read` here would let a student see every other student's exam in a
+  // batch they merely happen to also be enrolled in.
 
   public requireCanReadExam(exam: Exam): void {
     if (
       this.isSchoolAdmin() ||
       exam.studentId === this.profileId ||
-      (exam.batchId !== null && this.hasBatchPermission(exam.batchId, EXAM_READ_PERMISSION))
+      (exam.batchId !== null && this.hasBatchPermission(exam.batchId, EXAM_UPDATE_PERMISSION))
     ) {
       return
     }
@@ -209,8 +216,44 @@ export class AccessPolicy {
     }
 
     const profileId = this.requireProfileId()
-    const batchIds = this.batchIdsWithPermission(EXAM_READ_PERMISSION)
+    const batchIds = this.batchIdsWithPermission(EXAM_UPDATE_PERMISSION)
     return batchIds.length > 0 ? { kind: 'manageable', profileId, batchIds } : { kind: 'own', profileId }
+  }
+
+  // -- Evaluations --------------------------------------------------------------
+  // PARITY_PLAN.md §10.3/§10.4 phrase these as "school evaluation:read or actor batch
+  // evaluation:<x>". There's no general hasSchoolPermission() yet (§6.4) — but under the current
+  // school ACL (packages/auth/src/permissions/school.ts), only owner/admin hold evaluation:read
+  // at all (member gets none), which is exactly isSchoolAdmin(). If the school ACL ever grants
+  // `member` evaluation:read, these three checks need a real permission-statement call instead of
+  // this shortcut.
+
+  public requireCanReadBatchEvaluations(batchId: string): void {
+    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, EVALUATION_CREATE_PERMISSION)) {
+      return
+    }
+
+    throw forbidden()
+  }
+
+  public requireCanReadStudentEvaluations(batchId: string, studentId: string): void {
+    const permission = studentId === this.profileId ? EVALUATION_READ_PERMISSION : EVALUATION_CREATE_PERMISSION
+    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, permission)) {
+      return
+    }
+
+    throw forbidden()
+  }
+
+  // Deliberately no school-admin fallback (PARITY_PLAN.md §10.5: "current behavior does not use a
+  // school-level fallback on this route, apart from super-admin handling"). An owner/admin who
+  // isn't also enrolled as instructor/TA in this specific batch cannot create an evaluation here.
+  public requireCanCreateEvaluation(batchId: string): void {
+    if (this.isSuperAdmin || this.hasBatchPermission(batchId, EVALUATION_CREATE_PERMISSION)) {
+      return
+    }
+
+    throw forbidden()
   }
 
   // -- Profiles ---------------------------------------------------------------
