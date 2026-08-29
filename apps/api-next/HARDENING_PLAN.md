@@ -13,23 +13,30 @@ Before changing the draft, read [`AGENTS.md`](./AGENTS.md),
 
 ## 1. Purpose and relationship to parity
 
-[`PARITY_PLAN.md`](./PARITY_PLAN.md) answers: **what must the rewrite preserve so it can
-replace the current backend?**
+[`PARITY_PLAN.md`](./PARITY_PLAN.md) §1 (revised 2026-08-28) answers: **what capability must the
+rewrite deliver, and which categories of decision need real scrutiny rather than just good
+judgment?**
 
 This document answers: **which existing patterns or data models should be hardened even when
-that work is not necessary for parity?**
+that work isn't needed for any specific capability?**
 
-The plans deliberately remain separate:
+Every item in this plan's §1.1 scope lands squarely inside `PARITY_PLAN.md` §1.1's five
+scrutiny categories — concurrency correctness, data-affecting side effects/migrations, and
+irreversible decisions are what this whole document is about. That's *why* these items get a
+decision note each under [`decisions/`](./decisions/): not because every behavior change needs
+one (routine contract choices don't, per `PARITY_PLAN.md` §1.2), but because profile deletion
+semantics, connection-pool budgets, and concurrency guards are exactly the kind of thing that's
+expensive to get wrong and hard to walk back. The plans remain separate documents because:
 
-- Parity work must not silently acquire behavior changes from this plan.
-- This plan must not become a second route-parity backlog.
-- A hardening item that changes an HTTP contract, authorization result, stored side effect,
-  deletion behavior, error status, or concurrency result is blocked until its decision note is
-  manually approved under `PARITY_PLAN.md` §1.2.
-- Test infrastructure, characterization tests, compile-time boundary tests, and internal
-  refactors may proceed before approval only when they preserve observable behavior.
-- Approval of this plan as a planning artifact does **not** approve the individual design
-  decisions listed below.
+- this plan must not become a second capability backlog — it's about hardening what already
+  exists, not adding new surface;
+- a hardening item that changes authorization results, stored side effects, deletion behavior, or
+  concurrency outcomes still needs the scrutiny `PARITY_PLAN.md` §1.1 describes — a real decision
+  note where the stakes justify it, not a rubber stamp;
+- test infrastructure, characterization tests, compile-time boundary tests, and internal
+  refactors that preserve observable behavior need no scrutiny at all and can proceed freely;
+- a decision note being drafted (even by an agent, under delegation) is not the same as it being
+  approved — see each note's own manual-approval record.
 
 ### 1.1 In scope
 

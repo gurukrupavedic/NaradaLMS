@@ -1,28 +1,23 @@
-# Plan — True parity for `apps/api-next`
+# Plan — Capability parity for `apps/api-next`
 
-**Audit date:** 2026-07-17  
-**Reference implementation:** `apps/api/src` at the current working tree  
+**Audit date:** 2026-07-17 (routes/behavior audit)  
+**Philosophy revised:** 2026-08-28 — see §1  
+**Reference implementation:** `apps/api/src` at the current working tree — read for *what it lets
+a school do*, not *how to shape the API*  
 **Target:** `apps/api-next/src`  
 **Audience:** an engineer or coding agent picking this up without prior context
 
 Before changing the draft, read [`AGENTS.md`](./AGENTS.md) in full.
 
 For correctness, security, data-lifecycle, and operational improvements that are intentionally
-outside replacement parity, also read [`HARDENING_PLAN.md`](./HARDENING_PLAN.md). The hardening
-plan is a separate execution track: appearing there does not approve a behavior change under
-§1.2 and does not add work to the parity definition of done unless an approved decision is
-explicitly incorporated here.
+outside this plan's capability scope, also read [`HARDENING_PLAN.md`](./HARDENING_PLAN.md) — see
+its own §1 for how the two plans relate.
 
-The governing rule is:
-
-- `apps/api/src` defines the behavior that must continue to work: routes, request inputs,
-  response shapes, authorization decisions, tenant boundaries, ordering, pagination, errors,
-  and side effects.
-- It does **not** define the architecture to copy. New code must use the patterns already being
-  established in `apps/api-next`—domain modules, transport schemas, `AccessPolicy`,
-  explicit read scopes, cursor helpers, database-error translation, and transactional services.
-- Where the draft has no precedent, prefer the underlying library's idioms (Express 5, Drizzle,
-  Zod, BetterAuth) and small typed abstractions over porting helpers from the old backend.
+**Read §1 below before anything else in this document.** It defines what "parity" means here
+(capability, not contract) and supersedes language elsewhere in this file that still talks about
+matching `apps/api/src`'s exact routes/response shapes/ordering/pagination — that framing predates
+the 2026-08-28 revision. `apps/api/src` remains the reference for *behavior worth preserving*
+(§1.1) and *architecture never worth copying* (§1.3); it is not a wire-format spec.
 
 This document supersedes the 2026-07-12 parity plan. That plan identified the largest missing
 domains, but it did not cover all current routes or contract differences. In particular, it
@@ -117,102 +112,99 @@ admin without a profile viewing student X's batches gets X's batches, not the fu
 
 ---
 
-## 1. What “true parity” means
+## 1. What parity means here
 
-Parity is reached only when the draft can replace `apps/api/src` without an **unapproved**
-behavior change. An approved design may intentionally change callers, contracts, or boundaries,
-but its migration, tests, rollout, and rollback then become part of the parity work.
+Parity means the rewrite lets a school do everything the current backend lets it do — schedule an
+exam, see a student's history in a batch, enroll someone, record an evaluation, browse the
+curriculum — not that every URL, response envelope, field name, status code, or pagination detail
+matches `apps/api/src` exactly. `apps/api/src` is the executable specification of *what the
+product needs to support*. It is deliberately **not** a specification of the wire format, and
+matching that wire format byte-for-byte is not a goal of this rewrite.
 
-### 1.1 Compatibility baseline
+This corrects how this document originally framed things (§1.1–§1.4 below, as they read before
+2026-08-28, are superseded by this section — kept in git history, not reproduced here). The
+original process required every URL/method/header/response-shape/ordering/error-code detail to
+match `apps/api/src` unless a human explicitly approved each individual deviation through an
+8-section design note. That process caught real value once: several notes under
+[`decisions/`](./decisions/) document genuine authorization bugs — DD-005's cross-product exam
+visibility leak, the admin-bypass gaps `optionalProfileRoute` surfaced — found specifically
+because the process demanded reading the old code closely before touching anything. But it also
+spent real engineering time matching contract details (exact pagination tie-breaking order,
+response envelope shape, filter-schema field lists) that no actual capability depended on.
+`apps/web` is the only consumer of either backend today, it has not been migrated to
+`apps/api-next` yet, and we control it — so a contract-shape decision here is not "breaking a
+client" until the migration actually happens, at which point it's one caller-side change, not a
+compatibility crisis. Treating every shape decision as a standing compatibility obligation was
+solving a problem this project doesn't have yet.
 
-The following are the default requirements when no separately approved design change exists:
+### 1.1 What still needs real scrutiny
 
-1. The same public URL and HTTP method.
-2. The same required headers and authentication requirement.
-3. The same request-field names, accepted enum values, nullability, and validation limits.
-4. The same success status and success-body shape.
-5. The same resource visibility for super administrators, school owners/admins, ordinary school
-   members, instructors, TAs, and students.
-6. The same school-schema isolation selected by `X-School-Slug`.
-7. The same deterministic ordering and opaque cursor semantics.
-8. The same write side effects, including transaction boundaries.
-9. The same meaningful 400/401/403/404/409/422 distinctions.
-10. The same runtime behavior for authentication mounting, CORS, rate limiting, request IDs,
-    logging, graceful shutdown, and readiness.
+These categories are where "use good judgment and move on" is not enough — get them right
+deliberately, because getting them wrong is a security problem, hard to reverse, or touches real
+stored data:
 
-These requirements are a **baseline, not a ceiling**. Any one of them may be improved—including
-URLs/methods, headers, transport schemas, status codes, visibility rules, ordering/cursors, write
-side effects, transaction boundaries, or runtime behavior—but only through the approval process
-in §1.2. Until that process is complete, implementation must preserve the current behavior.
+1. **Authorization and visibility** — who can see or do what. This is where the actual bugs were.
+   New capability work should default to the access rules `apps/api/src` encodes — they're the
+   accumulated real product decisions about who gets to do what — verified by reading the actual
+   current code, never assumed from a stale note or symmetry with a similar-looking domain (piece
+   4's two exam bugs were both cases of assuming symmetry that didn't hold). The goal is the
+   *correct* rule, though — not a byte-for-byte copy of however the old code happens to express it.
+2. **Tenant isolation** — a request scoped to one school must never see another school's data.
+   Non-negotiable regardless of contract shape.
+3. **Data-affecting side effects and migrations** — anything that writes, deletes, or changes the
+   shape of stored data needs a real rollout/rollback plan, not just "it works in a test."
+4. **Concurrency/transaction correctness** — races that can corrupt data or leave inconsistent
+   state (the exam result/cancellation race DD-002 fixed is the template).
+5. **Irreversible or expensive-to-reverse decisions** — a shape a *real, migrated* client already
+   depends on, or a schema choice that's costly to walk back later.
 
-“The web app happens not to use that field today” is not a reason to omit it. Conversely,
-`docs/api.md` and `TODO.md` contain aspirational or stale endpoints that are not implemented
-by the current backend; they are **not** parity requirements. The executable reference is the
-current code.
+For all five: research the actual current behavior first, document the reasoning, and if there's
+a genuine tradeoff, get a second opinion before shipping — a short conversation, not necessarily
+the full decision-note process. `decisions/`'s template remains the right tool when a decision is
+security-relevant, contested, or has real rollout stakes; it is not the tool for routine API
+design.
 
-### 1.2 Approval-gated design changes
+### 1.2 What's a design choice, not a constraint
 
-An implementation agent may identify and recommend an improvement to any compatibility-baseline
-item. It may research the problem, document existing behavior, and prepare alternatives. It must
-**not implement the behavior change until a human has manually approved the specific design**.
+Everything else — URLs, HTTP methods, response envelope shape, field names, exact pagination or
+ordering, which endpoint a piece of data lives under, status codes for edge cases, request/
+response schema shape — is a normal engineering decision. Default to whatever is clearest and
+most consistent with the patterns already established in `apps/api-next` (§1.3), informed by what
+`apps/api/src` actually does as **useful prior art**, not a spec to satisfy. No approval process
+is required to choose differently than the old backend here. A one-line comment or a note in the
+relevant plan section is enough to record that the choice was deliberate, not an oversight.
 
-Manual approval means an affirmative human decision tied to a concrete proposal. Approval must
-not be inferred from:
+The detailed per-domain sections later in this document (§7 onward) describe `apps/api/src`'s
+actual behavior in a lot of contract-level detail. Read those as a **well-researched default**,
+not a mandate: they're the fastest route to a correct, working implementation without re-deriving
+business rules from scratch, and following them costs nothing extra when there's no reason to
+deviate — but where a clearer contract is obvious, use it. Don't wait for permission.
 
-- this parity plan listing an idea;
-- the general instruction to improve the draft;
-- silence or lack of objection;
-- approval of a different proposal or adjacent slice;
-- a code review that did not explicitly approve the design change;
-- an agent deciding that a bug fix is “obvious.”
+### 1.3 Architecture, unconditionally
 
-Each proposed deviation needs a design note containing:
+Independent of the parity-vs-contract question: `apps/api/src` defines *behavior* worth
+preserving (§1.1), never *architecture* worth copying. New code always uses the patterns already
+established in `apps/api-next`:
 
-1. **Decision ID and status:** `proposed`, `approved`, `rejected`, or `deferred`.
-2. **Current behavior:** executable evidence from `apps/api/src`, including edge cases.
-3. **Problem/opportunity:** correctness, security, usability, consistency, performance, or
-   maintainability issue being addressed.
-4. **Proposed behavior:** exact URL/method, input/output, authorization, ordering, errors, side
-   effects, transaction/concurrency semantics, and runtime behavior that would change.
-5. **Alternatives:** at least the current-compatible option and materially different reasonable
-   designs, with tradeoffs.
-6. **Impact analysis:** affected web clients, API consumers, database data, migrations, tenant
-   boundaries, permissions, observability, operations, and documentation.
-7. **Compatibility/rollout plan:** versioning, aliases or deprecation if needed, backfill,
-   deployment ordering, feature flags if appropriate, and rollback.
-8. **Acceptance criteria:** tests and observable outcomes proving the approved design.
-9. **Manual approval record:** approver, date, chosen alternative, and any conditions or scope
-   limits.
+- typed domain folders — `route.ts`, `schema.ts`, `service.ts`, `repository.ts`, `index.ts`;
+- a centralized `AccessPolicy` — never scattered `authorize`/`getBatchAccess`-style orchestration
+  reinvented per route;
+- explicit repository read scopes, so authorization determines the query scope instead of
+  fetching every row and filtering in application code;
+- typed schemas, explicit service/repository boundaries, and request-scoped caching.
 
-Rules for implementation:
+Where the draft has no precedent, prefer the underlying library's idioms (Express 5, Drizzle,
+Zod, BetterAuth) over porting an old-backend helper.
 
-- Keep proposals narrowly scoped; do not bundle unrelated behavior changes into one approval.
-- Pause only the affected behavior. Continue compatible work that does not prejudge the design.
-- A `proposed` or `deferred` item remains blocked from implementation.
-- If a proposal is rejected, implement the compatibility baseline.
-- If no proposal is made, implement the compatibility baseline.
-- After approval, update this plan's route matrix, detailed slice, tests, affected clients, and
-  rollout steps before writing the behavior-changing code.
-- Implement only the approved alternative and conditions. Any material expansion requires a new
-  approval.
+### 1.4 Historical decisions
 
-### 1.3 Internal patterns and candidate behavior improvements
-
-The following internal patterns may be implemented without a behavior-change approval **only if
-they preserve every externally observable compatibility-baseline item**:
-
-- Keep typed domain folders: `route.ts`, `schema.ts`, `service.ts`, `repository.ts`, `index.ts`.
-- Keep a centralized `AccessPolicy`; do not recreate scattered
-  `authorize/getBatchAccess/requireAccess` orchestration in every route.
-- Keep explicit repository read scopes so authorization determines the query scope instead of
-  fetching all rows and filtering in application code.
-- Use typed schemas, explicit service/repository boundaries, dependency injection, and request-scoped
-  caching where those choices do not alter behavior.
-
-The following are **candidate** improvements discovered during this audit. They are not approved
-merely because they appear in this plan. Each has a full design note under
-[`decisions/`](./decisions/) using the §1.2 template; this table is a summary index only —
-update the design note first, then reflect its status here.
+The design notes under [`decisions/`](./decisions/), recorded under the stricter process this
+section supersedes, remain valid records of real decisions and real bugs found — several document
+genuine security fixes, not contract trivia. Don't relitigate an approved decision just because
+the process that produced it has changed. Do feel free to make the equivalent call informally,
+without a new decision note, for anything §1.2 covers going forward. The summary table below is
+kept as a historical record of what was reviewed and why; new routine contract choices don't need
+an entry here.
 
 | Decision ID                     | Candidate improvement                                                                                                                          | Compatibility baseline if not approved                                                                | Status   |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------- |
@@ -227,31 +219,28 @@ update the design note first, then reflect its status here.
 | [DD-009](./decisions/DD-009.md) | Return structured JSON 400 for malformed JSON and JSON 404 for unmatched API routes.                                                           | Verified 2026-08-28: current backend returns 500 (not 400) for malformed JSON and HTML (not JSON) 404s for unmatched routes. | approved (2026-08-28) |
 | [DD-010](./decisions/DD-010.md) | Fail closed on unknown school roles rather than normalizing them to `member`.                                                                  | Verified 2026-08-28: current backend has no normalization step at all — it delegates to BetterAuth's `hasPermission`, which already fails closed on an unrecognized role. | approved (2026-08-28) |
 
-Later sections describe the audit's recommended target behavior. Whenever that recommendation
-differs from the compatibility baseline, it is conditional on the corresponding decision above
-being manually approved. If approval is rejected or absent, implement and test the baseline
-instead. Every approved deviation needs regression and rollout coverage; no behavior change may
-be smuggled in as “cleanup,” “refactoring,” or “parity.”
+These decisions predate the 2026-08-28 philosophy revision and were reviewed under the old
+"any deviation needs approval" standard — that's why routine items like DD-007/DD-008/DD-009 have
+a decision note at all. Going forward, only §1.1's five categories need this level of process;
+treat the rigor already spent here as sunk value, not a template to keep reproducing for
+contract-shape choices.
 
-### 1.4 Definition of done
+### 1.5 Definition of done
 
-The rewrite is complete only when:
+The rewrite is ready to promote when:
 
-- every row in the route matrix in §2 is implemented or replaced by an approved design with its
-  migration path completed;
-- every existing rewrite divergence in §3 is resolved;
-- the access matrix in §5 is covered by tests;
-- list cursors have multi-page tests with ties and nullable sort fields;
-- cross-school isolation tests pass;
-- server/auth/OTP/rate-limit behavior is represented in tests;
-- every compatibility deviation has an approved decision note and manual approval record;
-- no `proposed` or `deferred` design has been implemented;
-- both the current backend and the rewrite package typecheck during the migration;
-- the rewrite package passes lint and its complete unit/integration suite;
-- the web server-side API clients run against the approved target contract, including any
-  approved caller migration or temporary compatibility layer;
-- the production entrypoint and Docker image actually run the promoted rewrite rather than the
-  current backend.
+- every capability in the route matrix (§2) is deliverable through *some* implemented endpoint —
+  not necessarily the one listed there, if a clearer shape was chosen (§1.2);
+- §1.1's five categories — authorization/visibility, tenant isolation, data-affecting side
+  effects, concurrency correctness, and irreversible decisions — have been deliberately gotten
+  right, not defaulted into;
+- cross-school isolation and the authorization matrix (§5) are covered by tests;
+- list endpoints have real pagination tests where they paginate (multi-page, ties, nullable sort
+  fields);
+- both packages typecheck, the rewrite passes lint and its full unit/integration suite;
+- `apps/web` has been migrated to call the rewrite's actual contract — not the other way around;
+- the production entrypoint and Docker image run the promoted rewrite rather than the current
+  backend.
 
 ---
 
@@ -259,14 +248,16 @@ The rewrite is complete only when:
 
 Legend:
 
-- **Present / parity work** — a draft route exists, but at least one contract or ACL differs.
-- **Missing** — no draft route exists.
+- **Present / parity work** — a draft route exists, but the capability isn't fully there yet
+  (missing ACL, missing data, or a real gap — not merely "the contract differs from `apps/api/src`").
+- **Missing** — no draft route delivers this capability yet.
 - **Present / extension** — draft-only behavior that may remain.
 
-The matrix records the compatibility baseline and the audit's recommended work. A manually
-approved design may replace a method/path or any other cell detail; when that happens, update the
-row to link its decision ID and describe the migration rather than silently deleting the current
-contract.
+This matrix was originally written to record contract-level parity gaps; per §1.2, matching
+`apps/api/src`'s exact contract is no longer the goal, so read "Required work" as *what
+capability is still missing*, not *what still differs from the old wire format*. Cell text
+written under the old framing (exact schema/envelope/field-name wording) is left as useful detail
+about what `apps/api/src` does, not as a requirement.
 
 | Current endpoint                               | Draft state                   | Required work                                                                                                      |
 | ---------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -1477,21 +1468,20 @@ to find tests in another workspace package.
 
 Work in this order. Do not add domain routes on top of known-wrong wrappers or ACLs.
 
-### Phase 0 — Contract freeze and harness
+### Phase 0 — Harness (superseded framing — see §1)
 
-- Record route matrix and response fixtures.
-- Compare every recommended behavior in this plan against the §1.1 compatibility baseline.
-- Create one design note per proposed deviation using §1.2; conduct the design discussion and
-  record manual approval, rejection, or deferral before behavior-changing implementation.
-- Mark approval dependencies on affected phases/slices so compatible work can proceed without
-  implicitly choosing an unapproved design.
+This phase's original bullets ("create one design note per proposed deviation," "compare every
+recommended behavior against the compatibility baseline") described the pre-2026-08-28 process.
+Under §1's revision, that step is unnecessary for routine contract choices (§1.2) — do it only for
+the five scrutiny categories in §1.1. What's still worth doing upfront:
+
+- Record the route matrix (§2) as a capability checklist.
 - Add server dependency injection/test app construction.
-- Add response/error contract tests.
+- Add response/error contract tests for whatever contract is actually chosen.
 - Add school/profile/session fixtures.
 
-**Gate:** tests can express current behavior without calling production services; every proposed
-deviation has a decision ID and status; no behavior-changing code has started for an unapproved
-decision.
+**Gate:** tests can express the chosen behavior without calling production services; any §1.1
+scrutiny-category decision made along the way is documented, not silently assumed.
 
 ### Phase 1 — Request context, wrappers, and AccessPolicy
 
@@ -1599,39 +1589,39 @@ complete, and `apps/api-next` can replace `apps/api` without losing code or test
 
 ## 16. Per-slice completion checklist
 
-Apply this checklist to every route/module before marking it complete:
+Apply this checklist to every route/module before marking it complete. Per §1, "correct" below
+means *delivers the capability well*, using whatever contract is clearest — not "matches
+`apps/api/src`'s exact wire format." The §1.1-scrutiny items are marked; everything else is a
+normal engineering-quality bar, not a compatibility check.
 
-Unless a line explicitly says otherwise, “correct” below means the compatibility baseline or the
-exact manually approved replacement design—not an agent-selected improvement.
-
-- [ ] Each §1.1 compatibility-baseline item was compared to the intended implementation.
-- [ ] Every proposed deviation has a narrow decision ID and completed design note.
-- [ ] Manual approval was recorded before any behavior-changing code was written.
-- [ ] The implementation stays within the approved alternative, conditions, and scope.
-- [ ] Rejected/deferred/unproposed deviations use the compatibility baseline.
-- [ ] Route is mounted at the baseline method/path or the manually approved replacement and
-      migration are complete.
+- [ ] Authorization/visibility rule was verified against the real current code, not assumed —
+      including for actors the happy path doesn't cover (§1.1 #1).
+- [ ] Query is tenant-scoped — a request for one school cannot see another's data (§1.1 #2).
+- [ ] Any data-affecting side effect or migration has a real rollout/rollback plan, not just a
+      passing test (§1.1 #3).
+- [ ] Concurrent writes have a defined, tested winner (§1.1 #4).
 - [ ] Public vs school database context is correct.
 - [ ] Session requirement is correct.
-- [ ] Profile is optional/required exactly where intended.
-- [ ] Path, query, and body schemas match the transport contract.
+- [ ] Profile is optional/required exactly where the capability actually needs it, not merely
+      where `apps/api/src` happens to require it.
+- [ ] Path, query, and body schemas are internally consistent and documented — not required to
+      match `apps/api/src`'s field names/shape unless a real reason exists to.
 - [ ] Unknown-only update bodies fail.
-- [ ] School and batch permissions match shared ACLs.
-- [ ] Query is tenant-scoped and read-scope constrained.
-- [ ] Success status and `{ ok: true, data }` envelope match.
+- [ ] School and batch permissions match shared ACLs (`AccessPolicy`).
+- [ ] Success/error response shape is consistent with the rest of `apps/api-next`, whatever shape
+      that ends up being — not required to be `{ ok: true, data }` specifically.
 - [ ] 204 has no body.
-- [ ] 400/401/403/404/409/422 behavior is tested.
+- [ ] 400/401/403/404/409/422 distinctions are meaningful and tested.
 - [ ] Unique/FK races use domain or global translation.
-- [ ] List ordering is deterministic.
-- [ ] Cursor contains every sort key and has multi-page tests.
+- [ ] List ordering is deterministic where the capability needs it to be.
+- [ ] Cursor (if any) contains every sort key and has multi-page tests.
 - [ ] Multi-row writes are transactional.
-- [ ] Concurrent writes have a defined result.
 - [ ] No raw user/membership/profile/database fields leak.
 - [ ] No route-local authorization query duplicates `AccessPolicy`.
 - [ ] Service contains no Express request/response dependency.
 - [ ] Unit and integration tests pass.
-- [ ] Existing callers either need no adapter or use the manually approved migration/rollout
-      path.
+- [ ] If `apps/web` already calls the equivalent old-backend endpoint, note what caller-side
+      change its eventual migration will need — don't block on it now.
 
 ---
 
