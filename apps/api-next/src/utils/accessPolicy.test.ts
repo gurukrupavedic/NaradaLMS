@@ -526,3 +526,30 @@ describe('AccessPolicy#getProfileBatchListScope (corrected 2026-08-28)', () => {
     expect(enrollmentService.hasSharedInstructorEnrollment).not.toHaveBeenCalled()
   })
 })
+
+describe('AccessPolicy#getContentReadView', () => {
+  it('a school admin gets the authoring view', async () => {
+    mockMembership('admin')
+    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+
+    expect(access.getContentReadView()).toEqual({ kind: 'authoring' })
+  })
+
+  it('an ordinary member gets the learner-preview view, not authoring', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+
+    expect(access.getContentReadView()).toEqual({ kind: 'learnerPreview' })
+  })
+
+  it('a super admin gets the authoring view', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+    })
+
+    expect(access.getContentReadView()).toEqual({ kind: 'authoring' })
+  })
+})

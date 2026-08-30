@@ -29,6 +29,10 @@ export type ExamReadScope =
   | { kind: 'all' }
   | { kind: 'own'; profileId: string }
   | { kind: 'manageable'; profileId: string; batchIds: string[] }
+// Every school member can read published content; a caller who can also author it (content:update
+// — owner/admin) additionally sees drafts. No profile involved — this is a school-membership
+// question, not a per-batch one.
+export type ContentReadView = { kind: 'authoring' } | { kind: 'learnerPreview' }
 
 type AccessPolicySource = {
   db: SchoolDbClient
@@ -186,6 +190,17 @@ export class AccessPolicy {
     }
 
     throw forbidden()
+  }
+
+  // -- Content (tracks/chapters) -----------------------------------------------
+  // Verified against packages/auth/src/permissions/school.ts: every role (member included) holds
+  // content:read; only owner/admin additionally hold content:update. No profile is consulted —
+  // this is a school-membership question, matching apps/api/src's authorizeContentReadView (which
+  // checks `content:read` for the base requirement and `content:update` for the authoring
+  // upgrade, not any per-batch role).
+  public getContentReadView(): ContentReadView {
+    this.requireSchoolMember()
+    return this.isSchoolAdmin() ? { kind: 'authoring' } : { kind: 'learnerPreview' }
   }
 
   // -- Enrollment (batch roster) ----------------------------------------------
