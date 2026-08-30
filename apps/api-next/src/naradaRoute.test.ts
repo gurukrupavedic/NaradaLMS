@@ -23,7 +23,7 @@ vi.mock('./utils/accessPolicy', () => ({
 import { getSchoolDb, publicDb } from '@narada/db'
 
 import { unauthorized } from './error'
-import { optionalProfileRoute, profileRoute, schoolRoute, userRoute } from './naradaRoute'
+import { authRoute, optionalProfileRoute, profileRoute, schoolRoute, userRoute } from './naradaRoute'
 import { SessionService } from './session'
 import { AccessPolicy } from './utils/accessPolicy'
 
@@ -45,6 +45,30 @@ beforeEach(() => {
   } as never)
   vi.mocked(getSchoolDb).mockReturnValue({} as never)
   vi.mocked(SessionService.getCurrentUser).mockResolvedValue({ id: 'user-1' } as never)
+})
+
+describe('authRoute', () => {
+  it('resolves session and passes db/user through, without ever touching the school header', async () => {
+    const handler = vi.fn(async () => {})
+    const req = makeRequest(undefined) // no X-School-Slug at all
+
+    await authRoute(handler)(req, res, next)
+
+    expect(publicDb.query.organization.findFirst).not.toHaveBeenCalled()
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({ db: publicDb, user: { id: 'user-1' } }),
+    )
+  })
+
+  it('propagates a 401 for an invalid session', async () => {
+    vi.mocked(SessionService.getCurrentUser).mockRejectedValue(unauthorized())
+    const handler = vi.fn(async () => {})
+
+    await expect(authRoute(handler)(makeRequest(), res, next)).rejects.toMatchObject({
+      statusCode: 401,
+    })
+    expect(handler).not.toHaveBeenCalled()
+  })
 })
 
 describe('schoolRoute', () => {

@@ -28,6 +28,10 @@ export type PublicRouteArgs = {
   db: PublicDbClient
 }
 
+export type AuthRouteArgs = PublicRouteArgs & {
+  user: User
+}
+
 export type SchoolRouteArgs = {
   req: Request
   res: Response
@@ -53,6 +57,18 @@ export type ProfileRouteArgs = UserRouteArgs & {
 export function publicRoute(handler: (args: PublicRouteArgs) => Promise<void>): RequestHandler {
   return async (req, res) => {
     await handler({ req, res, db: publicDb })
+  }
+}
+
+/**
+ * Wraps a handler that requires an authenticated session but no school context — for the auth
+ * bootstrap response (which schools does this user belong to?) that necessarily runs *before* a
+ * school is selected, so `schoolRoute`/`userRoute` (both require `X-School-Slug`) don't fit.
+ */
+export function authRoute(handler: (args: AuthRouteArgs) => Promise<void>): RequestHandler {
+  return async (req, res) => {
+    const user = await SessionService.getCurrentUser(req)
+    await handler({ req, res, db: publicDb, user })
   }
 }
 

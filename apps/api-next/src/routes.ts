@@ -6,6 +6,7 @@ import enrollmentRouter from './enrollment'
 import evaluationsRouter from './evaluations'
 import examsRouter from './exams'
 import healthRouter from './health'
+import profileRouter from './profile'
 import profilesRouter from './profiles'
 
 const apiRateLimit = rateLimit({
@@ -19,6 +20,7 @@ export default function setupRoutes(router: Router) {
   router
     .use('/health', healthRouter)
     .use(apiRateLimit)
+    .use('/profile', profileRouter)
     .use('/profiles', profilesRouter)
     .use('/batches', batchesRouter)
     .use('/batches/:batchId/members', enrollmentRouter)
