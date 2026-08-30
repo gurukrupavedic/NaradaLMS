@@ -31,3 +31,9 @@ export const UpdateProfileSchema = requireNonEmpty(
     city: true,
   }).partial(),
 )
+
+export type SearchProfilesQuery = z.infer<typeof SearchProfilesQuerySchema>
+export const SearchProfilesQuerySchema = z.object({
+  query: z.string().trim().min(1).optional(),
+  excludeBatchId: z.uuid().optional(),
+})

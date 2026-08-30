@@ -1,8 +1,10 @@
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, isNull, notInArray } from 'drizzle-orm'
 
-import { profile, type PublicDb, type SchoolDb } from '@narada/db'
+import { enrollment, profile, type PublicDb, type SchoolDb } from '@narada/db'
 
-import type { CreateProfileData, Profile, UpdateProfileData } from './schema'
+import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
+
+const SEARCH_LIMIT = 25
 
 /**
  * Explicit projection matching `Profile` exactly. `profile.deletedAt` is an internal lifecycle
@@ -23,6 +25,47 @@ const profileColumns = {
 export async function findByUserId(db: SchoolDb, userId: string): Promise<Profile[]> {
   return db.query.profile.findMany({
     where: (t, { and, eq, isNull }) => and(eq(t.userId, userId), isNull(t.deletedAt)),
+    columns: { deletedAt: false },
+  })
+}
+
+export async function findById(db: SchoolDb, id: string): Promise<Profile | undefined> {
+  return db.query.profile.findFirst({
+    where: (t, { and, eq, isNull }) => and(eq(t.id, id), isNull(t.deletedAt)),
+    columns: { deletedAt: false },
+  })
+}
+
+/**
+ * Backs the admin "enroll a student" search — the only reason to search across every profile in
+ * the school rather than just one's own (`findByUserId`). `excludeBatchId` filters out profiles
+ * already enrolled in that batch at the query level, so `SEARCH_LIMIT` still returns useful
+ * candidates rather than being eaten by already-enrolled matches.
+ */
+export async function search(db: SchoolDb, options: SearchProfilesQuery): Promise<Profile[]> {
+  return db.query.profile.findMany({
+    where: (t, { and, ilike, isNull: isNullCol }) => {
+      const conditions = [isNullCol(t.deletedAt)]
+      if (options.query) {
+        conditions.push(ilike(t.name, `%${options.query}%`))
+      }
+
+      if (options.excludeBatchId) {
+        conditions.push(
+          notInArray(
+            t.id,
+            db
+              .select({ profileId: enrollment.profileId })
+              .from(enrollment)
+              .where(eq(enrollment.batchId, options.excludeBatchId)),
+          ),
+        )
+      }
+
+      return and(...conditions)
+    },
+    orderBy: (t, { asc }) => asc(t.name),
+    limit: SEARCH_LIMIT,
     columns: { deletedAt: false },
   })
 }

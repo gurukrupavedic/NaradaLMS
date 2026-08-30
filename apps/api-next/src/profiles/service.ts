@@ -3,7 +3,7 @@ import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 import { forbidden, internalError, notFound } from '../error'
 import type { User } from '../session'
 import * as repository from './repository'
-import type { CreateProfileData, Profile, UpdateProfileData } from './schema'
+import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
 
 type School = typeof organization.$inferSelect
 
@@ -14,6 +14,13 @@ export async function findByUserId(
   userId: string,
 ): Promise<Profile[]> {
   return repository.findByUserId(context.db, userId)
+}
+
+export async function searchProfiles(
+  context: ProfileServiceContext,
+  query: SearchProfilesQuery,
+): Promise<Profile[]> {
+  return repository.search(context.db, query)
 }
 
 /**

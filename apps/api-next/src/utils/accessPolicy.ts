@@ -9,6 +9,7 @@ import {
 import { hasBatchPermission as roleHasBatchPermission, type BatchPermissions } from '@narada/auth/permissions'
 
 import { forbidden } from '../error'
+import { hasSharedInstructorEnrollment } from '../enrollment/service'
 import type { Exam } from '../exams/schema'
 import type { User } from '../session'
 
@@ -51,6 +52,7 @@ const EVALUATION_CREATE_PERMISSION: BatchPermissions = { evaluation: ['create'] 
  */
 export class AccessPolicy {
   private constructor(
+    private readonly db: SchoolDbClient,
     private readonly userId: string,
     private readonly profileId: string | null,
     private readonly schoolRole: SchoolRole,
@@ -87,6 +89,7 @@ export class AccessPolicy {
     }
 
     return new AccessPolicy(
+      db,
       user.id,
       profile?.id ?? null,
       normalizeSchoolRole(membership?.role),
@@ -154,6 +157,35 @@ export class AccessPolicy {
     }
 
     return { kind: 'enrolled', profileId: this.requireProfileId() }
+  }
+
+  /**
+   * The read scope for "list `targetProfileId`'s batches" — a *different* question from
+   * `getBatchVisibility()`, which is "list batches" with no target in mind. Corrected 2026-08-28
+   * (see PARITY_PLAN.md addendum §0): school-wide access grants 'all' only for a **self** lookup
+   * (an admin looking at their own batches) — looking up someone else's batches is always scoped
+   * to that person's own enrollments, never the whole school, whether the caller is a super
+   * admin, owner, admin, or a shared instructor/TA. School-wide status there only grants
+   * *permission* to skip the shared-instructor-enrollment check below, not license to ignore
+   * which profile was actually asked for.
+   */
+  public async getProfileBatchListScope(targetProfileId: string): Promise<BatchReadScope> {
+    if (targetProfileId === this.profileId) {
+      return this.isSchoolAdmin() ? { kind: 'all' } : { kind: 'enrolled', profileId: targetProfileId }
+    }
+
+    if (this.isSchoolAdmin()) {
+      return { kind: 'enrolled', profileId: targetProfileId }
+    }
+
+    if (
+      this.profileId &&
+      (await hasSharedInstructorEnrollment(this.db, this.profileId, targetProfileId))
+    ) {
+      return { kind: 'enrolled', profileId: targetProfileId }
+    }
+
+    throw forbidden()
   }
 
   // -- Enrollment (batch roster) ----------------------------------------------
@@ -311,6 +343,18 @@ export class AccessPolicy {
 
   /** Admin-deactivation (DD-011 §9): only a school admin/owner (or super admin) may deactivate a profile other than their own. */
   public requireCanDeactivateProfile(): void {
+    if (!this.isSchoolAdmin()) {
+      throw forbidden()
+    }
+  }
+
+  // Gated on the same permission as creating an enrollment (school enrollment:create) — the only
+  // reason to search across every profile in the school is the admin "enroll a student" flow.
+  // Under the current school ACL (packages/auth/src/permissions/school.ts), only owner/admin hold
+  // enrollment:create at all (member gets none), so this is exactly isSchoolAdmin() today — same
+  // shortcut already used for requireCanReadBatchEvaluations; see its comment if the school ACL
+  // ever changes.
+  public requireCanSearchProfiles(): void {
     if (!this.isSchoolAdmin()) {
       throw forbidden()
     }

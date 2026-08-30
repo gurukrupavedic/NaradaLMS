@@ -12,7 +12,7 @@ import {
   enroll as enrollFixture,
   type TestWorld,
 } from '../testing/fixtures'
-import { enroll, unenroll } from './service'
+import { enroll, hasSharedInstructorEnrollment, unenroll } from './service'
 import { findEnrollment } from './repository'
 
 let world: TestWorld | undefined
@@ -122,5 +122,67 @@ describe('unenroll', () => {
     await expect(
       findEnrollment(world.schoolDb, studentProfile.id, batchB.id),
     ).resolves.toEqual({ role: 'student' })
+  })
+})
+
+// Backs AccessPolicy.getProfileBatchListScope's "you've taught this student, so you can see
+// their full history" rule — a §1.1-scrutiny authorization decision, not cosmetic, so it gets
+// real-database coverage, not just the mocked unit tests in accessPolicy.test.ts.
+describe('hasSharedInstructorEnrollment', () => {
+  it('true when the instructor currently teaches a batch the student is also enrolled in', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    const instructorProfile = await createProfile(world)
+    const studentProfile = await createProfile(world)
+    await enrollFixture(world, instructorProfile, batchRow, 'instructor')
+    await enrollFixture(world, studentProfile, batchRow, 'student')
+
+    await expect(
+      hasSharedInstructorEnrollment(world.schoolDb, instructorProfile.id, studentProfile.id),
+    ).resolves.toBe(true)
+  })
+
+  it('true for a TA, not just an instructor', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    const taProfile = await createProfile(world)
+    const studentProfile = await createProfile(world)
+    await enrollFixture(world, taProfile, batchRow, 'ta')
+    await enrollFixture(world, studentProfile, batchRow, 'student')
+
+    await expect(
+      hasSharedInstructorEnrollment(world.schoolDb, taProfile.id, studentProfile.id),
+    ).resolves.toBe(true)
+  })
+
+  it('false when the two profiles have never shared a batch', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchA = await createBatch(world, trackRow)
+    const batchB = await createBatch(world, trackRow)
+    const instructorProfile = await createProfile(world)
+    const studentProfile = await createProfile(world)
+    await enrollFixture(world, instructorProfile, batchA, 'instructor')
+    await enrollFixture(world, studentProfile, batchB, 'student')
+
+    await expect(
+      hasSharedInstructorEnrollment(world.schoolDb, instructorProfile.id, studentProfile.id),
+    ).resolves.toBe(false)
+  })
+
+  it('false when the shared enrollment exists but the actor is a student there too, not an instructor/ta', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    const actorProfile = await createProfile(world)
+    const studentProfile = await createProfile(world)
+    await enrollFixture(world, actorProfile, batchRow, 'student')
+    await enrollFixture(world, studentProfile, batchRow, 'student')
+
+    await expect(
+      hasSharedInstructorEnrollment(world.schoolDb, actorProfile.id, studentProfile.id),
+    ).resolves.toBe(false)
   })
 })

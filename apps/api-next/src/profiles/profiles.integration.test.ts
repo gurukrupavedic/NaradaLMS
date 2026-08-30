@@ -181,3 +181,50 @@ describe('admin-deactivation (DD-011 §9)', () => {
     expect(result).toHaveLength(0)
   })
 })
+
+describe('search (admin "enroll a student" support)', () => {
+  it('matches by case-insensitive substring and orders by name', async () => {
+    world = await createTestSchool()
+    await createProfile(world, { name: 'Bea Baker' })
+    await createProfile(world, { name: 'Ada Anderson' })
+    await createProfile(world, { name: 'Zed Zephyr' })
+
+    const results = await repository.search(world.schoolDb, { query: 'a' })
+
+    expect(results.map(r => r.name)).toEqual(['Ada Anderson', 'Bea Baker'])
+  })
+
+  it('excludes profiles already enrolled in excludeBatchId', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    const enrolledProfile = await createProfile(world, { name: 'Already Enrolled' })
+    const unenrolledProfile = await createProfile(world, { name: 'Not Yet Enrolled' })
+    await enroll(world, enrolledProfile, batchRow, 'student')
+
+    const results = await repository.search(world.schoolDb, { excludeBatchId: batchRow.id })
+
+    expect(results.map(r => r.id)).toContain(unenrolledProfile.id)
+    expect(results.map(r => r.id)).not.toContain(enrolledProfile.id)
+  })
+
+  it('never returns a deactivated profile', async () => {
+    world = await createTestSchool()
+    const deactivated = await createProfile(world, { name: 'Deactivated Person' })
+    await repository.softDeleteOwned(world.schoolDb, deactivated.id, deactivated.userId)
+
+    const results = await repository.search(world.schoolDb, { query: 'Deactivated' })
+
+    expect(results).toHaveLength(0)
+  })
+
+  it('with no query and no excludeBatchId, returns every active profile up to the limit', async () => {
+    world = await createTestSchool()
+    await createProfile(world)
+    await createProfile(world)
+
+    const results = await repository.search(world.schoolDb, {})
+
+    expect(results.length).toBeGreaterThanOrEqual(2)
+  })
+})

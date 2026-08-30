@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDbClient, organization } from '@narada/db'
 
-import { deactivateByAdmin, deleteById } from './service'
+import { deactivateByAdmin, deleteById, searchProfiles } from './service'
 import * as repository from './repository'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
@@ -14,6 +14,7 @@ vi.mock('./repository', () => ({
   updateOwned: vi.fn(),
   softDeleteOwned: vi.fn(),
   softDeleteById: vi.fn(),
+  search: vi.fn(),
 }))
 
 // `profiles/service.ts` imports the real `publicDb` value directly from `@narada/db`, so that
@@ -71,5 +72,21 @@ describe('deactivateByAdmin (DD-011 §9)', () => {
     await expect(deactivateByAdmin(context, 'profile-1')).rejects.toMatchObject({
       statusCode: 404,
     })
+  })
+})
+
+describe('searchProfiles', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('delegates straight through to the repository', async () => {
+    const results = [{ id: 'profile-1', userId: 'user-1', name: 'Ada', phone: null, city: null, updatedAt: new Date(), createdAt: new Date() }]
+    vi.mocked(repository.search).mockResolvedValue(results)
+
+    await expect(
+      searchProfiles(context, { query: 'ada', excludeBatchId: undefined }),
+    ).resolves.toEqual(results)
+    expect(repository.search).toHaveBeenCalledWith(db, { query: 'ada', excludeBatchId: undefined })
   })
 })

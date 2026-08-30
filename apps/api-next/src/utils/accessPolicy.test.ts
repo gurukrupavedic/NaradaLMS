@@ -9,9 +9,16 @@ vi.mock('@narada/db', () => ({
   publicDb: { query: { member: { findFirst: vi.fn() } } },
 }))
 
+// accessPolicy.ts imports this as a value for getProfileBatchListScope; mocked (rather than
+// letting the real enrollment/repository.ts run) so it never needs a real Drizzle `db`.
+vi.mock('../enrollment/service', () => ({
+  hasSharedInstructorEnrollment: vi.fn(),
+}))
+
 import { publicDb, type SchoolDbClient, type SchoolProfile } from '@narada/db'
 
 import { AccessPolicy } from './accessPolicy'
+import * as enrollmentService from '../enrollment/service'
 import type { User } from '../session'
 import type { Exam } from '../exams/schema'
 
@@ -398,5 +405,124 @@ describe('AccessPolicy — evaluations (§10.3–§10.5)', () => {
       profile,
     })
     expect(() => instructorAccess.requireCanCreateEvaluation('batch-1')).not.toThrow()
+  })
+})
+
+describe('AccessPolicy#requireCanSearchProfiles', () => {
+  it('allows a school admin, denies a plain member', async () => {
+    mockMembership('admin')
+    const adminAccess = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    expect(() => adminAccess.requireCanSearchProfiles()).not.toThrow()
+
+    mockMembership('member')
+    const memberAccess = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    expect(() => memberAccess.requireCanSearchProfiles()).toThrow()
+  })
+})
+
+describe('AccessPolicy#getProfileBatchListScope (corrected 2026-08-28)', () => {
+  it("a self-lookup by a school admin gets 'all'; a self-lookup by an ordinary member gets 'enrolled'", async () => {
+    mockMembership('admin')
+    const adminAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+    await expect(adminAccess.getProfileBatchListScope('profile-1')).resolves.toEqual({
+      kind: 'all',
+    })
+
+    mockMembership('member')
+    const memberAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+    await expect(memberAccess.getProfileBatchListScope('profile-1')).resolves.toEqual({
+      kind: 'enrolled',
+      profileId: 'profile-1',
+    })
+  })
+
+  it("a lookup of a DIFFERENT profile by a school admin is scoped to that profile's own enrollments, never 'all'", async () => {
+    mockMembership('admin')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.getProfileBatchListScope('someone-else')).resolves.toEqual({
+      kind: 'enrolled',
+      profileId: 'someone-else',
+    })
+  })
+
+  it("a super admin looking up a different profile is also scoped, never 'all'", async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+      profile,
+    })
+
+    await expect(access.getProfileBatchListScope('someone-else')).resolves.toEqual({
+      kind: 'enrolled',
+      profileId: 'someone-else',
+    })
+  })
+
+  it('a shared-instructor lookup of a different profile is granted, scoped to the target', async () => {
+    mockMembership('member')
+    vi.mocked(enrollmentService.hasSharedInstructorEnrollment).mockResolvedValue(true)
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.getProfileBatchListScope('someone-else')).resolves.toEqual({
+      kind: 'enrolled',
+      profileId: 'someone-else',
+    })
+    expect(enrollmentService.hasSharedInstructorEnrollment).toHaveBeenCalledWith(
+      expect.anything(),
+      'profile-1',
+      'someone-else',
+    )
+  })
+
+  it('denies a lookup of a different profile with no admin status and no shared history', async () => {
+    mockMembership('member')
+    vi.mocked(enrollmentService.hasSharedInstructorEnrollment).mockResolvedValue(false)
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'student' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.getProfileBatchListScope('someone-else')).rejects.toMatchObject({
+      statusCode: 403,
+    })
+  })
+
+  it('denies a lookup of a different profile when the caller has no active profile at all', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+
+    await expect(access.getProfileBatchListScope('someone-else')).rejects.toMatchObject({
+      statusCode: 403,
+    })
+    expect(enrollmentService.hasSharedInstructorEnrollment).not.toHaveBeenCalled()
   })
 })
