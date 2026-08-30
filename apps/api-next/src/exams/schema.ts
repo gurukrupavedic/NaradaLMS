@@ -4,6 +4,8 @@ import { examStatus, proficiencyLevel } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
 import { isoInstant, requireNonEmpty } from '../utils/validate'
+import { ChapterSchema } from '../chapters/schema'
+import { EvaluationSchema } from '../evaluations/schema'
 
 const PAGE_SIZE = 20
 
@@ -54,4 +56,13 @@ export type RecordExamResultData = z.infer<typeof RecordExamResultSchema>
 export const RecordExamResultSchema = z.object({
   level: proficiencyLevelSchema,
   notes: z.string().optional(),
+})
+
+// Enough to render an exam on its own — a bare Exam row has only chapterId and evaluationId, no
+// chapter title or result. Only used by the dashboard today (§0.4's list-wide ExamWithDetail
+// projection for GET /exams is a separate, still-open item — see PARITY_PLAN.md).
+export type ExamWithDetail = z.infer<typeof ExamWithDetailSchema>
+export const ExamWithDetailSchema = ExamSchema.extend({
+  chapter: ChapterSchema.pick({ id: true, code: true, title: true, trackId: true }),
+  evaluation: EvaluationSchema.pick({ level: true, notes: true }).nullable(),
 })

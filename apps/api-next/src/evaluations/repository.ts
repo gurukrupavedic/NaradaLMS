@@ -122,3 +122,39 @@ export async function insert(
   const rows = await db.insert(evaluation).values(data).returning()
   return rows.at(0)
 }
+
+/**
+ * Every evaluation a student has ever received, across every track — not scoped to a batch or
+ * current enrollment. Backs the dashboard's "my achievements" view: a student certified in
+ * tracks 1-8 over several years is enrolled in at most one batch today, so scoping to current
+ * enrollment would hide the other seven (dashboard.ts's own reasoning, ported as-is — this is a
+ * real product requirement, not an implementation detail).
+ */
+export async function findAllForStudent(db: SchoolDb, studentId: string): Promise<Evaluation[]> {
+  return db.query.evaluation.findMany({
+    where: (t, { eq }) => eq(t.studentId, studentId),
+    orderBy: (t, { desc: descCol }) => descCol(t.evaluatedAt),
+  })
+}
+
+/**
+ * Backs the dashboard's "teaching" summary: one query for every evaluation across every batch an
+ * instructor/TA teaches, bucketed back per batch in application code (two taught batches can
+ * share a track, so chapterId alone can't tell them apart — only the actual roster, already known
+ * to the caller, can). Empty either input list means no possible match — short-circuit rather
+ * than let `inArray([])` reach Postgres.
+ */
+export async function findForChaptersAndStudents(
+  db: SchoolDb,
+  chapterIds: string[],
+  studentIds: string[],
+): Promise<Evaluation[]> {
+  if (chapterIds.length === 0 || studentIds.length === 0) {
+    return []
+  }
+
+  return db.query.evaluation.findMany({
+    where: (t, { and: andCols, inArray: inArrayCol }) =>
+      andCols(inArrayCol(t.chapterId, chapterIds), inArrayCol(t.studentId, studentIds)),
+  })
+}

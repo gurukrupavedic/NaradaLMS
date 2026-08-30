@@ -39,6 +39,15 @@ export const BatchDetailSchema = BatchSchema.extend({
   members: z.array(BatchMemberSchema),
 })
 
+// Backs the dashboard's "my batches" list: a BatchDetail plus the *caller's own* role in it,
+// distinct from any entry in `members` (which is every member's role). Always a real role, never
+// null — every consumer of this type only ever asks for a profile's own enrolled batches, where a
+// role is guaranteed to exist by definition.
+export type BatchWithRole = z.infer<typeof BatchWithRoleSchema>
+export const BatchWithRoleSchema = BatchDetailSchema.extend({
+  role: batchMemberRoleSchema,
+})
+
 export type FindBatchesData = z.infer<typeof FindBatchesSchema>
 export const FindBatchesSchema = BatchSchema.pick({
   status: true,

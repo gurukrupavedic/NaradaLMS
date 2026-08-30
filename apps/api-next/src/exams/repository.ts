@@ -4,7 +4,7 @@ import { evaluation, exam, type SchoolDb } from '@narada/db'
 
 import type { ExamReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
-import type { CreateExamData, Exam, FindExamsData, UpdateExamData } from './schema'
+import type { CreateExamData, Exam, ExamWithDetail, FindExamsData, UpdateExamData } from './schema'
 
 export type Evaluation = typeof evaluation.$inferSelect
 
@@ -52,6 +52,22 @@ export async function findMany(
 export async function findById(db: SchoolDb, id: string): Promise<Exam | undefined> {
   return db.query.exam.findFirst({
     where: (t, { eq }) => eq(t.id, id),
+  })
+}
+
+/** Backs the dashboard's "upcoming exams" panel — one relational query, chapter/evaluation eager-loaded, not a fan-out. */
+export async function findUpcomingForStudent(
+  db: SchoolDb,
+  studentId: string,
+): Promise<ExamWithDetail[]> {
+  return db.query.exam.findMany({
+    where: (t, { and: andCols, eq: eqCol }) =>
+      andCols(eqCol(t.studentId, studentId), eqCol(t.status, 'scheduled')),
+    orderBy: (t, { asc: ascCol }) => ascCol(t.scheduledAt),
+    with: {
+      chapter: { columns: { id: true, code: true, title: true, trackId: true } },
+      evaluation: { columns: { level: true, notes: true } },
+    },
   })
 }
 

@@ -9,6 +9,8 @@ vi.mock('@narada/db', () => ({
   proficiencyLevel: {
     enumValues: ['absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4'],
   },
+  chapterStatus: { enumValues: ['draft', 'published'] },
+  script: { enumValues: ['te', 'sa', 'en'] },
 }))
 
 const studentId = crypto.randomUUID()

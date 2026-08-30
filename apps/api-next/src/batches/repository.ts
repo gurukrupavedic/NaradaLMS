@@ -4,7 +4,14 @@ import { batch, enrollment, type SchoolDb } from '@narada/db'
 
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
-import type { Batch, BatchDetail, CreateBatchData, FindBatchesData, UpdateBatchData } from './schema'
+import type {
+  Batch,
+  BatchDetail,
+  BatchWithRole,
+  CreateBatchData,
+  FindBatchesData,
+  UpdateBatchData,
+} from './schema'
 
 /**
  * Lists batches visible under `scope`, ordered `(startDate desc nulls last, id asc)` with a
@@ -108,6 +115,80 @@ export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<Bat
       joinedAt: e.joinedAt,
     })),
   }
+}
+
+/**
+ * Every batch `profileId` is enrolled in, with roster detail and `profileId`'s own role in each
+ * — backs the dashboard's "my batches" list. Unlike `findAccessible`'s paginated `enrolled`
+ * scope, this always returns everything in one query: a single profile's own enrollment count is
+ * naturally small and bounded, so there's no real pagination need here, only the N+1 the old
+ * per-batch dashboard fan-out caused (see [[project_batch_n1_incident]]) to avoid.
+ */
+export async function findAllMembershipsWithDetail(
+  db: SchoolDb,
+  profileId: string,
+): Promise<BatchWithRole[]> {
+  const rows = await db.query.batch.findMany({
+    where: (t, { inArray: inArrayCol }) =>
+      inArrayCol(
+        t.id,
+        db.select({ batchId: enrollment.batchId }).from(enrollment).where(eq(enrollment.profileId, profileId)),
+      ),
+    with: { enrollments: { with: { profile: true } } },
+  })
+
+  return rows.map(row => {
+    const { enrollments, ...batchRow } = row
+    const ownRole = enrollments.find(e => e.profileId === profileId)?.role
+    // `ownRole` is always found: the outer `where` only selects batches with a real enrollment
+    // row for `profileId`, so this branch is unreachable in practice — the fallback exists only
+    // to keep the return type honest rather than asserting past a case that can't happen.
+    return {
+      ...batchRow,
+      members: enrollments.map(e => ({
+        profileId: e.profileId,
+        name: e.profile.name,
+        phone: e.profile.phone,
+        city: e.profile.city,
+        role: e.role,
+        joinedAt: e.joinedAt,
+      })),
+      role: ownRole ?? 'student',
+    }
+  })
+}
+
+/**
+ * Every batch each of `profileIds` has ever been enrolled in (current or past — no status
+ * filter), bucketed per profile. Backs the dashboard's "past batches by student" panel for a
+ * teacher's roster. Bare `Batch` rows, not `BatchDetail`: this is a cross-reference list, not a
+ * roster view, so no per-batch member eager-load is needed.
+ */
+export async function findAllForProfiles(
+  db: SchoolDb,
+  profileIds: string[],
+): Promise<Map<string, Batch[]>> {
+  const map = new Map<string, Batch[]>()
+  if (profileIds.length === 0) {
+    return map
+  }
+
+  const rows = await db
+    .select({ profileId: enrollment.profileId, batch })
+    .from(enrollment)
+    .innerJoin(batch, eq(batch.id, enrollment.batchId))
+    .where(inArray(enrollment.profileId, profileIds))
+
+  for (const row of rows) {
+    const list = map.get(row.profileId)
+    if (list) {
+      list.push(row.batch)
+    } else {
+      map.set(row.profileId, [row.batch])
+    }
+  }
+
+  return map
 }
 
 export async function insert(db: SchoolDb, data: CreateBatchData): Promise<Batch | undefined> {

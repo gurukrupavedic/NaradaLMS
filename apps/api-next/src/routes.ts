@@ -3,6 +3,7 @@ import type { Router } from 'express'
 
 import batchesRouter from './batches'
 import chaptersRouter from './chapters'
+import dashboardRouter from './dashboard'
 import enrollmentRouter from './enrollment'
 import evaluationsRouter from './evaluations'
 import examsRouter from './exams'
@@ -23,6 +24,7 @@ export default function setupRoutes(router: Router) {
     .use('/health', healthRouter)
     .use(apiRateLimit)
     .use('/profile', profileRouter)
+    .use('/me/dashboard', dashboardRouter)
     .use('/profiles', profilesRouter)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
