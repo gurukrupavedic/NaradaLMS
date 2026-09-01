@@ -3,8 +3,8 @@ import * as z from 'zod'
 
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { CreateBatchSchema, FindBatchesSchema, UpdateBatchSchema } from './schema'
-import { createBatch, findAllAccessible, findByIdWithMembers, updateBatch } from './service'
+import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
+import { createBatch, findAllAccessible, findByIdWithMembers, setClassSlots, updateBatch } from './service'
 
 const router = Router()
 
@@ -46,6 +46,17 @@ router.patch(
     const data = await parse(UpdateBatchSchema, req.body)
     const batch = await updateBatch({ db }, batchId, data)
     res.status(200).json({ data: batch })
+  }),
+)
+
+router.put(
+  '/:batchId/schedule',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
+    await access.requireCanUpdateBatch(batchId)
+    const data = await parse(SetClassSlotsSchema, req.body)
+    const classSlots = await setClassSlots({ db }, batchId, data)
+    res.status(200).json({ data: classSlots })
   }),
 )
 

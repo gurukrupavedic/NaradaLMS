@@ -1,6 +1,6 @@
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql, type SQL } from 'drizzle-orm'
 
-import { batch, enrollment, type SchoolDb } from '@narada/db'
+import { batch, batchClassSlot, enrollment, type SchoolDb } from '@narada/db'
 
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
@@ -8,10 +8,16 @@ import type {
   Batch,
   BatchDetail,
   BatchWithRole,
+  ClassSlot,
   CreateBatchData,
   FindBatchesData,
+  SetClassSlotsData,
   UpdateBatchData,
 } from './schema'
+
+function toClassSlot(row: typeof batchClassSlot.$inferSelect): ClassSlot {
+  return { dayOfWeek: row.dayOfWeek, time: row.time, durationMinutes: row.durationMinutes }
+}
 
 /**
  * Lists batches visible under `scope`, ordered `(startDate desc nulls last, id asc)` with a
@@ -92,18 +98,18 @@ export async function findById(db: SchoolDb, id: string): Promise<Batch | undefi
   })
 }
 
-/** Batch detail plus its roster — one relational query, not a fan-out per member. */
+/** Batch detail plus its roster and recurring schedule — one relational query, not a fan-out. */
 export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<BatchDetail | undefined> {
   const row = await db.query.batch.findFirst({
     where: (t, { eq }) => eq(t.id, id),
-    with: { enrollments: { with: { profile: true } } },
+    with: { enrollments: { with: { profile: true } }, classSlots: true },
   })
 
   if (!row) {
     return undefined
   }
 
-  const { enrollments, ...batchRow } = row
+  const { enrollments, classSlots, ...batchRow } = row
   return {
     ...batchRow,
     members: enrollments.map(e => ({
@@ -114,7 +120,35 @@ export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<Bat
       role: e.role,
       joinedAt: e.joinedAt,
     })),
+    classSlots: classSlots.map(toClassSlot),
   }
+}
+
+/**
+ * Deletes a batch's entire current recurring schedule. Paired with {@link insertClassSlots} by
+ * the service inside one transaction — a full replace rather than a diff/upsert, matching the
+ * reference implementation and keeping "what does this batch meet on" a single source of truth
+ * instead of a client-computed diff that could drift.
+ */
+export async function deleteClassSlots(db: SchoolDb, batchId: string): Promise<void> {
+  await db.delete(batchClassSlot).where(eq(batchClassSlot.batchId, batchId))
+}
+
+export async function insertClassSlots(
+  db: SchoolDb,
+  batchId: string,
+  slots: SetClassSlotsData['slots'],
+): Promise<ClassSlot[]> {
+  if (slots.length === 0) {
+    return []
+  }
+
+  const rows = await db
+    .insert(batchClassSlot)
+    .values(slots.map(slot => ({ ...slot, batchId })))
+    .returning()
+
+  return rows.map(toClassSlot)
 }
 
 /**
@@ -134,11 +168,11 @@ export async function findAllMembershipsWithDetail(
         t.id,
         db.select({ batchId: enrollment.batchId }).from(enrollment).where(eq(enrollment.profileId, profileId)),
       ),
-    with: { enrollments: { with: { profile: true } } },
+    with: { enrollments: { with: { profile: true } }, classSlots: true },
   })
 
   return rows.map(row => {
-    const { enrollments, ...batchRow } = row
+    const { enrollments, classSlots, ...batchRow } = row
     const ownRole = enrollments.find(e => e.profileId === profileId)?.role
     // `ownRole` is always found: the outer `where` only selects batches with a real enrollment
     // row for `profileId`, so this branch is unreachable in practice — the fallback exists only
@@ -153,6 +187,7 @@ export async function findAllMembershipsWithDetail(
         role: e.role,
         joinedAt: e.joinedAt,
       })),
+      classSlots: classSlots.map(toClassSlot),
       role: ownRole ?? 'student',
     }
   })

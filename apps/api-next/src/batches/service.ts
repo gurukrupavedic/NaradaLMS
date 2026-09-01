@@ -4,7 +4,15 @@ import { conflict, internalError, notFound, unprocessable } from '../error'
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
-import type { Batch, BatchDetail, CreateBatchData, FindBatchesData, UpdateBatchData } from './schema'
+import type {
+  Batch,
+  BatchDetail,
+  ClassSlot,
+  CreateBatchData,
+  FindBatchesData,
+  SetClassSlotsData,
+  UpdateBatchData,
+} from './schema'
 
 /** Holds the tenant-scoped client so this service can pass it straight through to repository.ts. */
 type BatchServiceContext = { db: SchoolDbClient }
@@ -68,4 +76,20 @@ export async function updateBatch(
   }
 
   return row
+}
+
+export async function setClassSlots(
+  context: BatchServiceContext,
+  id: string,
+  data: SetClassSlotsData,
+): Promise<ClassSlot[]> {
+  const existing = await repository.findById(context.db, id)
+  if (!existing) {
+    throw notFound()
+  }
+
+  return context.db.transaction(async tx => {
+    await repository.deleteClassSlots(tx, id)
+    return repository.insertClassSlots(tx, id, data.slots)
+  })
 }

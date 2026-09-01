@@ -263,8 +263,8 @@ about what `apps/api/src` does, not as a requirement.
 | ---------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `GET /health`                                  | Present                       | Domain behavior matches; retain rate-limit bypass and verify server envelope exception.                            |
 | `GET /health/ready`                            | Present                       | Domain behavior matches; verify it always checks the public database and bypasses school resolution/rate limiting. |
-| `POST /auth/phone-number/send-otp`             | Present only through wildcard | Add parsed-body mounting plus both the general auth limiter and the phone-number keyed 3-per-10-minute limiter.    |
-| `ALL /auth/*splat`                             | Present                       | Preserve raw-body ordering, BetterAuth base path, and general 100-per-15-minute limiter.                           |
+| `POST /auth/phone-number/send-otp`             | Present (2026-09-01)          | Parsed-body pre-mount (`express.json()` before `authRateLimit`/`sendOtpRateLimit`) plus the phone-keyed 3-per-10-minute limiter (`utils/serverSecurity.ts::createSendOtpRateLimit`, keyed by `body.phoneNumber` falling back to normalized IP) both added, mirroring `apps/api/src/server.ts`. `@narada/otp` added as a direct dependency (was only a transitive peer of `@narada/auth`) and copied into the Dockerfile deps stage — addendum §0.8's gap. Unit-tested (boundary at 3/4th request, independent per-phone keys, IP fallback) without a full server. |
+| `ALL /auth/*splat`                             | Present                       | Raw-body ordering, BetterAuth base path, and general 100-per-15-minute limiter unchanged from before this pass.    |
 | `GET /schools`                                 | Missing                       | Add public-db service, super-admin policy, response projection, and route.                                         |
 | `PATCH /schools/:schoolId`                     | Missing                       | Add validation, super-admin policy, existence/conflict behavior, and response projection.                          |
 | `GET /profile`                                 | Present (2026-08-29)          | New singular `profile` domain (distinct from the plural `profiles` per-school-identity domain) — super-admin flag and organization memberships, via a new `authRoute` wrapper (session required, no school). Verified against real Postgres. |
@@ -279,10 +279,10 @@ about what `apps/api/src` does, not as a requirement.
 | `GET /tracks/:trackId`                         | Present (2026-08-29)          | Same content view; 404 for a nonexistent track. Verified against real Postgres.                                    |
 | `GET /chapters/:chapterId`                     | Present (2026-08-29)          | New `chapters` domain (schema shared with `tracks` — `chapters/schema.ts::Chapter`). A hidden draft 404s exactly like a nonexistent chapter, never 403 — a caller can't distinguish "hidden" from "doesn't exist." Verified against real Postgres. |
 | `GET /batches`                                 | Present / parity work         | Optional-profile admin flow (2026-08-28) and the full `(startDate desc nulls last, id asc)` compound cursor (§3.4/§9.1) implemented and verified against real Postgres (`batches.integration.test.ts`). Still missing: exact filter schema.                  |
-| `GET /batches/:batchId`                        | Present                       | Optional-profile admin flow (2026-08-28) and roster (2026-08-29, `findByIdWithMembers`) both delivered — "who's in this batch" is a real capability, not cosmetic response shape (§1.2). Class slots (recurring schedule) intentionally not added — no capability writes that data yet (`PUT /batches/:batchId/schedule` still missing), so there's nothing to read. |
+| `GET /batches/:batchId`                        | Present                       | Optional-profile admin flow (2026-08-28) and roster (2026-08-29, `findByIdWithMembers`) both delivered. As of 2026-09-01, `findByIdWithMembers` also eager-loads `classSlots` now that `PUT /batches/:batchId/schedule` gives that data a writer — "who's in this batch and when does it meet" is a real capability, not cosmetic response shape (§1.2). |
 | `POST /batches`                                | Present / parity work         | Active profile no longer required (2026-08-28, `optionalProfileRoute`). Still needs schema/envelope alignment.                                                       |
 | `PATCH /batches/:batchId`                      | Present / parity work         | Active profile no longer required (2026-08-28). Still needs: remove draft-only `trackId` update, align schema/envelope.                                       |
-| `PUT /batches/:batchId/schedule`               | Missing                       | Add atomic replace-set service, schema, admin ACL, route, and CORS support.                                        |
+| `PUT /batches/:batchId/schedule`               | Present (2026-09-01)          | Real gap closed. `batches/repository.ts::deleteClassSlots`/`insertClassSlots` (service opens the transaction, per the established pattern in `exams/service.ts` — repositories never open their own), reusing `access.requireCanUpdateBatch` (same school `batch:update` check as `PATCH /batches/:batchId`, no new ACL surface). `PUT` added to `CORS_METHODS`. Schema enforces max 7 slots / one-per-day; the DB's own `batchClassSlot_batchId_dayOfWeek_uidx` backs the same invariant independently (tested directly by bypassing the schema). Verified against real Postgres, including atomic-replace, empty-list-clears, per-batch isolation, and transaction-rollback-on-constraint-violation tests. |
 | `POST /batches/:batchId/members`               | Present (2026-08-29)          | New `enrollment` domain HTTP surface — `requireCanCreateEnrollment` (instructor or school admin only, verified against `packages/auth/src/permissions/batch.ts`), 404 on unknown target profile, 409 on duplicate enrollment. Verified against real Postgres. |
 | `DELETE /batches/:batchId/members/:profileId`  | Present (2026-08-29)          | `requireCanRemoveEnrollment`, 204/404 behavior. Verified against real Postgres.                                    |
 | `GET /batches/:batchId/evaluations`            | Present (2026-08-28)          | `evaluations` domain added — admin/instructor/TA batch-wide list with the full null-aware compound cursor (§10.2), ported directly from `apps/api/src`'s reference pagination logic, and mounted on `optionalProfileRoute` (§10.3: "resolve optional actor profile"). Verified against real Postgres (`evaluations.integration.test.ts`). |
@@ -1288,6 +1288,26 @@ owner/admin, super admin, caller without content read, unknown IDs, school isola
 ---
 
 ## 13. Server, auth, observability, and shutdown
+
+**Status (2026-09-01):** the runtime-hygiene gap this section describes is now closed —
+`server.ts`/`requestContext.ts`/`logger.ts`/`utils/serverSecurity.ts` implement 13.1–13.5 below.
+Specifically: glob-capable CORS origin matching (`utils/serverSecurity.ts::isTrustedOrigin`,
+ported from `apps/api/src/server.ts::isTrustedOrigin`, parameterized on the trusted-origin list
+rather than reading `@narada/env` directly so it stays unit-testable — see
+`utils/serverSecurity.test.ts`); a `WeakMap<Request, Logger>`-keyed request context
+(`requestContext.ts`), the same per-request-caching idiom `naradaRoute.ts`'s `schoolCache`/
+`session.ts`'s `sessionCache` already use, rather than porting `AsyncLocalStorage` as a second
+pattern — nothing in this draft needs ambient access outside of what already has `req` in scope;
+`x-request-id` echo, per-request child logger, and severity-by-status completion logging;
+the phone-keyed send-OTP limiter with its parsed-body pre-mount; `ok:false` error envelopes
+including a versioned JSON 404 and a translated 400 for malformed JSON bodies (DD-009); and
+SIGINT/SIGTERM/SIGUSR1/SIGUSR2 graceful shutdown with a "start shutdown only once" guard that the
+prior draft was missing entirely (only the exit path was guarded — two near-simultaneous signals
+would have raced `server.close()` and left two competing shutdown timers). `@narada/otp` was also
+added as a direct dependency and copied into the Dockerfile deps stage (addendum §0.8). Verified
+by `utils/serverSecurity.test.ts` (rate-limit boundary/CORS glob unit tests) and
+`server.integration.test.ts` (real Postgres, full middleware chain via supertest) — both passing,
+alongside the full unit (220) and integration (85) suites.
 
 ### 13.1 Middleware order
 

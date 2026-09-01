@@ -7,7 +7,8 @@ import * as examRepository from '../exams/repository'
 import { destroyTestWorld } from '../testing/cleanup'
 import { pgErrorCode } from '../testing/concurrency'
 import { createBatch, createChapter, createProfile, createTestSchool, createTrack, enroll, type TestWorld } from '../testing/fixtures'
-import { findAccessible, findByIdWithMembers } from './repository'
+import { deleteClassSlots, findAccessible, findByIdWithMembers, insertClassSlots } from './repository'
+import { setClassSlots } from './service'
 
 let world: TestWorld | undefined
 
@@ -235,5 +236,156 @@ describe('findByIdWithMembers (batch detail with roster)', () => {
     world = await createTestSchool()
 
     await expect(findByIdWithMembers(world.schoolDb, crypto.randomUUID())).resolves.toBeUndefined()
+  })
+
+  it('eager-loads the recurring class schedule alongside the roster', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    await insertClassSlots(world.schoolDb, batchRow.id, [
+      { dayOfWeek: 1, time: '09:00', durationMinutes: 60 },
+      { dayOfWeek: 3, time: '15:30', durationMinutes: 45 },
+    ])
+
+    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+
+    expect(detail?.classSlots).toHaveLength(2)
+    expect(detail?.classSlots).toContainEqual({ dayOfWeek: 1, time: '09:00:00', durationMinutes: 60 })
+    expect(detail?.classSlots).toContainEqual({ dayOfWeek: 3, time: '15:30:00', durationMinutes: 45 })
+  })
+})
+
+describe('setClassSlots (PUT /batches/:batchId/schedule — real gap: recurring class schedule)', () => {
+  it('throws 404 for a nonexistent batch, without writing anything', async () => {
+    world = await createTestSchool()
+
+    await expect(
+      setClassSlots({ db: world.schoolDb }, crypto.randomUUID(), {
+        slots: [{ dayOfWeek: 1, time: '09:00', durationMinutes: 60 }],
+      }),
+    ).rejects.toMatchObject({ statusCode: 404 })
+  })
+
+  it('sets a fresh schedule on a batch with none yet', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+
+    const result = await setClassSlots({ db: world.schoolDb }, batchRow.id, {
+      slots: [{ dayOfWeek: 2, time: '10:00', durationMinutes: 90 }],
+    })
+
+    expect(result).toEqual([{ dayOfWeek: 2, time: '10:00:00', durationMinutes: 90 }])
+  })
+
+  it('replaces the entire existing schedule rather than merging with it', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    await insertClassSlots(world.schoolDb, batchRow.id, [
+      { dayOfWeek: 1, time: '09:00', durationMinutes: 60 },
+      { dayOfWeek: 2, time: '09:00', durationMinutes: 60 },
+    ])
+
+    const result = await setClassSlots({ db: world.schoolDb }, batchRow.id, {
+      slots: [{ dayOfWeek: 5, time: '18:00', durationMinutes: 30 }],
+    })
+
+    expect(result).toEqual([{ dayOfWeek: 5, time: '18:00:00', durationMinutes: 30 }])
+    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    expect(detail?.classSlots).toEqual([{ dayOfWeek: 5, time: '18:00:00', durationMinutes: 30 }])
+  })
+
+  it('replacing with an empty slot list clears the schedule entirely', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    await insertClassSlots(world.schoolDb, batchRow.id, [
+      { dayOfWeek: 1, time: '09:00', durationMinutes: 60 },
+    ])
+
+    const result = await setClassSlots({ db: world.schoolDb }, batchRow.id, { slots: [] })
+
+    expect(result).toEqual([])
+    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    expect(detail?.classSlots).toEqual([])
+  })
+
+  it('setting up to the maximum of seven slots, one per day, all persist', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+
+    const slots = Array.from({ length: 7 }, (_, dayOfWeek) => ({
+      dayOfWeek,
+      time: '08:00',
+      durationMinutes: 60,
+    }))
+
+    const result = await setClassSlots({ db: world.schoolDb }, batchRow.id, { slots })
+
+    expect(result).toHaveLength(7)
+  })
+
+  it("replacing one batch's schedule does not touch another batch's schedule", async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchA = await createBatch(world, trackRow)
+    const batchB = await createBatch(world, trackRow)
+    await insertClassSlots(world.schoolDb, batchA.id, [
+      { dayOfWeek: 1, time: '09:00', durationMinutes: 60 },
+    ])
+    await insertClassSlots(world.schoolDb, batchB.id, [
+      { dayOfWeek: 2, time: '11:00', durationMinutes: 60 },
+    ])
+
+    await setClassSlots({ db: world.schoolDb }, batchA.id, { slots: [] })
+
+    const detailA = await findByIdWithMembers(world.schoolDb, batchA.id)
+    const detailB = await findByIdWithMembers(world.schoolDb, batchB.id)
+    expect(detailA?.classSlots).toEqual([])
+    expect(detailB?.classSlots).toEqual([{ dayOfWeek: 2, time: '11:00:00', durationMinutes: 60 }])
+  })
+
+  it(
+    'the database enforces one slot per day per batch independently of the schema-level check ' +
+      '(batchClassSlot_batchId_dayOfWeek_uidx) — raises 23505 for a direct duplicate-day insert',
+    async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const batchRow = await createBatch(world, trackRow)
+
+      await expect(
+        insertClassSlots(world.schoolDb, batchRow.id, [
+          { dayOfWeek: 1, time: '09:00', durationMinutes: 60 },
+          { dayOfWeek: 1, time: '15:00', durationMinutes: 30 },
+        ]),
+      ).rejects.toSatisfy((error: unknown) => pgErrorCode(error) === '23505')
+    },
+  )
+
+  it('a failed insert rolls back the preceding delete — the old schedule survives', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    await insertClassSlots(world.schoolDb, batchRow.id, [
+      { dayOfWeek: 1, time: '09:00', durationMinutes: 60 },
+    ])
+
+    // Bypasses the schema-level duplicate-day check to exercise the transaction's rollback path
+    // directly: the delete succeeds, then the insert fails on the DB unique constraint, and the
+    // whole transaction — including the delete — must roll back together.
+    await expect(
+      world.schoolDb.transaction(async tx => {
+        await deleteClassSlots(tx, batchRow.id)
+        await insertClassSlots(tx, batchRow.id, [
+          { dayOfWeek: 2, time: '09:00', durationMinutes: 60 },
+          { dayOfWeek: 2, time: '10:00', durationMinutes: 60 },
+        ])
+      }),
+    ).rejects.toSatisfy((error: unknown) => pgErrorCode(error) === '23505')
+
+    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    expect(detail?.classSlots).toEqual([{ dayOfWeek: 1, time: '09:00:00', durationMinutes: 60 }])
   })
 })

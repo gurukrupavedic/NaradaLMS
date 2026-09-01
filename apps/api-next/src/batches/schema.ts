@@ -34,9 +34,27 @@ export const BatchMemberSchema = z.object({
   joinedAt: isoInstant.nullable(),
 })
 
+export type ClassSlot = z.infer<typeof ClassSlotSchema>
+export const ClassSlotSchema = z.object({
+  dayOfWeek: z.number().int().min(0).max(6),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'time must be HH:MM'),
+  durationMinutes: z.number().int().positive(),
+})
+
+export type SetClassSlotsData = z.infer<typeof SetClassSlotsSchema>
+export const SetClassSlotsSchema = z.object({
+  slots: z
+    .array(ClassSlotSchema)
+    .max(7)
+    .refine(slots => new Set(slots.map(slot => slot.dayOfWeek)).size === slots.length, {
+      message: 'a batch can only have one class slot per day of week',
+    }),
+})
+
 export type BatchDetail = z.infer<typeof BatchDetailSchema>
 export const BatchDetailSchema = BatchSchema.extend({
   members: z.array(BatchMemberSchema),
+  classSlots: z.array(ClassSlotSchema),
 })
 
 // Backs the dashboard's "my batches" list: a BatchDetail plus the *caller's own* role in it,

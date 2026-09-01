@@ -65,6 +65,7 @@ describe('getDashboardData', () => {
         meetingUrl: null,
         role: 'student',
         members: [member('me', 'student')],
+        classSlots: [],
       },
     ])
 
@@ -100,6 +101,7 @@ describe('getDashboardData', () => {
         meetingUrl: null,
         role: 'instructor',
         members: [member('instructor-me', 'instructor'), member('student-1', 'student')],
+        classSlots: [],
       },
       {
         id: 'batch-B',
@@ -110,6 +112,7 @@ describe('getDashboardData', () => {
         meetingUrl: null,
         role: 'ta',
         members: [member('instructor-me', 'ta'), member('student-2', 'student')],
+        classSlots: [],
       },
     ])
 
@@ -163,6 +166,7 @@ describe('getDashboardData', () => {
         meetingUrl: null,
         role: 'instructor',
         members: [member('me', 'instructor'), member('student-1', 'student')],
+        classSlots: [],
       },
     ])
     vi.mocked(batchesRepository.findAllForProfiles).mockResolvedValue(
@@ -187,6 +191,7 @@ describe('getDashboardData', () => {
         meetingUrl: null,
         role: 'student' as const,
         members: [],
+        classSlots: [],
       },
     ]
     const tracks = [{ id: 'track-1', name: 'Track 1', order: 1, chapters: [] }]
