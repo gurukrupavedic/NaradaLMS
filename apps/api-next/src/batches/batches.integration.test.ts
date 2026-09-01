@@ -7,7 +7,13 @@ import * as examRepository from '../exams/repository'
 import { destroyTestWorld } from '../testing/cleanup'
 import { pgErrorCode } from '../testing/concurrency'
 import { createBatch, createChapter, createProfile, createTestSchool, createTrack, enroll, type TestWorld } from '../testing/fixtures'
-import { deleteClassSlots, findAccessible, findByIdWithMembers, insertClassSlots } from './repository'
+import {
+  deleteClassSlots,
+  findAccessible,
+  findAccessibleWithDetail,
+  findByIdWithMembers,
+  insertClassSlots,
+} from './repository'
 import { setClassSlots } from './service'
 
 let world: TestWorld | undefined
@@ -389,3 +395,116 @@ describe('setClassSlots (PUT /batches/:batchId/schedule — real gap: recurring 
     expect(detail?.classSlots).toEqual([{ dayOfWeek: 1, time: '09:00:00', durationMinutes: 60 }])
   })
 })
+
+describe(
+  'findAccessibleWithDetail (real gap: GET /profiles/:profileId/batches?withDetail=true, ' +
+    'found migrating apps/web — admin/page.tsx needs every school batch with roster in one query)',
+  () => {
+    it("the 'all' scope returns every batch with roster/classSlots, nulling role for a batch the target profile doesn't teach", async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const admin = await createProfile(world, { name: 'Admin' })
+      const taughtBatch = await createBatch(world, trackRow)
+      const untaughtBatch = await createBatch(world, trackRow)
+      const student = await createProfile(world, { name: 'A Student' })
+      await enroll(world, admin, taughtBatch, 'instructor')
+      await enroll(world, student, taughtBatch, 'student')
+      await enroll(world, student, untaughtBatch, 'student')
+      await insertClassSlots(world.schoolDb, untaughtBatch.id, [
+        { dayOfWeek: 1, time: '09:00', durationMinutes: 60 },
+      ])
+
+      const { items } = await findAccessibleWithDetail(
+        world.schoolDb,
+        { limit: 20, status: undefined, cursor: undefined },
+        { kind: 'all' },
+        admin.id,
+      )
+
+      const taught = items.find(i => i.id === taughtBatch.id)
+      const untaught = items.find(i => i.id === untaughtBatch.id)
+      expect(taught?.role).toBe('instructor')
+      expect(taught?.members).toHaveLength(2)
+      expect(untaught?.role).toBeNull()
+      expect(untaught?.members).toHaveLength(1)
+      expect(untaught?.classSlots).toEqual([{ dayOfWeek: 1, time: '09:00:00', durationMinutes: 60 }])
+    })
+
+    it("the 'enrolled' scope only returns the target's own batches, role always non-null", async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const student = await createProfile(world)
+      const enrolledBatch = await createBatch(world, trackRow)
+      await createBatch(world, trackRow) // not enrolled — must not appear
+      await enroll(world, student, enrolledBatch, 'student')
+
+      const { items } = await findAccessibleWithDetail(
+        world.schoolDb,
+        { limit: 20, status: undefined, cursor: undefined },
+        { kind: 'enrolled', profileId: student.id },
+        student.id,
+      )
+
+      expect(items.map(i => i.id)).toEqual([enrolledBatch.id])
+      expect(items[0]?.role).toBe('student')
+    })
+
+    it("'all' scope pagination (nulls-last compound cursor) matches the bare findAccessible ordering exactly", async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const admin = await createProfile(world)
+      const d1 = new Date('2024-01-01T00:00:00Z')
+      const d2 = new Date('2024-02-01T00:00:00Z')
+      const b1 = await createBatch(world, trackRow, { startDate: d1 })
+      const b2 = await createBatch(world, trackRow, { startDate: d2 })
+      const bNull = await createBatch(world, trackRow, { startDate: null })
+
+      const bareOrder = await findAccessible(
+        world.schoolDb,
+        { limit: 100, status: undefined, cursor: undefined },
+        { kind: 'all' },
+      )
+      const detailOrder = await findAccessibleWithDetail(
+        world.schoolDb,
+        { limit: 100, status: undefined, cursor: undefined },
+        { kind: 'all' },
+        admin.id,
+      )
+
+      expect(detailOrder.items.map(i => i.id)).toEqual(bareOrder.items.map(i => i.id))
+      expect(detailOrder.items.map(i => i.id)).toEqual([b2.id, b1.id, bNull.id])
+    })
+
+    it('a page boundary mid-detail-list still yields a usable nextCursor (multi-page, all scope)', async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const admin = await createProfile(world)
+      const d1 = new Date('2024-01-01T00:00:00Z')
+      const d2 = new Date('2024-02-01T00:00:00Z')
+      await createBatch(world, trackRow, { startDate: d1 })
+      const b2 = await createBatch(world, trackRow, { startDate: d2 })
+      await createBatch(world, trackRow, { startDate: new Date('2024-03-01T00:00:00Z') })
+
+      const page1 = await findAccessibleWithDetail(
+        world.schoolDb,
+        { limit: 2, status: undefined, cursor: undefined },
+        { kind: 'all' },
+        admin.id,
+      )
+      expect(page1.items).toHaveLength(2)
+      expect(page1.nextCursor).not.toBeNull()
+
+      // Following the pattern of the `findAccessible pagination` tests above: the cursor is
+      // constructed from the known second item's own sort key, rather than round-tripped through
+      // the opaque encoding — the encoding itself is `utils/cursor.ts`'s concern, already tested.
+      const page2 = await findAccessibleWithDetail(
+        world.schoolDb,
+        { limit: 2, status: undefined, cursor: { startDate: d2, id: b2.id } },
+        { kind: 'all' },
+        admin.id,
+      )
+      expect(page2.items).toHaveLength(1)
+      expect(page2.nextCursor).toBeNull()
+    })
+  },
+)

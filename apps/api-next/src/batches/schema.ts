@@ -57,13 +57,14 @@ export const BatchDetailSchema = BatchSchema.extend({
   classSlots: z.array(ClassSlotSchema),
 })
 
-// Backs the dashboard's "my batches" list: a BatchDetail plus the *caller's own* role in it,
-// distinct from any entry in `members` (which is every member's role). Always a real role, never
-// null — every consumer of this type only ever asks for a profile's own enrolled batches, where a
-// role is guaranteed to exist by definition.
+// A BatchDetail plus a specific profile's own role in it, distinct from any entry in `members`
+// (which is every member's role). Backs the dashboard's "my batches" list (always a real role,
+// since that list is always scoped to batches the profile is actually enrolled in) and
+// `GET /profiles/:profileId/batches?withDetail=true` (nullable: a school-wide admin/owner's "all
+// batches" view includes batches they don't personally teach).
 export type BatchWithRole = z.infer<typeof BatchWithRoleSchema>
 export const BatchWithRoleSchema = BatchDetailSchema.extend({
-  role: batchMemberRoleSchema,
+  role: batchMemberRoleSchema.nullable(),
 })
 
 export type FindBatchesData = z.infer<typeof FindBatchesSchema>

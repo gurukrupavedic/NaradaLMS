@@ -1,5 +1,6 @@
 import * as z from 'zod'
 
+import { FindBatchesSchema } from '../batches/schema'
 import { requireNonEmpty } from '../utils/validate'
 
 export type Profile = z.infer<typeof ProfileSchema>
@@ -36,4 +37,12 @@ export type SearchProfilesQuery = z.infer<typeof SearchProfilesQuerySchema>
 export const SearchProfilesQuerySchema = z.object({
   query: z.string().trim().min(1).optional(),
   excludeBatchId: z.uuid().optional(),
+})
+
+// `withDetail=true` eager-loads each batch's roster, schedule, and the target profile's own role
+// in the same query — for a caller (apps/web's admin overview) that needs every batch's detail
+// anyway, avoiding an N+1 fan-out of GET /batches/:id per item (see [[project_batch_n1_incident]]).
+export type ProfileBatchesQuery = z.infer<typeof ProfileBatchesQuerySchema>
+export const ProfileBatchesQuerySchema = FindBatchesSchema.safeExtend({
+  withDetail: z.coerce.boolean().optional().default(false),
 })

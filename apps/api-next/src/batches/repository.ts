@@ -92,6 +92,114 @@ export async function findAccessible(
   return paginateResponse(rows, limit, item => ({ startDate: item.startDate, id: item.id }))
 }
 
+/**
+ * Same filtering/ordering/cursor as {@link findAccessible}, but eager-loads each batch's roster,
+ * schedule, and `roleForProfileId`'s own role in one query — for `GET /profiles/:profileId/
+ * batches?withDetail=true` (real gap, found migrating apps/web: `admin/page.tsx` calls this for
+ * the admin's own profile to render every school batch with roster/schedule in one paginated
+ * query, avoiding a per-batch fetch — the exact fan-out shape [[project_batch_n1_incident]]
+ * already broke once). A direct port of `apps/api/src/services/batch.ts::findBatchesWithDetail`.
+ * `role` is null when `roleForProfileId` has no enrollment in that batch — real for the `all`
+ * scope (a school-wide admin/owner sees batches they don't personally teach); always non-null for
+ * the `enrolled` scope, since every returned batch is, by construction, one `roleForProfileId` is
+ * enrolled in.
+ */
+export async function findAccessibleWithDetail(
+  db: SchoolDb,
+  { status, limit, cursor }: FindBatchesData,
+  scope: BatchReadScope,
+  roleForProfileId: string,
+): Promise<{ items: BatchWithRole[]; nextCursor: string | null }> {
+  const baseConditions: SQL[] = []
+  if (status) {
+    baseConditions.push(eq(batch.status, status))
+  }
+
+  if (scope.kind === 'enrolled') {
+    baseConditions.push(
+      inArray(
+        batch.id,
+        db
+          .select({ batchId: enrollment.batchId })
+          .from(enrollment)
+          .where(eq(enrollment.profileId, scope.profileId)),
+      ),
+    )
+  }
+
+  function toBatchWithRole(row: {
+    enrollments: {
+      profileId: string
+      role: BatchWithRole['members'][number]['role']
+      joinedAt: Date | null
+      profile: { name: string; phone: string | null; city: string | null }
+    }[]
+    classSlots: (typeof batchClassSlot.$inferSelect)[]
+  } & Batch): BatchWithRole {
+    const { enrollments, classSlots, ...batchRow } = row
+    return {
+      ...batchRow,
+      members: enrollments.map(e => ({
+        profileId: e.profileId,
+        name: e.profile.name,
+        phone: e.profile.phone,
+        city: e.profile.city,
+        role: e.role,
+        joinedAt: e.joinedAt,
+      })),
+      classSlots: classSlots.map(toClassSlot),
+      role: enrollments.find(e => e.profileId === roleForProfileId)?.role ?? null,
+    }
+  }
+
+  if (cursor?.startDate === null) {
+    const rows = await db.query.batch.findMany({
+      where: and(...baseConditions, isNull(batch.startDate), gt(batch.id, cursor.id)),
+      orderBy: asc(batch.id),
+      limit: limit + 1,
+      with: { enrollments: { with: { profile: true } }, classSlots: true },
+    })
+
+    return paginateResponse(rows.map(toBatchWithRole), limit, item => ({
+      startDate: item.startDate,
+      id: item.id,
+    }))
+  }
+
+  const nonNullConditions = [...baseConditions, isNotNull(batch.startDate)]
+  if (cursor) {
+    nonNullConditions.push(
+      or(
+        lt(batch.startDate, cursor.startDate),
+        and(eq(batch.startDate, cursor.startDate), gt(batch.id, cursor.id)),
+      )!,
+    )
+  }
+
+  const rows = await db.query.batch.findMany({
+    where: and(...nonNullConditions),
+    orderBy: [sql`${batch.startDate} desc nulls last`, asc(batch.id)],
+    limit: limit + 1,
+    with: { enrollments: { with: { profile: true } }, classSlots: true },
+  })
+
+  if (rows.length <= limit) {
+    const nullRows = await db.query.batch.findMany({
+      where: and(...baseConditions, isNull(batch.startDate)),
+      orderBy: asc(batch.id),
+      limit: limit + 1 - rows.length,
+      with: { enrollments: { with: { profile: true } }, classSlots: true },
+    })
+
+    rows.push(...nullRows)
+  }
+
+  return paginateResponse(rows.map(toBatchWithRole), limit, item => ({
+    startDate: item.startDate,
+    id: item.id,
+  }))
+}
+
 export async function findById(db: SchoolDb, id: string): Promise<Batch | undefined> {
   return db.query.batch.findFirst({
     where: (t, { eq }) => eq(t.id, id),
@@ -173,10 +281,11 @@ export async function findAllMembershipsWithDetail(
 
   return rows.map(row => {
     const { enrollments, classSlots, ...batchRow } = row
+    // The outer `where` only selects batches with a real enrollment row for `profileId`, so
+    // `?? null` here is unreachable in practice — kept only because `BatchWithRole.role` is
+    // nullable in general (the `all`-scope case in `findAccessibleWithDetail` genuinely needs
+    // that), not because this function can ever actually produce it.
     const ownRole = enrollments.find(e => e.profileId === profileId)?.role
-    // `ownRole` is always found: the outer `where` only selects batches with a real enrollment
-    // row for `profileId`, so this branch is unreachable in practice — the fallback exists only
-    // to keep the return type honest rather than asserting past a case that can't happen.
     return {
       ...batchRow,
       members: enrollments.map(e => ({
@@ -188,7 +297,7 @@ export async function findAllMembershipsWithDetail(
         joinedAt: e.joinedAt,
       })),
       classSlots: classSlots.map(toClassSlot),
-      role: ownRole ?? 'student',
+      role: ownRole ?? null,
     }
   })
 }

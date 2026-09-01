@@ -7,6 +7,7 @@ import * as repository from './repository'
 import type {
   Batch,
   BatchDetail,
+  BatchWithRole,
   ClassSlot,
   CreateBatchData,
   FindBatchesData,
@@ -23,6 +24,15 @@ export async function findAllAccessible(
   scope: BatchReadScope,
 ): Promise<{ items: Batch[]; nextCursor: string | null }> {
   return repository.findAccessible(context.db, params, scope)
+}
+
+export async function findAllAccessibleWithDetail(
+  context: BatchServiceContext,
+  params: FindBatchesData,
+  scope: BatchReadScope,
+  roleForProfileId: string,
+): Promise<{ items: BatchWithRole[]; nextCursor: string | null }> {
+  return repository.findAccessibleWithDetail(context.db, params, scope, roleForProfileId)
 }
 
 export async function findById(context: BatchServiceContext, id: string): Promise<Batch> {

@@ -3,9 +3,13 @@ import * as z from 'zod'
 
 import { optionalProfileRoute, userRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { findAllAccessible } from '../batches/service'
-import { FindBatchesSchema } from '../batches/schema'
-import { CreateProfileSchema, SearchProfilesQuerySchema, UpdateProfileSchema } from './schema'
+import { findAllAccessible, findAllAccessibleWithDetail } from '../batches/service'
+import {
+  CreateProfileSchema,
+  ProfileBatchesQuerySchema,
+  SearchProfilesQuerySchema,
+  UpdateProfileSchema,
+} from './schema'
 import {
   createProfile,
   deactivateByAdmin,
@@ -38,17 +42,20 @@ router.get(
 )
 
 // "View a profile's batch history" — a real capability (see the philosophy discussion in
-// PARITY_PLAN.md §1.2), not just richer profile data. `withDetail`-style eager-loaded rosters per
-// batch (apps/api/src's addendum §0.3) are deliberately not added here: nothing in api-next
-// consumes that yet (it exists to avoid an N+1 from the dashboard, which isn't built), so there's
-// no capability it would deliver today. Add it when the dashboard actually needs it.
+// PARITY_PLAN.md §1.2), not just richer profile data. `withDetail=true` eager-loads each batch's
+// roster/schedule/the target's own role in the same query — added once a real consumer showed up
+// (apps/web's admin overview, scoped while migrating apps/web onto this contract): without it,
+// showing "every batch in the school with its roster" would cost one request per batch, the same
+// fan-out shape [[project_batch_n1_incident]] already broke once.
 router.get(
   '/:profileId/batches',
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
-    const query = await parse(FindBatchesSchema, req.query)
+    const query = await parse(ProfileBatchesQuerySchema, req.query)
     const scope = await access.getProfileBatchListScope(profileId)
-    const batches = await findAllAccessible({ db }, query, scope)
+    const batches = query.withDetail
+      ? await findAllAccessibleWithDetail({ db }, query, scope, profileId)
+      : await findAllAccessible({ db }, query, scope)
     res.status(200).json({ data: batches })
   }),
 )
