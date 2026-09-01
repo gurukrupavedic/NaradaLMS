@@ -2,7 +2,7 @@ import { auth } from '@narada/auth'
 import { fromNodeHeaders } from 'better-auth/node'
 import type { Request } from 'express'
 
-import { unauthorized } from './error'
+import { forbidden, unauthorized } from './error'
 
 export type AuthenticatedSession = typeof auth.$Infer.Session
 
@@ -48,6 +48,18 @@ export class User {
 
   get image(): string | null | undefined {
     return this._image
+  }
+}
+
+/**
+ * The one authorization check that has no school context to hang off `AccessPolicy` (which
+ * always requires a resolved school) — schools admin (`GET`/`PATCH /schools`) is deliberately
+ * mounted on `authRoute`, before any school is selected, so this is a standalone helper rather
+ * than a new `AccessPolicy` method.
+ */
+export function requireSuperAdmin(user: User): void {
+  if (!user.isSuperAdmin) {
+    throw forbidden()
   }
 }
 

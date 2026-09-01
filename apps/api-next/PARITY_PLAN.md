@@ -265,8 +265,8 @@ about what `apps/api/src` does, not as a requirement.
 | `GET /health/ready`                            | Present                       | Domain behavior matches; verify it always checks the public database and bypasses school resolution/rate limiting. |
 | `POST /auth/phone-number/send-otp`             | Present (2026-09-01)          | Parsed-body pre-mount (`express.json()` before `authRateLimit`/`sendOtpRateLimit`) plus the phone-keyed 3-per-10-minute limiter (`utils/serverSecurity.ts::createSendOtpRateLimit`, keyed by `body.phoneNumber` falling back to normalized IP) both added, mirroring `apps/api/src/server.ts`. `@narada/otp` added as a direct dependency (was only a transitive peer of `@narada/auth`) and copied into the Dockerfile deps stage — addendum §0.8's gap. Unit-tested (boundary at 3/4th request, independent per-phone keys, IP fallback) without a full server. |
 | `ALL /auth/*splat`                             | Present                       | Raw-body ordering, BetterAuth base path, and general 100-per-15-minute limiter unchanged from before this pass.    |
-| `GET /schools`                                 | Missing                       | Add public-db service, super-admin policy, response projection, and route.                                         |
-| `PATCH /schools/:schoolId`                     | Missing                       | Add validation, super-admin policy, existence/conflict behavior, and response projection.                          |
+| `GET /schools`                                 | Present (2026-09-01)          | Real gap closed. New `schools` domain, mounted on `authRoute` (session required, no school context — schools admin necessarily runs before a school is selected). `session.ts::requireSuperAdmin` added as a standalone check rather than an `AccessPolicy` method, since `AccessPolicy` always requires a resolved school and this domain has none. Response projects only `id/name/slug/createdAt` — never `logo`/`metadata`. Verified against real Postgres. |
+| `PATCH /schools/:schoolId`                     | Present (2026-09-01)          | Same `requireSuperAdmin` gate. Friendly slug-conflict precheck (409) plus the DB's own unique index as an independent fallback for a concurrent claim (tested directly by racing the precheck via `repository.update`). `schoolId` is a plain non-empty string path param, not a UUID (BetterAuth-generated org IDs aren't UUIDs). Verified against real Postgres. |
 | `GET /profile`                                 | Present (2026-08-29)          | New singular `profile` domain (distinct from the plural `profiles` per-school-identity domain) — super-admin flag and organization memberships, via a new `authRoute` wrapper (session required, no school). Verified against real Postgres. |
 | `GET /me/dashboard`                            | Present (2026-08-29)          | New `dashboard` domain — assembles memberships, tracks, own evaluations/exams, teaching summary, and taught-students' past batches in a small fixed number of queries (avoids the N+1 that caused [[project_batch_n1_incident]]). Deliberately scopes "my batches" to `{kind:'enrolled', profileId}` always, never admin-wide visibility — a dashboard shows a profile's own activity. `ExamWithDetail` (chapter/evaluation projection) built for this, in `exams/schema.ts` — see addendum §0.4, still open for the general `GET /exams` list. Verified against real Postgres, including a two-different-tracks bucketing test. |
 | `GET /profiles`                                | Present / parity work         | Add `ok: true`; verify school/session semantics and exact response fields.                                         |
@@ -479,7 +479,7 @@ Expected domains after parity:
 - `health`
 - `profile` (singular auth bootstrap)
 - `profiles`
-- `schools`
+- `schools` (present, 2026-09-01)
 - `tracks`
 - `chapters`
 - `batches`

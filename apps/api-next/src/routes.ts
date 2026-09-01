@@ -10,6 +10,7 @@ import examsRouter from './exams'
 import healthRouter from './health'
 import profileRouter from './profile'
 import profilesRouter from './profiles'
+import schoolsRouter from './schools'
 import tracksRouter from './tracks'
 
 const apiRateLimit = rateLimit({
@@ -25,6 +26,7 @@ export default function setupRoutes(router: Router) {
     .use(apiRateLimit)
     .use('/profile', profileRouter)
     .use('/me/dashboard', dashboardRouter)
+    .use('/schools', schoolsRouter)
     .use('/profiles', profilesRouter)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
