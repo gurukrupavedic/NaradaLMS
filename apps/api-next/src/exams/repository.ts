@@ -8,12 +8,18 @@ import type { CreateExamData, Exam, ExamWithDetail, FindExamsData, UpdateExamDat
 
 export type Evaluation = typeof evaluation.$inferSelect
 
-/** Lists exams visible under `scope`, ordered by `(scheduledAt, id)` with a matching compound cursor. */
+/**
+ * Lists exams visible under `scope`, ordered by `(scheduledAt, id)` with a matching compound
+ * cursor. Eager-loads chapter/evaluation detail (§0.4 of the resync addendum) — a bare `Exam` row
+ * has only `chapterId`/`evaluationId`, not enough to render on its own, and `apps/api/src`'s
+ * reference `findManyExams` does the same eager-load in this exact query rather than a follow-up
+ * fan-out.
+ */
 export async function findMany(
   db: SchoolDb,
   { status, cursor, limit }: FindExamsData,
   scope: ExamReadScope,
-): Promise<{ items: Exam[]; nextCursor: string | null }> {
+): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
   const conditions: SQL[] = []
   if (scope.kind === 'own') {
     conditions.push(eq(exam.studentId, scope.profileId))
@@ -44,14 +50,30 @@ export async function findMany(
     where: and(...conditions),
     orderBy: [asc(exam.scheduledAt), asc(exam.id)],
     limit: limit + 1,
+    with: {
+      chapter: { columns: { id: true, code: true, title: true, trackId: true } },
+      evaluation: { columns: { level: true, notes: true } },
+    },
   })
 
   return paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
 }
 
+/** Bare exam row — for internal service logic (authorization checks, transition guards) that only ever reads `Exam`'s own columns, never chapter/evaluation detail. */
 export async function findById(db: SchoolDb, id: string): Promise<Exam | undefined> {
   return db.query.exam.findFirst({
     where: (t, { eq }) => eq(t.id, id),
+  })
+}
+
+/** The `GET /:examId` read path — list-detail equivalence (§11.3/DD-004): same eager-load as {@link findMany}, not a separate, thinner shape. */
+export async function findByIdWithDetail(db: SchoolDb, id: string): Promise<ExamWithDetail | undefined> {
+  return db.query.exam.findFirst({
+    where: (t, { eq }) => eq(t.id, id),
+    with: {
+      chapter: { columns: { id: true, code: true, title: true, trackId: true } },
+      evaluation: { columns: { level: true, notes: true } },
+    },
   })
 }
 

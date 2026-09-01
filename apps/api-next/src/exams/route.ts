@@ -9,7 +9,7 @@ import {
   RecordExamResultSchema,
   UpdateExamSchema,
 } from './schema'
-import { createExam, findById, findExams, recordExamResult, updateExam } from './service'
+import { createExam, findById, findByIdWithDetail, findExams, recordExamResult, updateExam } from './service'
 
 const router = Router()
 
@@ -27,7 +27,7 @@ router.get(
   '/:examId',
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
-    const exam = await findById({ db }, examId)
+    const exam = await findByIdWithDetail({ db }, examId)
     await access.requireCanReadExam(exam)
     res.status(200).json({ data: exam })
   }),

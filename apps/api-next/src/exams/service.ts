@@ -8,6 +8,7 @@ import * as repository from './repository'
 import type {
   CreateExamData,
   Exam,
+  ExamWithDetail,
   FindExamsData,
   RecordExamResultData,
   UpdateExamData,
@@ -22,12 +23,25 @@ export async function findExams(
   context: ExamServiceContext,
   params: FindExamsData,
   scope: ExamReadScope,
-): Promise<{ items: Exam[]; nextCursor: string | null }> {
+): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
   return repository.findMany(context.db, params, scope)
 }
 
+/** Bare exam row — internal use only (authorization checks, transition guards); see `findByIdWithDetail` for the read path. */
 export async function findById(context: ExamServiceContext, id: string): Promise<Exam> {
   const row = await repository.findById(context.db, id)
+  if (!row) {
+    throw notFound()
+  }
+
+  return row
+}
+
+export async function findByIdWithDetail(
+  context: ExamServiceContext,
+  id: string,
+): Promise<ExamWithDetail> {
+  const row = await repository.findByIdWithDetail(context.db, id)
   if (!row) {
     throw notFound()
   }

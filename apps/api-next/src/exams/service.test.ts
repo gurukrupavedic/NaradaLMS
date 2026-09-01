@@ -4,7 +4,7 @@ import type { SchoolDbClient } from '@narada/db'
 
 import { DbConstraint } from '../utils/dbError'
 import type { AccessPolicy } from '../utils/accessPolicy'
-import { createExam, recordExamResult } from './service'
+import { createExam, findByIdWithDetail, recordExamResult } from './service'
 import * as repository from './repository'
 import * as enrollmentService from '../enrollment/service'
 
@@ -14,6 +14,7 @@ vi.mock('./repository', () => ({
   findChapterTrackId: vi.fn(),
   insert: vi.fn(),
   findById: vi.fn(),
+  findByIdWithDetail: vi.fn(),
   insertEvaluation: vi.fn(),
   complete: vi.fn(),
 }))
@@ -312,5 +313,40 @@ describe('recordExamResult', () => {
 
     expect(transactionMock).toHaveBeenCalled()
     expect(repository.findById).toHaveBeenNthCalledWith(2, {}, 'exam-1')
+  })
+})
+
+describe('findByIdWithDetail', () => {
+  const db = {} as SchoolDbClient
+  const context = { db }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('returns the exam with its chapter/evaluation projection', async () => {
+    const detail = {
+      id: 'exam-1',
+      chapterId: 'chapter-1',
+      studentId: 'student-1',
+      batchId: 'batch-1',
+      scheduledAt: new Date(),
+      status: 'scheduled' as const,
+      evaluationId: null,
+      performedAt: null,
+      chapter: { id: 'chapter-1', code: 'C1', title: 'Chapter 1', trackId: 'track-1' },
+      evaluation: null,
+    }
+    vi.mocked(repository.findByIdWithDetail).mockResolvedValue(detail)
+
+    await expect(findByIdWithDetail(context, 'exam-1')).resolves.toEqual(detail)
+  })
+
+  it('throws 404 for a nonexistent exam', async () => {
+    vi.mocked(repository.findByIdWithDetail).mockResolvedValue(undefined)
+
+    await expect(findByIdWithDetail(context, 'missing')).rejects.toMatchObject({
+      statusCode: 404,
+    })
   })
 })

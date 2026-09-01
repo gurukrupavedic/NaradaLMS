@@ -1,16 +1,23 @@
+import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
+
+import { exam } from '@narada/db'
 
 import { withTwoConnections, type TxConnection } from '../testing/concurrency'
 import { destroyTestWorld } from '../testing/cleanup'
 import {
+  createBatch,
   createChapter,
+  createEvaluation,
   createExam,
   createProfile,
   createTestSchool,
   createTrack,
+  enroll,
   type ExamRow,
   type TestWorld,
 } from '../testing/fixtures'
+import { findById, findByIdWithDetail, findMany } from './repository'
 
 let world: TestWorld | undefined
 
@@ -255,4 +262,123 @@ describe('exam result vs. cancellation race (matrix item 1, both orders) — H3 
       expect(finalExam?.status).toBe('completed')
     },
   )
+})
+
+describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendum §0.4)', () => {
+  it('findMany eager-loads chapter and evaluation detail, not just the bare exam row', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow, { title: 'Sandhi Rules', code: 'S1' })
+    const studentProfile = await createProfile(world)
+    const evaluatorProfile = await createProfile(world)
+    const examRow = await createExam(world, { student: studentProfile, chapter: chapterRow })
+
+    const { items } = await findMany(
+      world.schoolDb,
+      { limit: 20, status: undefined, cursor: undefined },
+      { kind: 'all' },
+    )
+
+    const found = items.find(item => item.id === examRow.id)
+    expect(found?.chapter).toEqual({
+      id: chapterRow.id,
+      code: 'S1',
+      title: 'Sandhi Rules',
+      trackId: trackRow.id,
+    })
+    expect(found?.evaluation).toBeNull()
+
+    // Record a result so the exam has a real evaluationId, then confirm the eager-loaded
+    // evaluation detail (level/notes) actually reflects it, not just a null placeholder.
+    const evaluationRow = await createEvaluation(world, {
+      student: studentProfile,
+      chapter: chapterRow,
+      evaluator: evaluatorProfile,
+      level: 'level2',
+      notes: 'good progress',
+    })
+    await world.schoolDb
+      .update(exam)
+      .set({ evaluationId: evaluationRow.id, status: 'completed', performedAt: new Date() })
+      .where(eq(exam.id, examRow.id))
+
+    const { items: itemsAfter } = await findMany(
+      world.schoolDb,
+      { limit: 20, status: undefined, cursor: undefined },
+      { kind: 'all' },
+    )
+    const foundAfter = itemsAfter.find(item => item.id === examRow.id)
+    expect(foundAfter?.evaluation).toEqual({ level: 'level2', notes: 'good progress' })
+  })
+
+  it("findMany's 'own' scope still returns the detail projection, not just visibility-filtered bare rows", async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow)
+    const me = await createProfile(world)
+    const someoneElse = await createProfile(world)
+    const myExam = await createExam(world, { student: me, chapter: chapterRow })
+    await createExam(world, { student: someoneElse, chapter: chapterRow })
+
+    const { items } = await findMany(
+      world.schoolDb,
+      { limit: 20, status: undefined, cursor: undefined },
+      { kind: 'own', profileId: me.id },
+    )
+
+    expect(items.map(i => i.id)).toEqual([myExam.id])
+    expect(items[0]?.chapter.id).toBe(chapterRow.id)
+  })
+
+  it("findMany's 'manageable' scope includes both the actor's own exams and their students', all with detail", async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow)
+    const instructorProfile = await createProfile(world)
+    const studentProfile = await createProfile(world)
+    const batchRow = await createBatch(world, trackRow)
+    await enroll(world, instructorProfile, batchRow, 'instructor')
+    await enroll(world, studentProfile, batchRow, 'student')
+    const studentExam = await createExam(world, { student: studentProfile, chapter: chapterRow })
+    // `createExam`'s fixture doesn't take a batchId (real exam creation resolves it via
+    // `resolveQualifyingBatch` in the service layer, not this raw-insert fixture) — set it
+    // directly so the 'manageable' scope's `inArray(exam.batchId, scope.batchIds)` has something
+    // to actually match.
+    await world.schoolDb.update(exam).set({ batchId: batchRow.id }).where(eq(exam.id, studentExam.id))
+
+    const { items } = await findMany(
+      world.schoolDb,
+      { limit: 20, status: undefined, cursor: undefined },
+      { kind: 'manageable', profileId: instructorProfile.id, batchIds: [batchRow.id] },
+    )
+
+    const found = items.find(i => i.id === studentExam.id)
+    expect(found?.chapter.id).toBe(chapterRow.id)
+  })
+
+  it('findByIdWithDetail returns the same chapter/evaluation projection as the list (list-detail equivalence, §11.3/DD-004)', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow, { title: 'Vibhakti', code: 'V1' })
+    const studentProfile = await createProfile(world)
+    const examRow = await createExam(world, { student: studentProfile, chapter: chapterRow })
+
+    const detail = await findByIdWithDetail(world.schoolDb, examRow.id)
+
+    expect(detail?.id).toBe(examRow.id)
+    expect(detail?.chapter).toEqual({
+      id: chapterRow.id,
+      code: 'V1',
+      title: 'Vibhakti',
+      trackId: trackRow.id,
+    })
+    expect(detail?.evaluation).toBeNull()
+  })
+
+  it('findByIdWithDetail returns undefined for a nonexistent exam, same as the bare findById', async () => {
+    world = await createTestSchool()
+
+    await expect(findByIdWithDetail(world.schoolDb, crypto.randomUUID())).resolves.toBeUndefined()
+    await expect(findById(world.schoolDb, crypto.randomUUID())).resolves.toBeUndefined()
+  })
 })
