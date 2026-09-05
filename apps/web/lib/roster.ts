@@ -35,7 +35,23 @@ export function toRosterStudent(member: ApiBatchMember): RosterStudent {
   }
 }
 
-// Evaluations are expected sorted DESC by evaluatedAt (matches the API's list order) — first
+// Newest first: evaluatedAt DESC with nulls last, then id DESC (ids are UUIDv7, so they order by
+// creation time and break ties between marks stamped in the same bulk import). This is the same
+// order the API's evaluation lists use; sorting again here is cheap and means a caller can never
+// end up with "first match = oldest mark", which is what made the dashboard disagree with history.
+export function sortEvaluationsLatestFirst(evaluations: ApiEvaluation[]): ApiEvaluation[] {
+  return [...evaluations].sort((a, b) => {
+    if (a.evaluatedAt !== b.evaluatedAt) {
+      if (a.evaluatedAt === null) return 1
+      if (b.evaluatedAt === null) return -1
+      const diff = new Date(b.evaluatedAt).getTime() - new Date(a.evaluatedAt).getTime()
+      if (diff !== 0) return diff
+    }
+    return b.id.localeCompare(a.id)
+  })
+}
+
+// Evaluations are expected sorted DESC by evaluatedAt (see sortEvaluationsLatestFirst) — first
 // match per (studentId, chapterId) is the latest.
 export function getLatestEvaluation(
   evaluations: ApiEvaluation[],

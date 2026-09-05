@@ -103,10 +103,20 @@ function TeachingRow({
           {pluralize(batch.studentCount, 'student')}
         </span>
 
-        <span className="w-16 shrink-0 text-right sm:w-20">
-          <span className="font-mono text-sm tabular-nums">{Math.round(batch.progress)}%</span>
-          <span className="ml-1 hidden text-xs text-muted-foreground tabular-nums sm:inline">
-            /{Math.round(batch.masteredProgress)}%
+        {/* Two different numbers, so each says what it is. This used to render "42% /0%" — the
+            second figure is the share of chapters at Level 4, which is ~0 for nearly every real
+            batch (253 of 10k marks), so an unlabelled "/0%" on every row read as a bug. Mirrors
+            the "N/M · K mastered" stack on the student's own track ladder. */}
+        <span
+          className="w-20 shrink-0 text-right sm:w-28"
+          title={`${Math.round(batch.progress)}% of chapters started · ${Math.round(batch.masteredProgress)}% at Level 4, averaged across students`}
+        >
+          <span className="block font-mono text-sm tabular-nums">
+            {Math.round(batch.progress)}%
+            <span className="ml-1 text-xs font-normal text-muted-foreground">started</span>
+          </span>
+          <span className="mt-0.5 hidden text-xs text-muted-foreground tabular-nums sm:block">
+            {Math.round(batch.masteredProgress)}% mastered
           </span>
         </span>
       </button>
