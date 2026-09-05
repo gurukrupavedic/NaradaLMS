@@ -2,6 +2,7 @@ import 'server-only'
 
 import { type BatchMembership } from '@/lib/api/batches'
 import { getDashboard } from '@/lib/api/dashboard'
+import { sortEvaluationsLatestFirst } from '@/lib/roster'
 import type { ApiBatch, ApiEvaluation, ApiExam, ApiTrack } from '@/lib/types'
 
 export type TeachingBatchData = {
@@ -35,10 +36,15 @@ export async function getDashboardData(): Promise<DashboardData> {
     firstName: dashboard.firstName,
     memberships,
     tracks: dashboard.tracks,
-    studentEvaluations: dashboard.studentEvaluations,
+    // Every reader below takes the first row per chapter as the latest mark, so the order is
+    // load-bearing — normalise it here rather than trusting whatever the API happened to emit.
+    studentEvaluations: sortEvaluationsLatestFirst(dashboard.studentEvaluations),
     upcomingExams: dashboard.upcomingExams,
     teachingByBatchId: new Map(
-      dashboard.teaching.map(({ batchId, evaluations }) => [batchId, { evaluations }]),
+      dashboard.teaching.map(({ batchId, evaluations }) => [
+        batchId,
+        { evaluations: sortEvaluationsLatestFirst(evaluations) },
+      ]),
     ),
     pastBatchesByStudentId: new Map(
       dashboard.pastBatchesByStudent.map(({ studentId, batches }) => [studentId, batches]),
