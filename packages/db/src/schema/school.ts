@@ -5,6 +5,7 @@ import {
   text,
   integer,
   real,
+  boolean,
   timestamp,
   time,
   uuid,
@@ -86,6 +87,11 @@ export const chapter = pgTable(
     status: chapterStatus('status').notNull().default('draft'),
     order: integer('order').notNull(),
     script: script('script'),
+    // Distinct from `status`: a `status` transition (draft ↔ published) stays visible to an
+    // admin in the catalog; `archived` hides the row from every view (see `chapters/service.ts`'s
+    // `updateChapter` doc comment) without deleting it, since real `evaluation`/`exam` rows can
+    // reference this chapter's id and a hard delete would orphan them.
+    archived: boolean('archived').notNull().default(false),
   },
   table => [
     index('chapter_trackId_idx').on(table.trackId),

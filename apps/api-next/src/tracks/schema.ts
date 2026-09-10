@@ -16,6 +16,12 @@ export const TrackWithChaptersSchema = TrackSchema.extend({
   chapters: z.array(ChapterSchema),
 })
 
+/** Full reorder of a track's active (non-archived) chapters — see `chapters/repository.ts::reorderChapters`'s own doc comment for how the new `order` values are assigned. */
+export type ReorderChaptersData = z.infer<typeof ReorderChaptersSchema>
+export const ReorderChaptersSchema = z.object({
+  chapterIds: z.array(z.uuid()).min(1),
+})
+
 // A track's certification result — decoupled from `chapter` (packages/db/src/schema/school.ts's
 // `trackCertification` table has its own doc comment on why). Same append-only-history shape as
 // `Evaluation`: multiple rows can exist for a student/track pair over time, latest wins; callers

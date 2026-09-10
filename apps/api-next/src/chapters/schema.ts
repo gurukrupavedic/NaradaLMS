@@ -120,6 +120,32 @@ export const SetAudioMappingsSchema = z.object({
   ),
 })
 
+// ── Chapter catalog management (title/order/status/delete) ─────────────────
+
+export type CreateChapterData = z.infer<typeof CreateChapterSchema>
+export const CreateChapterSchema = z.object({
+  trackId: z.uuid(),
+  code: z.string().min(1),
+  title: z.string().min(1),
+})
+
+/**
+ * `archived` is a real column, distinct from `status` — see `packages/db/src/schema/school.ts`'s
+ * `chapter.archived` doc comment for why a chapter can't just be hard-deleted. The admin's
+ * "Remove chapter" action sends `{ status: 'draft', archived: true }` through this same schema
+ * rather than a separate delete endpoint.
+ */
+export type UpdateChapterData = z.infer<typeof UpdateChapterSchema>
+export const UpdateChapterSchema = z
+  .object({
+    code: z.string().min(1).optional(),
+    title: z.string().min(1).optional(),
+    script: chapterScriptSchema.nullable().optional(),
+    status: chapterStatusSchema.optional(),
+    archived: z.boolean().optional(),
+  })
+  .refine(d => Object.keys(d).length > 0, { message: 'at least one field is required' })
+
 /**
  * Resizing a chapter's shared segment timeline — every script must be resegmented together (a
  * single script's save can't safely do this alone, see `upsertScript`'s own doc comment), so this

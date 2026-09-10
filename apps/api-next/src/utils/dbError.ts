@@ -32,6 +32,8 @@ export const DbConstraint = {
   evaluationStudentIdFk: 'evaluation_studentId_profile_id_fk',
   evaluationChapterIdFk: 'evaluation_chapterId_chapter_id_fk',
   evaluationEvaluatorIdFk: 'evaluation_evaluatorId_profile_id_fk',
+  chapterTrackIdFk: 'chapter_trackId_track_id_fk',
+  chapterTrackIdCodeUnique: 'chapter_trackId_code_uidx',
 } as const
 
 export type DbConstraint = (typeof DbConstraint)[keyof typeof DbConstraint]

@@ -6,18 +6,22 @@ import { parse } from '../utils/validate'
 import {
   createAudioAsset,
   createAudioUpload,
+  createChapter,
   deleteAudioAsset,
   findById,
   resegmentChapter,
   setAudioMappings,
+  updateChapter,
   upsertScript,
 } from './service'
 import {
   chapterScriptSchema,
   CreateAudioAssetSchema,
   CreateAudioUploadSchema,
+  CreateChapterSchema,
   ResegmentSchema,
   SetAudioMappingsSchema,
+  UpdateChapterSchema,
   UpsertScriptSchema,
 } from './schema'
 
@@ -32,6 +36,27 @@ router.get(
     const { chapterId } = await parse(chapterIdParams, req.params)
     const view = access.getContentReadView()
     const chapter = await findById({ db }, chapterId, view)
+    res.status(200).json({ data: chapter })
+  }),
+)
+
+router.post(
+  '/',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    access.requireCanUpdateContent()
+    const data = await parse(CreateChapterSchema, req.body)
+    const chapter = await createChapter({ db }, data)
+    res.status(201).json({ data: chapter })
+  }),
+)
+
+router.patch(
+  '/:chapterId',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { chapterId } = await parse(chapterIdParams, req.params)
+    access.requireCanUpdateContent()
+    const data = await parse(UpdateChapterSchema, req.body)
+    const chapter = await updateChapter({ db }, chapterId, data)
     res.status(200).json({ data: chapter })
   }),
 )

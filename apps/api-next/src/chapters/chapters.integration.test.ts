@@ -12,8 +12,9 @@ import {
   createTrack,
   type TestWorld,
 } from '../testing/fixtures'
+import { findAll as findAllTracks } from '../tracks/repository'
 import { findById } from './repository'
-import { findById as findChapterDetail } from './service'
+import { createChapter, findById as findChapterDetail, updateChapter } from './service'
 
 let world: TestWorld | undefined
 
@@ -122,5 +123,107 @@ describe('findById (service) — content', () => {
       { segmentId: segment1.id, audioStart: 0, audioEnd: 3 },
       { segmentId: segment2.id, audioStart: 3, audioEnd: 7 },
     ])
+  })
+})
+
+describe('createChapter (service)', () => {
+  it('creates a draft chapter one past the track\'s current max active order', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    await createChapterFixture(world, trackRow, { order: 0 })
+    await createChapterFixture(world, trackRow, { order: 1 })
+
+    const created = await createChapter({ db: world.schoolDb }, { trackId: trackRow.id, code: 'new-1', title: 'New Chapter' })
+
+    expect(created.status).toBe('draft')
+    expect(created.script).toBeNull()
+    expect(created.order).toBe(2)
+  })
+
+  it('rejects a duplicate code within the same track', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    await createChapterFixture(world, trackRow, { code: 'dup' })
+
+    await expect(
+      createChapter({ db: world.schoolDb }, { trackId: trackRow.id, code: 'dup', title: 'Another' }),
+    ).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('rejects an unknown trackId', async () => {
+    world = await createTestSchool()
+
+    await expect(
+      createChapter({ db: world.schoolDb }, { trackId: crypto.randomUUID(), code: 'c1', title: 'Orphan' }),
+    ).rejects.toMatchObject({ statusCode: 422 })
+  })
+})
+
+describe('updateChapter (service)', () => {
+  it('updates each field independently', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapterFixture(world, trackRow, { code: 'c1', title: 'Old Title', status: 'draft' })
+
+    const updated = await updateChapter({ db: world.schoolDb }, chapterRow.id, { title: 'New Title', status: 'published' })
+
+    expect(updated.title).toBe('New Title')
+    expect(updated.status).toBe('published')
+    expect(updated.code).toBe('c1')
+  })
+
+  it('rejects renaming a chapter\'s code to collide with a sibling', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    await createChapterFixture(world, trackRow, { code: 'taken' })
+    const chapterRow = await createChapterFixture(world, trackRow, { code: 'mine' })
+
+    await expect(
+      updateChapter({ db: world.schoolDb }, chapterRow.id, { code: 'taken' }),
+    ).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('404s a nonexistent chapter', async () => {
+    world = await createTestSchool()
+
+    await expect(
+      updateChapter({ db: world.schoolDb }, crypto.randomUUID(), { title: 'x' }),
+    ).rejects.toMatchObject({ statusCode: 404 })
+  })
+
+  it('archiving pushes order below the track\'s minimum and hides the chapter from every view', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const other = await createChapterFixture(world, trackRow, { order: 0, status: 'published' })
+    const toArchive = await createChapterFixture(world, trackRow, { order: 1, status: 'published' })
+
+    const archived = await updateChapter({ db: world.schoolDb }, toArchive.id, { status: 'draft', archived: true })
+
+    expect(archived.order).toBeLessThan(other.order)
+
+    const authoringTracks = await findAllTracks(world.schoolDb, { kind: 'authoring' })
+    const authoringTrack = authoringTracks.find(t => t.id === trackRow.id)
+    expect(authoringTrack?.chapters.map(c => c.id)).toEqual([other.id])
+
+    const learnerTracks = await findAllTracks(world.schoolDb, { kind: 'learnerPreview' })
+    const learnerTrack = learnerTracks.find(t => t.id === trackRow.id)
+    expect(learnerTrack?.chapters.map(c => c.id)).toEqual([other.id])
+  })
+
+  it('un-archiving appends the chapter back at the end of the active order', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const first = await createChapterFixture(world, trackRow, { order: 0 })
+    const archived = await updateChapter(
+      { db: world.schoolDb },
+      (await createChapterFixture(world, trackRow, { order: 1 })).id,
+      { archived: true },
+    )
+    const second = await createChapterFixture(world, trackRow, { order: 2 })
+
+    const restored = await updateChapter({ db: world.schoolDb }, archived.id, { archived: false })
+
+    expect(restored.order).toBeGreaterThan(second.order)
+    expect(restored.order).toBeGreaterThan(first.order)
   })
 })

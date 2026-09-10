@@ -9,7 +9,9 @@ import {
   createTrackCertification,
   type TestWorld,
 } from '../testing/fixtures'
+import { updateChapter } from '../chapters/service'
 import { findAll, findById, findCertificationsForStudent } from './repository'
+import { reorderChapters } from './service'
 
 let world: TestWorld | undefined
 
@@ -135,3 +137,73 @@ describe(
     })
   },
 )
+
+describe('reorderChapters (service)', () => {
+  it('persists a full permutation of the track\'s active chapters', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const c1 = await createChapter(world, trackRow, { order: 0 })
+    const c2 = await createChapter(world, trackRow, { order: 1 })
+    const c3 = await createChapter(world, trackRow, { order: 2 })
+
+    await reorderChapters({ db: world.schoolDb }, trackRow.id, [c3.id, c1.id, c2.id])
+
+    const track = await findById(world.schoolDb, trackRow.id, { kind: 'authoring' })
+    expect(track?.chapters.map(c => c.id)).toEqual([c3.id, c1.id, c2.id])
+  })
+
+  it('rejects a payload missing one of the track\'s active chapters, writing nothing', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const c1 = await createChapter(world, trackRow, { order: 0 })
+    await createChapter(world, trackRow, { order: 1 })
+
+    await expect(reorderChapters({ db: world.schoolDb }, trackRow.id, [c1.id])).rejects.toMatchObject({
+      statusCode: 422,
+    })
+
+    const track = await findById(world.schoolDb, trackRow.id, { kind: 'authoring' })
+    expect(track?.chapters.map(c => c.order)).toEqual([0, 1])
+  })
+
+  it('rejects a payload naming an archived chapter, writing nothing', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const c1 = await createChapter(world, trackRow, { order: 0 })
+    const c2 = await createChapter(world, trackRow, { order: 1 })
+    const archived = await updateChapter({ db: world.schoolDb }, c2.id, { archived: true })
+
+    await expect(
+      reorderChapters({ db: world.schoolDb }, trackRow.id, [c1.id, archived.id]),
+    ).rejects.toMatchObject({ statusCode: 422 })
+
+    const refetched = await findById(world.schoolDb, trackRow.id, { kind: 'authoring' })
+    expect(refetched?.chapters.map(c => c.id)).toEqual([c1.id])
+  })
+
+  it('leaves an archived chapter\'s order untouched by a reorder of the active set', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const c1 = await createChapter(world, trackRow, { order: 0 })
+    const c2 = await createChapter(world, trackRow, { order: 1 })
+    const toArchive = await createChapter(world, trackRow, { order: 2 })
+    const archived = await updateChapter({ db: world.schoolDb }, toArchive.id, { archived: true })
+
+    await reorderChapters({ db: world.schoolDb }, trackRow.id, [c2.id, c1.id])
+
+    const authoringTrack = await findById(world.schoolDb, trackRow.id, { kind: 'authoring' })
+    expect(authoringTrack?.chapters.map(c => c.id)).toEqual([c2.id, c1.id])
+
+    // The archived chapter's own order (a very negative sentinel — see
+    // `chapters/repository.ts::nextArchivedOrder`) wasn't part of the reorder and stays put.
+    expect(archived.order).toBeLessThan(0)
+  })
+
+  it('404s a nonexistent track', async () => {
+    world = await createTestSchool()
+
+    await expect(
+      reorderChapters({ db: world.schoolDb }, crypto.randomUUID(), [crypto.randomUUID()]),
+    ).rejects.toMatchObject({ statusCode: 404 })
+  })
+})

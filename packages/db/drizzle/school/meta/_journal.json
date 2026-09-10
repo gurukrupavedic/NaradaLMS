@@ -43,6 +43,13 @@
       "when": 1788890835359,
       "tag": "0005_curly_greymalkin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789000281678,
+      "tag": "0006_supreme_inhumans",
+      "breakpoints": true
     }
   ]
 }

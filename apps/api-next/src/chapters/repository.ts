@@ -1,5 +1,14 @@
-import { and, eq, inArray, ne } from 'drizzle-orm'
-import { audioAsset, audioMapping, chapterScript, chapterScriptSegment, segment, stagedUpload, type SchoolDb } from '@narada/db'
+import { and, eq, inArray, max, min, ne } from 'drizzle-orm'
+import {
+  audioAsset,
+  audioMapping,
+  chapter,
+  chapterScript,
+  chapterScriptSegment,
+  segment,
+  stagedUpload,
+  type SchoolDb,
+} from '@narada/db'
 
 import type { ContentReadView } from '../utils/accessPolicy'
 
@@ -208,4 +217,75 @@ export async function replaceAudioMappings(
     .insert(audioMapping)
     .values(pairs.map(p => ({ audioAssetId, segmentId: p.segmentId, audioStart: p.audioStart, audioEnd: p.audioEnd })))
     .returning()
+}
+
+// ── Chapter catalog management (title/order/status/archive) ────────────────
+
+/** One past the highest `order` among this track's active (non-archived) chapters — where a newly created or restored chapter goes. */
+export async function nextChapterOrder(db: SchoolDb, trackId: string): Promise<number> {
+  const rows = await db
+    .select({ max: max(chapter.order) })
+    .from(chapter)
+    .where(and(eq(chapter.trackId, trackId), eq(chapter.archived, false)))
+  return (rows[0]?.max ?? -1) + 1
+}
+
+/**
+ * One below the lowest `order` in the track, across every row (active or already archived) — so
+ * archiving permanently drops a chapter out of the active ordering range and can never collide
+ * with a future active chapter's `order`. See `chapters/service.ts::updateChapter`'s doc comment.
+ */
+export async function nextArchivedOrder(db: SchoolDb, trackId: string): Promise<number> {
+  const rows = await db.select({ min: min(chapter.order) }).from(chapter).where(eq(chapter.trackId, trackId))
+  return (rows[0]?.min ?? 0) - 1
+}
+
+export async function insertChapter(
+  db: SchoolDb,
+  data: { trackId: string; code: string; title: string; order: number },
+) {
+  const rows = await db
+    .insert(chapter)
+    .values({ ...data, status: 'draft', script: null, archived: false })
+    .returning()
+  return rows[0]
+}
+
+export async function updateChapterRow(
+  db: SchoolDb,
+  id: string,
+  data: Partial<{ code: string; title: string; script: 'te' | 'sa' | 'en' | null; status: 'draft' | 'published'; archived: boolean; order: number }>,
+) {
+  const rows = await db.update(chapter).set(data).where(eq(chapter.id, id)).returning()
+  return rows[0]
+}
+
+export async function findChapterRowById(db: SchoolDb, id: string) {
+  return db.query.chapter.findFirst({ where: (t, { eq }) => eq(t.id, id) })
+}
+
+export async function findActiveChapterIds(db: SchoolDb, trackId: string): Promise<string[]> {
+  const rows = await db
+    .select({ id: chapter.id })
+    .from(chapter)
+    .where(and(eq(chapter.trackId, trackId), eq(chapter.archived, false)))
+  return rows.map(r => r.id)
+}
+
+/**
+ * Reassigns every id in `orderedIds` to its index as the new `order`, in one transaction, via a
+ * temp-offset two-phase update — a single UPDATE across multiple rows isn't reliably safe against
+ * a plain (non-deferrable) unique index in Postgres (a mid-statement transient collision is a real
+ * gotcha, not hypothetical), and converting `chapter_trackId_order_uidx` to a deferrable
+ * constraint would drift from what Drizzle's schema builder models. `1_000_000 + index` is a temp
+ * range no realistic track's active chapters, and no archived chapter's negative `order`
+ * (`nextArchivedOrder` above), could ever reach.
+ */
+export async function reorderChapters(db: SchoolDb, orderedIds: string[]): Promise<void> {
+  for (const [index, id] of orderedIds.entries()) {
+    await db.update(chapter).set({ order: 1_000_000 + index }).where(eq(chapter.id, id))
+  }
+  for (const [index, id] of orderedIds.entries()) {
+    await db.update(chapter).set({ order: index }).where(eq(chapter.id, id))
+  }
 }
