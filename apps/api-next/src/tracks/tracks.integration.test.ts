@@ -1,8 +1,15 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { destroyTestWorld } from '../testing/cleanup'
-import { createChapter, createTestSchool, createTrack, type TestWorld } from '../testing/fixtures'
-import { findAll, findById } from './repository'
+import {
+  createChapter,
+  createProfile,
+  createTestSchool,
+  createTrack,
+  createTrackCertification,
+  type TestWorld,
+} from '../testing/fixtures'
+import { findAll, findById, findCertificationsForStudent } from './repository'
 
 let world: TestWorld | undefined
 
@@ -75,3 +82,56 @@ describe('findById', () => {
     ).resolves.toBeUndefined()
   })
 })
+
+describe(
+  'findCertificationsForStudent (real gap: certifications decoupled from chapter, ' +
+    'packages/db/src/schema/school.ts::trackCertification)',
+  () => {
+    it("returns every certification across every track for this student, not scoped to one track", async () => {
+      world = await createTestSchool()
+      const trackA = await createTrack(world)
+      const trackB = await createTrack(world)
+      const student = await createProfile(world, { name: 'Student' })
+      const evaluator = await createProfile(world, { name: 'Evaluator' })
+      const certA = await createTrackCertification(world, { track: trackA, student, evaluator, level: 'level4' })
+      const certB = await createTrackCertification(world, { track: trackB, student, evaluator, level: 'level1' })
+
+      const certifications = await findCertificationsForStudent(world.schoolDb, student.id)
+
+      expect(certifications.map(c => c.id).sort()).toEqual([certA.id, certB.id].sort())
+    })
+
+    it("never returns another student's certifications", async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const student = await createProfile(world)
+      const otherStudent = await createProfile(world)
+      const evaluator = await createProfile(world)
+      await createTrackCertification(world, { track: trackRow, student: otherStudent, evaluator })
+
+      const certifications = await findCertificationsForStudent(world.schoolDb, student.id)
+
+      expect(certifications).toEqual([])
+    })
+
+    it('returns an empty array, not an error, when the student has no certifications at all', async () => {
+      world = await createTestSchool()
+      const student = await createProfile(world)
+
+      await expect(findCertificationsForStudent(world.schoolDb, student.id)).resolves.toEqual([])
+    })
+
+    it('multiple certification rows for the same track/student are all returned — history, not a single current row', async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const student = await createProfile(world)
+      const evaluator = await createProfile(world)
+      await createTrackCertification(world, { track: trackRow, student, evaluator, level: 'practicing' })
+      await createTrackCertification(world, { track: trackRow, student, evaluator, level: 'level4' })
+
+      const certifications = await findCertificationsForStudent(world.schoolDb, student.id)
+
+      expect(certifications).toHaveLength(2)
+    })
+  },
+)

@@ -165,6 +165,33 @@ export const evaluation = pgTable(
   ],
 )
 
+// A track's certification result, per student — the outcome the whole track builds toward, not a
+// mark on any one taught chapter. Previously modeled (in the imported data) as a fake `chapter`
+// row ("TRACK N CERTIFICATION EXAM STATUS") with an ordinary `evaluation` against it; that made a
+// track's certification indistinguishable from its actual syllabus in every chapter list. This
+// table gives it a real, decoupled home instead — same append-only-history shape as `evaluation`
+// (multiple rows over time; latest wins), but keyed on the track rather than a chapter, since a
+// certification was never really about one specific chapter to begin with.
+export const trackCertification = pgTable(
+  'trackCertification',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    trackId: uuid('trackId')
+      .notNull()
+      .references(() => track.id, { onDelete: 'cascade' }),
+    studentId: uuid('studentId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'cascade' }),
+    level: proficiencyLevel('level').notNull(),
+    notes: text('notes'),
+    evaluatorId: uuid('evaluatorId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'restrict' }),
+    evaluatedAt: timestamp('evaluatedAt').defaultNow(),
+  },
+  table => [index('trackCertification_studentId_trackId_idx').on(table.studentId, table.trackId)],
+)
+
 export const exam = pgTable(
   'exam',
   {

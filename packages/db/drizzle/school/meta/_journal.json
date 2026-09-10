@@ -22,6 +22,13 @@
       "when": 1787953679039,
       "tag": "0002_jittery_tusk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788295201399,
+      "tag": "0003_wet_pretty_boy",
+      "breakpoints": true
     }
   ]
 }

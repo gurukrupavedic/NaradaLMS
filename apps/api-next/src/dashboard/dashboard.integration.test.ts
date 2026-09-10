@@ -9,6 +9,7 @@ import {
   createProfile,
   createTestSchool,
   createTrack,
+  createTrackCertification,
   enroll,
   type TestWorld,
 } from '../testing/fixtures'
@@ -49,6 +50,10 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     await createEvaluation(world, { student: me, chapter: chapterLearning, evaluator: myEvaluator })
     await createExam(world, { student: me, chapter: chapterLearning, status: 'scheduled' })
 
+    // My own certification for the learning track — decoupled from any chapter (the real gap:
+    // this used to be a fake chapter row with an evaluation against it).
+    await createTrackCertification(world, { track: trackLearning, student: me, evaluator: myEvaluator })
+
     // An evaluation I gave my taught student — should show up under `teaching`.
     await createEvaluation(world, {
       student: taughtStudent,
@@ -72,6 +77,9 @@ describe('getDashboardData (real Postgres, end to end)', () => {
 
     expect(data.studentEvaluations).toHaveLength(1)
     expect(data.studentEvaluations[0]?.chapterId).toBe(chapterLearning.id)
+
+    expect(data.certifications).toHaveLength(1)
+    expect(data.certifications[0]?.trackId).toBe(trackLearning.id)
 
     expect(data.upcomingExams).toHaveLength(1)
     expect(data.upcomingExams[0]?.chapter.id).toBe(chapterLearning.id)
@@ -99,6 +107,7 @@ describe('getDashboardData (real Postgres, end to end)', () => {
       memberships: [],
       tracks: [],
       studentEvaluations: [],
+      certifications: [],
       upcomingExams: [],
       teaching: [],
       pastBatchesByStudent: [],

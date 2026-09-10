@@ -14,6 +14,7 @@ import {
   publicDb,
   shutdownPools,
   track,
+  trackCertification,
   user as userTable,
 } from '@narada/db'
 // Reusing the live API's own validators rather than re-deriving parallel checks: a bulk import
@@ -70,6 +71,23 @@ type EvaluationRow = {
   level: ProficiencyLevel
   evaluatorId: string
 }
+type TrackCertificationRow = {
+  id: string
+  trackId: string
+  studentId: string
+  level: ProficiencyLevel
+  evaluatorId: string
+}
+
+const PROFICIENCY_LEVELS = new Set<ProficiencyLevel>([
+  'absent',
+  'notStarted',
+  'practicing',
+  'level1',
+  'level2',
+  'level3',
+  'level4',
+])
 
 function chunk<T>(rows: T[], size: number): T[][] {
   const out: T[][] = []
@@ -85,11 +103,23 @@ function readJson<T>(dataDir: string, fileName: string): T {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T
 }
 
+/** Like `readJson`, but tolerant of an older seed-data directory that predates this file. */
+function readJsonOptional<T>(dataDir: string, fileName: string, fallback: T): T {
+  const filePath = path.join(dataDir, fileName)
+  if (!fs.existsSync(filePath)) return fallback
+  return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T
+}
+
 // Matches the phoneNumber plugin's validator in packages/auth/src/index.ts — kept in sync
 // manually rather than imported, since that's server auth config and this is an offline CLI import.
 const E164_PATTERN = /^\+[1-9]\d{7,14}$/
 
-function validate(users: UserRow[], enrollments: EnrollmentRow[], evaluations: EvaluationRow[]): string[] {
+function validate(
+  users: UserRow[],
+  enrollments: EnrollmentRow[],
+  evaluations: EvaluationRow[],
+  trackCertifications: TrackCertificationRow[],
+): string[] {
   const errors: string[] = []
 
   for (const u of users) {
@@ -113,6 +143,16 @@ function validate(users: UserRow[], enrollments: EnrollmentRow[], evaluations: E
     })
     if (!result.success) {
       errors.push(`evaluation ${ev.id}: ${result.error.issues.map(i => i.message).join('; ')}`)
+    }
+  }
+
+  // No live endpoint creates a trackCertification yet (this is currently an import-only concept —
+  // see packages/db/src/schema/school.ts::trackCertification), so there's no service schema to
+  // reuse here the way evaluations/enrollments reuse the live API's own. A self-contained check
+  // instead.
+  for (const tc of trackCertifications) {
+    if (!PROFICIENCY_LEVELS.has(tc.level)) {
+      errors.push(`trackCertification ${tc.id}: level "${tc.level}" is not a valid proficiency level`)
     }
   }
 
@@ -142,14 +182,19 @@ const dataCmd = defineCommand({
       const profiles = readJson<ProfileRow[]>(dataDir, 'profiles.json')
       const enrollments = readJson<EnrollmentRow[]>(dataDir, 'enrollments.json')
       const evaluations = readJson<EvaluationRow[]>(dataDir, 'evaluations.json')
+      const trackCertifications = readJsonOptional<TrackCertificationRow[]>(
+        dataDir,
+        'track-certifications.json',
+        [],
+      )
 
       console.log(
         `Loaded ${users.length} users, ${profiles.length} profiles, ${tracks.length} tracks, ` +
           `${chapters.length} chapters, ${batches.length} batches, ${enrollments.length} enrollments, ` +
-          `${evaluations.length} evaluations from ${dataDir}`,
+          `${evaluations.length} evaluations, ${trackCertifications.length} track certifications from ${dataDir}`,
       )
 
-      const errors = validate(users, enrollments, evaluations)
+      const errors = validate(users, enrollments, evaluations, trackCertifications)
       if (errors.length > 0) {
         console.error(`❌ ${errors.length} row(s) failed validation against the live API's own schemas:`)
         for (const e of errors.slice(0, 20)) console.error(`  - ${e}`)
@@ -253,11 +298,15 @@ const dataCmd = defineCommand({
         for (const rows of chunk(evaluations, CHUNK_SIZE)) {
           await tx.insert(evaluation).values(rows).onConflictDoNothing({ target: evaluation.id })
         }
+        for (const rows of chunk(trackCertifications, CHUNK_SIZE)) {
+          await tx.insert(trackCertification).values(rows).onConflictDoNothing({ target: trackCertification.id })
+        }
       })
 
       console.log(
         `✅ Import committed: ${tracks.length} tracks, ${chapters.length} chapters, ${batches.length} batches, ` +
-          `${profiles.length} profiles, ${enrollments.length} enrollments, ${evaluations.length} evaluations.`,
+          `${profiles.length} profiles, ${enrollments.length} enrollments, ${evaluations.length} evaluations, ` +
+          `${trackCertifications.length} track certifications.`,
       )
     } finally {
       await shutdownPools()

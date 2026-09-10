@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm'
 
 import { user, session, account, organization, member, invitation } from './auth'
-import { track, chapter, batch, batchClassSlot, enrollment, evaluation, exam, profile } from './school'
+import { track, chapter, batch, batchClassSlot, enrollment, evaluation, exam, profile, trackCertification } from './school'
 
 // ─── Auth relations ───────────────────────────────────────────────────────────
 
@@ -44,6 +44,7 @@ export const profileRelations = relations(profile, ({ many }) => ({
 export const trackRelations = relations(track, ({ many }) => ({
   chapters: many(chapter),
   batches: many(batch),
+  certifications: many(trackCertification),
 }))
 
 export const chapterRelations = relations(chapter, ({ one, many }) => ({
@@ -68,6 +69,10 @@ export const enrollmentRelations = relations(enrollment, ({ one }) => ({
 
 export const evaluationRelations = relations(evaluation, ({ one }) => ({
   chapter: one(chapter, { fields: [evaluation.chapterId], references: [chapter.id] }),
+}))
+
+export const trackCertificationRelations = relations(trackCertification, ({ one }) => ({
+  track: one(track, { fields: [trackCertification.trackId], references: [track.id] }),
 }))
 
 export const examRelations = relations(exam, ({ one }) => ({

@@ -77,6 +77,11 @@ type EnrollmentRow = {
   leftDate: null
 }
 type EvaluationRow = { id: string; studentId: string; chapterId: string; level: string; evaluatorId: string }
+// A track's certification result — previously a fake `chapter` row (title matching
+// "TRACK N CERTIFICATION...") with an ordinary evaluation against it, which made a track's
+// certification indistinguishable from its real syllabus. Given its own row/table instead
+// (packages/db/src/schema/school.ts::trackCertification), keyed on the track, not a chapter.
+type TrackCertificationRow = { id: string; trackId: string; studentId: string; level: string; evaluatorId: string }
 
 // Registration-sheet columns with no home in the current schema — not written by import-school.ts
 // and never touches the DB. Kept identity-matched to a profile now (rather than left only in the
@@ -378,6 +383,11 @@ async function run() {
   let maxDataYear = 0
   const enrollmentsByKey = new Map<string, EnrollmentRow>()
   const evaluations: EvaluationRow[] = []
+  const trackCertifications: TrackCertificationRow[] = []
+  // Certification columns (e.g. "TRACK 8 CERTIFICATION EXAM STATUS") don't become chapters — this
+  // maps each such column name straight to the track it certifies, so the per-row evaluation loop
+  // below knows to route its values into `trackCertifications` instead of `evaluations`.
+  const certificationColumnTrackIds = new Map<string, string>()
   const registrationMetadata: RegistrationMetadataRow[] = []
 
   function buildRegistrationMetadata(profileId: string, row: Record<string, any>): RegistrationMetadataRow {
@@ -613,15 +623,28 @@ async function run() {
 
   if (assessRows.length > 0) {
     const allHeaders = Object.keys(assessRows[0])
-    const assessmentColumns = allHeaders.filter(col => !metadataColumns.has(col))
+    // SheetJS's `sheet_to_json` names a column with a blank header cell "__EMPTY", "__EMPTY_1", ...
+    // — 31 such columns trail Track 8's certification column in the real sheet, all blank for
+    // every single student (verified: zero non-empty cells across the whole assessment sheet).
+    // Real spreadsheet formatting artifacts, not unlabeled chapters — without this filter they
+    // became 31 fake published "chapters" with titles like "__EMPTY_12".
+    const isBlankHeaderColumn = (col: string) => /^__EMPTY(_\d+)?$/.test(col)
+    const assessmentColumns = allHeaders.filter(
+      col => !metadataColumns.has(col) && !isBlankHeaderColumn(col),
+    )
 
     let currentTrackNum = 1
     let orderInTrack = 1
 
     for (const colName of assessmentColumns) {
       const trackObj = tracksMap.get(currentTrackNum)!
+      const isCertificationColumn = /TRACK\s*\d+\s*CERTIFICATION/i.test(colName)
 
-      if (!chaptersMap.has(colName)) {
+      if (isCertificationColumn) {
+        // The certification result belongs to the track this column is closing out, not the one
+        // about to start — record it before `currentTrackNum` advances below.
+        certificationColumnTrackIds.set(colName, trackObj.id)
+      } else if (!chaptersMap.has(colName)) {
         chaptersMap.set(colName, {
           id: uuidv7(),
           trackId: trackObj.id,
@@ -633,7 +656,7 @@ async function run() {
         })
       }
 
-      if (/TRACK\s*\d+\s*CERTIFICATION/i.test(colName)) {
+      if (isCertificationColumn) {
         if (currentTrackNum < 8) {
           currentTrackNum++
           orderInTrack = 1
@@ -720,6 +743,19 @@ async function run() {
             id: uuidv7(),
             studentId: studentProfile.id,
             chapterId: chapterData.id,
+            level,
+            evaluatorId: evaluator.profile.id,
+          })
+        }
+      }
+
+      for (const [columnName, trackId] of certificationColumnTrackIds.entries()) {
+        const level = mapScoreToLevel(row[columnName])
+        if (level) {
+          trackCertifications.push({
+            id: uuidv7(),
+            trackId,
+            studentId: studentProfile.id,
             level,
             evaluatorId: evaluator.profile.id,
           })
@@ -812,6 +848,7 @@ async function run() {
   write('profiles.json', allProfiles)
   write('enrollments.json', enrollments)
   write('evaluations.json', evaluations)
+  write('track-certifications.json', trackCertifications)
   write('registration-metadata.json', registrationMetadata)
   write('_report.json', report)
 
@@ -819,6 +856,7 @@ async function run() {
 ✅ Done.
    users: ${allUsers.length}  profiles: ${allProfiles.length}  tracks: ${tracksMap.size}
    chapters: ${chaptersMap.size}  batches: ${batchesMap.size}  enrollments: ${enrollments.length}  evaluations: ${evaluations.length}
+   track certifications: ${trackCertifications.length}
    phone collisions (shared accounts): ${report.phoneCollisions.length}
    invalid E.164 phone numbers (no login capability yet): ${report.invalidE164Phones.length}
    ambiguous student-status values: ${report.ambiguousStudentStatus.length}

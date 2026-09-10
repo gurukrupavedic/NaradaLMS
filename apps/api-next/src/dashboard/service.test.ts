@@ -6,6 +6,7 @@ import { getDashboardData } from './service'
 import * as batchesRepository from '../batches/repository'
 import * as evaluationsRepository from '../evaluations/repository'
 import * as examsRepository from '../exams/repository'
+import * as tracksRepository from '../tracks/repository'
 import * as tracksService from '../tracks/service'
 
 vi.mock('../batches/repository', () => ({
@@ -18,6 +19,9 @@ vi.mock('../evaluations/repository', () => ({
 }))
 vi.mock('../exams/repository', () => ({
   findUpcomingForStudent: vi.fn(),
+}))
+vi.mock('../tracks/repository', () => ({
+  findCertificationsForStudent: vi.fn(),
 }))
 vi.mock('../tracks/service', () => ({
   findAll: vi.fn(),
@@ -37,6 +41,7 @@ beforeEach(() => {
   vi.mocked(examsRepository.findUpcomingForStudent).mockResolvedValue([])
   vi.mocked(evaluationsRepository.findForChaptersAndStudents).mockResolvedValue([])
   vi.mocked(batchesRepository.findAllForProfiles).mockResolvedValue(new Map())
+  vi.mocked(tracksRepository.findCertificationsForStudent).mockResolvedValue([])
 })
 
 describe('getDashboardData', () => {
@@ -180,7 +185,7 @@ describe('getDashboardData', () => {
     ])
   })
 
-  it('passes straight through: studentEvaluations, upcomingExams, tracks, memberships', async () => {
+  it('passes straight through: studentEvaluations, certifications, upcomingExams, tracks, memberships', async () => {
     const memberships = [
       {
         id: 'batch-A',
@@ -222,9 +227,22 @@ describe('getDashboardData', () => {
       },
     ]
 
+    const certifications = [
+      {
+        id: 'cert-1',
+        trackId: 'track-1',
+        studentId: 'me',
+        level: 'level4' as const,
+        notes: null,
+        evaluatorId: 'someone',
+        evaluatedAt: new Date(),
+      },
+    ]
+
     vi.mocked(batchesRepository.findAllMembershipsWithDetail).mockResolvedValue(memberships)
     vi.mocked(tracksService.findAll).mockResolvedValue(tracks)
     vi.mocked(evaluationsRepository.findAllForStudent).mockResolvedValue(studentEvaluations)
+    vi.mocked(tracksRepository.findCertificationsForStudent).mockResolvedValue(certifications)
     vi.mocked(examsRepository.findUpcomingForStudent).mockResolvedValue(upcomingExams)
 
     const data = await getDashboardData(context, 'me', 'Me')
@@ -232,6 +250,8 @@ describe('getDashboardData', () => {
     expect(data.memberships).toEqual(memberships)
     expect(data.tracks).toEqual(tracks)
     expect(data.studentEvaluations).toEqual(studentEvaluations)
+    expect(data.certifications).toEqual(certifications)
     expect(data.upcomingExams).toEqual(upcomingExams)
+    expect(tracksRepository.findCertificationsForStudent).toHaveBeenCalledWith(db, 'me')
   })
 })

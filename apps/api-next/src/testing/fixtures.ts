@@ -14,6 +14,7 @@ import {
   schoolSchemaName,
   session,
   track,
+  trackCertification,
   user,
   type SchoolDbClient,
 } from '@narada/db'
@@ -31,6 +32,7 @@ export type BatchClassSlotRow = typeof batchClassSlot.$inferSelect
 export type EnrollmentRow = typeof enrollment.$inferSelect
 export type EvaluationRow = typeof evaluation.$inferSelect
 export type ExamRow = typeof exam.$inferSelect
+export type TrackCertificationRow = typeof trackCertification.$inferSelect
 
 export type TestWorld = {
   orgId: string
@@ -330,6 +332,32 @@ export async function createEvaluation(
 
   const row = rows.at(0)
   if (!row) throw new Error('createEvaluation: insert returned no row')
+  return row
+}
+
+export async function createTrackCertification(
+  world: TestWorld,
+  o: {
+    track: TrackRow
+    student: ProfileRow
+    evaluator: ProfileRow
+    level?: TrackCertificationRow['level']
+    notes?: string | null
+  },
+): Promise<TrackCertificationRow> {
+  const rows = await world.schoolDb
+    .insert(trackCertification)
+    .values({
+      trackId: o.track.id,
+      studentId: o.student.id,
+      evaluatorId: o.evaluator.id,
+      level: o.level ?? 'level4',
+      notes: o.notes ?? null,
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createTrackCertification: insert returned no row')
   return row
 }
 
