@@ -9,6 +9,12 @@ vi.mock('./repository', () => ({
   findById: vi.fn(),
 }))
 
+// Avoids pulling in @narada/storage's real R2 client (and its env-var validation) for a unit test
+// that never needs an actual signed URL.
+vi.mock('../utils/contentStorage', () => ({
+  signedDownloadUrl: vi.fn(async (objectKey: string) => `https://signed.example/${objectKey}`),
+}))
+
 describe('findById', () => {
   const db = {} as SchoolDbClient
   const context = { db }
@@ -17,8 +23,8 @@ describe('findById', () => {
     vi.resetAllMocks()
   })
 
-  it('returns the chapter when found', async () => {
-    const chapter = {
+  it('returns the chapter, with its content, when found', async () => {
+    const row = {
       id: 'chapter-1',
       trackId: 'track-1',
       code: 'C1',
@@ -26,12 +32,23 @@ describe('findById', () => {
       status: 'published' as const,
       order: 1,
       script: null,
+      archived: false,
+      scripts: [],
+      audioAssets: [],
     }
-    vi.mocked(repository.findById).mockResolvedValue(chapter)
+    vi.mocked(repository.findById).mockResolvedValue(row)
 
-    await expect(findById(context, 'chapter-1', { kind: 'learnerPreview' })).resolves.toEqual(
-      chapter,
-    )
+    await expect(findById(context, 'chapter-1', { kind: 'learnerPreview' })).resolves.toEqual({
+      id: 'chapter-1',
+      trackId: 'track-1',
+      code: 'C1',
+      title: 'Chapter One',
+      status: 'published',
+      order: 1,
+      script: null,
+      scripts: [],
+      audio: [],
+    })
     expect(repository.findById).toHaveBeenCalledWith(db, 'chapter-1', { kind: 'learnerPreview' })
   })
 

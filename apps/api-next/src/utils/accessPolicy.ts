@@ -203,6 +203,15 @@ export class AccessPolicy {
     return this.isSchoolAdmin() ? { kind: 'authoring' } : { kind: 'learnerPreview' }
   }
 
+  // Writing content (scripts, segments, audio) is the same content:update permission
+  // `getContentReadView` already checks to decide authoring vs learnerPreview — school-membership
+  // only, no per-chapter or per-batch dimension.
+  public requireCanUpdateContent(): void {
+    if (!this.isSchoolAdmin()) {
+      throw forbidden()
+    }
+  }
+
   // -- Enrollment (batch roster) ----------------------------------------------
   // Only instructor (not ta, not student) holds enrollment:create/remove at the batch level —
   // verified against packages/auth/src/permissions/batch.ts. School admin bypasses both

@@ -553,3 +553,30 @@ describe('AccessPolicy#getContentReadView', () => {
     expect(access.getContentReadView()).toEqual({ kind: 'authoring' })
   })
 })
+
+describe('AccessPolicy#requireCanUpdateContent', () => {
+  it('a school admin may update content', async () => {
+    mockMembership('admin')
+    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+
+    expect(() => access.requireCanUpdateContent()).not.toThrow()
+  })
+
+  it('an ordinary member may not update content', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+
+    expect(() => access.requireCanUpdateContent()).toThrow()
+  })
+
+  it('a super admin may update content', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+    })
+
+    expect(() => access.requireCanUpdateContent()).not.toThrow()
+  })
+})

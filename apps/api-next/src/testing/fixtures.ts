@@ -1,7 +1,11 @@
 import {
+  audioAsset,
+  audioMapping,
   batch,
   batchClassSlot,
   chapter,
+  chapterScript,
+  chapterScriptSegment,
   enrollment,
   evaluation,
   exam,
@@ -12,7 +16,9 @@ import {
   provisionSchool,
   publicDb,
   schoolSchemaName,
+  segment,
   session,
+  stagedUpload,
   track,
   trackCertification,
   user,
@@ -27,6 +33,12 @@ export type SessionRow = typeof session.$inferSelect
 export type ProfileRow = typeof profile.$inferSelect
 export type TrackRow = typeof track.$inferSelect
 export type ChapterRow = typeof chapter.$inferSelect
+export type ChapterScriptRow = typeof chapterScript.$inferSelect
+export type SegmentRow = typeof segment.$inferSelect
+export type ChapterScriptSegmentRow = typeof chapterScriptSegment.$inferSelect
+export type AudioAssetRow = typeof audioAsset.$inferSelect
+export type AudioMappingRow = typeof audioMapping.$inferSelect
+export type StagedUploadRow = typeof stagedUpload.$inferSelect
 export type BatchRow = typeof batch.$inferSelect
 export type BatchClassSlotRow = typeof batchClassSlot.$inferSelect
 export type EnrollmentRow = typeof enrollment.$inferSelect
@@ -240,6 +252,173 @@ export async function createChapter(
 
   const row = rows.at(0)
   if (!row) throw new Error('createChapter: insert returned no row')
+  return row
+}
+
+let scriptOrderCounter = 0
+function nextScriptOrder(): number {
+  scriptOrderCounter += 1
+  return scriptOrderCounter
+}
+
+export async function createChapterScript(
+  world: TestWorld,
+  chapter_: ChapterRow,
+  overrides?: {
+    script?: ChapterScriptRow['script']
+    label?: string
+    shortLabel?: string
+    fontClass?: string
+    text?: string
+    order?: number
+  },
+): Promise<ChapterScriptRow> {
+  const rows = await world.schoolDb
+    .insert(chapterScript)
+    .values({
+      chapterId: chapter_.id,
+      script: overrides?.script ?? 'sa',
+      label: overrides?.label ?? 'Devanagari',
+      shortLabel: overrides?.shortLabel ?? 'SA',
+      fontClass: overrides?.fontClass ?? 'font-deva',
+      text: overrides?.text ?? `Text ${nextUnique()}`,
+      order: overrides?.order ?? nextScriptOrder(),
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createChapterScript: insert returned no row')
+  return row
+}
+
+let segmentOrderCounter = 0
+function nextSegmentOrder(): number {
+  segmentOrderCounter += 1
+  return segmentOrderCounter
+}
+
+export async function createSegment(
+  world: TestWorld,
+  chapter_: ChapterRow,
+  overrides?: { order?: number },
+): Promise<SegmentRow> {
+  const rows = await world.schoolDb
+    .insert(segment)
+    .values({
+      chapterId: chapter_.id,
+      order: overrides?.order ?? nextSegmentOrder(),
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createSegment: insert returned no row')
+  return row
+}
+
+/** One script's own offsets (`start`/`end`) into its own text, for a segment shared across scripts. */
+export async function createChapterScriptSegment(
+  world: TestWorld,
+  chapterScript_: ChapterScriptRow,
+  segment_: SegmentRow,
+  overrides: { start: number; end: number },
+): Promise<ChapterScriptSegmentRow> {
+  const rows = await world.schoolDb
+    .insert(chapterScriptSegment)
+    .values({
+      chapterScriptId: chapterScript_.id,
+      segmentId: segment_.id,
+      start: overrides.start,
+      end: overrides.end,
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createChapterScriptSegment: insert returned no row')
+  return row
+}
+
+let audioAssetOrderCounter = 0
+function nextAudioAssetOrder(): number {
+  audioAssetOrderCounter += 1
+  return audioAssetOrderCounter
+}
+
+export async function createAudioAsset(
+  world: TestWorld,
+  chapter_: ChapterRow,
+  overrides?: {
+    label?: string | null
+    reciter?: string
+    objectKey?: string
+    duration?: number
+    order?: number
+  },
+): Promise<AudioAssetRow> {
+  const rows = await world.schoolDb
+    .insert(audioAsset)
+    .values({
+      chapterId: chapter_.id,
+      label: overrides?.label ?? null,
+      reciter: overrides?.reciter ?? 'Test Reciter',
+      objectKey: overrides?.objectKey ?? `schools/test/chapters/${chapter_.id}/audio/${nextUnique()}.mp3`,
+      duration: overrides?.duration ?? 60,
+      order: overrides?.order ?? nextAudioAssetOrder(),
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createAudioAsset: insert returned no row')
+  return row
+}
+
+export async function createAudioMapping(
+  world: TestWorld,
+  segment_: SegmentRow,
+  audioAsset_: AudioAssetRow,
+  overrides: { audioStart: number; audioEnd: number },
+): Promise<AudioMappingRow> {
+  const rows = await world.schoolDb
+    .insert(audioMapping)
+    .values({
+      segmentId: segment_.id,
+      audioAssetId: audioAsset_.id,
+      audioStart: overrides.audioStart,
+      audioEnd: overrides.audioEnd,
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createAudioMapping: insert returned no row')
+  return row
+}
+
+export async function createStagedUpload(
+  world: TestWorld,
+  chapter_: ChapterRow,
+  overrides?: {
+    purpose?: StagedUploadRow['purpose']
+    status?: StagedUploadRow['status']
+    objectKey?: string
+    contentType?: string
+    createdByUserId?: string
+    expiresAt?: Date
+  },
+): Promise<StagedUploadRow> {
+  const rows = await world.schoolDb
+    .insert(stagedUpload)
+    .values({
+      chapterId: chapter_.id,
+      purpose: overrides?.purpose ?? 'audio',
+      status: overrides?.status ?? 'pending',
+      objectKey: overrides?.objectKey ?? `schools/test/chapters/${chapter_.id}/audio/${nextUnique()}.mp3`,
+      contentType: overrides?.contentType ?? 'audio/mpeg',
+      createdByUserId: overrides?.createdByUserId ?? newUserId(),
+      expiresAt: overrides?.expiresAt ?? new Date(Date.now() + 60 * 60 * 1000),
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createStagedUpload: insert returned no row')
   return row
 }
 

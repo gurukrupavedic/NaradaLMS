@@ -1,7 +1,22 @@
 import { relations } from 'drizzle-orm'
 
 import { user, session, account, organization, member, invitation } from './auth'
-import { track, chapter, batch, batchClassSlot, enrollment, evaluation, exam, profile, trackCertification } from './school'
+import {
+  track,
+  chapter,
+  chapterScript,
+  segment,
+  chapterScriptSegment,
+  audioAsset,
+  audioMapping,
+  batch,
+  batchClassSlot,
+  enrollment,
+  evaluation,
+  exam,
+  profile,
+  trackCertification,
+} from './school'
 
 // ─── Auth relations ───────────────────────────────────────────────────────────
 
@@ -50,6 +65,38 @@ export const trackRelations = relations(track, ({ many }) => ({
 export const chapterRelations = relations(chapter, ({ one, many }) => ({
   track: one(track, { fields: [chapter.trackId], references: [track.id] }),
   evaluations: many(evaluation),
+  scripts: many(chapterScript),
+  segments: many(segment),
+  audioAssets: many(audioAsset),
+}))
+
+export const chapterScriptRelations = relations(chapterScript, ({ one, many }) => ({
+  chapter: one(chapter, { fields: [chapterScript.chapterId], references: [chapter.id] }),
+  scriptSegments: many(chapterScriptSegment),
+}))
+
+export const segmentRelations = relations(segment, ({ one, many }) => ({
+  chapter: one(chapter, { fields: [segment.chapterId], references: [chapter.id] }),
+  scriptSegments: many(chapterScriptSegment),
+  audioMappings: many(audioMapping),
+}))
+
+export const chapterScriptSegmentRelations = relations(chapterScriptSegment, ({ one }) => ({
+  chapterScript: one(chapterScript, {
+    fields: [chapterScriptSegment.chapterScriptId],
+    references: [chapterScript.id],
+  }),
+  segment: one(segment, { fields: [chapterScriptSegment.segmentId], references: [segment.id] }),
+}))
+
+export const audioAssetRelations = relations(audioAsset, ({ one, many }) => ({
+  chapter: one(chapter, { fields: [audioAsset.chapterId], references: [chapter.id] }),
+  audioMappings: many(audioMapping),
+}))
+
+export const audioMappingRelations = relations(audioMapping, ({ one }) => ({
+  segment: one(segment, { fields: [audioMapping.segmentId], references: [segment.id] }),
+  audioAsset: one(audioAsset, { fields: [audioMapping.audioAssetId], references: [audioAsset.id] }),
 }))
 
 export const batchRelations = relations(batch, ({ one, many }) => ({
