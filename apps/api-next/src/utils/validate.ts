@@ -25,7 +25,17 @@ export function requireNonEmpty<T extends z.ZodObject>(schema: T) {
 export async function parse<T extends z.ZodType>(schema: T, data: unknown): Promise<z.output<T>> {
   const result = await schema.safeParseAsync(data)
   if (!result.success) {
-    throw validationError(undefined, result.error.issues)
+    // Leaving `message` undefined falls back to `AppError`'s own default, the bare error code
+    // ("VALIDATION_FAILED") — the real reason was always sitting in `details` but never reached
+    // the caller. The first issue is usually the whole story; `path` is empty for a schema-level
+    // refine (e.g. `requireNonEmpty`), so it's only prefixed when there's actually a field to name.
+    const [firstIssue] = result.error.issues
+    const message = firstIssue
+      ? firstIssue.path.length > 0
+        ? `${firstIssue.path.join('.')}: ${firstIssue.message}`
+        : firstIssue.message
+      : 'validation failed'
+    throw validationError(message, result.error.issues)
   }
 
   return result.data
