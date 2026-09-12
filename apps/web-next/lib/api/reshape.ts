@@ -2,7 +2,7 @@
  * Real-data → presentation-shape transforms for the fetchers in `resources.ts`.
  *
  * This is the reshaping apps/web's own `lib/dashboard-view.ts` already solves for the live app —
- * adapted here to `.draft-frontend`'s presentation types (`LadderTrack`/`TeachingBatch`/
+ * adapted here to `web-next`'s presentation types (`LadderTrack`/`TeachingBatch`/
  * `RosterStudent`, from `components/track-ladder.tsx` / `lib/mock-dashboard.ts`), which differ
  * from apps/web's own (e.g. this workspace's dashboard renders a full roster mark-book inline,
  * where apps/web's dashboard only shows a summary card). Concepts and formulas are ported
@@ -215,7 +215,7 @@ export function buildCatalogTrack(track: ApiTrack, batchCodes: string[]): Catalo
 /**
  * A batch's roster as a mark-book: each student's level per chapter in the batch's track, and
  * which chapter they were most recently evaluated on (`current`; null means never evaluated —
- * `.draft-frontend`'s "unevaluated" signal, see `components/mark-book.tsx`).
+ * `web-next`'s "unevaluated" signal, see `components/mark-book.tsx`).
  */
 export function buildRoster(
   membership: ApiBatchWithRole,

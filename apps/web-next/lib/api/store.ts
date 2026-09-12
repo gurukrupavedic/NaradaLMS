@@ -22,7 +22,7 @@ import type { CatalogTrack } from '@/lib/mock-catalog'
  * That is exactly the failure an optimistic UI is supposed to surface, and it
  * only shows up if writes and reads go through the same place. So they do —
  * seeded from a real `GET /v1/tracks` snapshot the first time either is called,
- * rather than the static fixture this module used before `.draft-frontend` had
+ * rather than the static fixture this module used before `web-next` had
  * real auth to fetch with.
  *
  * The seed is a fresh array from `buildCatalogTrack`, not a reference into

@@ -1,7 +1,7 @@
 /**
  * The subset of apps/api-next's real response shapes this workspace's real fetchers need.
  * Mirrors apps/web/lib/types.ts (the live app's own copy of the same contract) rather than
- * importing it — .draft-frontend is a standalone package with its own dependency graph.
+ * importing it — web-next is a standalone package with its own dependency graph.
  */
 
 // GET /v1/profiles — every profile the signed-in account can act as (see app/login/page.tsx's own

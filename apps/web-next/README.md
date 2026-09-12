@@ -1,4 +1,4 @@
-# Narada draft frontend
+# Narada web-next
 
 An isolated Next.js workspace for rethinking Narada's web application from first principles.
 
