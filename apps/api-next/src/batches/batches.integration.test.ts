@@ -7,6 +7,7 @@ import * as examRepository from '../exams/repository'
 import { destroyTestWorld } from '../testing/cleanup'
 import { pgErrorCode } from '../testing/concurrency'
 import { createBatch, createChapter, createProfile, createTestSchool, createTrack, enroll, type TestWorld } from '../testing/fixtures'
+import { parse } from '../utils/validate'
 import {
   deleteClassSlots,
   findAccessible,
@@ -14,7 +15,8 @@ import {
   findByIdWithMembers,
   insertClassSlots,
 } from './repository'
-import { setClassSlots } from './service'
+import { UpdateBatchSchema } from './schema'
+import { setClassSlots, updateBatch } from './service'
 
 let world: TestWorld | undefined
 
@@ -508,3 +510,20 @@ describe(
     })
   },
 )
+
+describe('updateBatch (real gap: PATCH /batches/:batchId must not accept trackId, §9.4)', () => {
+  it("a trackId in the request body never reaches the DB — the batch's real track is unchanged", async () => {
+    world = await createTestSchool()
+    const originalTrack = await createTrack(world)
+    const otherTrack = await createTrack(world)
+    const batchRow = await createBatch(world, originalTrack)
+
+    // Mirrors exactly what the route does: parse the request body through the real schema, then
+    // hand the (already-stripped) result to the service — not a hand-constructed service call.
+    const data = await parse(UpdateBatchSchema, { trackId: otherTrack.id, code: 'renamed' })
+    const updated = await updateBatch({ db: world.schoolDb }, batchRow.id, data)
+
+    expect(updated.code).toBe('renamed')
+    expect(updated.trackId).toBe(originalTrack.id)
+  })
+})

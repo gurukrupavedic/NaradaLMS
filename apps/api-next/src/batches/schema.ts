@@ -88,10 +88,11 @@ export const CreateBatchSchema = BatchSchema.pick({
   meetingUrl: true,
 })
 
+// No `trackId` — a batch's track is set once at creation; the real API never allowed moving it
+// after the fact, and nothing downstream (schedule, enrollment, evaluations) expects it to move.
 export type UpdateBatchData = z.infer<typeof UpdateBatchSchema>
 export const UpdateBatchSchema = requireNonEmpty(
   BatchSchema.pick({
-    trackId: true,
     code: true,
     status: true,
     startDate: true,

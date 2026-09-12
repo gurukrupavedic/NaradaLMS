@@ -75,6 +75,18 @@ describe('UpdateBatchSchema', () => {
     const result = UpdateBatchSchema.safeParse({ meetingUrl: 'https://host/x' })
     expect(result.success).toBe(true)
   })
+
+  // A batch's track is set once at creation — the real API never allowed moving it (§9.4).
+  // Zod's default is to strip unrecognized keys, not reject them, so a `trackId` in the body
+  // parses fine but never reaches the service/DB — this documents that stripping, not a 400.
+  it('strips a trackId in the body rather than accepting or rejecting it', () => {
+    const result = UpdateBatchSchema.safeParse({ trackId, code: 'B1' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).not.toHaveProperty('trackId')
+      expect(result.data).toEqual({ code: 'B1' })
+    }
+  })
 })
 
 describe('SetClassSlotsSchema', () => {
