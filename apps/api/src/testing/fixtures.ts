@@ -15,6 +15,7 @@ import {
   profile,
   provisionSchool,
   publicDb,
+  registration,
   schoolSchemaName,
   segment,
   session,
@@ -45,6 +46,7 @@ export type EnrollmentRow = typeof enrollment.$inferSelect
 export type EvaluationRow = typeof evaluation.$inferSelect
 export type ExamRow = typeof exam.$inferSelect
 export type TrackCertificationRow = typeof trackCertification.$inferSelect
+export type RegistrationRow = typeof registration.$inferSelect
 
 export type TestWorld = {
   orgId: string
@@ -561,6 +563,42 @@ export async function createExam(
 
   const row = rows.at(0)
   if (!row) throw new Error('createExam: insert returned no row')
+  return row
+}
+
+let registrationPhoneCounter = 0
+function nextRegistrationPhone(): string {
+  registrationPhoneCounter += 1
+  return `+1555${String(registrationPhoneCounter).padStart(7, '0')}`
+}
+
+export async function createRegistration(
+  world: TestWorld,
+  overrides?: {
+    status?: RegistrationRow['status']
+    firstName?: string
+    lastName?: string
+    phone?: string
+    email?: string | null
+    reviewedAt?: Date | null
+    reviewedBy?: string | null
+  },
+): Promise<RegistrationRow> {
+  const rows = await world.schoolDb
+    .insert(registration)
+    .values({
+      status: overrides?.status ?? 'pending',
+      firstName: overrides?.firstName ?? 'Test',
+      lastName: overrides?.lastName ?? `Student ${nextUnique()}`,
+      phone: overrides?.phone ?? nextRegistrationPhone(),
+      email: overrides?.email ?? null,
+      reviewedAt: overrides?.reviewedAt ?? null,
+      reviewedBy: overrides?.reviewedBy ?? null,
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createRegistration: insert returned no row')
   return row
 }
 

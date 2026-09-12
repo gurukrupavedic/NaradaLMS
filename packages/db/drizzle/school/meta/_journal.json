@@ -50,6 +50,13 @@
       "when": 1789000281678,
       "tag": "0006_supreme_inhumans",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789243776697,
+      "tag": "0007_nebulous_ironclad",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,62 @@
+import { Router } from 'express'
+import * as z from 'zod'
+
+import { optionalProfileRoute, schoolRoute } from '../naradaRoute'
+import { parse } from '../utils/validate'
+import { CreateRegistrationSchema, FindRegistrationsSchema } from './schema'
+import { approve, findAll, findById, reject, submit } from './service'
+
+const router = Router()
+
+// Public: a prospective student has no account and no school session at this point — only a
+// valid school (X-School-Slug) is required, same as any other schoolRoute endpoint.
+router.post(
+  '/',
+  schoolRoute(async ({ req, res, db }) => {
+    const data = await parse(CreateRegistrationSchema, req.body)
+    const created = await submit({ db }, data)
+    res.status(201).json({ data: created })
+  }),
+)
+
+router.get(
+  '/',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    access.requireCanReviewRegistrations()
+    const query = await parse(FindRegistrationsSchema, req.query)
+    const result = await findAll({ db }, query)
+    res.status(200).json({ data: result.items, nextCursor: result.nextCursor })
+  }),
+)
+
+router.get(
+  '/:registrationId',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    access.requireCanReviewRegistrations()
+    const { registrationId } = await parse(z.object({ registrationId: z.uuid() }), req.params)
+    const row = await findById({ db }, registrationId)
+    res.status(200).json({ data: row })
+  }),
+)
+
+router.post(
+  '/:registrationId/approve',
+  optionalProfileRoute(async ({ req, res, db, access, profile }) => {
+    access.requireCanReviewRegistrations()
+    const { registrationId } = await parse(z.object({ registrationId: z.uuid() }), req.params)
+    const row = await approve({ db }, registrationId, profile?.id ?? null)
+    res.status(200).json({ data: row })
+  }),
+)
+
+router.post(
+  '/:registrationId/reject',
+  optionalProfileRoute(async ({ req, res, db, access, profile }) => {
+    access.requireCanReviewRegistrations()
+    const { registrationId } = await parse(z.object({ registrationId: z.uuid() }), req.params)
+    const row = await reject({ db }, registrationId, profile?.id ?? null)
+    res.status(200).json({ data: row })
+  }),
+)
+
+export default router

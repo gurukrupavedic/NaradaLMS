@@ -64,6 +64,7 @@ export const examStatus = pgEnum('examStatus', [
   'completed',
   'cancelled',
 ])
+export const registrationStatus = pgEnum('registrationStatus', ['pending', 'approved', 'rejected'])
 
 export const track = pgTable(
   'track',
@@ -348,5 +349,46 @@ export const exam = pgTable(
     index('exam_chapterId_idx').on(table.chapterId),
     index('exam_studentId_idx').on(table.studentId),
     index('exam_batchId_studentId_idx').on(table.batchId, table.studentId),
+  ],
+)
+
+// A prospective student's self-submitted application — not yet a `user`/`profile`. Deliberately
+// holds its own identity fields (name/phone/email/etc.) rather than referencing `profile`: most
+// registrants don't have an account yet, and approving a registration is a separate, manual admin
+// step (matching a school's real review process), not an automatic account/profile creation.
+export const registration = pgTable(
+  'registration',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    status: registrationStatus('status').notNull().default('pending'),
+
+    firstName: text('firstName').notNull(),
+    lastName: text('lastName').notNull(),
+    yearOfBirth: integer('yearOfBirth'),
+    phone: text('phone').notNull(),
+    email: text('email'),
+    city: text('city'),
+    countryTimeZone: text('countryTimeZone'),
+
+    learningGoal: text('learningGoal'),
+    currentProficiency: proficiencyLevel('currentProficiency'),
+    spokenLanguages: text('spokenLanguages').array().notNull().default([]),
+    readLanguages: text('readLanguages').array().notNull().default([]),
+
+    parentNames: text('parentNames').array().notNull().default([]),
+    dressCodeAgreed: boolean('dressCodeAgreed').notNull().default(false),
+    noMeatAgreed: boolean('noMeatAgreed').notNull().default(false),
+    noAlcoholAgreed: boolean('noAlcoholAgreed').notNull().default(false),
+    noSmokingAgreed: boolean('noSmokingAgreed').notNull().default(false),
+    comments: text('comments'),
+
+    reviewedAt: timestamp('reviewedAt'),
+    reviewedBy: uuid('reviewedBy').references(() => profile.id),
+
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [
+    index('registration_status_createdAt_idx').on(table.status, table.createdAt),
+    index('registration_phone_idx').on(table.phone),
   ],
 )

@@ -6,6 +6,10 @@ import { validationError } from '../error'
  * offset-free timestamps, numbers, and non-instant strings; not accepted by `z.coerce.date()`. */
 export const isoInstant = z.iso.datetime({ offset: true }).transform(value => new Date(value))
 
+/** E.164 phone number — matches the `phoneNumberValidator` on the OTP-auth `phoneNumber` plugin
+ * config (packages/auth/src/index.ts) exactly, so nothing accepted here fails validation at sign-in. */
+export const e164Phone = z.string().regex(/^\+[1-9]\d{7,14}$/, 'phone must be in E.164 format')
+
 /** HTTPS-only URL with no embedded credentials (HARDENING_PLAN.md H6/DD-013). */
 export const httpsUrl = z.url({ protocol: /^https$/ }).refine(value => {
   try {

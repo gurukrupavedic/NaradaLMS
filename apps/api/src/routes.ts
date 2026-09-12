@@ -10,6 +10,7 @@ import examsRouter from './exams'
 import healthRouter from './health'
 import profileRouter from './profile'
 import profilesRouter from './profiles'
+import registrationsRouter from './registrations'
 import schoolsRouter from './schools'
 import tracksRouter from './tracks'
 
@@ -28,6 +29,7 @@ export default function setupRoutes(router: Router) {
     .use('/me/dashboard', dashboardRouter)
     .use('/schools', schoolsRouter)
     .use('/profiles', profilesRouter)
+    .use('/registrations', registrationsRouter)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
     .use('/batches', batchesRouter)
