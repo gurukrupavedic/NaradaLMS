@@ -19,7 +19,7 @@ import { publicDb, deviceLinkCode } from '@narada/db'
  *                        request can set a cookie in the new device's own jar.
  *
  * Everything here reads/writes `deviceLinkCode` directly through `publicDb` (plain Drizzle, the
- * same style `stagedUpload`'s repository uses in apps/api-next) rather than going through
+ * same style `stagedUpload`'s repository uses in apps/api) rather than going through
  * BetterAuth's generic `ctx.context.adapter` model layer — this app doesn't abstract its database
  * away anywhere else, and a table only this plugin ever touches doesn't need to start.
  * `ctx.context.internalAdapter`/`setSessionCookie`/`sensitiveSessionMiddleware` are the only
@@ -42,7 +42,7 @@ const CODE_CREATE_ATTEMPTS = 5 // retries on the astronomically unlikely unique-
 
 const EXPIRY_MS = 10 * 60 * 1000
 // Failed `approve` attempts against one code — belt-and-suspenders alongside the endpoint's own
-// per-IP rate limit (apps/api-next/src/utils/serverSecurity.ts), not the primary defense: at
+// per-IP rate limit (apps/api/src/utils/serverSecurity.ts), not the primary defense: at
 // 32^9 combinations the code itself is already far past brute-forceable.
 const MAX_ATTEMPTS = 20
 
@@ -219,7 +219,7 @@ export const deviceLink = () => ({
 /**
  * A code nobody ever finished with — never approved, or approved but the new device never came
  * back to poll — sits in `pending`/`approved` forever with nothing else to revisit it (the same
- * gap `stagedUpload`'s own sweep exists for in apps/api-next). Lives in the shared public schema,
+ * gap `stagedUpload`'s own sweep exists for in apps/api). Lives in the shared public schema,
  * not per-school, so — unlike `sweepExpiredStagedUploads` — this is one query, no per-organization
  * loop. Returns the number of rows expired.
  */

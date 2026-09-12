@@ -37,7 +37,7 @@ export const auth = betterAuth({
     // sensitive-settings flow here for that freshness check to protect, so it's off rather than
     // silently breaking the device list for anyone who signed in more than a day ago.
     freshAge: 0,
-    // Every request through apps/api-next validates its session against this cache before ever
+    // Every request through apps/api validates its session against this cache before ever
     // touching the database (session.ts), so its length is also how long a session revoked from
     // Settings' linked-devices list keeps working elsewhere — accepted as a deliberate trade-off
     // in favor of keeping the cache's benefit for ordinary traffic, rather than shortening the

@@ -33,18 +33,20 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  narada-api-next:
-    profiles: ["rewrite"]
-    container_name: narada-api-next
+  # The pre-rewrite API, kept buildable as a fallback while apps/api (above) is still unreviewed —
+  # opt-in only, the same way apps/api itself used to be the opt-in one before the rename.
+  narada-api-legacy:
+    profiles: ["legacy"]
+    container_name: narada-api-legacy
     build:
       context: .
-      dockerfile: apps/api-next/Dockerfile
+      dockerfile: apps/api-legacy/Dockerfile
     env_file:
       - path: .env
         required: false
     environment:
       PORT: 3000
-      API_BASE_URL: ${API_NEXT_BASE_URL:-http://localhost:3001/v1}
+      API_BASE_URL: ${API_LEGACY_BASE_URL:-http://localhost:3001/v1}
     ports:
       - "3001:3000"
     depends_on:

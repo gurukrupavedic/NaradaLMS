@@ -1,99 +1,111 @@
 export type ProficiencyLevel =
   | 'notStarted'
-  | 'practicing'
+  | 'absent'
   | 'level1'
   | 'level2'
   | 'level3'
   | 'level4'
-  | 'absent'
 
-export const PROFICIENCY_LEVELS: ProficiencyLevel[] = [
+export const PROFICIENCY_ORDER: ProficiencyLevel[] = [
   'notStarted',
   'absent',
-  'practicing',
   'level1',
   'level2',
   'level3',
   'level4',
 ]
 
-const PROFICIENCY_CONFIG: Record<
-  ProficiencyLevel,
-  { label: string; shortLabel: string; bg: string; text: string }
-> = {
-  notStarted: {
-    label: 'Not Started',
-    shortLabel: '—',
-    bg: 'bg-muted',
-    text: 'text-muted-foreground',
-  },
-  practicing: {
-    label: 'Practicing',
-    shortLabel: 'P',
-    bg: 'bg-amber-500 dark:bg-amber-600',
-    text: 'text-white',
-  },
-  level1: {
-    label: 'Level 1',
-    shortLabel: 'L1',
-    bg: 'bg-emerald-600 dark:bg-emerald-700',
-    text: 'text-white',
-  },
-  level2: {
-    label: 'Level 2',
-    shortLabel: 'L2',
-    bg: 'bg-teal-700 dark:bg-teal-800',
-    text: 'text-white',
-  },
-  level3: {
-    label: 'Level 3',
-    shortLabel: 'L3',
-    bg: 'bg-violet-600 dark:bg-violet-700',
-    text: 'text-white',
-  },
-  level4: {
-    label: 'Level 4',
-    shortLabel: 'L4',
-    bg: 'bg-purple-600 dark:bg-purple-800',
-    text: 'text-white',
-  },
-  absent: {
-    label: 'Absent',
-    shortLabel: 'A',
-    bg: 'bg-neutral-200 dark:bg-neutral-700',
-    text: 'text-neutral-600 dark:text-neutral-300',
-  },
+// The levels that actually sit on the scale, in order. `notStarted` and
+// `absent` are states, not rungs — they are rendered as an empty rung and a
+// hatched one respectively, and never occupy a position on the ramp.
+export const GRADED_LEVELS: ProficiencyLevel[] = ['level1', 'level2', 'level3', 'level4']
+
+// L1 marks "done with classroom instruction, not yet examined by a TA" — a
+// real, common resting state (there's a whole population of students sitting
+// there), not a synonym for "started." L2/L3 are intermediate exam results;
+// L4 is the only one that also certifies the track (see `isCertified`).
+export const PROFICIENCY_LABEL: Record<ProficiencyLevel, string> = {
+  notStarted: 'Not Started',
+  absent: 'Absent',
+  level1: 'L1',
+  level2: 'L2',
+  level3: 'L3',
+  level4: 'L4',
 }
 
-export function getProficiencyConfig(level: ProficiencyLevel) {
-  return PROFICIENCY_CONFIG[level]
+export const PROFICIENCY_SHORT: Record<ProficiencyLevel, string> = {
+  notStarted: '—',
+  absent: 'A',
+  level1: 'L1',
+  level2: 'L2',
+  level3: 'L3',
+  level4: 'L4',
 }
 
-export function isStartedProficiency(level: ProficiencyLevel): boolean {
+// The register's own colour sense, not a fresh pick — see globals.css's header
+// note on why this replaced the single deepening indigo ramp, and why it's
+// still two disciplined families (green, purple) rather than the five stray
+// hues that came before *that*. Colour doesn't track depth alone: level 2
+// (light green) and level 3 (full green) are looked up independently even
+// though level 1 and level 4 each stand alone in their own hue.
+export const LEVEL_INK: Record<ProficiencyLevel, string> = {
+  notStarted: 'bg-mark-not-started',
+  absent: 'bg-mark-absent',
+  level1: 'bg-mark-level1',
+  level2: 'bg-mark-level2',
+  level3: 'bg-mark-level3',
+  level4: 'bg-mark-level4',
+}
+
+// Which family ink a cell should be read against for text contrast — the
+// "light" cell (level 2) takes dark ink text, level 3/4 (the base inks,
+// undiluted, both clearly dark) take card (light) text. Level 1's ochre is
+// the odd one out — see `--mark-ink-fixed` in globals.css for why it gets its
+// own always-dark token instead of the theme-flipping `text-ink`/`text-card`.
+export const LEVEL_TEXT: Record<ProficiencyLevel, string> = {
+  notStarted: 'text-ink-muted/35',
+  absent: 'text-ink-muted',
+  level1: 'text-mark-ink-fixed',
+  level2: 'text-ink',
+  level3: 'text-card',
+  level4: 'text-card',
+}
+
+export function isStarted(level: ProficiencyLevel): boolean {
   return level !== 'notStarted' && level !== 'absent'
 }
 
-export function isMasteredProficiency(level: ProficiencyLevel): boolean {
+export function isMastered(level: ProficiencyLevel): boolean {
   return level === 'level4'
 }
 
-export function getProficiencyProgress(levels: ProficiencyLevel[]): number {
-  if (levels.length === 0) {
-    return 0
-  }
-
-  const startedLevels = levels.filter(isStartedProficiency)
-  return (startedLevels.length / levels.length) * 100
+// A track's certification result — L4 is the only score that certifies.
+// Kept as its own named function rather than an alias for `isMastered`
+// (even though they check the same thing today): one is a per-chapter
+// "fully learned this one chapter" signal, the other a track-level
+// "did they pass the certification exam" signal, and they've already drifted
+// apart once — a call site asking "is this certified" shouldn't have to know
+// it currently happens to mean the same thing as chapter mastery.
+export function isCertified(level: ProficiencyLevel): boolean {
+  return level === 'level4'
 }
 
-// A chapter counts toward "progress" the moment it's started (practicing or above) — this
-// answers "how much has been touched," not "how much has been mastered." Pair with this
-// wherever progress is shown, rather than letting one number stand in for both.
-export function getMasteredProgress(levels: ProficiencyLevel[]): number {
-  if (levels.length === 0) {
-    return 0
-  }
+// Fraction of chapters that have been started (any graded level), as a
+// 0–100 percentage — matches the production progress-bar semantics.
+export function getProficiencyProgress(levels: ProficiencyLevel[]): number {
+  if (levels.length === 0) return 0
+  return (levels.filter(isStarted).length / levels.length) * 100
+}
 
-  const masteredLevels = levels.filter(isMasteredProficiency)
-  return (masteredLevels.length / levels.length) * 100
+export function getMasteredProgress(levels: ProficiencyLevel[]): number {
+  if (levels.length === 0) return 0
+  return (levels.filter(isMastered).length / levels.length) * 100
+}
+
+export function countStarted(levels: ProficiencyLevel[]): number {
+  return levels.filter(isStarted).length
+}
+
+export function countMastered(levels: ProficiencyLevel[]): number {
+  return levels.filter(isMastered).length
 }

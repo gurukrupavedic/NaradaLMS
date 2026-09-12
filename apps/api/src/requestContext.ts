@@ -1,4 +1,3 @@
-import { AsyncLocalStorage } from 'async_hooks'
 import { randomUUID } from 'crypto'
 import type { NextFunction, Request, Response } from 'express'
 import type { Logger } from 'pino'
@@ -7,43 +6,28 @@ import logger from './logger'
 
 const REQUEST_ID_HEADER = 'x-request-id'
 
-type RequestContext = {
-  requestId: string
-  logger: Logger
-  cache: Map<string, Promise<unknown>>
-}
-
-const requestContext = new AsyncLocalStorage<RequestContext>()
+/**
+ * Per-request logger, keyed the same way `naradaRoute.ts`'s `schoolCache`/`session.ts`'s
+ * `sessionCache` already are — a `WeakMap<Request, _>` rather than `AsyncLocalStorage`, since
+ * every caller here already has `req` in scope (this module has no deep-service consumer that
+ * would need ambient access).
+ */
+const loggerCache = new WeakMap<Request, Logger>()
 
 export function attachRequestContext(req: Request, res: Response, next: NextFunction) {
   const requestId = getRequestId(req)
-  const requestLogger = logger.child({ requestId })
-
+  loggerCache.set(req, logger.child({ requestId }))
   res.setHeader(REQUEST_ID_HEADER, requestId)
-  requestContext.run({ requestId, logger: requestLogger, cache: new Map() }, next)
+  next()
 }
 
-export function getLogger(): Logger {
-  const ctx = requestContext.getStore()
-  return ctx?.logger ?? logger
+/** Falls back to the base logger for code paths that run before `attachRequestContext` (or without a request at all, e.g. server startup). */
+export function getLogger(req?: Request): Logger {
+  if (!req) return logger
+  return loggerCache.get(req) ?? logger
 }
 
-export function getRequestCachedValue<T>(key: string, load: () => Promise<T>): Promise<T> {
-  const ctx = requestContext.getStore()
-  if (!ctx) return load()
-
-  const cached = ctx.cache.get(key)
-  if (cached) return cached as Promise<T>
-
-  const promise = load().catch((error: unknown) => {
-    ctx.cache.delete(key)
-    throw error
-  })
-  ctx.cache.set(key, promise)
-  return promise
-}
-
-function getRequestId(req: Request) {
+function getRequestId(req: Request): string {
   const value = req.get(REQUEST_ID_HEADER)?.trim()
   return value ? value : randomUUID()
 }

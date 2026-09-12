@@ -49,28 +49,32 @@ This creates a super-admin account (`superadmin@local.test` / `testing123`) and 
 **Start the dev servers:**
 
 ```sh
-pnpm api:dev        # Express API on port 3000
-pnpm api-next:dev   # rewrite API (uses the configured API port)
+pnpm api:dev        # API on port 3000
 pnpm web:dev        # Next.js frontend
 ```
+
+`apps/api-legacy` and `apps/web-legacy` are the pre-rewrite apps, kept as a fallback while the
+rewrite is still settling in — same scripts, `api-legacy:*` / `web-legacy:*` instead.
 
 ## Commands
 
 ### Development
 
 ```sh
-pnpm api:dev        # start API with tsx watch (hot reload)
-pnpm api-next:dev   # start the tracked rewrite API
-pnpm web:dev        # start Next.js dev server
+pnpm api:dev          # start API with tsx watch (hot reload)
+pnpm web:dev          # start Next.js dev server
+pnpm api-legacy:dev    # start the pre-rewrite API
+pnpm web-legacy:dev    # start the pre-rewrite frontend
 ```
 
 ### Build
 
 ```sh
-pnpm api:build      # tsc → dist/
-pnpm api-next:build # rewrite API: tsc → dist/
-pnpm web:build      # next build
-pnpm typecheck      # typecheck all packages
+pnpm api:build          # tsc → dist/
+pnpm web:build          # next build
+pnpm api-legacy:build   # pre-rewrite API: tsc → dist/
+pnpm web-legacy:build   # pre-rewrite frontend: next build
+pnpm typecheck          # typecheck all packages
 ```
 
 ### Database
@@ -178,9 +182,10 @@ The `packages/env/src/index.ts` module validates all required variables at start
 
 ```
 apps/
-  api/          @narada/api       current Express 5 backend
-  api-next/     @narada/api-next  tracked backend rewrite
-  web/          @narada/web       Next.js 16 frontend
+  api/          @narada/api        current backend (formerly the "api-next" rewrite)
+  web/          @narada/web        current Next.js 16 frontend (formerly "web-next")
+  api-legacy/   @narada/api-legacy pre-rewrite Express 5 backend, kept as a fallback
+  web-legacy/   @narada/web-legacy pre-rewrite frontend, kept as a fallback
 packages/
   auth/         @narada/auth    BetterAuth config, permissions, ids
   db/           @narada/db      Drizzle ORM, schema definitions, connection pooling

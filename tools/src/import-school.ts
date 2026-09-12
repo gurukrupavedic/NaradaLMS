@@ -19,8 +19,9 @@ import {
 } from '@narada/db'
 // Reusing the live API's own validators rather than re-deriving parallel checks: a bulk import
 // that bypasses the HTTP layer should still never write a row the real API would reject.
-import { enrollSchema } from '@narada/api/src/services/enrollment'
-import { createEvaluationSchema } from '@narada/api/src/services/evaluation'
+// @narada/api-legacy, not @narada/api: this app is still what's actually deployed in production.
+import { enrollSchema } from '@narada/api-legacy/src/services/enrollment'
+import { createEvaluationSchema } from '@narada/api-legacy/src/services/evaluation'
 import { requireSchool, upsertOrgMember, upsertSchool } from './school-helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

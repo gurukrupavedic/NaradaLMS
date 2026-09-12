@@ -19,7 +19,7 @@
     "backfill:remove-empty-chapters": "tsx src/backfill-remove-empty-chapters.ts"
   },
   "dependencies": {
-    "@narada/api": "workspace:*",
+    "@narada/api-legacy": "workspace:*",
     "@narada/auth": "workspace:*",
     "@narada/db": "workspace:*",
     "@narada/env": "workspace:*",

@@ -1,208 +1,180 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  CaretDownIcon,
-  HamburgerIcon,
-  LeaveIcon,
-  MoonIcon,
-  SunIcon,
-  XIcon,
-} from '@/components/ui/icons'
-import { useTheme } from '@/components/theme-provider'
-import { signOut } from '@/lib/session'
-import type { ApiProfile } from '@/lib/types'
-import type { NavigationItem } from '@/lib/nav-items'
+import { signOut as signOutRequest } from '@/lib/auth/client'
+import { clearSelectedProfile, useHasAdminAccess, useSelectedProfileName } from '@/lib/auth/profile-store'
 
-function isItemActive(item: NavigationItem, pathname: string): boolean {
-  if (item.href === '/') return pathname === '/'
-  return pathname === item.href || pathname.startsWith(`${item.href}/`)
+/**
+ * The masthead.
+ *
+ * The old shell floated a rounded card inside a 24px gutter, which fought the
+ * flat-paper idea it sat on — a shadowless system does not need a raised
+ * container to say "this is the chrome". Here the bar is flush to the page and
+ * separated by a single rule, the way a printed masthead is. It also gives the
+ * content back the vertical space the gutter was spending.
+ */
+
+const NAV = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Practice', href: '/practice' },
+  { label: 'Record', href: '/exams' },
+  { label: 'Admin', href: '/admin' },
+  { label: 'Settings', href: '/settings' },
+]
+
+// The theme lives on <html>, put there before paint by the root layout. Mirroring
+// it into React state meant reading the DOM in an effect and calling setState
+// from it — a cascading render, and a hydration mismatch waiting to happen, to
+// decide one word of button text. The class is already the source of truth, so
+// both labels are rendered and CSS shows whichever applies.
+function toggleTheme() {
+  const next = !document.documentElement.classList.contains('dark')
+  document.documentElement.classList.toggle('dark', next)
+  localStorage.setItem('narada-theme', next ? 'dark' : 'light')
 }
 
-function NavButton({ item, isActive }: { item: NavigationItem; isActive: boolean }) {
-  const Icon = item.icon
-  const buttonClass = cn(
-    'group flex items-center gap-2 rounded-none px-3 py-1.5 text-sm transition-colors',
-    isActive
-      ? 'text-foreground font-medium'
-      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-  )
-
+export function Wordmark({ className }: { className?: string }) {
   return (
-    <Button variant="ghost" className={buttonClass} render={<a href={item.href} />} nativeButton={false}>
-      <Icon className="size-3.5 shrink-0" />
-      <span>{item.label}</span>
-    </Button>
+    <Link
+      href="/dashboard"
+      className={cn('display text-[1.35rem] leading-none tracking-tight', className)}
+      aria-label="Narada — home"
+    >
+      Narada<span className="text-vermilion">.</span>
+    </Link>
   )
 }
 
-function UserMenu({ profile }: { profile: ApiProfile | null }) {
-  const [isSigningOut, startSignOut] = useTransition()
-  const name = profile?.name ?? 'Account'
-
-  function handleSignOut() {
-    startSignOut(() => signOut())
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button className="group text-muted-foreground hover:text-foreground flex items-center gap-1.5 px-1.5 py-1 text-xs transition-colors" />
-        }
-      >
-        <Avatar className="size-6 shrink-0">
-          <AvatarFallback className="bg-primary text-[9px] font-medium text-primary-foreground">
-            {name.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <span className="text-foreground font-medium">{name}</span>
-        <CaretDownIcon className="size-2.5 transition-transform group-data-popup-open:rotate-180" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="end" className="min-w-44">
-        <div className="px-3 py-2">
-          <p className="text-xs font-medium">{name}</p>
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut}>
-          <LeaveIcon className="size-3.5 shrink-0" />
-          {isSigningOut ? 'Signing out…' : 'Sign out'}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-interface AppShellProps {
-  navigationItems: NavigationItem[]
-  profile: ApiProfile | null
-  className?: string
-  children?: React.ReactNode
-}
-
-export function AppShell({ navigationItems, profile, children, className }: AppShellProps) {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [isSigningOut, startSignOut] = useTransition()
-  const { theme, toggleTheme } = useTheme()
+export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const profileName = useSelectedProfileName()
+  const hasAdminAccess = useHasAdminAccess()
+  // Hidden until access resolves, not just when it's false — showing the link and then
+  // yanking it away a moment later reads as more broken than a one-tick-later appearance.
+  const nav = NAV.filter(item => item.href !== '/admin' || hasAdminAccess)
 
   function handleSignOut() {
-    startSignOut(() => signOut())
+    void signOutRequest().finally(() => {
+      clearSelectedProfile()
+      // Every cached query — dashboard, exams, admin batches, authProfile — is scoped to
+      // whoever was signed in. `QueryClient` is a browser-lifetime singleton
+      // (`lib/query/client.ts`), so without this the *next* account to sign in in this same
+      // tab would see the outgoing account's data (and its admin nav item) until each query
+      // happened to refetch on its own — which, at a 60s+ staleTime, is not "immediately."
+      queryClient.clear()
+      router.push('/login')
+    })
   }
 
   return (
-    <div className={cn('flex h-full flex-col overflow-hidden', className)}>
-      {/* Floating nav — wide gutter, card treatment */}
-      <div className="shrink-0 px-6 py-3">
-        <div className="bg-card ring-1 ring-foreground/10">
-          <header className="flex h-13 items-center px-5">
-            {/* Brand — left third */}
-            <div className="flex flex-1 items-center">
-              <span className="whitespace-nowrap text-sm font-semibold tracking-tight">
-                Narada LMS
+    <div className="flex min-h-dvh flex-col">
+      <header className="sticky top-0 z-30 border-b border-rule bg-paper/92 backdrop-blur-[2px]">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-8 px-5">
+          <Wordmark />
+
+          <nav className="hidden flex-1 items-center gap-7 md:flex" aria-label="Primary">
+            {nav.map(item => {
+              const active = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={cn(
+                    'label relative py-1 transition-colors',
+                    active ? 'text-ink' : 'text-ink-muted hover:text-ink',
+                  )}
+                >
+                  {item.label}
+                  {/* The active mark is a ruled underline in the spot colour —
+                      the same gesture as underlining a heading by hand. */}
+                  {active && (
+                    <span className="absolute -bottom-px left-0 h-px w-full bg-vermilion" />
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-4 md:ml-0">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="label text-ink-muted transition-colors hover:text-ink"
+              aria-label="Toggle colour scheme"
+            >
+              <span className="dark:hidden">Dark</span>
+              <span className="hidden dark:inline">Light</span>
+            </button>
+
+            {profileName && (
+              <span className="hidden items-center gap-2 sm:flex">
+                <span
+                  aria-hidden
+                  className="grid size-6 place-items-center border border-rule bg-card font-label text-[0.5625rem] text-ink-muted"
+                >
+                  {profileName.charAt(0)}
+                </span>
+                <span className="text-[0.8125rem] text-ink-muted">{profileName}</span>
               </span>
-            </div>
+            )}
 
-            {/* Nav items — centered */}
-            <nav className="hidden items-center gap-3 md:flex">
-              {navigationItems.map(item => (
-                <NavButton key={item.label} item={item} isActive={isItemActive(item, pathname)} />
-              ))}
-            </nav>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="label text-ink-muted transition-colors hover:text-ink"
+            >
+              Sign out
+            </button>
 
-            {/* Actions — right third */}
-            <div className="flex flex-1 items-center justify-end gap-1.5">
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="rounded-none"
-                onClick={toggleTheme}
-              >
-                {theme === 'dark' ? (
-                  <SunIcon className="size-3.5" />
-                ) : (
-                  <MoonIcon className="size-3.5" />
-                )}
-              </Button>
-
-              <div className="hidden sm:block">
-                <UserMenu profile={profile} />
-              </div>
-
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="rounded-none md:hidden"
-                onClick={() => setMobileOpen(o => !o)}
-              >
-                {mobileOpen ? (
-                  <XIcon className="size-3.5" />
-                ) : (
-                  <HamburgerIcon className="size-3.5" />
-                )}
-              </Button>
-            </div>
-          </header>
-
-          {/* Mobile menu — extends the card downward */}
-          {mobileOpen && (
-            <div className="border-t border-border/40 md:hidden">
-              {navigationItems.map(item => {
-                const Icon = item.icon
-                const isActive = isItemActive(item, pathname)
-                const itemClass = cn(
-                  'flex w-full items-center gap-2 px-5 py-2.5 text-sm transition-colors',
-                  isActive
-                    ? 'bg-muted font-medium text-foreground'
-                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-                )
-                return (
-                  <a key={item.label} href={item.href} className={itemClass}>
-                    <Icon className="size-3.5 shrink-0" />
-                    {item.label}
-                  </a>
-                )
-              })}
-              <Separator />
-              <button
-                type="button"
-                onClick={handleSignOut}
-                disabled={isSigningOut}
-                className="flex w-full items-center gap-2 px-5 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
-              >
-                <LeaveIcon className="size-3.5 shrink-0" />
-                {isSigningOut ? 'Signing out…' : 'Sign out'}
-              </button>
-              <Separator />
-              <div className="flex items-center gap-2.5 px-5 py-3">
-                <Avatar className="size-7 shrink-0">
-                  <AvatarFallback className="bg-primary text-[9px] font-medium text-primary-foreground">
-                    {(profile?.name ?? 'Account').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium leading-none">{profile?.name ?? 'Account'}</p>
-                </div>
-              </div>
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(o => !o)}
+              className="label text-ink-muted md:hidden"
+              aria-expanded={menuOpen}
+            >
+              {menuOpen ? 'Close' : 'Menu'}
+            </button>
+          </div>
         </div>
-      </div>
 
-      <main className="flex-1 overflow-auto">{children}</main>
+        {menuOpen && (
+          <nav className="border-t border-rule-soft md:hidden" aria-label="Primary, mobile">
+            {nav.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className={cn(
+                  'label block border-b border-rule-soft px-5 py-3 last:border-0',
+                  pathname === item.href ? 'text-vermilion' : 'text-ink-muted',
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </header>
+
+      <main className="flex-1">{children}</main>
+
+      <footer className="mt-16 border-t border-rule">
+        <div className="mx-auto flex max-w-5xl items-baseline justify-between px-5 py-6">
+          <span className="label text-ink-muted">Narada · practice register</span>
+          <span className="font-deva text-base text-ink/25" aria-hidden>
+            ॐ
+          </span>
+        </div>
+      </footer>
     </div>
   )
 }

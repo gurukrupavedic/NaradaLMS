@@ -2,9 +2,6 @@ packages:
   - apps/*
   - packages/*
   - tools
-  # Its own standalone workspace (own lockfile, own pnpm-workspace.yaml) — apps/* would otherwise
-  # sweep it into this one now that it's a top-level apps/ entry rather than nested inside apps/web.
-  - '!apps/web-next'
 
 # 1 week in seconds.
 minimumReleaseAge: 10080
