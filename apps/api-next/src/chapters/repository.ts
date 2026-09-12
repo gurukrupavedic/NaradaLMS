@@ -159,6 +159,13 @@ export async function markStagedUploadCompleted(db: SchoolDb, id: string): Promi
   await db.update(stagedUpload).set({ status: 'completed', completedAt: new Date() }).where(eq(stagedUpload.id, id))
 }
 
+/** Every `pending` upload past its bookkeeping TTL — the sweep's input set. Served by `stagedUpload_status_expiresAt_idx`. */
+export async function findExpiredPendingStagedUploads(db: SchoolDb) {
+  return db.query.stagedUpload.findMany({
+    where: (t, { and, eq, lte }) => and(eq(t.status, 'pending'), lte(t.expiresAt, new Date())),
+  })
+}
+
 // ── Audio assets + mappings ──────────────────────────────────────────────────
 
 export async function nextAudioAssetOrder(db: SchoolDb, chapterId: string): Promise<number> {

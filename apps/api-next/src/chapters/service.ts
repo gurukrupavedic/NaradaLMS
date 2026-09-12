@@ -423,3 +423,28 @@ export async function deleteAudioAsset(
     getLogger().warn({ err, objectKey: asset.objectKey }, 'failed to delete R2 object after audio asset deletion')
   }
 }
+
+/**
+ * A confirm call (`createAudioAsset`) is the only place a `stagedUpload` row would otherwise ever
+ * move out of `pending` — and only if the client happens to come back after abandoning the upload.
+ * A closed tab or a crash mid-upload leaves the row `pending` forever with its R2 object (if the
+ * PUT actually completed) never deleted. This sweeps every `pending` row past its own `expiresAt`
+ * for one school: same best-effort delete-then-continue as `deleteAudioAsset` above, since one
+ * bad row's storage hiccup shouldn't stop the rest of the sweep.
+ */
+export async function sweepExpiredStagedUploads(context: ChapterServiceContext): Promise<number> {
+  const expired = await repository.findExpiredPendingStagedUploads(context.db)
+
+  for (const staged of expired) {
+    try {
+      if (await storedObjectExists(staged.objectKey)) {
+        await deleteStoredObject(staged.objectKey)
+      }
+    } catch (err) {
+      getLogger().warn({ err, objectKey: staged.objectKey }, 'failed to delete R2 object for expired staged upload')
+    }
+    await repository.markStagedUploadExpired(context.db, staged.id)
+  }
+
+  return expired.length
+}

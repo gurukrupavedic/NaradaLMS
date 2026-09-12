@@ -25,6 +25,7 @@ import {
   findById as findChapterDetail,
   resegmentChapter,
   setAudioMappings,
+  sweepExpiredStagedUploads,
   upsertScript,
 } from './service'
 
@@ -430,5 +431,60 @@ describe('resegmentChapter', () => {
     const detail = await findChapterDetail({ db: world.schoolDb }, chapterRow.id, { kind: 'authoring' })
     const sa = detail.scripts.find(s => s.key === 'sa')
     expect(sa?.segments).toEqual([{ id: segment1.id, start: 0, end: 3 }])
+  })
+})
+
+describe('sweepExpiredStagedUploads', () => {
+  it('expires a pending upload past its expiresAt and deletes its R2 object', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow)
+    const staged = await createStagedUpload(world, chapterRow, {
+      expiresAt: new Date(Date.now() - 1000),
+      objectKey: 'schools/test/expired.mp3',
+    })
+
+    const count = await sweepExpiredStagedUploads({ db: world.schoolDb })
+
+    expect(count).toBe(1)
+    expect(storage.deleteObject).toHaveBeenCalledWith('schools/test/expired.mp3')
+    const row = await world.schoolDb.query.stagedUpload.findFirst({ where: (t, { eq }) => eq(t.id, staged.id) })
+    expect(row?.status).toBe('expired')
+  })
+
+  it('skips the R2 delete when the object was never actually uploaded', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow)
+    vi.mocked(storage.objectExists).mockResolvedValueOnce(false)
+    await createStagedUpload(world, chapterRow, { expiresAt: new Date(Date.now() - 1000) })
+
+    const count = await sweepExpiredStagedUploads({ db: world.schoolDb })
+
+    expect(count).toBe(1)
+    expect(storage.deleteObject).not.toHaveBeenCalled()
+  })
+
+  it('leaves a not-yet-expired pending upload and an already-completed one untouched', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow)
+    const stillPending = await createStagedUpload(world, chapterRow, {
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    })
+    const completed = await createStagedUpload(world, chapterRow, {
+      status: 'completed',
+      expiresAt: new Date(Date.now() - 1000),
+    })
+
+    const count = await sweepExpiredStagedUploads({ db: world.schoolDb })
+
+    expect(count).toBe(0)
+    expect(storage.deleteObject).not.toHaveBeenCalled()
+    const rows = await world.schoolDb.query.stagedUpload.findMany({
+      where: (t, { inArray }) => inArray(t.id, [stillPending.id, completed.id]),
+    })
+    expect(rows.find(r => r.id === stillPending.id)?.status).toBe('pending')
+    expect(rows.find(r => r.id === completed.id)?.status).toBe('completed')
   })
 })
