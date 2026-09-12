@@ -2,7 +2,7 @@ export * from './auth'
 export * from './school'
 export * from './relations'
 
-import { user, session, account, verification, organization, member, invitation } from './auth'
+import { user, session, account, verification, organization, member, invitation, deviceLinkCode } from './auth'
 import {
   profile,
   track,
@@ -27,6 +27,7 @@ import {
   organizationRelations,
   memberRelations,
   invitationRelations,
+  deviceLinkCodeRelations,
   profileRelations,
   trackRelations,
   chapterRelations,
@@ -52,12 +53,14 @@ export const publicSchema = {
   organization,
   member,
   invitation,
+  deviceLinkCode,
   userRelations,
   sessionRelations,
   accountRelations,
   organizationRelations,
   memberRelations,
   invitationRelations,
+  deviceLinkCodeRelations,
 }
 
 /** Profile/content/batch/enrollment/exam/evaluation tables and their relations. Backs SchoolDbClient's `.query` surface. */

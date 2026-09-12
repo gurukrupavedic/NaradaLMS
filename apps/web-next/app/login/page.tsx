@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
-import { sendOtp, verifyOtp } from '@/lib/auth/client'
+import { getAuthSession, sendOtp, verifyOtp } from '@/lib/auth/client'
 import { setSelectedProfile } from '@/lib/auth/profile-store'
 import { fetchProfiles } from '@/lib/api/resources'
 import type { ApiProfile } from '@/lib/api/api-types'
@@ -17,14 +17,25 @@ import type { ApiProfile } from '@/lib/api/api-types'
  * the import found one phone carrying several students — so "who is this?" is a
  * real question, not an edge case, and it gets a full step rather than a
  * dropdown buried in the form.
+ *
+ * A session now lasts a year (packages/auth/src/index.ts), so this page is reached far more often
+ * by a device that's already signed in — `proxy.ts` sends a valid-session-but-no-chosen-profile
+ * request here rather than to `/dashboard` — than by one that genuinely needs phone/OTP. `checking`
+ * is that mount-time fork: skip straight to profile selection if a session already exists, and
+ * only fall through to the phone step if it doesn't. A freshly linked device (device-link's
+ * `poll` endpoint sets a real session cookie with no profile chosen) lands here exactly the same
+ * way.
  */
 
 type State =
+  | { step: 'checking' }
   | { step: 'phone'; error: string | null }
   | { step: 'code'; phone: string; error: string | null }
   | { step: 'profile'; phone: string; profiles: ApiProfile[]; selected: string | null }
 
 type Action =
+  | { type: 'no_session' }
+  | { type: 'existing_session'; profiles: ApiProfile[] }
   | { type: 'sending' }
   | { type: 'sent'; phone: string }
   | { type: 'send_failed'; error: string }
@@ -35,6 +46,12 @@ type Action =
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
+    case 'no_session':
+      return state.step === 'checking' ? { step: 'phone', error: null } : state
+    case 'existing_session':
+      return state.step === 'checking'
+        ? { step: 'profile', phone: '', profiles: action.profiles, selected: null }
+        : state
     case 'sending':
       return state.step === 'phone' ? { step: 'phone', error: null } : state
     case 'sent':
@@ -66,7 +83,7 @@ const OTP_RESEND_COOLDOWN_SECONDS = 60
 const STEPS = ['Number', 'Code', 'Profile'] as const
 
 export default function LoginPage() {
-  const [state, dispatch] = useReducer(reducer, { step: 'phone', error: null })
+  const [state, dispatch] = useReducer(reducer, { step: 'checking' })
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
   const [isPending, setIsPending] = useState(false)
@@ -74,13 +91,37 @@ export default function LoginPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const stepIndex = state.step === 'phone' ? 0 : state.step === 'code' ? 1 : 2
+  const stepIndex = state.step === 'checking' || state.step === 'phone' ? 0 : state.step === 'code' ? 1 : 2
 
   useEffect(() => {
     if (cooldown <= 0) return
     const timer = setInterval(() => setCooldown(seconds => seconds - 1), 1000)
     return () => clearInterval(timer)
   }, [cooldown])
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const session = await getAuthSession()
+      if (cancelled) return
+      if (!session) {
+        dispatch({ type: 'no_session' })
+        return
+      }
+      try {
+        const profiles = await fetchProfiles()
+        if (!cancelled) dispatch({ type: 'existing_session', profiles })
+      } catch {
+        // A session that's stopped resolving to real profiles (revoked account, backend hiccup)
+        // is no better than no session — fall through to the normal phone/OTP path rather than
+        // stranding the reader on a step that can never succeed.
+        if (!cancelled) dispatch({ type: 'no_session' })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Doesn't dispatch itself — the phone step (a failed *first* send) and the code step (a failed
   // *resend*) need the error to land in different places in `state` (`send_failed` only updates

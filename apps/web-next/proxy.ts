@@ -15,7 +15,10 @@ import { NextRequest, NextResponse } from 'next/server'
  */
 const SESSION_COOKIE = 'better-auth.session_token'
 const PROFILE_COOKIE = 'narada-profile-id'
-const PUBLIC_PATHS = new Set(['/login'])
+// `/link-device` is where a brand-new device shows its code/QR — by definition reached before
+// that device has any session at all, so it has to stay public. `/settings/approve-device` is the
+// opposite (the *trusted* device's approve form) and stays behind the normal gate on purpose.
+const PUBLIC_PATHS = new Set(['/login', '/link-device'])
 
 function hasSession(request: NextRequest): boolean {
   return Boolean(

@@ -24,6 +24,7 @@ const NAV = [
   { label: 'Practice', href: '/practice' },
   { label: 'Record', href: '/exams' },
   { label: 'Admin', href: '/admin' },
+  { label: 'Settings', href: '/settings' },
 ]
 
 // The theme lives on <html>, put there before paint by the root layout. Mirroring

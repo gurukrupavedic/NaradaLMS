@@ -13,7 +13,7 @@ import { env } from '@narada/env'
 import { AppError, ErrorCode, badRequest } from './error'
 import { attachRequestContext, getLogger } from './requestContext'
 import setupRoutes from './routes'
-import { createSendOtpRateLimit, isTrustedOrigin } from './utils/serverSecurity'
+import { createDeviceLinkRateLimit, createSendOtpRateLimit, isTrustedOrigin } from './utils/serverSecurity'
 import { translateDbError } from './utils/dbError'
 
 interface ServerOptions {
@@ -34,6 +34,7 @@ const authRateLimit = rateLimit({
 })
 
 const sendOtpRateLimit = createSendOtpRateLimit()
+const deviceLinkRateLimit = createDeviceLinkRateLimit()
 
 export function createServer() {
   const router = Router()
@@ -61,12 +62,25 @@ export function createServer() {
     sendOtpRateLimit,
     toNodeHandler(auth),
   )
+  // Both IP-keyed only (no body field to read), so — unlike send-otp above — neither needs
+  // express.json() ahead of its rate limiter.
+  router.post('/auth/device-link/start', authRateLimit, deviceLinkRateLimit, toNodeHandler(auth))
+  router.post('/auth/device-link/approve', authRateLimit, deviceLinkRateLimit, toNodeHandler(auth))
   router.all('/auth/*splat', authRateLimit, toNodeHandler(auth))
   router.use(express.json())
   setupRoutes(router)
   router.use(handleUnmatchedRoute)
 
   const app = express()
+  // Railway (.github/workflows/deploy-api*.yml) fronts this service with exactly one reverse
+  // proxy hop, which appends its own X-Forwarded-For entry. Express ignores that header by
+  // default ("trust proxy" is false), so req.ip falls back to the immediate socket peer — Railway's
+  // own edge address, the same for every request regardless of who's actually calling. That
+  // collapses every IP-keyed rate limiter (createDeviceLinkRateLimit, the IP fallback in
+  // sendOtpRateLimitKey) into one shared bucket across the whole user base instead of one per
+  // caller. `1` trusts exactly that one hop — not `true`, which would trust an unbounded chain and
+  // let a client spoof its own X-Forwarded-For to bypass IP-based limiting entirely.
+  app.set('trust proxy', 1)
   app.use(`/v${env.API_VERSION}`, router)
   app.use(handleErrors)
   return app

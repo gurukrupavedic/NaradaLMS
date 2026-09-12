@@ -39,3 +39,18 @@ export function createSendOtpRateLimit() {
     keyGenerator: sendOtpRateLimitKey,
   })
 }
+
+// device-link's `start` (unauthenticated code creation) and `approve` (unauthenticated-adjacent —
+// the code itself is the only thing identifying the request) both take no identifier to key a
+// limiter on besides IP. At 9 alphanumeric characters (packages/auth/src/plugins/device-link.ts)
+// the code is already far past brute-forceable, so this is ordinary abuse protection, not a
+// brute-force defense — one shared, generous limiter for both endpoints.
+export function createDeviceLinkRateLimit() {
+  return rateLimit({
+    windowMs: 10 * 60 * 1000,
+    limit: 20,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    keyGenerator: (req: Request) => ipKeyGenerator(req.ip ?? ''),
+  })
+}

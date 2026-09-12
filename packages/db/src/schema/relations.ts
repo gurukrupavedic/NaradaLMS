@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm'
 
-import { user, session, account, organization, member, invitation } from './auth'
+import { user, session, account, organization, member, invitation, deviceLinkCode } from './auth'
 import {
   track,
   chapter,
@@ -25,10 +25,16 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   members: many(member),
   invitations: many(invitation),
+  deviceLinkCodes: many(deviceLinkCode),
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, { fields: [session.userId], references: [user.id] }),
+}))
+
+export const deviceLinkCodeRelations = relations(deviceLinkCode, ({ one }) => ({
+  user: one(user, { fields: [deviceLinkCode.userId], references: [user.id] }),
+  claimedSession: one(session, { fields: [deviceLinkCode.claimedSessionId], references: [session.id] }),
 }))
 
 export const accountRelations = relations(account, ({ one }) => ({
