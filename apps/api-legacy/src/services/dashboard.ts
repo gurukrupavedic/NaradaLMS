@@ -1,4 +1,6 @@
-import type { SchoolDbExecutor } from '@narada/db'
+import { desc, sql } from 'drizzle-orm'
+
+import { evaluation, type SchoolDbExecutor } from '@narada/db'
 
 import {
   findBatchesForProfiles,
@@ -14,6 +16,12 @@ import { type ExamWithDetail } from './exam'
 export type TeachingSummary = { batchId: string; evaluations: Evaluation[] }
 export type PastBatchesEntry = { studentId: string; batches: Batch[] }
 
+// Every consumer of these evaluation lists (the roster's "current level", the history drawer,
+// the certification record) takes the FIRST row per (student, chapter) as the latest mark. That
+// only holds if the rows leave here newest-first — the same order GET /batches/:id/evaluations
+// uses, so the dashboard and the full history page can never disagree about a student's level.
+const LATEST_FIRST = [sql`${evaluation.evaluatedAt} desc nulls last`, desc(evaluation.id)]
+
 export type DashboardData = {
   firstName: string
   memberships: BatchWithRole[]
@@ -28,9 +36,7 @@ const MEMBERSHIPS_PAGE_SIZE = 100
 
 // findBatchesWithDetail's own cursor field is base64 that a route would normally decode via
 // parseQuery — reusing the exact schema here rather than re-implementing the encoding.
-type MembershipsCursor = NonNullable<
-  import('zod').infer<typeof listBatchesQuerySchema>['cursor']
->
+type MembershipsCursor = NonNullable<import('zod').infer<typeof listBatchesQuerySchema>['cursor']>
 
 async function findAllMyMemberships(
   db: SchoolDbExecutor,
@@ -101,7 +107,7 @@ export async function getDashboardData(
       // set and stays small (~140 rows for the heaviest student in the real roster).
       db.query.evaluation.findMany({
         where: (t, { eq }) => eq(t.studentId, profileId),
-        orderBy: (t, { desc }) => desc(t.evaluatedAt),
+        orderBy: LATEST_FIRST,
       }),
       db.query.exam.findMany({
         where: (t, { and, eq }) => and(eq(t.studentId, profileId), eq(t.status, 'scheduled')),
@@ -118,6 +124,10 @@ export async function getDashboardData(
                 inArray(t.chapterId, teachingChapterIds),
                 inArray(t.studentId, teachingStudentIds),
               ),
+            // Without this, Postgres returned rows in heap (insertion) order, so a re-evaluated
+            // chapter kept showing its OLDEST mark on the dashboard while the history page
+            // (which does order) showed the newest.
+            orderBy: LATEST_FIRST,
           })
         : [],
       findBatchesForProfiles(db, teachingStudentIds),
@@ -129,7 +139,9 @@ export async function getDashboardData(
   const teaching: TeachingSummary[] = teachingMemberships.map(membership => {
     const chapterIds = new Set(chapterIdsForTrack(membership.trackId))
     const studentIds = new Set(
-      membership.members.filter(member => member.role === 'student').map(member => member.profileId),
+      membership.members
+        .filter(member => member.role === 'student')
+        .map(member => member.profileId),
     )
     return {
       batchId: membership.id,
