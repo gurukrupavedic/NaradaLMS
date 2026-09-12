@@ -25,7 +25,7 @@ router.get(
     access.requireCanReviewRegistrations()
     const query = await parse(FindRegistrationsSchema, req.query)
     const result = await findAll({ db }, query)
-    res.status(200).json({ data: result.items, nextCursor: result.nextCursor })
+    res.status(200).json({ data: result })
   }),
 )
 
