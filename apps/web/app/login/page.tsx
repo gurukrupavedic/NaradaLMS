@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useReducer, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -274,6 +275,13 @@ export default function LoginPage() {
               <Submit disabled={isPending || phone.trim().length < 6}>
                 {isPending ? 'Sending…' : 'Send code'}
               </Submit>
+
+              <p className="label mt-5 text-center text-ink-muted">
+                New here?{' '}
+                <Link href="/register" className="text-ink underline underline-offset-4">
+                  Register
+                </Link>
+              </p>
             </form>
           )}
 

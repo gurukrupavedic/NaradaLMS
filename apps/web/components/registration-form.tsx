@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { submitRegistration, type SubmitRegistrationInput } from '@/lib/api/resources'
@@ -185,7 +186,12 @@ export function RegistrationForm() {
     <div className="mx-auto max-w-xl px-6 py-12 sm:px-10">
       <Wordmark />
 
-      <p className="label mt-8 text-ink-muted">Registration</p>
+      <p className="label mt-8 flex items-baseline justify-between text-ink-muted">
+        Registration
+        <Link href="/login" className="text-ink-muted underline underline-offset-4 hover:text-ink">
+          Already registered? Sign in
+        </Link>
+      </p>
       <h1 className="display mt-3 text-[2rem]">Join a batch</h1>
       <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-muted">
         Tell us about yourself. A teacher reviews every application before a batch is assigned.
