@@ -12,7 +12,10 @@ import type {
   ApiChapterDetail,
   ApiDashboard,
   ApiEvaluation,
+  ApiProficiencyLevel,
   ApiProfile,
+  ApiRegistration,
+  ApiRegistrationStatus,
   ApiScriptKey,
   ApiTrack,
 } from '@/lib/api/api-types'
@@ -54,6 +57,55 @@ export async function fetchProfiles(): Promise<ApiProfile[]> {
 // (`lib/auth/profile-store.ts`), which gates the admin nav item and screens.
 export async function fetchAuthProfile(): Promise<ApiAuthProfile> {
   return fetchApi<ApiAuthProfile>('/profile')
+}
+
+// ── Registrations ────────────────────────────────────────────────────────────
+
+export type SubmitRegistrationInput = {
+  firstName: string
+  lastName: string
+  phone: string
+  yearOfBirth?: number | null
+  email?: string | null
+  city?: string | null
+  countryTimeZone?: string | null
+  learningGoal?: string | null
+  currentProficiency?: ApiProficiencyLevel | null
+  spokenLanguages?: string[]
+  readLanguages?: string[]
+  parentNames?: string[]
+  dressCodeAgreed?: boolean
+  noMeatAgreed?: boolean
+  noAlcoholAgreed?: boolean
+  noSmokingAgreed?: boolean
+  comments?: string | null
+}
+
+// POST /v1/registrations — the one call in this file with no signed-in caller. `mutateApi` still
+// fits: `getSelectedProfileId()` simply has nothing to return for a visitor who has never signed
+// in, so the `X-Profile-Id` header it normally attaches is just omitted, exactly like the
+// `fetchProfiles()` call below does for the same reason.
+export async function submitRegistration(data: SubmitRegistrationInput): Promise<ApiRegistration> {
+  return mutateApi<ApiRegistration>('/registrations', 'POST', data)
+}
+
+// GET /v1/registrations?status=... — admin-only (AccessPolicy.requireCanReviewRegistrations).
+export async function fetchRegistrations(status: ApiRegistrationStatus): Promise<ApiRegistration[]> {
+  return fetchAllPages<ApiRegistration>(
+    cursor => `/registrations?status=${status}&limit=100${cursor ? `&cursor=${cursor}` : ''}`,
+  )
+}
+
+export async function fetchRegistration(id: string): Promise<ApiRegistration> {
+  return fetchApi<ApiRegistration>(`/registrations/${id}`)
+}
+
+export async function approveRegistration(id: string): Promise<ApiRegistration> {
+  return mutateApi<ApiRegistration>(`/registrations/${id}/approve`, 'POST')
+}
+
+export async function rejectRegistration(id: string): Promise<ApiRegistration> {
+  return mutateApi<ApiRegistration>(`/registrations/${id}/reject`, 'POST')
 }
 
 // GET /v1/me/dashboard

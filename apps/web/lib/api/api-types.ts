@@ -147,6 +147,38 @@ export type ApiTrackCertification = {
   evaluatedAt: string | null
 }
 
+// GET/POST /v1/registrations — a prospective student's application, filed before they have any
+// account (see apps/api/src/registrations/schema.ts). `currentProficiency` reuses
+// `ApiProficiencyLevel`, but a self-reported starting point never has a real reason to be
+// `'absent'` (that value means "no evaluation exists," a teacher-side concept) — the registration
+// form simply never offers it, rather than the type excluding it.
+export type ApiRegistrationStatus = 'pending' | 'approved' | 'rejected'
+
+export type ApiRegistration = {
+  id: string
+  status: ApiRegistrationStatus
+  firstName: string
+  lastName: string
+  yearOfBirth: number | null
+  phone: string
+  email: string | null
+  city: string | null
+  countryTimeZone: string | null
+  learningGoal: string | null
+  currentProficiency: ApiProficiencyLevel | null
+  spokenLanguages: string[]
+  readLanguages: string[]
+  parentNames: string[]
+  dressCodeAgreed: boolean
+  noMeatAgreed: boolean
+  noAlcoholAgreed: boolean
+  noSmokingAgreed: boolean
+  comments: string | null
+  reviewedAt: string | null
+  reviewedBy: string | null
+  createdAt: string
+}
+
 export type ApiDashboard = {
   firstName: string
   memberships: ApiBatchWithRole[]

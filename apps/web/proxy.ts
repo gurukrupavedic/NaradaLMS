@@ -18,7 +18,9 @@ const PROFILE_COOKIE = 'narada-profile-id'
 // `/link-device` is where a brand-new device shows its code/QR — by definition reached before
 // that device has any session at all, so it has to stay public. `/settings/approve-device` is the
 // opposite (the *trusted* device's approve form) and stays behind the normal gate on purpose.
-const PUBLIC_PATHS = new Set(['/login', '/link-device'])
+// `/register` is a prospective student's application, filed before they have any account at all —
+// same reasoning as `/link-device`.
+const PUBLIC_PATHS = new Set(['/login', '/link-device', '/register'])
 
 function hasSession(request: NextRequest): boolean {
   return Boolean(

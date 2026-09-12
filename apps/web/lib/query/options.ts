@@ -10,7 +10,10 @@ import {
   fetchChapterDetail,
   fetchDashboard,
   fetchExams,
+  fetchRegistration,
+  fetchRegistrations,
 } from '@/lib/api/resources'
+import type { ApiRegistrationStatus } from '@/lib/api/api-types'
 
 /**
  * Query keys, in one place.
@@ -49,6 +52,14 @@ export const keys = {
     all: ['catalog'] as const,
     list: () => ['catalog', 'list'] as const,
     track: (id: string) => ['catalog', 'track', id] as const,
+  },
+
+  registrations: {
+    // Prefix key — an approve/reject mutation invalidates this to catch every list (whichever
+    // status tab) and every detail query at once, rather than enumerating all three statuses.
+    all: ['registrations'] as const,
+    list: (status: ApiRegistrationStatus) => ['registrations', 'list', status] as const,
+    detail: (id: string) => ['registrations', 'detail', id] as const,
   },
 } as const
 
@@ -126,4 +137,16 @@ export const catalogTrackQuery = (trackId: string) =>
     queryKey: keys.catalog.track(trackId),
     queryFn: () => fetchCatalogTrack(trackId),
     staleTime: CATALOG_STALE_TIME,
+  })
+
+export const registrationsQuery = (status: ApiRegistrationStatus) =>
+  queryOptions({
+    queryKey: keys.registrations.list(status),
+    queryFn: () => fetchRegistrations(status),
+  })
+
+export const registrationQuery = (id: string) =>
+  queryOptions({
+    queryKey: keys.registrations.detail(id),
+    queryFn: () => fetchRegistration(id),
   })
