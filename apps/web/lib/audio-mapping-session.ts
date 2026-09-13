@@ -154,3 +154,55 @@ export function undoLastMapping(mappings: DraftMapping[]): { mappings: DraftMapp
   const removed = mappings[mappings.length - 1]!
   return { mappings: mappings.slice(0, -1), currentTime: removed.audioStart }
 }
+
+/**
+ * The correction half of mapping: after a segment is armed-marked roughly by ear, its boundary can
+ * be dragged directly on the waveform to fix it against what's actually visible in the audio. Unlike
+ * `markMappingEnd` — which is always extending the *next* unmapped segment and so silently clears
+ * whatever later mappings that would now overlap — a drag can target any already-mapped segment, at
+ * any position, so a silent cascade would be surprising here. Refused instead, the same policy
+ * `segment-picker.tsx` uses for an overlapping text selection: the admin sees why and adjusts,
+ * rather than another segment's mapping disappearing out from under them.
+ */
+export function applyRegionEdit({
+  segments,
+  mappings,
+  segmentId,
+  audioStart,
+  audioEnd,
+  duration,
+}: {
+  segments: MappableSegment[]
+  mappings: DraftMapping[]
+  segmentId: string
+  audioStart: number
+  audioEnd: number
+  duration: number
+}): { mappings: DraftMapping[]; error: string | null } {
+  const index = segments.findIndex(s => s.id === segmentId)
+  if (index === -1) return { mappings, error: null }
+
+  const start = roundToTenths(Math.max(0, audioStart))
+  const end = roundToTenths(Math.min(duration, audioEnd))
+  if (end <= start) return { mappings, error: 'A mapping needs some duration — drag the end past the start.' }
+
+  const mappingMap = new Map(mappings.map(m => [m.segmentId, m]))
+  const prevMapping = index > 0 ? mappingMap.get(segments[index - 1]!.id) : undefined
+  const nextMapping = index < segments.length - 1 ? mappingMap.get(segments[index + 1]!.id) : undefined
+
+  if (prevMapping && start < prevMapping.audioEnd) {
+    return {
+      mappings,
+      error: `Overlaps the previous segment, which ends at ${formatTimestamp(prevMapping.audioEnd)}.`,
+    }
+  }
+  if (nextMapping && end > nextMapping.audioStart) {
+    return {
+      mappings,
+      error: `Overlaps the next segment, which starts at ${formatTimestamp(nextMapping.audioStart)}.`,
+    }
+  }
+
+  const updated: DraftMapping = { segmentId, audioStart: start, audioEnd: end }
+  return { mappings: [...mappings.filter(m => m.segmentId !== segmentId), updated], error: null }
+}
