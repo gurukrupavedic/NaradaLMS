@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { submitRegistration, type SubmitRegistrationInput } from '@/lib/api/resources'
 import { ApiError } from '@/lib/api/client'
 import type { ApiProficiencyLevel } from '@/lib/api/api-types'
+import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
 import { Wordmark } from '@/components/app-shell'
 
 /**
@@ -25,17 +26,6 @@ const PHONE_REGEX = /^\+[1-9]\d{7,14}$/
 const CURRENT_YEAR = new Date().getFullYear()
 
 const STEPS = ['About you', 'Learning', 'Agreements'] as const
-
-// `absent` is excluded on purpose — it means "no evaluation exists," a teacher-side concept a
-// self-reported starting point never has a reason to claim.
-const PROFICIENCY_OPTIONS: { value: ApiProficiencyLevel; label: string }[] = [
-  { value: 'notStarted', label: 'Just starting' },
-  { value: 'practicing', label: 'Practicing on my own' },
-  { value: 'level1', label: 'Level 1' },
-  { value: 'level2', label: 'Level 2' },
-  { value: 'level3', label: 'Level 3' },
-  { value: 'level4', label: 'Level 4' },
-]
 
 type FormState = {
   firstName: string
@@ -289,7 +279,7 @@ export function RegistrationForm() {
               hint="Optional"
               value={form.currentProficiency}
               onChange={v => patch({ currentProficiency: v as ApiProficiencyLevel | '' })}
-              options={PROFICIENCY_OPTIONS}
+              options={SELF_REPORTED_PROFICIENCY_OPTIONS}
             />
             <TagListField
               label="Languages you speak"
@@ -388,6 +378,15 @@ export function RegistrationForm() {
   )
 }
 
+function FieldLabel({ label, hint }: { label: string; hint?: string }) {
+  return (
+    <span className="label flex items-baseline justify-between text-ink-muted">
+      {label}
+      {hint && <span className="text-ink-muted/60 normal-case">{hint}</span>}
+    </span>
+  )
+}
+
 function Field({
   label,
   hint,
@@ -405,10 +404,7 @@ function Field({
 }) {
   return (
     <label className="mt-7 block">
-      <span className="label flex items-baseline justify-between text-ink-muted">
-        {label}
-        {hint && <span className="text-ink-muted/60 normal-case">{hint}</span>}
-      </span>
+      <FieldLabel label={label} hint={hint} />
       <input
         type={type}
         value={value}
@@ -435,10 +431,7 @@ function TextAreaField({
 }) {
   return (
     <label className="mt-7 block">
-      <span className="label flex items-baseline justify-between text-ink-muted">
-        {label}
-        {hint && <span className="text-ink-muted/60 normal-case">{hint}</span>}
-      </span>
+      <FieldLabel label={label} hint={hint} />
       <textarea
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -465,10 +458,7 @@ function SelectField({
 }) {
   return (
     <label className="mt-7 block">
-      <span className="label flex items-baseline justify-between text-ink-muted">
-        {label}
-        {hint && <span className="text-ink-muted/60 normal-case">{hint}</span>}
-      </span>
+      <FieldLabel label={label} hint={hint} />
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -510,10 +500,7 @@ function TagListField({
 
   return (
     <div className="mt-7">
-      <span className="label flex items-baseline justify-between text-ink-muted">
-        {label}
-        {hint && <span className="text-ink-muted/60 normal-case">{hint}</span>}
-      </span>
+      <FieldLabel label={label} hint={hint} />
       <input
         type="text"
         value={draft}

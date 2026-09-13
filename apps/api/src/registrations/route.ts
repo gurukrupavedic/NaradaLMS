@@ -39,24 +39,16 @@ router.get(
   }),
 )
 
-router.post(
-  '/:registrationId/approve',
-  optionalProfileRoute(async ({ req, res, db, school, access, profile }) => {
+function reviewHandler(action: typeof approve | typeof reject) {
+  return optionalProfileRoute(async ({ req, res, db, school, access, profile }) => {
     access.requireCanReviewRegistrations()
     const { registrationId } = await parse(z.object({ registrationId: z.uuid() }), req.params)
-    const row = await approve({ db, school }, registrationId, profile?.id ?? null)
+    const row = await action({ db, school }, registrationId, profile?.id ?? null)
     res.status(200).json({ data: row })
-  }),
-)
+  })
+}
 
-router.post(
-  '/:registrationId/reject',
-  optionalProfileRoute(async ({ req, res, db, school, access, profile }) => {
-    access.requireCanReviewRegistrations()
-    const { registrationId } = await parse(z.object({ registrationId: z.uuid() }), req.params)
-    const row = await reject({ db, school }, registrationId, profile?.id ?? null)
-    res.status(200).json({ data: row })
-  }),
-)
+router.post('/:registrationId/approve', reviewHandler(approve))
+router.post('/:registrationId/reject', reviewHandler(reject))
 
 export default router

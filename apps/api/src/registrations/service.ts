@@ -55,20 +55,22 @@ async function provisionApprovedApplicant(
   context: ReviewContext,
   registration: Registration,
 ): Promise<string> {
+  const fullName = `${registration.firstName} ${registration.lastName}`
   const applicantUser = await repository.findOrCreateApplicantUser(publicDb, {
     phone: registration.phone,
-    name: `${registration.firstName} ${registration.lastName}`,
+    name: fullName,
     email: registration.email,
   })
 
-  await repository.ensureSchoolMembership(publicDb, context.school.id, applicantUser.id)
-
-  const profile = await insertProfile(context.db, {
-    userId: applicantUser.id,
-    name: `${registration.firstName} ${registration.lastName}`,
-    phone: registration.phone,
-    city: registration.city,
-  })
+  const [, profile] = await Promise.all([
+    repository.ensureSchoolMembership(publicDb, context.school.id, applicantUser.id),
+    insertProfile(context.db, {
+      userId: applicantUser.id,
+      name: fullName,
+      phone: registration.phone,
+      city: registration.city,
+    }),
+  ])
   if (!profile) {
     throw internalError()
   }

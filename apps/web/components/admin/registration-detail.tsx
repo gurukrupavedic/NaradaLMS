@@ -11,24 +11,13 @@ import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
 import { registrationQuery } from '@/lib/query/options'
 import { useApproveRegistration, useRejectRegistration } from '@/lib/query/use-registration-mutations'
+import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
 import type { ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
 
 const STATUS_LABEL: Record<ApiRegistrationStatus, string> = {
   pending: 'Pending review',
   approved: 'Approved',
   rejected: 'Rejected',
-}
-
-// Same curated subset the registration form itself offers (registration-form.tsx) — 'absent' is a
-// teacher-side evaluation concept that never has a reason to show up here, but a raw value is
-// still rendered as-is rather than hidden if it somehow does.
-const PROFICIENCY_LABEL: Partial<Record<string, string>> = {
-  notStarted: 'Just starting',
-  practicing: 'Practicing on my own',
-  level1: 'Level 1',
-  level2: 'Level 2',
-  level3: 'Level 3',
-  level4: 'Level 4',
 }
 
 const AGREEMENT_LABELS: { key: keyof ApiRegistration; label: string }[] = [
@@ -109,7 +98,7 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
               <dt className="label mt-5 text-ink-muted">Current proficiency</dt>
               <dd className="mt-2 text-[0.9375rem]">
                 {registration.currentProficiency
-                  ? (PROFICIENCY_LABEL[registration.currentProficiency] ?? registration.currentProficiency)
+                  ? (SELF_REPORTED_PROFICIENCY_LABEL[registration.currentProficiency] ?? registration.currentProficiency)
                   : '—'}
               </dd>
             </div>
