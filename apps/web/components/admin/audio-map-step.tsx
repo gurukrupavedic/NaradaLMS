@@ -1,11 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
+import WaveSurfer from 'wavesurfer.js'
+import RegionsPlugin, { type Region } from 'wavesurfer.js/plugins/regions'
 
 import { cn } from '@/lib/utils'
 import { ApiError } from '@/lib/api/client'
 import { useDeleteChapterAudioAsset, useSetChapterAudioMappings, useUploadChapterAudio } from '@/lib/query/use-content-mutations'
 import {
+  applyRegionEdit,
   createAudioMappingSession,
   formatTimestamp,
   markMappingEnd,
@@ -16,51 +19,125 @@ import {
 } from '@/lib/audio-mapping-session'
 import type { ApiAudioAsset } from '@/lib/api/api-types'
 
-/** Real play/pause/seek against the take's actual audio file — no shared surface with the practice room's own player (that one needs loop/rate for drilling a line; marking boundaries only ever needs to listen and read the clock). */
-function useAudioPlayer(url: string) {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+const REGION_COLOR = 'rgba(99, 91, 178, 0.28)' // indigo, matches the text segment highlight
+const REGION_COLOR_ACTIVE = 'rgba(196, 74, 42, 0.32)' // vermilion, matches the "armed" treatment
+
+/**
+ * Waveform playback plus one draggable/resizable region per saved mapping — the two things a plain
+ * `<audio>` + range-input transport can't give you: a visual read on where the silence between
+ * recited lines actually falls, and a way to fix a boundary that's off by ear *after* marking it,
+ * by dragging its edge until it lines up with what the waveform shows. Modeled on lyric-timer
+ * (github.com/abesmon/lyric-timer)'s two-phase workflow — tap to stamp a rough mark, then drag on
+ * the waveform to correct it — adapted from per-word lyric lines to per-segment recitation audio.
+ *
+ * Region edits only ever change local state; nothing reaches the server until Save, same as the
+ * armed-marking flow below. Doesn't wire up the region-updated listener itself — the caller
+ * subscribes on the returned `regions` ref once it also has `mappings`/`segments` in scope, since
+ * validating an edit needs both.
+ */
+function useWaveformMapper({ url }: { url: string }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const wsRef = useRef<WaveSurfer | null>(null)
+  const regionsRef = useRef<RegionsPlugin | null>(null)
+
   const [time, setTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [playing, setPlaying] = useState(false)
+  const [pxPerSec, setPxPerSec] = useState(80)
 
   useEffect(() => {
-    const audio = new Audio(url)
-    audioRef.current = audio
-    const onTime = () => setTime(audio.currentTime)
-    const onLoaded = () => setDuration(audio.duration)
+    const container = containerRef.current
+    if (!container) return
+
+    const regions = RegionsPlugin.create()
+    const ws = WaveSurfer.create({
+      container,
+      url,
+      height: 88,
+      waveColor: 'rgba(26, 22, 18, 0.35)',
+      progressColor: 'rgba(26, 22, 18, 0.55)',
+      cursorColor: '#c44a2a',
+      normalize: true,
+      minPxPerSec: pxPerSec,
+      plugins: [regions],
+    })
+    wsRef.current = ws
+    regionsRef.current = regions
+
+    const onTime = () => setTime(ws.getCurrentTime())
+    const onReady = () => setDuration(ws.getDuration())
     const onPlay = () => setPlaying(true)
     const onPauseOrEnd = () => setPlaying(false)
-    audio.addEventListener('timeupdate', onTime)
-    audio.addEventListener('loadedmetadata', onLoaded)
-    audio.addEventListener('play', onPlay)
-    audio.addEventListener('pause', onPauseOrEnd)
-    audio.addEventListener('ended', onPauseOrEnd)
+    ws.on('timeupdate', onTime)
+    ws.on('ready', onReady)
+    ws.on('play', onPlay)
+    ws.on('pause', onPauseOrEnd)
+    ws.on('finish', onPauseOrEnd)
+
     return () => {
-      audio.pause()
-      audio.removeEventListener('timeupdate', onTime)
-      audio.removeEventListener('loadedmetadata', onLoaded)
-      audio.removeEventListener('play', onPlay)
-      audio.removeEventListener('pause', onPauseOrEnd)
-      audio.removeEventListener('ended', onPauseOrEnd)
-      audioRef.current = null
+      ws.destroy()
+      wsRef.current = null
+      regionsRef.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url])
 
-  const toggle = useCallback(() => {
-    const audio = audioRef.current
-    if (!audio) return
-    if (audio.paused) void audio.play()
-    else audio.pause()
-  }, [])
+  useEffect(() => {
+    // `zoom` throws until the waveform has finished decoding — `minPxPerSec` above already covers
+    // the initial render, so this only needs to fire for zoom changes once audio is ready.
+    if (duration > 0) wsRef.current?.zoom(pxPerSec)
+  }, [pxPerSec, duration])
+
+  const toggle = useCallback(() => wsRef.current?.playPause(), [])
 
   const seek = useCallback((to: number) => {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.currentTime = Math.min(Math.max(to, 0), audio.duration || to)
-    setTime(audio.currentTime)
+    const ws = wsRef.current
+    if (!ws || !ws.getDuration()) return
+    ws.setTime(Math.min(Math.max(to, 0), ws.getDuration()))
   }, [])
 
-  return { time, duration, playing, toggle, seek }
+  return [
+    { time, duration, playing, toggle, seek, pxPerSec, setPxPerSec },
+    containerRef,
+    regionsRef,
+  ] as const
+}
+
+/** Keeps the waveform's regions in sync with `mappings` — cheapest correct approach is to redraw them all on any change rather than diff, since a chapter's mapping count is small and edits are infrequent (one drag, or one armed-mark, at a time). */
+function useSyncRegions({
+  regions,
+  mappings,
+  segments,
+  armedSegmentId,
+  ready,
+}: {
+  regions: RefObject<RegionsPlugin | null>
+  mappings: DraftMapping[]
+  segments: MappableSegment[]
+  armedSegmentId: string | null
+  ready: boolean
+}) {
+  useEffect(() => {
+    const plugin = regions.current
+    // Before the waveform has decoded the audio, wavesurfer doesn't know the track's duration yet
+    // and clamps any `end` past it — collapsing every region to a zero-width marker at 0.
+    if (!plugin || !ready) return
+    plugin.clearRegions()
+    for (const mapping of mappings) {
+      const index = segments.findIndex(s => s.id === mapping.segmentId)
+      if (index === -1) continue
+      plugin.addRegion({
+        id: mapping.segmentId,
+        start: mapping.audioStart,
+        end: mapping.audioEnd,
+        color: mapping.segmentId === armedSegmentId ? REGION_COLOR_ACTIVE : REGION_COLOR,
+        content: `${index + 1}`,
+        drag: true,
+        resize: true,
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mappings, segments, armedSegmentId, ready])
 }
 
 function toDraftMappings(mappings: ApiAudioAsset['mappings']): DraftMapping[] {
@@ -74,18 +151,26 @@ function toDraftMappings(mappings: ApiAudioAsset['mappings']): DraftMapping[] {
  * armed line finishes; the next line arms itself with its suggested start already at the
  * previous line's end, so there's nothing to type for a cleanly-read recitation. Set Start only
  * matters when the reciter paused or restarted between lines.
+ *
+ * That armed-marking pass gets you roughly right, fast — it doesn't get you *accurate*, because
+ * "by ear, in real time" always lags the sound slightly. The waveform below is the correction
+ * pass: every mapping is a region drawn on it, and dragging a region's edge until it lines up with
+ * where the waveform actually shows the line starting is a lot more reliable than re-listening and
+ * re-guessing. Rejects a drag that would overlap a neighboring segment's region rather than
+ * resolving it automatically — same reasoning as `applyRegionEdit`'s own doc comment.
  */
 function ArmedAudioMapper({ chapterId, asset, segments }: { chapterId: string; asset: ApiAudioAsset; segments: MappableSegment[] }) {
   const [mappings, setMappings] = useState<DraftMapping[]>(() => toDraftMappings(asset.mappings))
   const [draftStarts, setDraftStarts] = useState<Record<string, number>>({})
-  const player = useAudioPlayer(asset.url)
-  const duration = player.duration || asset.duration
+  const [dragError, setDragError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const setMappingsMutation = useSetChapterAudioMappings(chapterId)
   const deleteAsset = useDeleteChapterAudioAsset(chapterId)
 
-  const session = createAudioMappingSession({ segments, mappings, currentTime: player.time, duration, draftStarts })
+  const [player, waveformContainerRef, regionsRef] = useWaveformMapper({ url: asset.url })
+  const duration = player.duration || asset.duration
+
   const {
     armedIndex,
     armedSegment,
@@ -100,7 +185,28 @@ function ArmedAudioMapper({ chapterId, asset, segments }: { chapterId: string; a
     allMapped,
     prevMappedSegments,
     nextUnmappedSegments,
-  } = session
+  } = createAudioMappingSession({ segments, mappings, currentTime: player.time, duration, draftStarts })
+
+  useSyncRegions({ regions: regionsRef, mappings, segments, armedSegmentId: armedSegment?.id ?? null, ready: player.duration > 0 })
+
+  useEffect(() => {
+    const plugin = regionsRef.current
+    if (!plugin) return
+    const handler = (region: Region) => {
+      const result = applyRegionEdit({ segments, mappings, segmentId: region.id, audioStart: region.start, audioEnd: region.end, duration })
+      if (result.error) {
+        setDragError(result.error)
+        const original = mappings.find(m => m.segmentId === region.id)
+        if (original) region.setOptions({ start: original.audioStart, end: original.audioEnd })
+      } else {
+        setDragError(null)
+        setMappings(result.mappings)
+      }
+    }
+    plugin.on('region-updated', handler)
+    return () => plugin.un('region-updated', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [segments, mappings, duration])
 
   function markEnd() {
     setMappings(prev => markMappingEnd({ segments, mappings: prev, armedIndex, armedStart, currentTime: player.time, duration }))
@@ -114,7 +220,8 @@ function ArmedAudioMapper({ chapterId, asset, segments }: { chapterId: string; a
     const next = undoLastMapping(mappings)
     setMappings(next.mappings)
     if (next.currentTime !== null) player.seek(next.currentTime)
-  }, [mappings, player])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mappings])
 
   useEffect(() => {
     function handler(event: KeyboardEvent) {
@@ -222,17 +329,30 @@ function ArmedAudioMapper({ chapterId, asset, segments }: { chapterId: string; a
         ))}
       </div>
 
+      {/* Waveform — every saved mapping is a draggable/resizable region on it, numbered to match
+          the segment order above. Drag a region's edge to correct it; click empty waveform to seek. */}
+      <div className="mt-4 border-t border-rule-soft pt-3.5">
+        <div className="flex items-center justify-between">
+          <span className="label text-ink-muted">Drag a region&apos;s edge to correct its boundary</span>
+          <label className="flex shrink-0 items-center gap-1.5">
+            <span className="label text-ink-muted">Zoom</span>
+            <input
+              type="range"
+              min={20}
+              max={400}
+              step={10}
+              value={player.pxPerSec}
+              onChange={e => player.setPxPerSec(Number(e.target.value))}
+              className="w-24 accent-[var(--vermilion)]"
+            />
+          </label>
+        </div>
+        <div ref={waveformContainerRef} className="mt-2 w-full overflow-x-auto border border-rule-soft" />
+        {dragError && <p className="label mt-1.5 text-vermilion">{dragError}</p>}
+      </div>
+
       {/* Transport */}
-      <div className="mt-4 space-y-2 border-t border-rule-soft pt-3.5">
-        <input
-          type="range"
-          min={0}
-          max={duration || 1}
-          step={0.1}
-          value={player.time}
-          onChange={e => player.seek(Number(e.target.value))}
-          className="w-full accent-[var(--vermilion)]"
-        />
+      <div className="mt-3 space-y-2">
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={player.toggle} className="label shrink-0 bg-ink px-2.5 py-1.5 text-paper">
             {player.playing ? '❚❚ Pause' : '▶ Play'}
