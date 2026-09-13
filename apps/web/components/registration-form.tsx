@@ -206,7 +206,7 @@ export function RegistrationForm() {
       <form className="mt-9" onSubmit={step === STEPS.length - 1 ? handleSubmit : e => e.preventDefault()}>
         {step === 0 && (
           <div className="space-y-1">
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
               <Field
                 label="First name"
                 value={form.firstName}
@@ -228,7 +228,7 @@ export function RegistrationForm() {
               placeholder="+91 98859 81818"
               type="tel"
             />
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
               <Field
                 label="Email"
                 hint="Optional"
@@ -246,7 +246,7 @@ export function RegistrationForm() {
                 type="text"
               />
             </div>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
               <Field
                 label="City"
                 hint="Optional"
