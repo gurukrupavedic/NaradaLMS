@@ -1,10 +1,34 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 
 import { batch, enrollment, profile, type SchoolDb } from '@narada/db'
 
 import type { CreateEnrollmentData } from './schema'
 
 export type Enrollment = typeof enrollment.$inferSelect
+
+/** Active student headcount per batch, for capacity checks (`enrollment/service.ts::selfEnroll`,
+ * `batches/repository.ts::findOpen`) — 'break'/'dropped'/'inactive' don't hold a seat, and a TA/
+ * instructor never counted against a batch's *student* capacity to begin with. Batches with no
+ * enrollment at all are simply absent from the returned map, not present with a `0` — every call
+ * site already treats a missing entry as zero (`?? 0`). */
+export async function countActiveStudentEnrollments(
+  db: SchoolDb,
+  batchIds: string[],
+): Promise<Map<string, number>> {
+  if (batchIds.length === 0) {
+    return new Map()
+  }
+
+  const rows = await db
+    .select({ batchId: enrollment.batchId, count: sql<number>`count(*)::int` })
+    .from(enrollment)
+    .where(
+      and(inArray(enrollment.batchId, batchIds), eq(enrollment.role, 'student'), eq(enrollment.status, 'active')),
+    )
+    .groupBy(enrollment.batchId)
+
+  return new Map(rows.map(row => [row.batchId, row.count]))
+}
 
 // Deliberately returns every qualifying batch rather than `.limit(1)`-ing to one — the caller
 // (`resolveQualifyingBatch`) must reject ambiguity when a student qualifies for more than one

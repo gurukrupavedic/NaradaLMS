@@ -19,6 +19,7 @@ import {
   evaluation,
   exam,
   trackCertification,
+  registration,
 } from './school'
 import {
   userRelations,
@@ -80,6 +81,7 @@ export const schoolSchema = {
   evaluation,
   exam,
   trackCertification,
+  registration,
   profileRelations,
   trackRelations,
   chapterRelations,

@@ -89,6 +89,9 @@ describe('findByIdWithMembers', () => {
       status: 'active' as const,
       startDate: null,
       meetingUrl: null,
+      enrollmentOpensAt: null,
+      enrollmentClosesAt: null,
+      capacity: null,
       members: [
         {
           profileId: 'profile-1',
@@ -147,6 +150,9 @@ describe('setClassSlots', () => {
       status: 'active',
       startDate: null,
       meetingUrl: null,
+      enrollmentOpensAt: null,
+      enrollmentClosesAt: null,
+      capacity: null,
     })
     const newSlots = [{ dayOfWeek: 1, time: '09:00', durationMinutes: 60 }]
     vi.mocked(repository.insertClassSlots).mockResolvedValue(newSlots)
@@ -171,6 +177,9 @@ describe('setClassSlots', () => {
       status: 'active',
       startDate: null,
       meetingUrl: null,
+      enrollmentOpensAt: null,
+      enrollmentClosesAt: null,
+      capacity: null,
     })
     vi.mocked(repository.insertClassSlots).mockResolvedValue([])
 

@@ -384,6 +384,16 @@ export class AccessPolicy {
     }
   }
 
+  // -- Registrations ------------------------------------------------------------
+
+  /** Reviewing a registration (list/read/approve/reject) is a school-admin action — a prospective
+   * student's application is never visible to ordinary members. */
+  public requireCanReviewRegistrations(): void {
+    if (!this.isSchoolAdmin()) {
+      throw forbidden()
+    }
+  }
+
   private requireProfileId(): string {
     if (!this.profileId) {
       throw forbidden('X-Profile-Id header is required')

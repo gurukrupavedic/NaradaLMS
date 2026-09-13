@@ -7,6 +7,7 @@ import { CreateBatchSchema, SetClassSlotsSchema, UpdateBatchSchema } from './sch
 vi.mock('@narada/db', () => ({
   batchStatus: { enumValues: ['upcoming', 'active', 'completed'] },
   enrollmentRole: { enumValues: ['instructor', 'ta', 'student'] },
+  enrollmentStatus: { enumValues: ['active', 'break', 'dropped', 'inactive'] },
 }))
 
 const trackId = crypto.randomUUID()

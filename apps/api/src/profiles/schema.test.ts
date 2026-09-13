@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('@narada/db', () => ({
   batchStatus: { enumValues: ['upcoming', 'active', 'completed'] },
   enrollmentRole: { enumValues: ['instructor', 'ta', 'student'] },
+  enrollmentStatus: { enumValues: ['active', 'break', 'dropped', 'inactive'] },
 }))
 
 import { ProfileBatchesQuerySchema } from './schema'

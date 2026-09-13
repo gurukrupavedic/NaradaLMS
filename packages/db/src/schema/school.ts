@@ -64,6 +64,7 @@ export const examStatus = pgEnum('examStatus', [
   'completed',
   'cancelled',
 ])
+export const registrationStatus = pgEnum('registrationStatus', ['pending', 'approved', 'rejected'])
 
 export const track = pgTable(
   'track',
@@ -236,6 +237,13 @@ export const batch = pgTable('batch', {
   status: batchStatus('status').notNull().default('upcoming'),
   startDate: timestamp('startDate'),
   meetingUrl: text('meetingUrl'),
+  // A student self-enrolls (apps/api/src/batches/service.ts::selfEnroll) only while `now()` falls
+  // in this window — both null (the default) means never open, not "always open"; an admin opts a
+  // batch in explicitly rather than every batch silently becoming joinable the moment it's
+  // 'upcoming'. `capacity` null means unlimited — most batches won't need a cap.
+  enrollmentOpensAt: timestamp('enrollmentOpensAt'),
+  enrollmentClosesAt: timestamp('enrollmentClosesAt'),
+  capacity: integer('capacity'),
 })
 
 // A batch typically meets multiple times a week (e.g. Mon/Wed/Fri), each potentially at a
@@ -348,5 +356,51 @@ export const exam = pgTable(
     index('exam_chapterId_idx').on(table.chapterId),
     index('exam_studentId_idx').on(table.studentId),
     index('exam_batchId_studentId_idx').on(table.batchId, table.studentId),
+  ],
+)
+
+// A prospective student's self-submitted application — not yet a `user`/`profile` at the time it's
+// filed. Deliberately holds its own identity fields (name/phone/email/etc.) rather than
+// referencing `profile`: most registrants don't have an account yet, and a registration must be
+// able to exist (and be reviewed) before one does. Approving one (apps/api/src/registrations/
+// service.ts) provisions the real `user`/`member`/`profile` rows and records the result here via
+// `convertedProfileId`.
+export const registration = pgTable(
+  'registration',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    status: registrationStatus('status').notNull().default('pending'),
+
+    firstName: text('firstName').notNull(),
+    lastName: text('lastName').notNull(),
+    yearOfBirth: integer('yearOfBirth'),
+    phone: text('phone').notNull(),
+    email: text('email'),
+    city: text('city'),
+    countryTimeZone: text('countryTimeZone'),
+
+    learningGoal: text('learningGoal'),
+    currentProficiency: proficiencyLevel('currentProficiency'),
+    spokenLanguages: text('spokenLanguages').array().notNull().default([]),
+    readLanguages: text('readLanguages').array().notNull().default([]),
+
+    parentNames: text('parentNames').array().notNull().default([]),
+    dressCodeAgreed: boolean('dressCodeAgreed').notNull().default(false),
+    noMeatAgreed: boolean('noMeatAgreed').notNull().default(false),
+    noAlcoholAgreed: boolean('noAlcoholAgreed').notNull().default(false),
+    noSmokingAgreed: boolean('noSmokingAgreed').notNull().default(false),
+    comments: text('comments'),
+
+    reviewedAt: timestamp('reviewedAt'),
+    reviewedBy: uuid('reviewedBy').references(() => profile.id),
+    // Set only on approval — the profile provisioned for this applicant, so an approved
+    // registration's outcome stays traceable instead of just becoming an unlinked 'approved' row.
+    convertedProfileId: uuid('convertedProfileId').references(() => profile.id),
+
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [
+    index('registration_status_createdAt_idx').on(table.status, table.createdAt),
+    index('registration_phone_idx').on(table.phone),
   ],
 )

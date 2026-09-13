@@ -55,6 +55,7 @@ export type AdminBatchRow = {
   staff: string
   hasSchedule: boolean
   hasMeetingUrl: boolean
+  isOpenForEnrollment: boolean
 }
 
 export type ClassSlot = { day: string; time: string; durationMinutes: number }
@@ -62,6 +63,7 @@ export type ClassSlot = { day: string; time: string; durationMinutes: number }
 export type BatchStaff = { name: string; role: 'instructor' | 'ta' }
 
 export type AdminBatchDetail = AdminBatchRow & {
+  id: string
   trackId: string
   startDate: string | null
   meetingUrl: string | null
@@ -69,6 +71,9 @@ export type AdminBatchDetail = AdminBatchRow & {
   staffRoster: BatchStaff[]
   chapterCodes: string[]
   roster: RosterStudent[]
+  enrollmentOpensAt: string | null
+  enrollmentClosesAt: string | null
+  capacity: number | null
 }
 
 export function summariseRoster(roster: RosterStudent[]) {

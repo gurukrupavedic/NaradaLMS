@@ -60,6 +60,9 @@ export function BatchTable({ rows }: { rows: AdminBatchRow[] }) {
                           : 'no link'}
                     </span>
                   )}
+                  {row.isOpenForEnrollment && (
+                    <span className="label mt-0.5 block text-vermilion">Enrolling now</span>
+                  )}
                 </td>
                 <td className="px-4 py-2.5 text-[0.8125rem] text-ink-muted">{row.track}</td>
                 <td className="hidden px-4 py-2.5 text-[0.8125rem] text-ink-muted sm:table-cell">

@@ -9,6 +9,7 @@ import { Archive, Section } from '@/components/section'
 import { PillKey } from '@/components/proficiency-pill'
 import { TrackLadder } from '@/components/track-ladder'
 import { TeachingList } from '@/components/teaching-list'
+import { OpenBatchPicker } from '@/components/open-batch-picker'
 import { Notice } from '@/components/notice'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
@@ -37,32 +38,47 @@ export function DashboardScreen() {
     resumeChapterId,
     nextClass,
     upcomingExam,
+    hasActiveBatch,
   } = data
 
   const focus = learningTracks[0]
   const resume = focus?.chapters.find(c => c.id === resumeChapterId)
+  // Real progress already on record (even with no *current* live seat) is what tells a returning
+  // break/graduated-cohort student apart from someone freshly approved with no history at all —
+  // see components/open-batch-picker.tsx's own doc comment on why both land on the same screen.
+  const returning = learningTracks.some(track => track.started > 0)
 
   return (
     <>
-      <Standing
-        eyebrow={`${firstName} · up next`}
-        headline={resume?.title ?? 'Nothing in progress'}
-        meta={
-          focus && resume
-            ? [focus.name, `chapter ${resume.code}`, focus.batchCode].filter(Boolean).join(' · ')
-            : 'You have no active chapters right now.'
-        }
-        stats={
-          focus
-            ? [
-                { value: `${focus.started}/${focus.total}`, label: 'Chapters' },
-                { value: String(focus.mastered), label: 'Mastered' },
-              ]
-            : []
-        }
-      />
+      {hasActiveBatch ? (
+        <Standing
+          eyebrow={`${firstName} · up next`}
+          headline={resume?.title ?? 'Nothing in progress'}
+          meta={
+            focus && resume
+              ? [focus.name, `chapter ${resume.code}`, focus.batchCode].filter(Boolean).join(' · ')
+              : 'You have no active chapters right now.'
+          }
+          stats={
+            focus
+              ? [
+                  { value: `${focus.started}/${focus.total}`, label: 'Chapters' },
+                  { value: String(focus.mastered), label: 'Mastered' },
+                ]
+              : []
+          }
+        />
+      ) : (
+        <Standing
+          eyebrow={`${firstName} · ${returning ? 'welcome back' : 'welcome'}`}
+          headline={returning ? 'Pick a batch to rejoin' : 'Pick your first batch'}
+          meta="A teacher opens enrollment for a batch when it's ready to take new students — join one below to get started."
+        />
+      )}
 
       <div className="mx-auto max-w-5xl space-y-12 px-5 py-9">
+        {!hasActiveBatch && <OpenBatchPicker returning={returning} />}
+
         {/* `Reveal` always renders its own wrapper element, even around a `Notice` that renders
             nothing — an empty-but-present sibling still collects `space-y-12`'s margin, which
             read as a dead gap above "Your practice" whenever there was no notice to show (the
@@ -100,31 +116,36 @@ export function DashboardScreen() {
           </Reveal>
         )}
 
-        <Reveal delay={60}>
-          <Section title="Your practice" count={`${learningTracks.length} tracks`}>
-            <PillKey />
-            <div className="space-y-4">
-              {learningTracks.map(track => (
-                <TrackLadder
-                  key={track.id}
-                  track={track}
-                  resumeChapterId={track.id === focus?.id ? resumeChapterId : null}
-                  defaultOpen={track.id === focus?.id}
-                />
-              ))}
-            </div>
+        {/* With no live seat and no real history, every track here is just the published syllabus
+            at 0% — noise next to the picker above, not useful context. A returning student's real
+            progress, by contrast, is worth keeping visible alongside it. */}
+        {(hasActiveBatch || returning) && (
+          <Reveal delay={60}>
+            <Section title="Your practice" count={`${learningTracks.length} tracks`}>
+              <PillKey />
+              <div className="space-y-4">
+                {learningTracks.map(track => (
+                  <TrackLadder
+                    key={track.id}
+                    track={track}
+                    resumeChapterId={track.id === focus?.id ? resumeChapterId : null}
+                    defaultOpen={track.id === focus?.id}
+                  />
+                ))}
+              </div>
 
-            {archivedLearningTracks.length > 0 && (
-              <Archive label={`${archivedLearningTracks.length} completed track`}>
-                <div className="space-y-4">
-                  {archivedLearningTracks.map(track => (
-                    <TrackLadder key={track.id} track={track} defaultOpen={false} />
-                  ))}
-                </div>
-              </Archive>
-            )}
-          </Section>
-        </Reveal>
+              {archivedLearningTracks.length > 0 && (
+                <Archive label={`${archivedLearningTracks.length} completed track`}>
+                  <div className="space-y-4">
+                    {archivedLearningTracks.map(track => (
+                      <TrackLadder key={track.id} track={track} defaultOpen={false} />
+                    ))}
+                  </div>
+                </Archive>
+              )}
+            </Section>
+          </Reveal>
+        )}
 
         {teachingBatches.length > 0 && (
           <Reveal delay={120}>

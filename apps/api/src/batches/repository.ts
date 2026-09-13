@@ -2,6 +2,7 @@ import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql, type SQL } f
 
 import { batch, batchClassSlot, enrollment, type SchoolDb } from '@narada/db'
 
+import { countActiveStudentEnrollments } from '../enrollment/repository'
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
 import type {
@@ -11,6 +12,7 @@ import type {
   ClassSlot,
   CreateBatchData,
   FindBatchesData,
+  OpenBatch,
   SetClassSlotsData,
   UpdateBatchData,
 } from './schema'
@@ -131,12 +133,14 @@ export async function findAccessibleWithDetail(
     enrollments: {
       profileId: string
       role: BatchWithRole['members'][number]['role']
+      status: BatchWithRole['enrollmentStatus']
       joinedAt: Date | null
       profile: { name: string; phone: string | null; city: string | null }
     }[]
     classSlots: (typeof batchClassSlot.$inferSelect)[]
   } & Batch): BatchWithRole {
     const { enrollments, classSlots, ...batchRow } = row
+    const own = enrollments.find(e => e.profileId === roleForProfileId)
     return {
       ...batchRow,
       members: enrollments.map(e => ({
@@ -148,7 +152,8 @@ export async function findAccessibleWithDetail(
         joinedAt: e.joinedAt,
       })),
       classSlots: classSlots.map(toClassSlot),
-      role: enrollments.find(e => e.profileId === roleForProfileId)?.role ?? null,
+      role: own?.role ?? null,
+      enrollmentStatus: own?.status ?? null,
     }
   }
 
@@ -203,6 +208,51 @@ export async function findAccessibleWithDetail(
 export async function findById(db: SchoolDb, id: string): Promise<Batch | undefined> {
   return db.query.batch.findFirst({
     where: (t, { eq }) => eq(t.id, id),
+  })
+}
+
+/** Row-locking read for `enrollment/service.ts::selfEnroll`'s transaction — the relational query
+ * API (`db.query.batch.findFirst`) has no `FOR UPDATE`, so this drops to the plain query builder.
+ * Locking the batch row serializes concurrent self-enroll attempts on it, so two students racing
+ * for the last seat can't both read "1 seat left" and both succeed. */
+export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Batch | undefined> {
+  const rows = await db.select().from(batch).where(eq(batch.id, id)).for('update')
+  return rows.at(0)
+}
+
+/**
+ * Batches currently open for self-enrollment: both enrollment-window columns are set and `now()`
+ * falls between them (see the column's own doc comment in packages/db/src/schema/school.ts —
+ * either being null means never open, not "always open"). `seatsRemaining` is `null` for an
+ * uncapped batch, never a number standing in for "unlimited".
+ */
+export async function findOpen(db: SchoolDb): Promise<OpenBatch[]> {
+  const now = new Date()
+  const rows = await db.query.batch.findMany({
+    where: (t, { and: andCols, gte, isNotNull: isNotNullCol, lte }) =>
+      andCols(
+        isNotNullCol(t.enrollmentOpensAt),
+        isNotNullCol(t.enrollmentClosesAt),
+        lte(t.enrollmentOpensAt, now),
+        gte(t.enrollmentClosesAt, now),
+      ),
+    with: { classSlots: true, track: true },
+    orderBy: (t, { asc: ascCol }) => ascCol(t.code),
+  })
+
+  const capacitatedIds = rows.filter(row => row.capacity !== null).map(row => row.id)
+  const counts = await countActiveStudentEnrollments(db, capacitatedIds)
+
+  return rows.map(row => {
+    const { classSlots, track: trackRow, ...batchRow } = row
+    const seatsRemaining =
+      batchRow.capacity === null ? null : Math.max(0, batchRow.capacity - (counts.get(row.id) ?? 0))
+    return {
+      ...batchRow,
+      trackName: trackRow.name,
+      classSlots: classSlots.map(toClassSlot),
+      seatsRemaining,
+    }
   })
 }
 
@@ -285,7 +335,7 @@ export async function findAllMembershipsWithDetail(
     // `?? null` here is unreachable in practice — kept only because `BatchWithRole.role` is
     // nullable in general (the `all`-scope case in `findAccessibleWithDetail` genuinely needs
     // that), not because this function can ever actually produce it.
-    const ownRole = enrollments.find(e => e.profileId === profileId)?.role
+    const own = enrollments.find(e => e.profileId === profileId)
     return {
       ...batchRow,
       members: enrollments.map(e => ({
@@ -297,7 +347,8 @@ export async function findAllMembershipsWithDetail(
         joinedAt: e.joinedAt,
       })),
       classSlots: classSlots.map(toClassSlot),
-      role: ownRole ?? null,
+      role: own?.role ?? null,
+      enrollmentStatus: own?.status ?? null,
     }
   })
 }

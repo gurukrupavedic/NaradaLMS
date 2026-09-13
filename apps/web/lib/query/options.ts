@@ -10,7 +10,11 @@ import {
   fetchChapterDetail,
   fetchDashboard,
   fetchExams,
+  fetchOpenBatches,
+  fetchRegistration,
+  fetchRegistrations,
 } from '@/lib/api/resources'
+import type { ApiRegistrationStatus } from '@/lib/api/api-types'
 
 /**
  * Query keys, in one place.
@@ -43,12 +47,21 @@ export const keys = {
   batches: {
     all: ['batches'] as const,
     detail: (code: string) => ['batches', code] as const,
+    open: ['batches', 'open'] as const,
   },
 
   catalog: {
     all: ['catalog'] as const,
     list: () => ['catalog', 'list'] as const,
     track: (id: string) => ['catalog', 'track', id] as const,
+  },
+
+  registrations: {
+    // Prefix key — an approve/reject mutation invalidates this to catch every list (whichever
+    // status tab) and every detail query at once, rather than enumerating all three statuses.
+    all: ['registrations'] as const,
+    list: (status: ApiRegistrationStatus) => ['registrations', 'list', status] as const,
+    detail: (id: string) => ['registrations', 'detail', id] as const,
   },
 } as const
 
@@ -114,6 +127,17 @@ export const adminBatchQuery = (code: string) =>
     queryFn: () => fetchAdminBatch(code),
   })
 
+// Which batches are open changes on its own schedule (an admin's enrollment window opening or
+// closing), not something this app writes to directly except via the admin edit below — a short
+// staleTime rather than the catalog's 10-minute one keeps a picker that's sat open for a while
+// from missing a window that just opened or closed.
+export const openBatchesQuery = () =>
+  queryOptions({
+    queryKey: keys.batches.open,
+    queryFn: fetchOpenBatches,
+    staleTime: 30_000,
+  })
+
 export const catalogTracksQuery = () =>
   queryOptions({
     queryKey: keys.catalog.list(),
@@ -126,4 +150,16 @@ export const catalogTrackQuery = (trackId: string) =>
     queryKey: keys.catalog.track(trackId),
     queryFn: () => fetchCatalogTrack(trackId),
     staleTime: CATALOG_STALE_TIME,
+  })
+
+export const registrationsQuery = (status: ApiRegistrationStatus) =>
+  queryOptions({
+    queryKey: keys.registrations.list(status),
+    queryFn: () => fetchRegistrations(status),
+  })
+
+export const registrationQuery = (id: string) =>
+  queryOptions({
+    queryKey: keys.registrations.detail(id),
+    queryFn: () => fetchRegistration(id),
   })
