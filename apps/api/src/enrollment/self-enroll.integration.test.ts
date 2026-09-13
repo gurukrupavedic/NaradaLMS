@@ -70,6 +70,20 @@ describe('selfEnroll', () => {
     await expect(selfEnroll(world.schoolDb, batch.id, student.id)).rejects.toMatchObject({ statusCode: 409 })
   })
 
+  it('enrolls when the window is open-ended (opened in the past, no scheduled close)', async () => {
+    world = await createTestSchool()
+    const track = await createTrack(world)
+    const batch = await createBatch(world, track, {
+      enrollmentOpensAt: new Date(Date.now() - HOUR),
+      enrollmentClosesAt: null,
+    })
+    const student = await createProfile(world)
+
+    const row = await selfEnroll(world.schoolDb, batch.id, student.id)
+
+    expect(row).toMatchObject({ profileId: student.id, batchId: batch.id, role: 'student' })
+  })
+
   it('rejects with 409 when no enrollment window was ever set', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)

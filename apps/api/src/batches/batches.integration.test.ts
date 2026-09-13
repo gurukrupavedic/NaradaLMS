@@ -16,7 +16,7 @@ import {
   insertClassSlots,
 } from './repository'
 import { UpdateBatchSchema } from './schema'
-import { setClassSlots, updateBatch } from './service'
+import { closeEnrollment, findOpenBatches, openEnrollment, setClassSlots, updateBatch } from './service'
 
 let world: TestWorld | undefined
 
@@ -510,6 +510,51 @@ describe(
     })
   },
 )
+
+describe('openEnrollment / closeEnrollment (the admin "just open/close it" toggle)', () => {
+  it('openEnrollment opens the batch immediately, with no scheduled close, overwriting any prior window', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow, {
+      enrollmentOpensAt: new Date(Date.now() + 60 * 60 * 1000),
+      enrollmentClosesAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+    })
+
+    const before = Date.now()
+    const updated = await openEnrollment({ db: world.schoolDb }, batchRow.id)
+    const after = Date.now()
+
+    expect(updated.enrollmentClosesAt).toBeNull()
+    expect(updated.enrollmentOpensAt).not.toBeNull()
+    expect(updated.enrollmentOpensAt!.getTime()).toBeGreaterThanOrEqual(before)
+    expect(updated.enrollmentOpensAt!.getTime()).toBeLessThanOrEqual(after)
+
+    const openBatches = await findOpenBatches({ db: world.schoolDb })
+    expect(openBatches.map(b => b.id)).toContain(batchRow.id)
+  })
+
+  it('closeEnrollment closes an open-ended batch immediately', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow, {
+      enrollmentOpensAt: new Date(Date.now() - 60 * 60 * 1000),
+      enrollmentClosesAt: null,
+    })
+
+    await closeEnrollment({ db: world.schoolDb }, batchRow.id)
+
+    const openBatches = await findOpenBatches({ db: world.schoolDb })
+    expect(openBatches.map(b => b.id)).not.toContain(batchRow.id)
+  })
+
+  it('openEnrollment throws 404 for a nonexistent batch', async () => {
+    world = await createTestSchool()
+
+    await expect(openEnrollment({ db: world.schoolDb }, crypto.randomUUID())).rejects.toMatchObject({
+      statusCode: 404,
+    })
+  })
+})
 
 describe('updateBatch (real gap: PATCH /batches/:batchId must not accept trackId, §9.4)', () => {
   it("a trackId in the request body never reaches the DB — the batch's real track is unchanged", async () => {

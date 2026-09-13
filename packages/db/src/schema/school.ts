@@ -259,10 +259,16 @@ export const batch = pgTable('batch', {
   status: batchStatus('status').notNull().default('upcoming'),
   startDate: timestamp('startDate'),
   meetingUrl: text('meetingUrl'),
-  // A student self-enrolls (apps/api/src/batches/service.ts::selfEnroll) only while `now()` falls
-  // in this window — both null (the default) means never open, not "always open"; an admin opts a
-  // batch in explicitly rather than every batch silently becoming joinable the moment it's
-  // 'upcoming'. `capacity` null means unlimited — most batches won't need a cap.
+  // A student self-enrolls (apps/api/src/batches/service.ts::selfEnroll) only while the batch is
+  // open: `enrollmentOpensAt` is non-null and in the past, AND (`enrollmentClosesAt` is null OR
+  // still in the future). `enrollmentOpensAt: null` (the default) means never open, not "always
+  // open" — an admin opts a batch in explicitly rather than every batch silently becoming joinable
+  // the moment it's 'upcoming'. `enrollmentClosesAt: null` means open-ended (no scheduled close),
+  // not closed — that's what lets an admin "just open it" (`POST /batches/:id/enrollment/open`)
+  // without having to pick an end date. `capacity` null means unlimited. No admin-facing UI sets
+  // this per batch today — `CreateBatchSchema` (apps/api/src/batches/schema.ts) defaults every new
+  // batch to `DEFAULT_BATCH_CAPACITY` instead — but the column stays nullable/settable at the API
+  // level in case per-batch capacity comes back.
   enrollmentOpensAt: timestamp('enrollmentOpensAt'),
   enrollmentClosesAt: timestamp('enrollmentClosesAt'),
   capacity: integer('capacity'),

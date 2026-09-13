@@ -7,6 +7,12 @@ import { httpsUrl, isoInstant, requireNonEmpty } from '../utils/validate'
 
 const PAGE_SIZE = 20
 
+// No admin-facing way to set a batch's capacity exists today (the create-batch form and the
+// batch-detail "Enrollment" section both dropped the field — DB columns kept in case per-batch
+// capacity comes back later, see packages/db/src/schema/school.ts's own doc comment). Until then,
+// every batch gets this same hard cap at creation.
+export const DEFAULT_BATCH_CAPACITY = 15
+
 export const batchStatusSchema = z.enum(batchStatus.enumValues)
 export const batchMemberRoleSchema = z.enum(enrollmentRole.enumValues)
 export const enrollmentStatusSchema = z.enum(enrollmentStatus.enumValues)
@@ -98,13 +104,18 @@ export const CreateBatchSchema = BatchSchema.pick({
   enrollmentOpensAt: true,
   enrollmentClosesAt: true,
   capacity: true,
-}).partial({
-  startDate: true,
-  meetingUrl: true,
-  enrollmentOpensAt: true,
-  enrollmentClosesAt: true,
-  capacity: true,
 })
+  .partial({
+    startDate: true,
+    meetingUrl: true,
+    enrollmentOpensAt: true,
+    enrollmentClosesAt: true,
+    capacity: true,
+  })
+  // A caller that still wants a different (or uncapped) batch can pass `capacity` explicitly —
+  // this only fills in the value nothing sends anymore now that the create-batch form itself has
+  // no capacity field.
+  .extend({ capacity: BatchSchema.shape.capacity.default(DEFAULT_BATCH_CAPACITY) })
 
 // No `trackId` — a batch's track is set once at creation; the real API never allowed moving it
 // after the fact, and nothing downstream (schedule, enrollment, evaluations) expects it to move.

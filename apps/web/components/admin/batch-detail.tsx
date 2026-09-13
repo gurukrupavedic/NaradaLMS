@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 
+import { cn } from '@/lib/utils'
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
@@ -13,9 +13,10 @@ import { MarkBook } from '@/components/mark-book'
 import { Notice } from '@/components/notice'
 import { ApiError } from '@/lib/api/client'
 import { isBatchOpenForEnrollment } from '@/lib/api/resources'
-import { adminBatchQuery, catalogTrackQuery } from '@/lib/query/options'
+import { adminBatchQuery, catalogTrackQuery, keys } from '@/lib/query/options'
 import { usePrefetch } from '@/lib/query/use-prefetch'
-import { useUpdateBatchEnrollmentWindow } from '@/lib/query/use-batch-mutations'
+import { useCloseBatchEnrollment, useOpenBatchEnrollment } from '@/lib/query/use-batch-mutations'
+import { useSetEvaluation } from '@/lib/query/use-evaluation-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/mock-dashboard'
 
 const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Completed' } as const
@@ -167,109 +168,85 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
 
         <EnrollmentSection batch={batch} />
 
-        <Section
-          title="Roster"
-          count={`${batch.roster.length} enrolled · ${batch.chapterCodes.length} chapters`}
-        >
-          {batch.roster.length === 0 ? (
-            <p className="sheet px-4 py-7 text-center text-[0.875rem] text-ink-muted">
-              Nobody is enrolled in this batch yet.
-            </p>
-          ) : (
-            <>
-              <PillKey />
-              <div className="sheet">
-                <MarkBook chapterCodes={batch.chapterCodes} students={batch.roster} />
-              </div>
-            </>
-          )}
-        </Section>
+        <RosterSection batch={batch} />
       </div>
     </>
   )
 }
 
-/** A UTC ISO instant, formatted for `<input type="datetime-local">` in the *browser's* local time
- * zone (that input has no time-zone concept of its own — it always means "local"). */
-function toLocalInputValue(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+/**
+ * The roster mark book, plus its grade editor (components/grade-dialog.tsx) — a school admin can
+ * grade any batch's roster here, not just one they personally teach
+ * (AccessPolicy.requireCanCreateEvaluation).
+ */
+function RosterSection({ batch }: { batch: AdminBatchDetail }) {
+  const setLevel = useSetEvaluation(batch.id, keys.batches.detail(batch.code))
+
+  return (
+    <Section title="Roster" count={`${batch.roster.length} enrolled · ${batch.chapterCodes.length} chapters`}>
+      {batch.roster.length === 0 ? (
+        <p className="sheet px-4 py-7 text-center text-[0.875rem] text-ink-muted">
+          Nobody is enrolled in this batch yet.
+        </p>
+      ) : (
+        <>
+          <PillKey />
+          <div className="sheet">
+            <MarkBook
+              chapterCodes={batch.chapterCodes}
+              chapterIds={batch.chapterIds}
+              chapterTitles={batch.chapterTitles}
+              students={batch.roster}
+              grading={setLevel}
+            />
+          </div>
+        </>
+      )}
+    </Section>
+  )
 }
 
 /**
  * The one place an admin opens a batch to self-enrollment (components/open-batch-picker.tsx is
- * the student-facing result). No dedicated "edit batch" screen exists yet for any other field
- * either, so this is a small always-editable form on the detail page rather than a toggled edit
- * mode — there's nothing to toggle away from.
+ * the student-facing result). A single "Open"/"Close" toggle rather than a pair of datetime-local
+ * inputs — an admin doesn't think in opens-at/closes-at timestamps, only "can students join right
+ * now or not," so that's the one thing this control asks (see
+ * `use-batch-mutations.ts::useOpenBatchEnrollment`/`useCloseBatchEnrollment`, which resolve it to
+ * the actual columns server-side). No capacity control here — every batch gets the same hard cap
+ * at creation (`DEFAULT_BATCH_CAPACITY`, apps/api/src/batches/schema.ts) until per-batch capacity
+ * comes back.
  */
 function EnrollmentSection({ batch }: { batch: AdminBatchDetail }) {
-  const update = useUpdateBatchEnrollmentWindow(batch.code, batch.id)
-  const [opensAt, setOpensAt] = useState(() => toLocalInputValue(batch.enrollmentOpensAt))
-  const [closesAt, setClosesAt] = useState(() => toLocalInputValue(batch.enrollmentClosesAt))
-  const [capacity, setCapacity] = useState(() => (batch.capacity !== null ? String(batch.capacity) : ''))
-
   const isOpenNow = isBatchOpenForEnrollment(batch)
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    update.mutate({
-      enrollmentOpensAt: opensAt ? new Date(opensAt).toISOString() : null,
-      enrollmentClosesAt: closesAt ? new Date(closesAt).toISOString() : null,
-      capacity: capacity.trim() ? Number(capacity) : null,
-    })
-  }
+  const open = useOpenBatchEnrollment(batch.code, batch.id)
+  const close = useCloseBatchEnrollment(batch.code, batch.id)
+  const toggle = isOpenNow ? close : open
 
   return (
-    <Section title="Enrollment" count={isOpenNow ? 'Open now' : undefined}>
-      <form onSubmit={handleSubmit} className="sheet grid grid-cols-1 gap-5 px-4 py-4 sm:grid-cols-3">
-        <label className="block">
-          <span className="label block text-ink-muted">Opens</span>
-          <input
-            type="datetime-local"
-            value={opensAt}
-            onChange={e => setOpensAt(e.target.value)}
-            className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.875rem] focus:border-vermilion focus:outline-none"
-          />
-        </label>
-        <label className="block">
-          <span className="label block text-ink-muted">Closes</span>
-          <input
-            type="datetime-local"
-            value={closesAt}
-            onChange={e => setClosesAt(e.target.value)}
-            className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.875rem] focus:border-vermilion focus:outline-none"
-          />
-        </label>
-        <label className="block">
-          <span className="label block text-ink-muted">Capacity</span>
-          <input
-            type="number"
-            min={1}
-            value={capacity}
-            onChange={e => setCapacity(e.target.value)}
-            placeholder="Unlimited"
-            className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.875rem] placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
-          />
-        </label>
-
-        <div className="flex items-center gap-3 sm:col-span-3">
-          <button
-            type="submit"
-            disabled={update.isPending}
-            className="label bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
-          >
-            {update.isPending ? 'Saving…' : 'Save'}
-          </button>
-          {update.isError && (
-            <p className="text-[0.8125rem] text-vermilion">
-              {update.error instanceof ApiError ? update.error.message : 'Something went wrong.'}
-            </p>
+    <Section title="Enrollment" count={isOpenNow ? 'Open now' : 'Closed'}>
+      <div className="sheet flex flex-wrap items-center gap-4 px-4 py-4">
+        <button
+          type="button"
+          onClick={() => toggle.mutate()}
+          disabled={toggle.isPending}
+          className={cn(
+            'label px-4 py-2 transition-opacity disabled:opacity-50',
+            isOpenNow ? 'border border-ink/25 text-ink' : 'bg-ink text-paper',
           )}
-          {update.isSuccess && <p className="label text-ink-muted">Saved</p>}
-        </div>
-      </form>
+        >
+          {toggle.isPending ? 'Saving…' : isOpenNow ? 'Close enrollment' : 'Open enrollment'}
+        </button>
+        <span className="text-[0.875rem] text-ink-muted">
+          {isOpenNow
+            ? 'Students can self-enroll in this batch right now.'
+            : 'Students cannot self-enroll in this batch.'}
+        </span>
+        {toggle.isError && (
+          <p className="w-full text-[0.8125rem] text-vermilion">
+            {toggle.error instanceof ApiError ? toggle.error.message : 'Something went wrong.'}
+          </p>
+        )}
+      </div>
     </Section>
   )
 }

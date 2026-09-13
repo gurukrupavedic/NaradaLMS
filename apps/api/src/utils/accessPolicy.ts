@@ -352,11 +352,18 @@ export class AccessPolicy {
     throw forbidden()
   }
 
-  // Deliberately no school-admin fallback (PARITY_PLAN.md §10.5: "current behavior does not use a
-  // school-level fallback on this route, apart from super-admin handling"). An owner/admin who
-  // isn't also enrolled as instructor/TA in this specific batch cannot create an evaluation here.
+  // A school admin/owner can grade any batch's roster, not just one they're personally enrolled
+  // in as instructor/TA — matching the read-side checks above (requireCanReadBatchEvaluations/
+  // requireCanReadStudentEvaluations already carry the same isSchoolAdmin() fallback). This is a
+  // deliberate product decision, not parity with the old backend (which had no such fallback here
+  // — see PARITY_PLAN.md §10.5): admins need to be able to correct or record a grade even for a
+  // batch they don't personally teach.
   public requireCanCreateEvaluation(batchId: string): void {
-    if (this.isSuperAdmin || this.hasBatchPermission(batchId, EVALUATION_CREATE_PERMISSION)) {
+    if (
+      this.isSuperAdmin ||
+      this.isSchoolAdmin() ||
+      this.hasBatchPermission(batchId, EVALUATION_CREATE_PERMISSION)
+    ) {
       return
     }
 

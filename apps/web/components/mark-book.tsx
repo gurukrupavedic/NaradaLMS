@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { PROFICIENCY_LABEL, PROFICIENCY_SHORT, type ProficiencyLevel } from '@/lib/proficiency'
 import type { RosterStudent } from '@/lib/mock-dashboard'
+import { GradeDialog, type GradeDialogTarget, type GradeMutation } from '@/components/grade-dialog'
 
 /**
  * The mark book.
@@ -20,6 +22,13 @@ import type { RosterStudent } from '@/lib/mock-dashboard'
  * belongs to is legible at the size of a grid cell, not just from a bead
  * count. This is the one place that colour convention matters most: it's the
  * grid the mark book itself is named after.
+ *
+ * A cell is only clickable to grade when `chapterIds` and `grading` are both supplied — the
+ * dashboard's own read-only history views (certification-record.tsx etc.) don't wire either, and
+ * stay plain badges. Where it is wired, clicking a mark opens components/grade-dialog.tsx (one
+ * shared dialog for the whole grid, not one per cell) — a real evaluation is history (see
+ * reshape.ts's `latestLevelByChapterId`), so "editing" a grade here means recording a new one, not
+ * mutating the mark shown.
  */
 
 const CELL_INK: Record<ProficiencyLevel, string> = {
@@ -33,13 +42,22 @@ const CELL_INK: Record<ProficiencyLevel, string> = {
 
 export function MarkBook({
   chapterCodes,
+  chapterIds,
+  chapterTitles,
   students,
   className,
+  grading,
 }: {
   chapterCodes: string[]
+  // Parallel to chapterCodes — both required to enable grading (see this file's own doc comment).
+  chapterIds?: string[]
+  chapterTitles?: string[]
   students: RosterStudent[]
   className?: string
+  grading?: GradeMutation
 }) {
+  const [target, setTarget] = useState<GradeDialogTarget | null>(null)
+
   return (
     <div className={cn('overflow-x-auto', className)}>
       <table className="w-full border-collapse text-left">
@@ -94,21 +112,40 @@ export function MarkBook({
                   )}
                 </th>
 
-                {student.marks.map((level, i) => (
-                  <td key={chapterCodes[i]} className="p-[3px] text-center align-middle">
-                    <span
-                      title={`${chapterCodes[i]} · ${PROFICIENCY_LABEL[level]}`}
-                      className={cn(
-                        'grid h-6 w-full place-items-center font-mono text-[0.5625rem] leading-none',
-                        CELL_INK[level],
-                        level === 'notStarted' && 'border border-dashed border-rule',
-                        level === 'level4' && 'ring-1 ring-vermilion ring-inset',
-                      )}
-                    >
-                      {level === 'notStarted' ? '' : PROFICIENCY_SHORT[level]}
-                    </span>
-                  </td>
-                ))}
+                {student.marks.map((level, i) => {
+                  const chapterId = chapterIds?.[i]
+                  const canEdit = Boolean(grading && chapterId)
+
+                  return (
+                    <td key={chapterCodes[i]} className="p-[3px] text-center align-middle">
+                      <button
+                        type="button"
+                        disabled={!canEdit}
+                        onClick={() =>
+                          chapterId &&
+                          setTarget({
+                            studentId: student.id,
+                            studentName: student.name,
+                            chapterId,
+                            chapterCode: chapterCodes[i]!,
+                            chapterTitle: chapterTitles?.[i] ?? '',
+                            currentLevel: level,
+                          })
+                        }
+                        title={`${chapterCodes[i]} · ${PROFICIENCY_LABEL[level]}`}
+                        className={cn(
+                          'grid h-6 w-full place-items-center font-mono text-[0.5625rem] leading-none',
+                          CELL_INK[level],
+                          level === 'notStarted' && 'border border-dashed border-rule',
+                          level === 'level4' && 'ring-1 ring-vermilion ring-inset',
+                          canEdit && 'cursor-pointer transition-opacity hover:opacity-75',
+                        )}
+                      >
+                        {level === 'notStarted' ? '' : PROFICIENCY_SHORT[level]}
+                      </button>
+                    </td>
+                  )
+                })}
 
                 <td className="py-1.5 pr-4 pl-4 text-right">
                   {unevaluated ? (
@@ -122,6 +159,15 @@ export function MarkBook({
           })}
         </tbody>
       </table>
+
+      {grading && (
+        <GradeDialog
+          open={target !== null}
+          onOpenChange={open => !open && setTarget(null)}
+          target={target}
+          grading={grading}
+        />
+      )}
     </div>
   )
 }

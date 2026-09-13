@@ -119,8 +119,9 @@ export type ApiBatch = {
   status: ApiBatchStatus
   startDate: string | null
   meetingUrl: string | null
-  // A student can self-enroll (POST /batches/:batchId/enroll) only while `now()` falls between
-  // these two — both null means never open, not "always open". `capacity: null` means uncapped.
+  // A student can self-enroll (POST /batches/:batchId/enroll) only while the batch is open:
+  // `enrollmentOpensAt` set and in the past, and `enrollmentClosesAt` either null (open-ended) or
+  // still in the future. `enrollmentOpensAt: null` means never open. `capacity: null` means uncapped.
   enrollmentOpensAt: string | null
   enrollmentClosesAt: string | null
   capacity: number | null

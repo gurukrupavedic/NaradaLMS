@@ -4,6 +4,8 @@ import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
 import { MarkBook } from '@/components/mark-book'
+import { keys } from '@/lib/query/options'
+import { useSetEvaluation } from '@/lib/query/use-evaluation-mutations'
 import type { TeachingBatch } from '@/lib/mock-dashboard'
 
 const ROLE_LABEL: Record<TeachingBatch['role'], string> = { instructor: 'Teacher', ta: 'TA' }
@@ -32,6 +34,7 @@ function TeachingRow({
   defaultOpen: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  const setLevel = useSetEvaluation(batch.batchId, keys.dashboard)
 
   return (
     <div>
@@ -74,7 +77,13 @@ function TeachingRow({
 
       {open && (
         <div className="border-t border-rule-soft">
-          <MarkBook chapterCodes={batch.chapterCodes} students={batch.students} />
+          <MarkBook
+            chapterCodes={batch.chapterCodes}
+            chapterIds={batch.chapterIds}
+            chapterTitles={batch.chapterTitles}
+            students={batch.students}
+            grading={setLevel}
+          />
         </div>
       )}
     </div>

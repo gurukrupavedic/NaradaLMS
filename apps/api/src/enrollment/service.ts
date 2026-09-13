@@ -101,9 +101,8 @@ export async function selfEnroll(db: SchoolDbClient, batchId: string, profileId:
     const now = new Date()
     const isOpen =
       batchRow.enrollmentOpensAt !== null &&
-      batchRow.enrollmentClosesAt !== null &&
       batchRow.enrollmentOpensAt <= now &&
-      now <= batchRow.enrollmentClosesAt
+      (batchRow.enrollmentClosesAt === null || now <= batchRow.enrollmentClosesAt)
     if (!isOpen) {
       throw conflict('batch is not currently open for enrollment')
     }

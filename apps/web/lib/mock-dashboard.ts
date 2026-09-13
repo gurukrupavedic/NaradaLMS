@@ -24,6 +24,9 @@ export type TeachingBatch = {
   role: 'instructor' | 'ta'
   status: 'active' | 'completed'
   chapterCodes: string[]
+  // Parallel to chapterCodes — see AdminBatchDetail.chapterIds' own doc comment.
+  chapterIds: string[]
+  chapterTitles: string[]
   students: RosterStudent[]
   unevaluatedCount: number
   progress: number
@@ -70,6 +73,14 @@ export type AdminBatchDetail = AdminBatchRow & {
   classSlots: ClassSlot[]
   staffRoster: BatchStaff[]
   chapterCodes: string[]
+  // Parallel to chapterCodes (same order, same index) — `RosterStudent.marks[i]` is one chapter's
+  // mark for that student, keyed to this same order. Carried separately from chapterCodes (rather
+  // than folded into RosterStudent) because the mark-book's grade editor needs the real chapter
+  // id to POST an evaluation; the code alone (what the grid displays) isn't enough for that.
+  chapterIds: string[]
+  // Parallel to chapterCodes/chapterIds — the grade dialog's own title line
+  // (components/grade-dialog.tsx) shows the full title, not just the code.
+  chapterTitles: string[]
   roster: RosterStudent[]
   enrollmentOpensAt: string | null
   enrollmentClosesAt: string | null
