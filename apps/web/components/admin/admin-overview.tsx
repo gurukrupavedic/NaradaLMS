@@ -72,6 +72,15 @@ export function AdminOverview() {
           </Link>
         </Section>
 
+        <div className="flex justify-end">
+          <Link
+            href="/admin/batches/new"
+            className="label text-ink-muted transition-colors hover:text-vermilion"
+          >
+            + New batch →
+          </Link>
+        </div>
+
         <Section title="Active" count={`${batches.active.length} batches`}>
           <FilterableBatchTable rows={batches.active} />
         </Section>

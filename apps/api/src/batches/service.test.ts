@@ -31,7 +31,7 @@ describe('createBatch', () => {
     })
 
     await expect(
-      createBatch(context, { trackId: 'missing-track', code: 'BATCH-1' }),
+      createBatch(context, { trackId: 'missing-track', code: 'BATCH-1', capacity: null }),
     ).rejects.toMatchObject({
       statusCode: 422,
       message: 'unknown or invalid track',
@@ -44,7 +44,7 @@ describe('createBatch', () => {
     })
 
     await expect(
-      createBatch(context, { trackId: 'track-1', code: 'DUP' }),
+      createBatch(context, { trackId: 'track-1', code: 'DUP', capacity: null }),
     ).rejects.toMatchObject({
       statusCode: 409,
       message: 'a batch with this code already exists',
@@ -55,7 +55,9 @@ describe('createBatch', () => {
     const original = { cause: { code: '23503', constraint: 'some_other_fk' } }
     vi.mocked(repository.insert).mockRejectedValue(original)
 
-    await expect(createBatch(context, { trackId: 'track-1', code: 'X' })).rejects.toBe(original)
+    await expect(
+      createBatch(context, { trackId: 'track-1', code: 'X', capacity: null }),
+    ).rejects.toBe(original)
   })
 })
 

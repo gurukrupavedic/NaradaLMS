@@ -6,10 +6,12 @@ import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
 import {
+  closeEnrollment,
   createBatch,
   findAllAccessible,
   findByIdWithMembers,
   findOpenBatches,
+  openEnrollment,
   setClassSlots,
   updateBatch,
 } from './service'
@@ -66,6 +68,30 @@ router.patch(
     await access.requireCanUpdateBatch(batchId)
     const data = await parse(UpdateBatchSchema, req.body)
     const batch = await updateBatch({ db }, batchId, data)
+    res.status(200).json({ data: batch })
+  }),
+)
+
+// The admin "just open/close it" actions — a one-click alternative to `PATCH /:batchId` that
+// spares an admin from having to compute an opens-at/closes-at timestamp pair by hand (see
+// `batches/service.ts::openEnrollment`/`closeEnrollment`, and the enrollment columns' own doc
+// comment in packages/db/src/schema/school.ts). Same authorization as any other batch edit.
+router.post(
+  '/:batchId/enrollment/open',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
+    await access.requireCanUpdateBatch(batchId)
+    const batch = await openEnrollment({ db }, batchId)
+    res.status(200).json({ data: batch })
+  }),
+)
+
+router.post(
+  '/:batchId/enrollment/close',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
+    await access.requireCanUpdateBatch(batchId)
+    const batch = await closeEnrollment({ db }, batchId)
     res.status(200).json({ data: batch })
   }),
 )

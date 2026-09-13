@@ -302,6 +302,8 @@ export function buildTeachingBatch(
     role: membership.role,
     status: membership.status,
     chapterCodes: orderedChapters.map(chapter => chapter.code),
+    chapterIds: orderedChapters.map(chapter => chapter.id),
+    chapterTitles: orderedChapters.map(chapter => chapter.title),
     students,
     unevaluatedCount: students.filter(student => student.current === null).length,
     progress: getProficiencyProgress(allMarks),

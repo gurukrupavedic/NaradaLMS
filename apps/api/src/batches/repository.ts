@@ -221,20 +221,19 @@ export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Batch
 }
 
 /**
- * Batches currently open for self-enrollment: both enrollment-window columns are set and `now()`
- * falls between them (see the column's own doc comment in packages/db/src/schema/school.ts —
- * either being null means never open, not "always open"). `seatsRemaining` is `null` for an
- * uncapped batch, never a number standing in for "unlimited".
+ * Batches currently open for self-enrollment: `enrollmentOpensAt` is set and in the past, and
+ * `enrollmentClosesAt` is either unset (open-ended) or still in the future (see the column's own
+ * doc comment in packages/db/src/schema/school.ts). `seatsRemaining` is `null` for an uncapped
+ * batch, never a number standing in for "unlimited".
  */
 export async function findOpen(db: SchoolDb): Promise<OpenBatch[]> {
   const now = new Date()
   const rows = await db.query.batch.findMany({
-    where: (t, { and: andCols, gte, isNotNull: isNotNullCol, lte }) =>
+    where: (t, { and: andCols, gte, isNotNull: isNotNullCol, isNull: isNullCol, lte, or: orCols }) =>
       andCols(
         isNotNullCol(t.enrollmentOpensAt),
-        isNotNullCol(t.enrollmentClosesAt),
         lte(t.enrollmentOpensAt, now),
-        gte(t.enrollmentClosesAt, now),
+        orCols(isNullCol(t.enrollmentClosesAt), gte(t.enrollmentClosesAt, now))!,
       ),
     with: { classSlots: true, track: true },
     orderBy: (t, { asc: ascCol }) => ascCol(t.code),

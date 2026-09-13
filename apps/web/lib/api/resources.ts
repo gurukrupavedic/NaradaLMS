@@ -8,6 +8,7 @@ import type { LadderTrack } from '@/components/track-ladder'
 import type {
   ApiAudioAsset,
   ApiAuthProfile,
+  ApiBatch,
   ApiBatchWithRole,
   ApiChapterDetail,
   ApiDashboard,
@@ -268,14 +269,19 @@ export type AdminBatchesPayload = {
 }
 
 // Shared with components/admin/batch-detail.tsx's "Enrollment" section — one definition of "open"
-// (both timestamps set, `now()` between them) rather than two copies that could drift.
+// (mirrors apps/api's own apps/api/src/enrollment/service.ts::selfEnroll and
+// apps/api/src/batches/repository.ts::findOpen) rather than three copies that could drift.
+// `enrollmentClosesAt: null` means open-ended (no scheduled close), not closed.
 export function isBatchOpenForEnrollment(batch: {
   enrollmentOpensAt: string | null
   enrollmentClosesAt: string | null
 }): boolean {
-  if (batch.enrollmentOpensAt === null || batch.enrollmentClosesAt === null) return false
+  if (batch.enrollmentOpensAt === null) return false
   const now = Date.now()
-  return new Date(batch.enrollmentOpensAt).getTime() <= now && now <= new Date(batch.enrollmentClosesAt).getTime()
+  return (
+    new Date(batch.enrollmentOpensAt).getTime() <= now &&
+    (batch.enrollmentClosesAt === null || now <= new Date(batch.enrollmentClosesAt).getTime())
+  )
 }
 
 function toAdminBatchRow(batch: ApiBatchWithRole, trackName: string): AdminBatchRow {
@@ -359,11 +365,31 @@ export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
       .filter((m): m is typeof m & { role: 'instructor' | 'ta' } => m.role === 'instructor' || m.role === 'ta')
       .map(m => ({ name: m.name, role: m.role })),
     chapterCodes: orderedChapters.map(chapter => chapter.code),
+    // Parallel to chapterCodes — lets a caller (the mark book's grade editor) resolve which real
+    // chapter a grid column stands for, since `RosterStudent.marks[i]` is keyed to this same order.
+    chapterIds: orderedChapters.map(chapter => chapter.id),
+    chapterTitles: orderedChapters.map(chapter => chapter.title),
     roster,
     enrollmentOpensAt: batch.enrollmentOpensAt,
     enrollmentClosesAt: batch.enrollmentClosesAt,
     capacity: batch.capacity,
   }
+}
+
+// POST /v1/batches/:batchId/evaluations — a teacher/TA, or (AccessPolicy.requireCanCreateEvaluation)
+// a school admin, marks a student's level on one chapter. Evaluations are append-only history (see
+// reshape.ts's `latestLevelByChapterId`): "editing" a grade means recording a new one, not mutating
+// an old row — the most recent `evaluatedAt` simply becomes the roster's new current mark for that
+// chapter.
+export type CreateEvaluationInput = {
+  studentId: string
+  chapterId: string
+  level: ApiProficiencyLevel
+  notes?: string
+}
+
+export async function createEvaluation(batchId: string, data: CreateEvaluationInput): Promise<ApiEvaluation> {
+  return mutateApi<ApiEvaluation>(`/batches/${batchId}/evaluations`, 'POST', data)
 }
 
 // ── Open enrollment (student self-service) ──────────────────────────────────
@@ -382,14 +408,40 @@ export async function selfEnrollInBatch(batchId: string): Promise<void> {
   await mutateApi(`/batches/${batchId}/enroll`, 'POST')
 }
 
-// PATCH /v1/batches/:batchId — admin-only, narrowed to just the three enrollment-window fields
-// this app's UI currently edits (components/admin/batch-detail.tsx's "Enrollment" section) rather
-// than a general batch-edit form, which doesn't exist yet for any other field either.
-export async function updateBatchEnrollmentWindow(
-  batchId: string,
-  patch: { enrollmentOpensAt: string | null; enrollmentClosesAt: string | null; capacity: number | null },
-): Promise<void> {
-  await mutateApi(`/batches/${batchId}`, 'PATCH', patch)
+// POST /v1/batches/:batchId/enrollment/open — admin-only. Opens the batch for self-enrollment
+// right now, with no scheduled close. The one-click replacement for hand-picking an opens-at/
+// closes-at timestamp pair (components/admin/batch-detail.tsx's "Enrollment" section).
+export async function openBatchEnrollment(batchId: string): Promise<void> {
+  await mutateApi(`/batches/${batchId}/enrollment/open`, 'POST')
+}
+
+// POST /v1/batches/:batchId/enrollment/close — admin-only.
+export async function closeBatchEnrollment(batchId: string): Promise<void> {
+  await mutateApi(`/batches/${batchId}/enrollment/close`, 'POST')
+}
+
+// POST /v1/batches — admin-only. `openForEnrollmentNow` is this form's own convenience, not a
+// real column: checked, it sends the current instant as `enrollmentOpensAt` with no
+// `enrollmentClosesAt` (open-ended, same shape `openBatchEnrollment` produces on an existing
+// batch); unchecked, it sends neither, leaving the new batch closed the way every batch was
+// before this form existed. No `capacity` field — every batch gets the server's own
+// `DEFAULT_BATCH_CAPACITY` (apps/api/src/batches/schema.ts) since there's no admin-facing way to
+// set it per batch today.
+export type CreateBatchInput = {
+  trackId: string
+  code: string
+  startDate?: string | null
+  meetingUrl?: string | null
+  openForEnrollmentNow: boolean
+}
+
+export async function createBatch(input: CreateBatchInput): Promise<ApiBatch> {
+  const { openForEnrollmentNow, ...rest } = input
+  return mutateApi<ApiBatch>('/batches', 'POST', {
+    ...rest,
+    enrollmentOpensAt: openForEnrollmentNow ? new Date().toISOString() : null,
+    enrollmentClosesAt: null,
+  })
 }
 
 // GET /v1/tracks — admin view, drafts included. Reads through the store (lib/api/store.ts), which

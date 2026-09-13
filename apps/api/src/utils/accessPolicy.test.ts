@@ -378,7 +378,7 @@ describe('AccessPolicy — evaluations (§10.3–§10.5)', () => {
     expect(() => access.requireCanReadStudentEvaluations('batch-1', 'someone-else')).toThrow()
   })
 
-  it('requireCanCreateEvaluation has no school-admin fallback — only super admin or a batch evaluation:create role', async () => {
+  it('requireCanCreateEvaluation allows a school admin, a super admin, or a batch evaluation:create role', async () => {
     mockMembership('admin')
     const adminAccess = await AccessPolicy.load({
       db: schoolDbWithEnrollments([]),
@@ -386,7 +386,16 @@ describe('AccessPolicy — evaluations (§10.3–§10.5)', () => {
       user: user(),
       profile,
     })
-    expect(() => adminAccess.requireCanCreateEvaluation('batch-1')).toThrow()
+    expect(() => adminAccess.requireCanCreateEvaluation('batch-1')).not.toThrow()
+
+    mockMembership('member')
+    const plainMemberAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+    expect(() => plainMemberAccess.requireCanCreateEvaluation('batch-1')).toThrow()
 
     mockMembership('member')
     const superAdminAccess = await AccessPolicy.load({

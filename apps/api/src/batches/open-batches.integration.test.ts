@@ -66,6 +66,19 @@ describe('findOpenBatches', () => {
     await expect(findOpenBatches({ db: world.schoolDb })).resolves.toEqual([])
   })
 
+  it('includes a batch that opened in the past with no scheduled close (open-ended)', async () => {
+    world = await createTestSchool()
+    const track = await createTrack(world)
+    const open = await createBatch(world, track, {
+      enrollmentOpensAt: new Date(Date.now() - HOUR),
+      enrollmentClosesAt: null,
+    })
+
+    const items = await findOpenBatches({ db: world.schoolDb })
+
+    expect(items.map(item => item.id)).toEqual([open.id])
+  })
+
   it('reports seatsRemaining as null for an uncapped batch, and a real count for a capped one', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
