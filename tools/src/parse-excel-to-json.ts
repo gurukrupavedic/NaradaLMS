@@ -83,11 +83,13 @@ type EvaluationRow = { id: string; studentId: string; chapterId: string; level: 
 // (packages/db/src/schema/school.ts::trackCertification), keyed on the track, not a chapter.
 type TrackCertificationRow = { id: string; trackId: string; studentId: string; level: string; evaluatorId: string }
 
-// Registration-sheet columns with no home in the current schema — not written by import-school.ts
-// and never touches the DB. Kept identity-matched to a profile now (rather than left only in the
-// raw spreadsheet) so whoever adds real columns for this later can join on profileId instead of
-// re-deriving the phone/YOB/name matching from scratch. One entry per profile, captured from
-// whichever registration row first established that profile's identity.
+// Registration-sheet columns, identity-matched to a profileId (one entry per profile, captured
+// from whichever registration row first established that profile's identity). Most of these have
+// a real column on `profile` now (packages/db/src/schema/school.ts, mirroring `registration`'s own
+// columns) and `import-school.ts`'s `data` command backfills them onto the imported profile —
+// see that file's `applyRegistrationMetadata` for the raw-string -> typed-column conversion. The
+// rest (registeredYear through vedaShaka/jobOccupation/parentStudying/priorityLevel below) still
+// have no home in the schema and stay import-only, kept here for whenever that changes.
 type RegistrationMetadataRow = {
   profileId: string
   registeredYear: string | null
@@ -98,6 +100,12 @@ type RegistrationMetadataRow = {
   joinedCommGroup: string | null
   category: string | null
   upanayanamYear: string | null
+  // `profile.email`/`profile.yearOfBirth` — read here from the same spreadsheet columns already
+  // used elsewhere in this file (EMAIL ADDRESS feeds `user.email` via `claimEmail`; YEAR OF BIRTH
+  // feeds `identityKey`'s dedup matching) rather than reusing those computed values directly,
+  // since this function only ever sees the raw `row`.
+  email: string | null
+  yearOfBirth: number | null
   countryTimeZone: string | null
   // Raw "PRIMARY KEY" column from the source spreadsheet's own prior dedup pass — some rows show
   // "#NAME?" (an Excel formula error already present in the source), kept as-is rather than
@@ -142,6 +150,10 @@ type Report = {
   resolvedEmailOverrides: { email: string; assignedToPhone: string; fellBackToSyntheticFor: string }[]
   batchStatusDefaults: { batchCode: string; status: string; reason: string }[]
   droppedRowsMissingIdentity: { sheet: string; reason: string }[]
+  // A "GURUVU GARU" column name that exact-matched an already-registered profile's own name —
+  // that registrant's real (phone-bearing) identity was reused for the teacher role instead of
+  // minting a second, disconnected, phone-less one. See getOrCreateTeacher's own doc comment.
+  teacherIdentityMerges: { teacherName: string; profileId: string }[]
 }
 
 // ==========================================
@@ -319,6 +331,13 @@ function identityKey(phone: string, yob: unknown, firstName: unknown, lastName: 
   return `${phone}_${cleanYob}_${cleanFirst}_${cleanLast}`
 }
 
+/** Case/whitespace-insensitive full-name key — used to recognize the same real person across the
+ * registration sheet's (first name, last name) fields and the assessment sheet's bare "GURUVU
+ * GARU" name column, which has no phone/YOB to run through identityKey above. */
+function normalizeName(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
 async function run() {
   console.log(`🚀 Loading Excel file: ${EXCEL_FILE}`)
 
@@ -342,10 +361,11 @@ async function run() {
 
   const report: Report = {
     droppedMetadata:
-      'Registration-sheet columns with no home in the current schema (qualified status, upanayanam, ' +
-      'parent info, consent flags, comments, etc.) are not part of the DB-shaped output and are ' +
-      'never written by the importer. Preserved, identity-matched to a profileId, in ' +
-      'registration-metadata.json for whenever real columns exist for this data.',
+      'Registration-sheet metadata is identity-matched to a profileId in registration-metadata.json. ' +
+      "Most of it (contact/background/agreements) has a real column on `profile` now and " +
+      "import-school.ts's `data` command backfills it there. The rest (qualified status, upanayanam, " +
+      'reference contacts, consent flags, etc.) still has no home in the schema and is dropped by the ' +
+      'importer, kept here only for whenever that changes.',
     phoneCollisions: [],
     missingPhoneProfiles: [],
     invalidE164Phones: [],
@@ -356,6 +376,7 @@ async function run() {
     resolvedEmailOverrides: [],
     batchStatusDefaults: [],
     droppedRowsMissingIdentity: [],
+    teacherIdentityMerges: [],
   }
 
   // ==========================================
@@ -370,8 +391,17 @@ async function run() {
   tracksMap.set(GRADUATED_TRACK_NUM, { id: uuidv7(), name: 'Graduated', order: GRADUATED_TRACK_NUM })
 
   const usersByPhone = new Map<string, UserRow>()
+  // Every created user, by id — lets getOrCreateTeacher below resolve a matched registrant's
+  // profile.userId back to its UserRow without needing usersByPhone's own (phone-or-synthetic-key)
+  // indexing scheme.
+  const usersById = new Map<string, UserRow>()
   const profilesByIdentity = new Map<string, ProfileRow>()
   const profilesByPhone = new Map<string, { profileId: string; name: string }[]>()
+  // Every registrant's profile, by normalized full name — lets getOrCreateTeacher below recognize
+  // when a "GURUVU GARU" column names someone who already registered as a student (see that
+  // function's own doc comment), instead of minting a second, disconnected, phone-less identity
+  // for the same real person.
+  const profilesByName = new Map<string, ProfileRow>()
   const teachersByName = new Map<string, { user: UserRow; profile: ProfileRow }>()
   const chaptersMap = new Map<string, ChapterRow>()
   const batchesMap = new Map<string, BatchRow>()
@@ -396,6 +426,9 @@ async function run() {
       return trimmed || null
     }
 
+    const rawEmail = asString(row['EMAIL ADDRESS'])
+    const rawYearOfBirth = Number(row['YEAR OF BIRTH'])
+
     return {
       profileId,
       registeredYear: asString(row['REGISTERED']),
@@ -406,6 +439,8 @@ async function run() {
       joinedCommGroup: asString(row['JOINED COMM GROUP?']),
       category: asString(row['CATEGORY']),
       upanayanamYear: asString(row['UPANAYANAM']),
+      email: rawEmail ? rawEmail.toLowerCase() : null,
+      yearOfBirth: Number.isFinite(rawYearOfBirth) && rawYearOfBirth > 1900 ? rawYearOfBirth : null,
       countryTimeZone: asString(row['COUNTRY TIME ZONE']),
       sourcePrimaryKey: asString(row['PRIMARY KEY']),
       referenceName: asString(row['REFERENCE NAME']),
@@ -505,6 +540,7 @@ async function run() {
         phoneNumberVerified: phoneNumber ? false : null,
       }
       usersByPhone.set(userKey, user)
+      usersById.set(user.id, user)
     }
 
     const profile: ProfileRow = {
@@ -515,6 +551,13 @@ async function run() {
       city: (params.city as string) || null,
     }
     profilesByIdentity.set(key, profile)
+    // First registrant with a given name wins the name-index (same tie-break as claimEmail above)
+    // — two different real people sharing an exact name is an inherent ambiguity exact-string
+    // matching can't resolve, not a bug to chase further here.
+    const nameKey = normalizeName(computedName)
+    if (!profilesByName.has(nameKey)) {
+      profilesByName.set(nameKey, profile)
+    }
 
     if (params.phone) {
       const siblings = profilesByPhone.get(params.phone) ?? []
@@ -527,6 +570,15 @@ async function run() {
     return profile
   }
 
+  /**
+   * A "GURUVU GARU" column has only a bare name — no phone, no YOB — so it can't run through
+   * identityKey the way a registration row does. Run against the name of every profile the
+   * registration sheet already produced first: an exact match means this teacher is the same real
+   * person as an existing (phone-bearing) registrant, and reuses their identity outright rather
+   * than minting a second, disconnected, phone-less one for the same person — the bug that used to
+   * leave every teacher with no way to sign in even when they'd separately registered as a
+   * student. Falls back to a fresh phone-less identity only when no registrant matches.
+   */
   function getOrCreateTeacher(teacherName: unknown): { user: UserRow; profile: ProfileRow } | null {
     const trimmedName = String(teacherName || '').trim()
     if (!trimmedName || trimmedName.toLowerCase() === 'na' || trimmedName.toLowerCase() === 'none') {
@@ -535,6 +587,16 @@ async function run() {
 
     const existing = teachersByName.get(trimmedName)
     if (existing) return existing
+
+    const matchedProfile = profilesByName.get(normalizeName(trimmedName))
+    if (matchedProfile) {
+      const matchedUser = usersById.get(matchedProfile.userId)
+      if (!matchedUser) throw new Error(`getOrCreateTeacher: no user found for matched profile ${matchedProfile.id}`)
+      const teacher = { user: matchedUser, profile: matchedProfile }
+      teachersByName.set(trimmedName, teacher)
+      report.teacherIdentityMerges.push({ teacherName: trimmedName, profileId: matchedProfile.id })
+      return teacher
+    }
 
     const teacherId = uuidv7()
     // No phone column exists for teachers in either sheet (only GURUVU GARU name columns) — stays
@@ -547,6 +609,7 @@ async function run() {
       phoneNumber: null,
       phoneNumberVerified: null,
     }
+    usersById.set(user.id, user)
     const profile: ProfileRow = {
       id: uuidv7(),
       userId: user.id,
@@ -834,8 +897,20 @@ async function run() {
   // ==========================================
   console.log('💾 Saving JSON seed files...')
 
-  const allUsers = [...usersByPhone.values(), ...[...teachersByName.values()].map(t => t.user)]
-  const allProfiles = [...profilesByIdentity.values(), ...[...teachersByName.values()].map(t => t.profile)]
+  // Deduped by id, not concatenated: a merged teacher (getOrCreateTeacher's identity-match path,
+  // see report.teacherIdentityMerges) reuses an existing registrant's user/profile object rather
+  // than creating a new one, so teachersByName and usersByPhone/profilesByIdentity can legitimately
+  // both contain the exact same row for that person — concatenating would emit it twice.
+  const allUsersById = new Map<string, UserRow>()
+  for (const u of usersByPhone.values()) allUsersById.set(u.id, u)
+  for (const t of teachersByName.values()) allUsersById.set(t.user.id, t.user)
+  const allUsers = [...allUsersById.values()]
+
+  const allProfilesById = new Map<string, ProfileRow>()
+  for (const p of profilesByIdentity.values()) allProfilesById.set(p.id, p)
+  for (const t of teachersByName.values()) allProfilesById.set(t.profile.id, t.profile)
+  const allProfiles = [...allProfilesById.values()]
+
   const enrollments = Array.from(enrollmentsByKey.values())
 
   const write = (name: string, data: unknown) =>
@@ -858,9 +933,10 @@ async function run() {
    chapters: ${chaptersMap.size}  batches: ${batchesMap.size}  enrollments: ${enrollments.length}  evaluations: ${evaluations.length}
    track certifications: ${trackCertifications.length}
    phone collisions (shared accounts): ${report.phoneCollisions.length}
+   teacher identities merged into an existing registrant (same person, one identity): ${report.teacherIdentityMerges.length}
    invalid E.164 phone numbers (no login capability yet): ${report.invalidE164Phones.length}
    ambiguous student-status values: ${report.ambiguousStudentStatus.length}
-   registration-metadata.json: ${registrationMetadata.length} rows (not imported — for future schema work)
+   registration-metadata.json: ${registrationMetadata.length} rows (import-school.ts backfills most fields onto profile)
    review seed-data/_report.json before running the importer.
   `)
 }

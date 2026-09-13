@@ -4,6 +4,7 @@ import * as z from 'zod'
 import { optionalProfileRoute, userRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { findAllAccessible, findAllAccessibleWithDetail } from '../batches/service'
+import { getDashboardData } from '../dashboard/service'
 import {
   CreateProfileSchema,
   ProfileBatchesQuerySchema,
@@ -14,6 +15,7 @@ import {
   createProfile,
   deactivateByAdmin,
   deleteById,
+  findById,
   findByUserId,
   searchProfiles,
   updateProfile,
@@ -57,6 +59,20 @@ router.get(
       ? await findAllAccessibleWithDetail({ db }, query, scope, profileId)
       : await findAllAccessible({ db }, query, scope)
     res.status(200).json({ data: batches })
+  }),
+)
+
+// The profile page's data: full contact/background detail plus the same track/exam-history shape
+// the dashboard already assembles for "self" — `getDashboardData` was already fully parametrized
+// by profileId, so this is the same aggregation for any profile the caller is allowed to view.
+router.get(
+  '/:profileId/detail',
+  optionalProfileRoute(async ({ req, res, db, school, user, access }) => {
+    const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
+    await access.requireCanViewProfile(profileId)
+    const profile = await findById({ db, school, user }, profileId)
+    const dashboard = await getDashboardData({ db }, profile.id, profile.name)
+    res.status(200).json({ data: { profile, dashboard } })
   }),
 )
 

@@ -384,6 +384,24 @@ export class AccessPolicy {
     }
   }
 
+  /**
+   * The profile page's audience, exactly: the profile's own owner, a school admin, or a teacher
+   * who shares a batch with this profile (instructor/ta in a batch this profile is also enrolled
+   * in) — the same relationship `getProfileBatchListScope` above already checks for "can this
+   * caller see that profile's batches," reused here for "can this caller see that profile at all."
+   */
+  public async requireCanViewProfile(targetProfileId: string): Promise<void> {
+    if (targetProfileId === this.profileId || this.isSchoolAdmin()) {
+      return
+    }
+
+    if (this.profileId && (await hasSharedInstructorEnrollment(this.db, this.profileId, targetProfileId))) {
+      return
+    }
+
+    throw forbidden()
+  }
+
   // -- Registrations ------------------------------------------------------------
 
   /** Reviewing a registration (list/read/approve/reject) is a school-admin action — a prospective

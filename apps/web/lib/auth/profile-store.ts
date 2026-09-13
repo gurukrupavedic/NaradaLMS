@@ -82,6 +82,13 @@ export function useSelectedProfileName(): string | null {
   return useSyncExternalStore(subscribe, getSelectedProfileName, () => null)
 }
 
+// Same reasoning as useSelectedProfileName above: getSelectedProfileId() reads
+// document.cookie directly, so calling it during render (rather than through this
+// hook) crashes on the server, where document doesn't exist.
+export function useSelectedProfileId(): string | null {
+  return useSyncExternalStore(subscribe, getSelectedProfileId, () => null)
+}
+
 /**
  * Whether the signed-in *account* (not the acted-as profile — see this file's header comment)
  * has admin-level access anywhere it matters here: global super-admin, or owner/admin of this

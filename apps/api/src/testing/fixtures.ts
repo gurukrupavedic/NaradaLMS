@@ -586,6 +586,7 @@ export async function createRegistration(
     lastName?: string
     phone?: string
     email?: string | null
+    learningGoal?: string | null
     reviewedAt?: Date | null
     reviewedBy?: string | null
   },
@@ -598,6 +599,7 @@ export async function createRegistration(
       lastName: overrides?.lastName ?? `Student ${nextUnique()}`,
       phone: overrides?.phone ?? nextRegistrationPhone(),
       email: overrides?.email ?? null,
+      learningGoal: overrides?.learningGoal ?? null,
       reviewedAt: overrides?.reviewedAt ?? null,
       reviewedBy: overrides?.reviewedBy ?? null,
     })

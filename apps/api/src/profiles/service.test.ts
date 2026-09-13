@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDbClient, organization } from '@narada/db'
 
-import { deactivateByAdmin, deleteById, searchProfiles } from './service'
+import { deactivateByAdmin, deleteById, findById, searchProfiles } from './service'
 import * as repository from './repository'
+import type { Profile } from './schema'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
 vi.mock('./repository', () => ({
+  findById: vi.fn(),
   findByUserId: vi.fn(),
   findMembership: vi.fn(),
   insert: vi.fn(),
@@ -32,6 +34,29 @@ const user = { id: 'user-1', isSuperAdmin: false } as unknown as Parameters<
   typeof deleteById
 >[0]['user']
 const context = { db, school, user }
+
+const baseProfile: Profile = {
+  id: 'profile-1',
+  userId: 'user-1',
+  name: 'Ada',
+  phone: null,
+  city: null,
+  email: null,
+  yearOfBirth: null,
+  countryTimeZone: null,
+  learningGoal: null,
+  currentProficiency: null,
+  spokenLanguages: [],
+  readLanguages: [],
+  parentNames: [],
+  dressCodeAgreed: false,
+  noMeatAgreed: false,
+  noAlcoholAgreed: false,
+  noSmokingAgreed: false,
+  comments: null,
+  updatedAt: new Date(),
+  createdAt: new Date(),
+}
 
 describe('deleteById', () => {
   beforeEach(() => {
@@ -81,12 +106,32 @@ describe('searchProfiles', () => {
   })
 
   it('delegates straight through to the repository', async () => {
-    const results = [{ id: 'profile-1', userId: 'user-1', name: 'Ada', phone: null, city: null, updatedAt: new Date(), createdAt: new Date() }]
+    const results = [baseProfile]
     vi.mocked(repository.search).mockResolvedValue(results)
 
     await expect(
       searchProfiles(context, { query: 'ada', excludeBatchId: undefined }),
     ).resolves.toEqual(results)
     expect(repository.search).toHaveBeenCalledWith(db, { query: 'ada', excludeBatchId: undefined })
+  })
+})
+
+describe('findById', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('returns the profile, registration-derived fields included', async () => {
+    const withRegistrationFields = { ...baseProfile, email: 'ada@example.com', learningGoal: 'Fluency' }
+    vi.mocked(repository.findById).mockResolvedValue(withRegistrationFields)
+
+    await expect(findById(context, 'profile-1')).resolves.toEqual(withRegistrationFields)
+    expect(repository.findById).toHaveBeenCalledWith(db, 'profile-1')
+  })
+
+  it('404s a missing or soft-deleted profile', async () => {
+    vi.mocked(repository.findById).mockResolvedValue(undefined)
+
+    await expect(findById(context, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
   })
 })

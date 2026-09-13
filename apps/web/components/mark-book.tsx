@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { cn } from '@/lib/utils'
 import { PROFICIENCY_LABEL, PROFICIENCY_SHORT, type ProficiencyLevel } from '@/lib/proficiency'
 import type { RosterStudent } from '@/lib/mock-dashboard'
@@ -84,7 +86,9 @@ export function MarkBook({
                     unevaluated && 'bg-transparent',
                   )}
                 >
-                  <span className="block truncate">{student.name}</span>
+                  <Link href={`/students/${student.id}`} className="block truncate hover:text-vermilion">
+                    {student.name}
+                  </Link>
                   {student.city && (
                     <span className="label block text-ink-muted">{student.city}</span>
                   )}

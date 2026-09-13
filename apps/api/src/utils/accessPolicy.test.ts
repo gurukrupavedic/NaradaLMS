@@ -527,6 +527,81 @@ describe('AccessPolicy#getProfileBatchListScope (corrected 2026-08-28)', () => {
   })
 })
 
+describe('AccessPolicy#requireCanViewProfile', () => {
+  it('allows a self-lookup even with no admin status and no shared history', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.requireCanViewProfile('profile-1')).resolves.toBeUndefined()
+    expect(enrollmentService.hasSharedInstructorEnrollment).not.toHaveBeenCalled()
+  })
+
+  it('allows a school admin to view any profile', async () => {
+    mockMembership('admin')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.requireCanViewProfile('someone-else')).resolves.toBeUndefined()
+    expect(enrollmentService.hasSharedInstructorEnrollment).not.toHaveBeenCalled()
+  })
+
+  it('allows a teacher who shares a batch with the target profile', async () => {
+    mockMembership('member')
+    vi.mocked(enrollmentService.hasSharedInstructorEnrollment).mockResolvedValue(true)
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.requireCanViewProfile('someone-else')).resolves.toBeUndefined()
+    expect(enrollmentService.hasSharedInstructorEnrollment).toHaveBeenCalledWith(
+      expect.anything(),
+      'profile-1',
+      'someone-else',
+    )
+  })
+
+  it('denies a stranger — no self-match, no admin status, no shared history', async () => {
+    mockMembership('member')
+    vi.mocked(enrollmentService.hasSharedInstructorEnrollment).mockResolvedValue(false)
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'student' }]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.requireCanViewProfile('someone-else')).rejects.toMatchObject({
+      statusCode: 403,
+    })
+  })
+
+  it('denies a lookup of a different profile when the caller has no active profile at all', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+
+    await expect(access.requireCanViewProfile('someone-else')).rejects.toMatchObject({
+      statusCode: 403,
+    })
+    expect(enrollmentService.hasSharedInstructorEnrollment).not.toHaveBeenCalled()
+  })
+})
+
 describe('AccessPolicy#getContentReadView', () => {
   it('a school admin gets the authoring view', async () => {
     mockMembership('admin')

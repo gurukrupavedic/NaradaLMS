@@ -27,12 +27,24 @@ const testAuth = betterAuth({
   plugins: [testUtils()],
 })
 
-// Real profiles from the imported `slmts` dev database — a student with real evaluation history,
-// and the school's real org admin. Swap these for other userIds if you want different personas;
-// find one via `psql` against the `profile`/`user` tables in the school-<orgId> schema.
+// Real profiles from the imported `slmts` dev database. These ids are only stable until the next
+// `import-school.ts data --commit` re-import, which regenerates every id from scratch
+// (tools/src/parse-excel-to-json.ts's ids are not deterministic across runs) — swap in fresh ones
+// from `psql` against the `profile`/`user` tables in the school-<orgId> schema whenever this
+// starts failing with "no user found".
+//
+// `teacher` is a real instructor with their own phone number — parse-excel-to-json.ts used to
+// give every "GURUVU GARU" name a brand-new, phone-less identity even when that same person had
+// already registered as a student elsewhere in the sheet; it now unifies those by exact name
+// match (see getOrCreateTeacher's own doc comment), so a real teacher persona exists at all now.
+//
+// `admin` is a manually-promoted super admin (`UPDATE "user" SET "isSuperAdmin" = true ...`) — a
+// plain `import-school.ts data` import grants every roster user the same 'member' org role, never
+// an owner/admin, so this bypass is what stands in for one until a real admin account is set up.
 const PERSONAS: Record<string, string> = {
-  student: '019fe868-fc2c-746d-982a-e14b63d78328', // Siva Rama Krishna Pochimcherla
-  admin: '7Q6pJUGtpHva8s6CeMkM3jloq8hOf0gs', // Gurukrupa Vedic, org admin
+  student: '01a09965-6726-7199-8331-bcb5f8e51fcb', // Harish Kumar Cherukuru
+  teacher: '01a09965-6727-72ff-96ec-c6a6790caa51', // Chakravarthy Panchagnula
+  admin: '01a09965-6727-72ff-96ec-6e25f945face', // Revanth Pothukuchi (super admin)
 }
 
 async function main() {

@@ -1,6 +1,7 @@
 import * as z from 'zod'
 
 import { FindBatchesSchema } from '../batches/schema'
+import { proficiencyLevelSchema } from '../evaluations/schema'
 import { requireNonEmpty } from '../utils/validate'
 
 export type Profile = z.infer<typeof ProfileSchema>
@@ -10,6 +11,23 @@ export const ProfileSchema = z.object({
   name: z.string().min(1),
   phone: z.string().nullable(),
   city: z.string().nullable(),
+  // The rest of these mirror `registration`'s own fields exactly — only ever populated by
+  // `registrations/service.ts::provisionApprovedApplicant` copying an approved application across,
+  // never client-supplied (see `CreateProfileSchema`/`UpdateProfileSchema` below), so a profile
+  // created directly via `POST /profiles` simply carries the empty/null defaults.
+  email: z.email().nullable(),
+  yearOfBirth: z.number().int().nullable(),
+  countryTimeZone: z.string().nullable(),
+  learningGoal: z.string().nullable(),
+  currentProficiency: proficiencyLevelSchema.nullable(),
+  spokenLanguages: z.array(z.string()),
+  readLanguages: z.array(z.string()),
+  parentNames: z.array(z.string()),
+  dressCodeAgreed: z.boolean(),
+  noMeatAgreed: z.boolean(),
+  noAlcoholAgreed: z.boolean(),
+  noSmokingAgreed: z.boolean(),
+  comments: z.string().nullable(),
   updatedAt: z.coerce.date(),
   createdAt: z.coerce.date(),
 })

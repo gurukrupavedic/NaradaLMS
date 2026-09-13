@@ -120,6 +120,8 @@ describe('approve', () => {
       firstName: 'Anjali',
       lastName: 'Rao',
       phone: '+15556660002',
+      email: 'anjali@example.com',
+      learningGoal: 'Fluency',
     })
 
     const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
@@ -130,7 +132,15 @@ describe('approve', () => {
     const profileRow = await world.schoolDb.query.profile.findFirst({
       where: (t, { eq }) => eq(t.id, row.convertedProfileId!),
     })
-    expect(profileRow).toMatchObject({ userId: provisionedUser.id, name: 'Anjali Rao', phone: '+15556660002' })
+    // `profile` becomes the living record of the full application, not just name/phone/city — see
+    // `registrations/service.ts::provisionApprovedApplicant`'s doc comment.
+    expect(profileRow).toMatchObject({
+      userId: provisionedUser.id,
+      name: 'Anjali Rao',
+      phone: '+15556660002',
+      email: 'anjali@example.com',
+      learningGoal: 'Fluency',
+    })
 
     const memberRow = await publicDb.query.member.findFirst({
       where: (t, { and, eq }) => and(eq(t.organizationId, world!.orgId), eq(t.userId, provisionedUser.id)),

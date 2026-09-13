@@ -11,6 +11,7 @@ import {
   fetchDashboard,
   fetchExams,
   fetchOpenBatches,
+  fetchProfileDetail,
   fetchRegistration,
   fetchRegistrations,
 } from '@/lib/api/resources'
@@ -62,6 +63,10 @@ export const keys = {
     all: ['registrations'] as const,
     list: (status: ApiRegistrationStatus) => ['registrations', 'list', status] as const,
     detail: (id: string) => ['registrations', 'detail', id] as const,
+  },
+
+  profiles: {
+    detail: (profileId: string) => ['profiles', 'detail', profileId] as const,
   },
 } as const
 
@@ -162,4 +167,10 @@ export const registrationQuery = (id: string) =>
   queryOptions({
     queryKey: keys.registrations.detail(id),
     queryFn: () => fetchRegistration(id),
+  })
+
+export const profileDetailQuery = (profileId: string) =>
+  queryOptions({
+    queryKey: keys.profiles.detail(profileId),
+    queryFn: () => fetchProfileDetail(profileId),
   })

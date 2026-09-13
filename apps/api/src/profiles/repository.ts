@@ -17,6 +17,19 @@ const profileColumns = {
   name: profile.name,
   phone: profile.phone,
   city: profile.city,
+  email: profile.email,
+  yearOfBirth: profile.yearOfBirth,
+  countryTimeZone: profile.countryTimeZone,
+  learningGoal: profile.learningGoal,
+  currentProficiency: profile.currentProficiency,
+  spokenLanguages: profile.spokenLanguages,
+  readLanguages: profile.readLanguages,
+  parentNames: profile.parentNames,
+  dressCodeAgreed: profile.dressCodeAgreed,
+  noMeatAgreed: profile.noMeatAgreed,
+  noAlcoholAgreed: profile.noAlcoholAgreed,
+  noSmokingAgreed: profile.noSmokingAgreed,
+  comments: profile.comments,
   updatedAt: profile.updatedAt,
   createdAt: profile.createdAt,
 }
@@ -82,9 +95,17 @@ export async function findMembership(
   })
 }
 
+// The registration-derived fields (see `ProfileSchema`'s own doc comment) are always optional here
+// — `registrations/service.ts::provisionApprovedApplicant` passes them all, while the plain
+// self-serve `createProfile` (no registration behind it) passes none and leaves them at their
+// column defaults.
+type ProfileRegistrationFields = Partial<
+  Omit<Profile, 'id' | 'userId' | 'name' | 'phone' | 'city' | 'updatedAt' | 'createdAt'>
+>
+
 export async function insert(
   db: SchoolDb,
-  values: CreateProfileData & { userId: string; phone: string | null; city: string | null },
+  values: CreateProfileData & { userId: string; phone: string | null; city: string | null } & ProfileRegistrationFields,
 ): Promise<Profile | undefined> {
   const rows = await db.insert(profile).values(values).returning(profileColumns)
   return rows.at(0)

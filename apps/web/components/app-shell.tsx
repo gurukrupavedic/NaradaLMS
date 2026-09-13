@@ -7,7 +7,12 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
 import { signOut as signOutRequest } from '@/lib/auth/client'
-import { clearSelectedProfile, useHasAdminAccess, useSelectedProfileName } from '@/lib/auth/profile-store'
+import {
+  clearSelectedProfile,
+  useHasAdminAccess,
+  useSelectedProfileId,
+  useSelectedProfileName,
+} from '@/lib/auth/profile-store'
 
 /**
  * The masthead.
@@ -24,6 +29,9 @@ const NAV = [
   { label: 'Practice', href: '/practice' },
   { label: 'Record', href: '/exams' },
   { label: 'Admin', href: '/admin' },
+  // href is a placeholder — AppShell below swaps it for the signed-in account's own
+  // `/students/:profileId` once the selected profile id is known.
+  { label: 'Profile', href: '/profile' },
   { label: 'Settings', href: '/settings' },
 ]
 
@@ -57,9 +65,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const profileName = useSelectedProfileName()
   const hasAdminAccess = useHasAdminAccess()
+  const selectedProfileId = useSelectedProfileId()
   // Hidden until access resolves, not just when it's false — showing the link and then
-  // yanking it away a moment later reads as more broken than a one-tick-later appearance.
+  // yanking it away a moment later reads as more broken than a one-tick-later appearance. Same
+  // reasoning for "Profile": no cookie yet (a page rendered ahead of the client picking one up)
+  // means no destination to link to, so it's simply absent rather than pointing at `/students/`.
   const nav = NAV.filter(item => item.href !== '/admin' || hasAdminAccess)
+    .filter(item => item.href !== '/profile' || selectedProfileId)
+    .map(item => (item.href === '/profile' ? { ...item, href: `/students/${selectedProfileId}` } : item))
 
   function handleSignOut() {
     void signOutRequest().finally(() => {

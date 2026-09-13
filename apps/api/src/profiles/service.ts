@@ -23,6 +23,15 @@ export async function searchProfiles(
   return repository.search(context.db, query)
 }
 
+export async function findById(context: ProfileServiceContext, id: string): Promise<Profile> {
+  const row = await repository.findById(context.db, id)
+  if (!row) {
+    throw notFound()
+  }
+
+  return row
+}
+
 /**
  * A super admin may create a profile in any school; everyone else must already hold an
  * organization membership for this school (checked against the public schema, not this
