@@ -25,7 +25,7 @@ import {
   type ProficiencyLevel,
 } from '@/lib/proficiency'
 import type { ChapterRow, LadderTrack } from '@/components/track-ladder'
-import type { RosterStudent, TeachingBatch } from '@/lib/mock-dashboard'
+import type { CertificationRow, RosterStudent, TeachingBatch } from '@/lib/mock-dashboard'
 import { EMPTY, type CatalogChapter, type CatalogTrack } from '@/lib/mock-catalog'
 import type { ChapterContent } from '@/lib/mock-content'
 import type {
@@ -127,6 +127,36 @@ export function buildLadderTrack(
     progress: getProficiencyProgress(levels),
     masteredProgress: getMasteredProgress(levels),
   }
+}
+
+/**
+ * Every one of a dashboard's tracks with real chapters, as ladders — the same construction
+ * `fetchDashboard` (self) and `fetchProfileDetail` (any viewable profile) both need, extracted so
+ * neither re-derives it independently. A track with no chapters isn't real curriculum (see
+ * `buildCatalogTrack`'s doc comment on the "Graduated" synthetic bucket), so it's filtered here,
+ * once, for every caller.
+ */
+export function buildLearningTracks(dashboard: ApiDashboard): LadderTrack[] {
+  const membershipByTrackId = new Map(dashboard.memberships.map(m => [m.trackId, m]))
+  return dashboard.tracks
+    .filter(track => track.chapters.length > 0)
+    .map(track => buildLadderTrack(track, dashboard.studentEvaluations, membershipByTrackId.get(track.id)))
+}
+
+/** Every one of a dashboard's tracks as a certification-record row — see `buildLearningTracks`'s doc comment on why this is shared rather than re-derived per caller. */
+export function buildCertificationRows(dashboard: ApiDashboard): CertificationRow[] {
+  const certificationByTrackId = latestCertificationByTrackId(dashboard.certifications)
+  return dashboard.tracks
+    .filter(track => track.chapters.length > 0)
+    .map(track => {
+      const cert = certificationByTrackId.get(track.id)
+      return {
+        track: track.name,
+        chapter: 'Track certification',
+        level: cert ? narrowLevel(cert.level) : 'notStarted',
+        awardedAt: cert?.evaluatedAt ?? null,
+      }
+    })
 }
 
 /**

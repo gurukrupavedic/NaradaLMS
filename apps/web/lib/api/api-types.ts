@@ -6,11 +6,30 @@
 
 // GET /v1/profiles — every profile the signed-in account can act as (see app/login/page.tsx's own
 // doc comment on why a household can have several).
+//
+// The fields from `email` through `comments` mirror `ApiRegistration`'s own fields exactly:
+// apps/api's `registrations/service.ts::provisionApprovedApplicant` copies an approved
+// application's full detail onto the profile it creates, so `profile` is the living record —
+// `registration` stays an immutable snapshot of what was originally submitted. A profile created
+// directly (no registration behind it) simply carries the null/empty defaults for all of them.
 export type ApiProfile = {
   id: string
   name: string
   phone: string | null
   city: string | null
+  email: string | null
+  yearOfBirth: number | null
+  countryTimeZone: string | null
+  learningGoal: string | null
+  currentProficiency: ApiProficiencyLevel | null
+  spokenLanguages: string[]
+  readLanguages: string[]
+  parentNames: string[]
+  dressCodeAgreed: boolean
+  noMeatAgreed: boolean
+  noAlcoholAgreed: boolean
+  noSmokingAgreed: boolean
+  comments: string | null
   createdAt: string
   updatedAt: string
 }
@@ -208,4 +227,12 @@ export type ApiDashboard = {
   upcomingExams: ApiExam[]
   teaching: { batchId: string; evaluations: ApiEvaluation[] }[]
   pastBatchesByStudent: { studentId: string; batches: ApiBatch[] }[]
+}
+
+// GET /v1/profiles/:profileId/detail — the profile page's data: full contact/background detail
+// plus the same track/exam-history shape the dashboard already assembles for "self," reused here
+// for any profile the caller is allowed to view (self, a teacher sharing a batch, or an admin).
+export type ApiProfileDetail = {
+  profile: ApiProfile
+  dashboard: ApiDashboard
 }

@@ -56,6 +56,41 @@ type UserRow = {
   phoneNumberVerified: boolean | null
 }
 type ProfileRow = { id: string; userId: string; name: string; phone: string | null; city: string | null }
+// Registration-sheet metadata, identity-matched to a profileId — parse-excel-to-json.ts's own
+// RegistrationMetadataRow, narrowed to just the fields `applyRegistrationMetadata` below actually
+// consumes (the rest still have no home on `profile` — see that file's doc comment).
+type RegistrationMetadataRow = {
+  profileId: string
+  email: string | null
+  yearOfBirth: number | null
+  countryTimeZone: string | null
+  spokenLanguages: string | null
+  readLanguages: string | null
+  parentNames: string | null
+  learningGoal: string | null
+  currentProficiency: string | null
+  dressCodeAgreed: string | null
+  noMeatAgreed: string | null
+  noAlcoholAgreed: string | null
+  noSmokingAgreed: string | null
+  comments: string | null
+}
+// `profile` with the registration-derived columns filled in — see `applyRegistrationMetadata`.
+type ProfileInsertRow = ProfileRow & {
+  email: string | null
+  yearOfBirth: number | null
+  countryTimeZone: string | null
+  learningGoal: string | null
+  currentProficiency: ProficiencyLevel | null
+  spokenLanguages: string[]
+  readLanguages: string[]
+  parentNames: string[]
+  dressCodeAgreed: boolean
+  noMeatAgreed: boolean
+  noAlcoholAgreed: boolean
+  noSmokingAgreed: boolean
+  comments: string | null
+}
 type EnrollmentRow = {
   profileId: string
   batchId: string
@@ -102,6 +137,83 @@ function readJson<T>(dataDir: string, fileName: string): T {
     throw new Error(`Missing seed file: ${filePath} — run \`pnpm parse:excel\` first.`)
   }
   return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T
+}
+
+function parseYesNo(value: string | null): boolean {
+  return value?.trim().toLowerCase() === 'yes'
+}
+
+// Free-text lists in the source spreadsheet mix comma-separated ("Telugu, Hindi") and
+// space-separated ("telugu English") entries inconsistently; splitting on commas handles the
+// overwhelming majority without guessing at anything more elaborate — a handful of purely
+// space-separated entries stay as one combined string rather than being force-split on a boundary
+// that isn't actually there.
+//
+// Junk placeholder entries are dropped rather than kept as a fake language/parent name. The
+// "not applicable" family shows up in a lot of different spellings/punctuation across ~1000 rows
+// ("N/A", "N.A.", "N-A", "n/a", "Not Applicable") — stripping non-alphanumerics before comparing
+// collapses all of those to one check instead of hand-enumerating every variant.
+const LIST_JUNK_VALUES = new Set(['na', 'none', 'no', 'notapplicable', '0'])
+function normalizeForJunkCheck(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+function splitList(value: string | null): string[] {
+  if (!value) return []
+  return value
+    .split(',')
+    .map(entry => entry.trim())
+    .filter(entry => entry.length > 0 && !LIST_JUNK_VALUES.has(normalizeForJunkCheck(entry)))
+}
+
+// The historical registration sheet asked a differently-worded self-assessment question ("None" /
+// "Low" / "High", each followed by a long free-text explanation) than the live registration form's
+// Level 1-4 scale (lib/registration-proficiency.ts in apps/web) — there is no exact mapping
+// between them. This keeps only the leading keyword's coarse intent: no experience, some
+// self-taught practice, or meaningfully experienced — kept at the lowest formal tier rather than
+// guessing a specific level 1-4 number the data doesn't actually claim.
+function mapSelfReportedProficiency(value: string | null): ProficiencyLevel | null {
+  const lower = value?.trim().toLowerCase()
+  if (!lower) return null
+  if (lower.startsWith('none')) return 'notStarted'
+  if (lower.startsWith('low')) return 'practicing'
+  if (lower.startsWith('high')) return 'level1'
+  return null
+}
+
+/**
+ * Merges each profile with its matching registration-metadata row (by profileId, 1:1 — see
+ * parse-excel-to-json.ts's own doc comment on RegistrationMetadataRow), converting the sheet's raw
+ * strings into the typed shape `profile`'s own columns expect — the same fields
+ * `registrations/service.ts::provisionApprovedApplicant` copies from a live registration approval,
+ * so a bulk-imported profile ends up carrying the same kind of detail one approved through the app
+ * would. A profile with no metadata row (e.g. a teacher, who never filed a registration) gets the
+ * same column defaults a fresh registration-less profile would.
+ */
+function applyRegistrationMetadata(
+  profiles: ProfileRow[],
+  metadata: RegistrationMetadataRow[],
+): ProfileInsertRow[] {
+  const metadataByProfileId = new Map(metadata.map(row => [row.profileId, row]))
+
+  return profiles.map(profile => {
+    const meta = metadataByProfileId.get(profile.id)
+    return {
+      ...profile,
+      email: meta?.email ?? null,
+      yearOfBirth: meta?.yearOfBirth ?? null,
+      countryTimeZone: meta?.countryTimeZone ?? null,
+      learningGoal: meta?.learningGoal ?? null,
+      currentProficiency: mapSelfReportedProficiency(meta?.currentProficiency ?? null),
+      spokenLanguages: splitList(meta?.spokenLanguages ?? null),
+      readLanguages: splitList(meta?.readLanguages ?? null),
+      parentNames: splitList(meta?.parentNames ?? null),
+      dressCodeAgreed: parseYesNo(meta?.dressCodeAgreed ?? null),
+      noMeatAgreed: parseYesNo(meta?.noMeatAgreed ?? null),
+      noAlcoholAgreed: parseYesNo(meta?.noAlcoholAgreed ?? null),
+      noSmokingAgreed: parseYesNo(meta?.noSmokingAgreed ?? null),
+      comments: meta?.comments ?? null,
+    }
+  })
 }
 
 /** Like `readJson`, but tolerant of an older seed-data directory that predates this file. */
@@ -188,11 +300,17 @@ const dataCmd = defineCommand({
         'track-certifications.json',
         [],
       )
+      const registrationMetadata = readJsonOptional<RegistrationMetadataRow[]>(
+        dataDir,
+        'registration-metadata.json',
+        [],
+      )
 
       console.log(
         `Loaded ${users.length} users, ${profiles.length} profiles, ${tracks.length} tracks, ` +
           `${chapters.length} chapters, ${batches.length} batches, ${enrollments.length} enrollments, ` +
-          `${evaluations.length} evaluations, ${trackCertifications.length} track certifications from ${dataDir}`,
+          `${evaluations.length} evaluations, ${trackCertifications.length} track certifications, ` +
+          `${registrationMetadata.length} registration-metadata rows from ${dataDir}`,
       )
 
       const errors = validate(users, enrollments, evaluations, trackCertifications)
@@ -253,8 +371,9 @@ const dataCmd = defineCommand({
       }
 
       const usersToInsert = users.filter(u => !idRemap.has(u.id))
-      const remappedProfiles = profiles.map(p =>
-        idRemap.has(p.userId) ? { ...p, userId: idRemap.get(p.userId)! } : p,
+      const remappedProfiles = applyRegistrationMetadata(
+        profiles.map(p => (idRemap.has(p.userId) ? { ...p, userId: idRemap.get(p.userId)! } : p)),
+        registrationMetadata,
       )
 
       // publicDb: user, then org membership for every imported user.

@@ -69,6 +69,22 @@ async function provisionApprovedApplicant(
       name: fullName,
       phone: registration.phone,
       city: registration.city,
+      // `profile` mirrors the rest of `registration`'s own columns exactly (see its schema's doc
+      // comment) so the application's full detail survives onto the living record, not just
+      // name/phone/city — straight field-for-field, since the names already match.
+      email: registration.email,
+      yearOfBirth: registration.yearOfBirth,
+      countryTimeZone: registration.countryTimeZone,
+      learningGoal: registration.learningGoal,
+      currentProficiency: registration.currentProficiency,
+      spokenLanguages: registration.spokenLanguages,
+      readLanguages: registration.readLanguages,
+      parentNames: registration.parentNames,
+      dressCodeAgreed: registration.dressCodeAgreed,
+      noMeatAgreed: registration.noMeatAgreed,
+      noAlcoholAgreed: registration.noAlcoholAgreed,
+      noSmokingAgreed: registration.noSmokingAgreed,
+      comments: registration.comments,
     }),
   ])
   if (!profile) {

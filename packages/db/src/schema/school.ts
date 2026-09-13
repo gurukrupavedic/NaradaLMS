@@ -16,6 +16,18 @@ import {
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
 
+// Declared before `profile` (below) since `profile.currentProficiency` references it — a pgEnum
+// value must exist before a pgTable call closes over it.
+export const proficiencyLevel = pgEnum('proficiencyLevel', [
+  'absent',
+  'notStarted',
+  'practicing',
+  'level1',
+  'level2',
+  'level3',
+  'level4',
+])
+
 export const profile = pgTable(
   'profile',
   {
@@ -24,6 +36,25 @@ export const profile = pgTable(
     name: text('name').notNull(),
     phone: text('phone'),
     city: text('city'),
+    // The rest of these mirror `registration`'s own columns exactly (same names/types):
+    // `registrations/service.ts::provisionApprovedApplicant` copies them straight across when an
+    // application is approved, so `profile` becomes the living record of a student's contact and
+    // background details — `registration` stays an immutable snapshot of what was submitted.
+    // Null/empty-default for every one of these so a profile created directly via `POST /profiles`
+    // (no registration behind it) stays valid.
+    email: text('email'),
+    yearOfBirth: integer('yearOfBirth'),
+    countryTimeZone: text('countryTimeZone'),
+    learningGoal: text('learningGoal'),
+    currentProficiency: proficiencyLevel('currentProficiency'),
+    spokenLanguages: text('spokenLanguages').array().notNull().default([]),
+    readLanguages: text('readLanguages').array().notNull().default([]),
+    parentNames: text('parentNames').array().notNull().default([]),
+    dressCodeAgreed: boolean('dressCodeAgreed').notNull().default(false),
+    noMeatAgreed: boolean('noMeatAgreed').notNull().default(false),
+    noAlcoholAgreed: boolean('noAlcoholAgreed').notNull().default(false),
+    noSmokingAgreed: boolean('noSmokingAgreed').notNull().default(false),
+    comments: text('comments'),
     // Soft-delete marker (DD-011): NULL = active. Deliberately has no `.$onUpdateFn` —
     // unlike `updatedAt`, this is set exactly once, explicitly, by the soft-delete write,
     // and must never be auto-touched by an unrelated UPDATE.
@@ -48,15 +79,6 @@ export const enrollmentStatus = pgEnum('enrollmentStatus', [
   'break',
   'dropped',
   'inactive',
-])
-export const proficiencyLevel = pgEnum('proficiencyLevel', [
-  'absent',
-  'notStarted',
-  'practicing',
-  'level1',
-  'level2',
-  'level3',
-  'level4',
 ])
 export const examStatus = pgEnum('examStatus', [
   'scheduled',

@@ -15,19 +15,20 @@ import type {
   ApiOpenBatch,
   ApiProficiencyLevel,
   ApiProfile,
+  ApiProfileDetail,
   ApiRegistration,
   ApiRegistrationStatus,
   ApiScriptKey,
   ApiTrack,
 } from '@/lib/api/api-types'
 import {
+  buildCertificationRows,
   buildChapterContent,
-  buildLadderTrack,
+  buildLearningTracks,
   buildRoster,
   buildTeachingBatch,
   findNextClass,
   findResumeChapterId,
-  latestCertificationByTrackId,
   narrowLevel,
 } from '@/lib/api/reshape'
 
@@ -58,6 +59,14 @@ export async function fetchProfiles(): Promise<ApiProfile[]> {
 // (`lib/auth/profile-store.ts`), which gates the admin nav item and screens.
 export async function fetchAuthProfile(): Promise<ApiAuthProfile> {
   return fetchApi<ApiAuthProfile>('/profile')
+}
+
+// GET /v1/profiles/:profileId/detail — the profile page: full contact/registration detail plus
+// the same track/exam-history shape the dashboard already assembles, for any profile the caller is
+// allowed to view (self, a teacher sharing a batch with them, or a school admin — enforced server-
+// side by `AccessPolicy#requireCanViewProfile`; a caller outside that set gets a 403 `ApiError`).
+export async function fetchProfileDetail(profileId: string): Promise<ApiProfileDetail> {
+  return fetchApi<ApiProfileDetail>(`/profiles/${profileId}/detail`)
 }
 
 // ── Registrations ────────────────────────────────────────────────────────────
@@ -132,12 +141,7 @@ async function fetchStudentDashboard(): Promise<ApiDashboard> {
 export async function fetchDashboard(): Promise<DashboardPayload> {
   const data = await fetchStudentDashboard()
 
-  const membershipByTrackId = new Map(data.memberships.map(m => [m.trackId, m]))
-  const ladders = data.tracks
-    .filter(track => track.chapters.length > 0)
-    .map(track =>
-      buildLadderTrack(track, data.studentEvaluations, membershipByTrackId.get(track.id)),
-    )
+  const ladders = buildLearningTracks(data)
   // A track is archived once the student has been through everything in it AND isn't sitting in
   // a still-running batch for it — matches apps/web/lib/dashboard-view.ts::isLiveTrack +
   // hasUnfinishedWork: `status: 'completed'` means the cohort's run ended, not that the student
@@ -245,24 +249,7 @@ export async function fetchExams(): Promise<ExamsPayload> {
   ])
 
   const trackNameById = new Map(dashboard.tracks.map(track => [track.id, track.name]))
-
-  const certificationByTrackId = latestCertificationByTrackId(dashboard.certifications)
-  const certifications: CertificationRow[] = dashboard.tracks
-    // A track with no chapters isn't real curriculum a student can be certified on — it's
-    // "Graduated," a synthetic bucket the importer gives every post-program cohort batch purely
-    // to satisfy batch.trackId's NOT NULL constraint (tools/src/parse-excel-to-json.ts). Same
-    // filter fetchDashboard() already applies to the learning ladder, kept consistent here.
-    .filter(track => track.chapters.length > 0)
-    .map(track => {
-      const cert = certificationByTrackId.get(track.id)
-      return {
-        track: track.name,
-        chapter: 'Track certification',
-        level: cert ? narrowLevel(cert.level) : 'notStarted',
-        awardedAt: cert?.evaluatedAt ?? null,
-      }
-    })
-
+  const certifications = buildCertificationRows(dashboard)
   const sittings = examList.items.map(exam => toSittingRow(exam, trackNameById))
   return {
     certifications,

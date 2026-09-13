@@ -1,18 +1,24 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
+import type { User } from '../session'
+import { AccessPolicy } from '../utils/accessPolicy'
+import { getDashboardData } from '../dashboard/service'
 import { destroyTestWorld } from '../testing/cleanup'
 import * as enrollmentRepository from '../enrollment/repository'
 import {
   createBatch,
   createChapter,
   createEvaluation,
+  createMembership,
   createProfile,
   createTestSchool,
   createTrack,
+  createUser,
   enroll,
   type TestWorld,
 } from '../testing/fixtures'
 import * as repository from './repository'
+import { findById } from './service'
 
 let world: TestWorld | undefined
 
@@ -226,5 +232,94 @@ describe('search (admin "enroll a student" support)', () => {
     const results = await repository.search(world.schoolDb, {})
 
     expect(results.length).toBeGreaterThanOrEqual(2)
+  })
+})
+
+// The profile detail page's whole access story, end to end against a real database — the pieces
+// `profiles/route.ts`'s `GET /:profileId/detail` composes: `AccessPolicy#requireCanViewProfile`
+// (unit-tested against mocks in `utils/accessPolicy.test.ts`), `findById`, and the dashboard
+// domain's already-parametrized `getDashboardData`.
+describe('profile detail access (self, admin, shared teacher, stranger)', () => {
+  function actor(userId: string): User {
+    return { id: userId, isSuperAdmin: false } as User
+  }
+
+  it('a student can view their own profile', async () => {
+    world = await createTestSchool()
+    const userRow = await createUser(world)
+    await createMembership(world, userRow.id, { role: 'member' })
+    const studentProfile = await createProfile(world, { userId: userRow.id })
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof AccessPolicy.load>[0]['school']
+
+    const access = await AccessPolicy.load({
+      db: world.schoolDb,
+      school: orgSchool,
+      user: actor(userRow.id),
+      profile: studentProfile,
+    })
+
+    await expect(access.requireCanViewProfile(studentProfile.id)).resolves.toBeUndefined()
+    const detail = await findById({ db: world.schoolDb, school: orgSchool, user: actor(userRow.id) }, studentProfile.id)
+    await expect(getDashboardData({ db: world.schoolDb }, detail.id, detail.name)).resolves.toBeDefined()
+  })
+
+  it('a school admin can view any profile', async () => {
+    world = await createTestSchool()
+    const adminUserRow = await createUser(world)
+    await createMembership(world, adminUserRow.id, { role: 'admin' })
+    const adminProfile = await createProfile(world, { userId: adminUserRow.id })
+    const studentProfile = await createProfile(world)
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof AccessPolicy.load>[0]['school']
+
+    const access = await AccessPolicy.load({
+      db: world.schoolDb,
+      school: orgSchool,
+      user: actor(adminUserRow.id),
+      profile: adminProfile,
+    })
+
+    await expect(access.requireCanViewProfile(studentProfile.id)).resolves.toBeUndefined()
+  })
+
+  it('a teacher sharing a batch with the student can view their profile', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    const teacherUserRow = await createUser(world)
+    await createMembership(world, teacherUserRow.id, { role: 'member' })
+    const teacherProfile = await createProfile(world, { userId: teacherUserRow.id })
+    const studentProfile = await createProfile(world)
+    await enroll(world, teacherProfile, batchRow, 'instructor')
+    await enroll(world, studentProfile, batchRow, 'student')
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof AccessPolicy.load>[0]['school']
+
+    const access = await AccessPolicy.load({
+      db: world.schoolDb,
+      school: orgSchool,
+      user: actor(teacherUserRow.id),
+      profile: teacherProfile,
+    })
+
+    await expect(access.requireCanViewProfile(studentProfile.id)).resolves.toBeUndefined()
+  })
+
+  it('an unrelated member with no shared batch and no admin status is denied', async () => {
+    world = await createTestSchool()
+    const strangerUserRow = await createUser(world)
+    await createMembership(world, strangerUserRow.id, { role: 'member' })
+    const strangerProfile = await createProfile(world, { userId: strangerUserRow.id })
+    const studentProfile = await createProfile(world)
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof AccessPolicy.load>[0]['school']
+
+    const access = await AccessPolicy.load({
+      db: world.schoolDb,
+      school: orgSchool,
+      user: actor(strangerUserRow.id),
+      profile: strangerProfile,
+    })
+
+    await expect(access.requireCanViewProfile(studentProfile.id)).rejects.toMatchObject({
+      statusCode: 403,
+    })
   })
 })
