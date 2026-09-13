@@ -80,6 +80,7 @@ export type ApiTrack = {
 
 export type ApiBatchStatus = 'upcoming' | 'active' | 'completed'
 export type ApiEnrollmentRole = 'instructor' | 'ta' | 'student'
+export type ApiEnrollmentStatus = 'active' | 'break' | 'dropped' | 'inactive'
 
 export type ApiClassSlot = { dayOfWeek: number; time: string; durationMinutes: number }
 
@@ -99,10 +100,29 @@ export type ApiBatch = {
   status: ApiBatchStatus
   startDate: string | null
   meetingUrl: string | null
+  // A student can self-enroll (POST /batches/:batchId/enroll) only while `now()` falls between
+  // these two — both null means never open, not "always open". `capacity: null` means uncapped.
+  enrollmentOpensAt: string | null
+  enrollmentClosesAt: string | null
+  capacity: number | null
 }
 
 export type ApiBatchDetail = ApiBatch & { members: ApiBatchMember[]; classSlots: ApiClassSlot[] }
-export type ApiBatchWithRole = ApiBatchDetail & { role: ApiEnrollmentRole | null }
+// `enrollmentStatus` is the caller's own enrollment status in this batch — distinct from `status`
+// (the batch's own upcoming/active/completed) — used to tell a live seat apart from a batch the
+// caller was once in but is now on a break from, dropped, or otherwise inactive in.
+export type ApiBatchWithRole = ApiBatchDetail & {
+  role: ApiEnrollmentRole | null
+  enrollmentStatus: ApiEnrollmentStatus | null
+}
+
+// GET /v1/batches/open — a student's own "batches I can join" view: schedule and remaining seats,
+// never the roster (unlike ApiBatchDetail). `seatsRemaining: null` means uncapped, not "none left".
+export type ApiOpenBatch = ApiBatch & {
+  trackName: string
+  classSlots: ApiClassSlot[]
+  seatsRemaining: number | null
+}
 
 export type ApiProficiencyLevel =
   | 'notStarted'

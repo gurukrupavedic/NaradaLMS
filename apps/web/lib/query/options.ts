@@ -10,6 +10,7 @@ import {
   fetchChapterDetail,
   fetchDashboard,
   fetchExams,
+  fetchOpenBatches,
   fetchRegistration,
   fetchRegistrations,
 } from '@/lib/api/resources'
@@ -46,6 +47,7 @@ export const keys = {
   batches: {
     all: ['batches'] as const,
     detail: (code: string) => ['batches', code] as const,
+    open: ['batches', 'open'] as const,
   },
 
   catalog: {
@@ -123,6 +125,17 @@ export const adminBatchQuery = (code: string) =>
   queryOptions({
     queryKey: keys.batches.detail(code),
     queryFn: () => fetchAdminBatch(code),
+  })
+
+// Which batches are open changes on its own schedule (an admin's enrollment window opening or
+// closing), not something this app writes to directly except via the admin edit below — a short
+// staleTime rather than the catalog's 10-minute one keeps a picker that's sat open for a while
+// from missing a window that just opened or closed.
+export const openBatchesQuery = () =>
+  queryOptions({
+    queryKey: keys.batches.open,
+    queryFn: fetchOpenBatches,
+    staleTime: 30_000,
   })
 
 export const catalogTracksQuery = () =>

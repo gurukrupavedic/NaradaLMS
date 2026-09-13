@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { SchoolDb } from '@narada/db'
+import type { SchoolDb, SchoolDbClient } from '@narada/db'
 
-import { assertStudentEnrolledInBatch, enroll, resolveQualifyingBatch, unenroll } from './service'
+import { assertStudentEnrolledInBatch, enroll, resolveQualifyingBatch, selfEnroll, unenroll } from './service'
 import * as repository from './repository'
+import * as batchesRepository from '../batches/repository'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
@@ -13,6 +14,13 @@ vi.mock('./repository', () => ({
   profileExists: vi.fn(),
   insertEnrollment: vi.fn(),
   deleteEnrollment: vi.fn(),
+  countActiveStudentEnrollments: vi.fn(),
+}))
+
+// Same reasoning as the `./repository` mock above — `selfEnroll` is the one function here that
+// also reaches into `../batches/repository` (to lock and read the batch row).
+vi.mock('../batches/repository', () => ({
+  findByIdForUpdate: vi.fn(),
 }))
 
 describe('resolveQualifyingBatch', () => {
@@ -146,5 +154,127 @@ describe('unenroll', () => {
     vi.mocked(repository.deleteEnrollment).mockResolvedValue(false)
 
     await expect(unenroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
+  })
+})
+
+describe('selfEnroll', () => {
+  // Stubs `transaction` to actually invoke the callback with a fake `tx`, mimicking real Drizzle
+  // behavior — same pattern as batches/service.test.ts's `setClassSlots` suite.
+  const tx = {}
+  const transactionMock = vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback(tx))
+  const db = { transaction: transactionMock } as unknown as SchoolDbClient
+
+  const openBatch = {
+    id: 'batch-1',
+    trackId: 'track-1',
+    code: 'B1',
+    status: 'active' as const,
+    startDate: null,
+    meetingUrl: null,
+    enrollmentOpensAt: new Date('2026-01-01T00:00:00Z'),
+    enrollmentClosesAt: new Date('2026-12-31T00:00:00Z'),
+    capacity: null,
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    transactionMock.mockImplementation(async callback => callback(tx))
+    vi.mocked(repository.findEnrollment).mockResolvedValue(undefined)
+    vi.mocked(repository.countActiveStudentEnrollments).mockResolvedValue(new Map())
+  })
+
+  it('enrolls the profile as a student when the batch is open and has room', async () => {
+    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue(openBatch)
+    const row = {
+      profileId: 'profile-1',
+      batchId: 'batch-1',
+      role: 'student' as const,
+      status: 'active' as const,
+      joinedAt: new Date(),
+      leftDate: null,
+    }
+    vi.mocked(repository.insertEnrollment).mockResolvedValue(row)
+
+    await expect(selfEnroll(db, 'batch-1', 'profile-1')).resolves.toEqual(row)
+    expect(batchesRepository.findByIdForUpdate).toHaveBeenCalledWith(tx, 'batch-1')
+    expect(repository.insertEnrollment).toHaveBeenCalledWith(tx, 'batch-1', {
+      profileId: 'profile-1',
+      role: 'student',
+    })
+  })
+
+  it('rejects with 404 when the batch does not exist', async () => {
+    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue(undefined)
+
+    await expect(selfEnroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
+    expect(repository.insertEnrollment).not.toHaveBeenCalled()
+  })
+
+  it('rejects with 409 when the enrollment window has not opened yet', async () => {
+    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue({
+      ...openBatch,
+      enrollmentOpensAt: new Date('2099-01-01T00:00:00Z'),
+    })
+
+    await expect(selfEnroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'batch is not currently open for enrollment',
+    })
+  })
+
+  it('rejects with 409 when the enrollment window has already closed', async () => {
+    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue({
+      ...openBatch,
+      enrollmentClosesAt: new Date('2020-01-01T00:00:00Z'),
+    })
+
+    await expect(selfEnroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('rejects with 409 when no enrollment window was ever set', async () => {
+    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue({
+      ...openBatch,
+      enrollmentOpensAt: null,
+      enrollmentClosesAt: null,
+    })
+
+    await expect(selfEnroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('rejects with 409 when already enrolled in this batch', async () => {
+    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue(openBatch)
+    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student' })
+
+    await expect(selfEnroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'already enrolled in this batch',
+    })
+    expect(repository.insertEnrollment).not.toHaveBeenCalled()
+  })
+
+  it('rejects with 409 when the batch is at capacity', async () => {
+    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue({ ...openBatch, capacity: 2 })
+    vi.mocked(repository.countActiveStudentEnrollments).mockResolvedValue(new Map([['batch-1', 2]]))
+
+    await expect(selfEnroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'batch is full',
+    })
+    expect(repository.insertEnrollment).not.toHaveBeenCalled()
+  })
+
+  it('enrolls when under capacity', async () => {
+    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue({ ...openBatch, capacity: 2 })
+    vi.mocked(repository.countActiveStudentEnrollments).mockResolvedValue(new Map([['batch-1', 1]]))
+    vi.mocked(repository.insertEnrollment).mockResolvedValue({
+      profileId: 'profile-1',
+      batchId: 'batch-1',
+      role: 'student',
+      status: 'active',
+      joinedAt: new Date(),
+      leftDate: null,
+    })
+
+    await expect(selfEnroll(db, 'batch-1', 'profile-1')).resolves.toMatchObject({ profileId: 'profile-1' })
   })
 })

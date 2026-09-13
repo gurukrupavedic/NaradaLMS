@@ -1,10 +1,18 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
-import { optionalProfileRoute } from '../naradaRoute'
+import { selfEnroll } from '../enrollment/service'
+import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
-import { createBatch, findAllAccessible, findByIdWithMembers, setClassSlots, updateBatch } from './service'
+import {
+  createBatch,
+  findAllAccessible,
+  findByIdWithMembers,
+  findOpenBatches,
+  setClassSlots,
+  updateBatch,
+} from './service'
 
 const router = Router()
 
@@ -14,6 +22,19 @@ router.get(
     const query = await parse(FindBatchesSchema, req.query)
     const visibility = await access.getBatchVisibility()
     const batches = await findAllAccessible({ db }, query, visibility)
+    res.status(200).json({ data: batches })
+  }),
+)
+
+// Mounted before `/:batchId` below so Express never tries to parse "open" as a batch UUID — same
+// reasoning as profiles/route.ts's `/search`. Any signed-in profile, not gated by a batch
+// permission: "which batches can I join" is a different question from "which batches am I
+// already in or administer" (access.getBatchVisibility), and every batch's own open-enrollment
+// window is the real gate here, not a school role.
+router.get(
+  '/open',
+  profileRoute(async ({ res, db }) => {
+    const batches = await findOpenBatches({ db })
     res.status(200).json({ data: batches })
   }),
 )
@@ -46,6 +67,19 @@ router.patch(
     const data = await parse(UpdateBatchSchema, req.body)
     const batch = await updateBatch({ db }, batchId, data)
     res.status(200).json({ data: batch })
+  }),
+)
+
+// The student's own counterpart to admin enrollment (POST /batches/:batchId/members, in
+// ../enrollment/route.ts) — always enrolls the caller's own active profile as a student, gated by
+// the batch's own open-enrollment window rather than a batch permission. `profileRoute`, not
+// `optionalProfileRoute`: there is no meaningful "enroll myself" with no self to enroll.
+router.post(
+  '/:batchId/enroll',
+  profileRoute(async ({ req, res, db, profile }) => {
+    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
+    const row = await selfEnroll(db, batchId, profile.id)
+    res.status(201).json({ data: row })
   }),
 )
 

@@ -64,6 +64,13 @@
       "when": 1789258199978,
       "tag": "0008_fat_black_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789261279493,
+      "tag": "0009_minor_gambit",
+      "breakpoints": true
     }
   ]
 }

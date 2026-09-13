@@ -68,6 +68,10 @@ describe('getDashboardData', () => {
         status: 'active',
         startDate: null,
         meetingUrl: null,
+        enrollmentOpensAt: null,
+        enrollmentClosesAt: null,
+        capacity: null,
+        enrollmentStatus: null,
         role: 'student',
         members: [member('me', 'student')],
         classSlots: [],
@@ -104,6 +108,10 @@ describe('getDashboardData', () => {
         status: 'active',
         startDate: null,
         meetingUrl: null,
+        enrollmentOpensAt: null,
+        enrollmentClosesAt: null,
+        capacity: null,
+        enrollmentStatus: null,
         role: 'instructor',
         members: [member('instructor-me', 'instructor'), member('student-1', 'student')],
         classSlots: [],
@@ -115,6 +123,10 @@ describe('getDashboardData', () => {
         status: 'active',
         startDate: null,
         meetingUrl: null,
+        enrollmentOpensAt: null,
+        enrollmentClosesAt: null,
+        capacity: null,
+        enrollmentStatus: null,
         role: 'ta',
         members: [member('instructor-me', 'ta'), member('student-2', 'student')],
         classSlots: [],
@@ -169,19 +181,23 @@ describe('getDashboardData', () => {
         status: 'active',
         startDate: null,
         meetingUrl: null,
+        enrollmentOpensAt: null,
+        enrollmentClosesAt: null,
+        capacity: null,
+        enrollmentStatus: null,
         role: 'instructor',
         members: [member('me', 'instructor'), member('student-1', 'student')],
         classSlots: [],
       },
     ])
     vi.mocked(batchesRepository.findAllForProfiles).mockResolvedValue(
-      new Map([['student-1', [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }]]]),
+      new Map([['student-1', [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null, enrollmentOpensAt: null, enrollmentClosesAt: null, capacity: null }]]]),
     )
 
     const data = await getDashboardData(context, 'me', 'Me')
 
     expect(data.pastBatchesByStudent).toEqual([
-      { studentId: 'student-1', batches: [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }] },
+      { studentId: 'student-1', batches: [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null, enrollmentOpensAt: null, enrollmentClosesAt: null, capacity: null }] },
     ])
   })
 
@@ -194,6 +210,10 @@ describe('getDashboardData', () => {
         status: 'active' as const,
         startDate: null,
         meetingUrl: null,
+        enrollmentOpensAt: null,
+        enrollmentClosesAt: null,
+        capacity: null,
+        enrollmentStatus: null,
         role: 'student' as const,
         members: [],
         classSlots: [],

@@ -11,6 +11,7 @@ import type {
   ClassSlot,
   CreateBatchData,
   FindBatchesData,
+  OpenBatch,
   SetClassSlotsData,
   UpdateBatchData,
 } from './schema'
@@ -86,6 +87,10 @@ export async function updateBatch(
   }
 
   return row
+}
+
+export async function findOpenBatches(context: BatchServiceContext): Promise<OpenBatch[]> {
+  return repository.findOpen(context.db)
 }
 
 export async function setClassSlots(

@@ -237,6 +237,13 @@ export const batch = pgTable('batch', {
   status: batchStatus('status').notNull().default('upcoming'),
   startDate: timestamp('startDate'),
   meetingUrl: text('meetingUrl'),
+  // A student self-enrolls (apps/api/src/batches/service.ts::selfEnroll) only while `now()` falls
+  // in this window — both null (the default) means never open, not "always open"; an admin opts a
+  // batch in explicitly rather than every batch silently becoming joinable the moment it's
+  // 'upcoming'. `capacity` null means unlimited — most batches won't need a cap.
+  enrollmentOpensAt: timestamp('enrollmentOpensAt'),
+  enrollmentClosesAt: timestamp('enrollmentClosesAt'),
+  capacity: integer('capacity'),
 })
 
 // A batch typically meets multiple times a week (e.g. Mon/Wed/Fri), each potentially at a

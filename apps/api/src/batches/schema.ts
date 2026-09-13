@@ -1,6 +1,6 @@
 import * as z from 'zod'
 
-import { batchStatus, enrollmentRole } from '@narada/db'
+import { batchStatus, enrollmentRole, enrollmentStatus } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
 import { httpsUrl, isoInstant, requireNonEmpty } from '../utils/validate'
@@ -9,6 +9,7 @@ const PAGE_SIZE = 20
 
 export const batchStatusSchema = z.enum(batchStatus.enumValues)
 export const batchMemberRoleSchema = z.enum(enrollmentRole.enumValues)
+export const enrollmentStatusSchema = z.enum(enrollmentStatus.enumValues)
 
 export type Batch = z.infer<typeof BatchSchema>
 export const BatchSchema = z.object({
@@ -18,6 +19,11 @@ export const BatchSchema = z.object({
   status: batchStatusSchema,
   startDate: isoInstant.nullable(),
   meetingUrl: httpsUrl.nullable(),
+  // A student can self-enroll (POST /batches/:batchId/enroll) only while `now()` falls between
+  // these two — see the column's own doc comment in packages/db/src/schema/school.ts.
+  enrollmentOpensAt: isoInstant.nullable(),
+  enrollmentClosesAt: isoInstant.nullable(),
+  capacity: z.number().int().positive().nullable(),
 })
 
 // "View a batch" includes "see who's in it" — this is a capability, not just a richer response
@@ -62,9 +68,15 @@ export const BatchDetailSchema = BatchSchema.extend({
 // since that list is always scoped to batches the profile is actually enrolled in) and
 // `GET /profiles/:profileId/batches?withDetail=true` (nullable: a school-wide admin/owner's "all
 // batches" view includes batches they don't personally teach).
+//
+// `enrollmentStatus` is the caller's own *enrollment* status (active/break/dropped/inactive) —
+// deliberately not named `status` (that's already `Batch`'s own upcoming/active/completed) and
+// deliberately not on `BatchMember` in general: today, only "is my own seat here still live"
+// needs answering (the dashboard's "do I have an active batch" check), not every member's status.
 export type BatchWithRole = z.infer<typeof BatchWithRoleSchema>
 export const BatchWithRoleSchema = BatchDetailSchema.extend({
   role: batchMemberRoleSchema.nullable(),
+  enrollmentStatus: enrollmentStatusSchema.nullable(),
 })
 
 export type FindBatchesData = z.infer<typeof FindBatchesSchema>
@@ -83,9 +95,15 @@ export const CreateBatchSchema = BatchSchema.pick({
   code: true,
   startDate: true,
   meetingUrl: true,
+  enrollmentOpensAt: true,
+  enrollmentClosesAt: true,
+  capacity: true,
 }).partial({
   startDate: true,
   meetingUrl: true,
+  enrollmentOpensAt: true,
+  enrollmentClosesAt: true,
+  capacity: true,
 })
 
 // No `trackId` — a batch's track is set once at creation; the real API never allowed moving it
@@ -97,5 +115,20 @@ export const UpdateBatchSchema = requireNonEmpty(
     status: true,
     startDate: true,
     meetingUrl: true,
+    enrollmentOpensAt: true,
+    enrollmentClosesAt: true,
+    capacity: true,
   }).partial(),
 )
+
+// GET /batches/open — deliberately its own shape, not `BatchDetail`: a student browsing batches to
+// join should see the schedule and how many seats are left, never the existing roster (who's
+// already in it). `seatsRemaining: null` means capacity is uncapped, not "zero left." `trackName`
+// is denormalized onto the row (rather than making the client resolve `trackId` itself) — a
+// student choosing between open batches across tracks needs to know which is which at a glance.
+export type OpenBatch = z.infer<typeof OpenBatchSchema>
+export const OpenBatchSchema = BatchSchema.extend({
+  trackName: z.string(),
+  classSlots: z.array(ClassSlotSchema),
+  seatsRemaining: z.number().int().nullable(),
+})

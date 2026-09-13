@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 
@@ -10,8 +11,11 @@ import { Section } from '@/components/section'
 import { PillKey } from '@/components/proficiency-pill'
 import { MarkBook } from '@/components/mark-book'
 import { Notice } from '@/components/notice'
+import { ApiError } from '@/lib/api/client'
+import { isBatchOpenForEnrollment } from '@/lib/api/resources'
 import { adminBatchQuery, catalogTrackQuery } from '@/lib/query/options'
 import { usePrefetch } from '@/lib/query/use-prefetch'
+import { useUpdateBatchEnrollmentWindow } from '@/lib/query/use-batch-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/mock-dashboard'
 
 const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Completed' } as const
@@ -161,6 +165,8 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
           </dl>
         </Section>
 
+        <EnrollmentSection batch={batch} />
+
         <Section
           title="Roster"
           count={`${batch.roster.length} enrolled · ${batch.chapterCodes.length} chapters`}
@@ -180,5 +186,90 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
         </Section>
       </div>
     </>
+  )
+}
+
+/** A UTC ISO instant, formatted for `<input type="datetime-local">` in the *browser's* local time
+ * zone (that input has no time-zone concept of its own — it always means "local"). */
+function toLocalInputValue(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/**
+ * The one place an admin opens a batch to self-enrollment (components/open-batch-picker.tsx is
+ * the student-facing result). No dedicated "edit batch" screen exists yet for any other field
+ * either, so this is a small always-editable form on the detail page rather than a toggled edit
+ * mode — there's nothing to toggle away from.
+ */
+function EnrollmentSection({ batch }: { batch: AdminBatchDetail }) {
+  const update = useUpdateBatchEnrollmentWindow(batch.code, batch.id)
+  const [opensAt, setOpensAt] = useState(() => toLocalInputValue(batch.enrollmentOpensAt))
+  const [closesAt, setClosesAt] = useState(() => toLocalInputValue(batch.enrollmentClosesAt))
+  const [capacity, setCapacity] = useState(() => (batch.capacity !== null ? String(batch.capacity) : ''))
+
+  const isOpenNow = isBatchOpenForEnrollment(batch)
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    update.mutate({
+      enrollmentOpensAt: opensAt ? new Date(opensAt).toISOString() : null,
+      enrollmentClosesAt: closesAt ? new Date(closesAt).toISOString() : null,
+      capacity: capacity.trim() ? Number(capacity) : null,
+    })
+  }
+
+  return (
+    <Section title="Enrollment" count={isOpenNow ? 'Open now' : undefined}>
+      <form onSubmit={handleSubmit} className="sheet grid grid-cols-1 gap-5 px-4 py-4 sm:grid-cols-3">
+        <label className="block">
+          <span className="label block text-ink-muted">Opens</span>
+          <input
+            type="datetime-local"
+            value={opensAt}
+            onChange={e => setOpensAt(e.target.value)}
+            className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.875rem] focus:border-vermilion focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="label block text-ink-muted">Closes</span>
+          <input
+            type="datetime-local"
+            value={closesAt}
+            onChange={e => setClosesAt(e.target.value)}
+            className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.875rem] focus:border-vermilion focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="label block text-ink-muted">Capacity</span>
+          <input
+            type="number"
+            min={1}
+            value={capacity}
+            onChange={e => setCapacity(e.target.value)}
+            placeholder="Unlimited"
+            className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.875rem] placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
+          />
+        </label>
+
+        <div className="flex items-center gap-3 sm:col-span-3">
+          <button
+            type="submit"
+            disabled={update.isPending}
+            className="label bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
+          >
+            {update.isPending ? 'Saving…' : 'Save'}
+          </button>
+          {update.isError && (
+            <p className="text-[0.8125rem] text-vermilion">
+              {update.error instanceof ApiError ? update.error.message : 'Something went wrong.'}
+            </p>
+          )}
+          {update.isSuccess && <p className="label text-ink-muted">Saved</p>}
+        </div>
+      </form>
+    </Section>
   )
 }
