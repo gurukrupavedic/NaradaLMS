@@ -5,6 +5,8 @@ import { eq } from 'drizzle-orm'
 import {
   dropSchoolSchema,
   member,
+  migrateExistingSchool,
+  needsLegacyMigrationBackfill,
   organization,
   provisionSchool,
   publicDb,
@@ -12,38 +14,6 @@ import {
   uuidv7,
 } from '@narada/db'
 import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
-
-const migrate = defineCommand({
-  meta: {
-    description:
-      'Apply any pending school-schema migrations to already-provisioned schools. ' +
-      'provisionSchool only ever runs at creation time, so a school never picks up a migration ' +
-      'added after it existed unless something calls it again — this is that something.',
-  },
-  args: {
-    slug: {
-      type: 'string',
-      description: 'Migrate only this school (default: every existing school).',
-    },
-  },
-  async run({ args }) {
-    const operatorPhone = await promptSuperAdminPhone()
-    try {
-      await requireSuperAdminByPhone(operatorPhone)
-
-      const targets = args.slug ? [await requireSchoolBySlug(args.slug)] : await allSchools()
-      const migrated = []
-      for (const school of targets) {
-        await provisionSchool(school.id)
-        migrated.push({ id: school.id, slug: school.slug })
-      }
-
-      console.log(JSON.stringify({ migrated }, null, 2))
-    } finally {
-      await shutdownPools()
-    }
-  },
-})
 
 const create = defineCommand({
   meta: { description: 'Create a school organization and provision its Postgres schema.' },
@@ -71,6 +41,30 @@ const create = defineCommand({
       operatorPhone,
       ownerEmail: args.ownerEmail,
     })
+  },
+})
+
+const migrate = defineCommand({
+  meta: {
+    description:
+      'Apply any pending school-schema migrations to already-provisioned school(s) (the ' +
+      'counterpart to `create`, which only ever migrates a school once, at creation).',
+  },
+  args: {
+    slug: {
+      type: 'string',
+      description: 'Only migrate the school with this slug (default: every existing school).',
+    },
+    dryRun: {
+      type: 'boolean',
+      default: false,
+      description: 'Report what would happen without changing anything.',
+    },
+  },
+  async run({ args }) {
+    const operatorPhone = await promptSuperAdminPhone()
+    await requireSuperAdminByPhone(operatorPhone)
+    await migrateSchools({ slug: args.slug, dryRun: args.dryRun })
   },
 })
 
@@ -144,17 +138,48 @@ async function createSchool(input: {
   }
 }
 
-async function requireSchoolBySlug(slug: string) {
-  const school = await publicDb.query.organization.findFirst({
-    where: (t, { eq }) => eq(t.slug, slug),
-  })
+async function migrateSchools(input: { slug?: string; dryRun: boolean }) {
+  try {
+    const schools = input.slug
+      ? [await requireSchoolBySlug(input.slug)]
+      : await publicDb.query.organization.findMany()
 
-  if (!school) throw new Error(`School slug not found: ${slug}`)
-  return school
+    for (const school of schools) {
+      if (input.dryRun) {
+        const wouldBackfillLegacyTracking = await needsLegacyMigrationBackfill(school.id)
+        console.log(
+          JSON.stringify({
+            id: school.id,
+            slug: school.slug,
+            dryRun: true,
+            wouldBackfillLegacyTracking,
+          }),
+        )
+        continue
+      }
+
+      const { backfilledLegacyTracking } = await migrateExistingSchool(school.id)
+      console.log(
+        JSON.stringify({
+          id: school.id,
+          slug: school.slug,
+          migrated: true,
+          backfilledLegacyTracking,
+        }),
+      )
+    }
+  } finally {
+    await shutdownPools()
+  }
 }
 
-async function allSchools() {
-  return publicDb.query.organization.findMany()
+async function requireSchoolBySlug(slug: string) {
+  const school = await publicDb.query.organization.findFirst({ where: (t, { eq }) => eq(t.slug, slug) })
+  if (!school) {
+    throw new Error(`No school with slug \`${slug}\``)
+  }
+
+  return school
 }
 
 async function findUserIdByEmail(email: string) {

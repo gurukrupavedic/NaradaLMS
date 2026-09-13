@@ -10,8 +10,12 @@ const rootEnvPath = join(repoRoot, '.env')
 const encryptedEnvPath = join(repoRoot, 'packages/env/.env.sops')
 const sopsConfigPath = join(repoRoot, '.sops.yaml')
 
+// apps/web's own .env.local is deliberately not here — unlike apps/web-legacy (which shares the
+// full secrets bundle other server-side apps use), it's a small, standalone, non-secret config
+// file (API_BASE_URL, NEXT_PUBLIC_SCHOOL_SLUG) that this tool has never managed.
 const envTargets = [
-  'apps/web/.env.local',
+  'apps/web-legacy/.env.local',
+  'apps/api-legacy/.env',
   'apps/api/.env',
   'packages/env/.env',
 ]

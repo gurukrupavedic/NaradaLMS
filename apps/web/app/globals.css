@@ -1,119 +1,341 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
+@import "tailwindcss" source(none);
+@source "./";
+@source "../components";
+@source "../lib";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NARADA — paper & ink
+   ───────────────────────────────────────────────────────────────────────────
+   A warm ground (the desk) carrying lighter sheets (the cards), ruled with
+   hairlines rather than separated by shadow. Two inks own the interface:
+
+     vermilion — the spot colour. Appears ONLY where the reader should act or
+                 look first. Never decorative, never a fill for large areas.
+     indigo    — the structural ink. Owns everything that is "ink but not a
+                 mark" — progress bars, pipeline cells, reference tints.
+
+   Proficiency is the one place a third register enters: the mark book. The
+   very first version reached into stock Tailwind for amber → emerald → teal
+   → violet → purple — five unrelated hues for a strictly ordinal quantity —
+   and was replaced with a single deepening indigo ramp for exactly that
+   reason. That in turn hid a real distinction the roster's own mark book
+   already drew: an "absent" mark is not a low score, and level 3/4 (both
+   real certifications) look nothing like level 1/2 (still in progress) to
+   anyone who graded from the sheet. `practicing` — real work with no exam
+   rung held yet — turned out to be a state the register defines but the
+   data never uses (no row has ever carried it), so the scale below drops it
+   rather than keep a colour for a mark nobody makes.
+
+   So the ramp below is grounded in the register's own colour sense, not
+   picked fresh — but built the same disciplined way the indigo ramp was:
+   ochre marks level 1 alone (the entry rung, no sibling to share the hue
+   with); green spans level 2 (light) → level 3 (full), the two "still in
+   progress" rungs; purple marks level 4 alone — the one rung that actually
+   earns the certification stamp. Absent keeps its own grey (a taken-but-
+   missing reading, never a position on the scale). Every mixed mark is still
+   `color-mix`ed from one base ink per family toward the card, so a colour
+   can drift in depth but never in hue.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Ground and sheets ── */
+  --paper: #efe6d0;
+  --card: #faf5e6;
+  --ink: #221d18;
+  --ink-muted: #7b6d59;
+  --rule: #d6c8ac;
+  --rule-soft: color-mix(in srgb, var(--rule) 55%, transparent);
+
+  /* ── The two inks ── */
+  --vermilion: #c03f22;
+  --indigo: #363f6d;
+
+  /* ── Proficiency families ── */
+  /* Base hues, one per family — everything below is `color-mix`ed from these
+     four toward the card, so depth can vary but hue never drifts. */
+  --mark-ochre: #a8791a;
+  --mark-green: #3f6b3a;
+  --mark-purple: #573a76;
+  --mark-grey: #6b6255;
+
+  /* Level 1 and 4 stand alone, so each takes its base ink undiluted — no
+     lighter sibling to leave room for. Level 2/3 share the green family and
+     are spaced 62/100 rather than evenly: the "light" cell needs enough
+     weight to read as coloured at all against the card — a first pass at 42%
+     read as barely-there, especially at bead size — and the "full" cell is
+     the base ink itself, the ceiling of the family, not a third mix step. */
+  --mark-level1: var(--mark-ochre);
+  --mark-level2: color-mix(in srgb, var(--mark-green) 62%, var(--card));
+  --mark-level3: var(--mark-green);
+  --mark-level4: var(--mark-purple);
+
+  /* Ochre sits in the middle of the lightness range in *both* themes — a mid
+     brown in light mode, a bright gold in dark mode — so it always wants dark
+     text, unlike every other mark family where one theme's version is clearly
+     light and the other clearly dark. `--ink` can't supply that: it inherits
+     the theme's foreground/background flip, so it reads light *on* dark-theme
+     ochre. Declared once, here, and deliberately left out of the `.dark`
+     block below so it never inherits that flip — see `.plate`'s own
+     unthemed `--ink` a little further down for the same pattern. */
+  --mark-ink-fixed: #221d18;
+  --mark-absent: color-mix(in srgb, var(--mark-grey) 65%, transparent);
+  --mark-not-started: color-mix(in srgb, var(--ink) 8%, var(--card));
+
+  /* ── shadcn bridge ── */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card-foreground: var(--ink);
+  --popover: var(--card);
+  --popover-foreground: var(--ink);
+  --primary: var(--vermilion);
+  --primary-foreground: #fdf8ec;
+  --secondary: color-mix(in srgb, var(--ink) 7%, var(--card));
+  --secondary-foreground: var(--ink);
+  --muted: color-mix(in srgb, var(--ink) 6%, var(--card));
+  --muted-foreground: var(--ink-muted);
+  --accent: color-mix(in srgb, var(--ink) 9%, var(--card));
+  --accent-foreground: var(--ink);
+  --destructive: #a5341c;
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--vermilion);
+
+  /* Print register: corners are cut, not rounded. */
+  --radius: 0.125rem;
+}
+
+.dark {
+  --paper: #17150f;
+  --card: #201d16;
+  --ink: #ece2cb;
+  --ink-muted: #9c8e78;
+  --rule: #383225;
+  --rule-soft: color-mix(in srgb, var(--rule) 70%, transparent);
+
+  --vermilion: #e0522d;
+  --indigo: #8791d8;
+
+  --mark-ochre: #d9a83f;
+  --mark-green: #7fa876;
+  --mark-purple: #a98bc9;
+  --mark-grey: #9c9182;
+
+  --mark-level1: var(--mark-ochre);
+  --mark-level2: color-mix(in srgb, var(--mark-green) 58%, var(--card));
+  --mark-level3: var(--mark-green);
+  --mark-level4: var(--mark-purple);
+  --mark-absent: color-mix(in srgb, var(--mark-grey) 55%, transparent);
+  --mark-not-started: color-mix(in srgb, var(--ink) 10%, var(--card));
+
+  --primary-foreground: #17150f;
+  --destructive: #e5604a;
+}
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-plex-mono);
-  --font-heading: var(--font-sans);
-  --font-serif: var(--font-display);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-vermilion: var(--vermilion);
+  --color-indigo: var(--indigo);
+  --color-mark-ochre: var(--mark-ochre);
+  --color-mark-green: var(--mark-green);
+  --color-mark-purple: var(--mark-purple);
+  --color-mark-grey: var(--mark-grey);
+  --color-mark-level1: var(--mark-level1);
+  --color-mark-level2: var(--mark-level2);
+  --color-mark-level3: var(--mark-level3);
+  --color-mark-level4: var(--mark-level4);
+  --color-mark-ink-fixed: var(--mark-ink-fixed);
+  --color-mark-absent: var(--mark-absent);
+  --color-mark-not-started: var(--mark-not-started);
+
+  --font-serif: var(--font-display);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-figure);
+  --font-label: var(--font-typewriter);
+  --font-deva: var(--font-devanagari);
+  --font-telugu: var(--font-telugu);
+
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 2);
+  --radius-xl: calc(var(--radius) * 3);
 }
 
-:root {
-  --background: #f6ecd2;
-  --foreground: #3d2f1f;
-  --card: #efe0ba;
-  --card-foreground: #3d2f1f;
-  --popover: #efe0ba;
-  --popover-foreground: #3d2f1f;
-  --primary: #8a6a3a;
-  --primary-foreground: #f6ecd2;
-  --secondary: #e8d8ac;
-  --secondary-foreground: #3d2f1f;
-  --muted: #efe0ba;
-  --muted-foreground: #8a7452;
-  --accent: #d8c391;
-  --accent-foreground: #3d2f1f;
-  --destructive: #9d3a28;
-  --border: #d8c391;
-  --input: #d8c391;
-  --ring: #8a6a3a;
-  --chart-1: #8a6a3a;
-  --chart-2: #a15c42;
-  --chart-3: #4f6e74;
-  --chart-4: #5c7a52;
-  --chart-5: #6b4f26;
-  --radius: 0.625rem;
-  --sidebar: #efe0ba;
-  --sidebar-foreground: #3d2f1f;
-  --sidebar-primary: #8a6a3a;
-  --sidebar-primary-foreground: #f6ecd2;
-  --sidebar-accent: #e8d8ac;
-  --sidebar-accent-foreground: #3d2f1f;
-  --sidebar-border: #d8c391;
-  --sidebar-ring: #8a6a3a;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    margin: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Figures line up in every table, ladder and stat block without having to
+     remember `tabular-nums` at each call site. */
+  .font-mono,
+  .font-label {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-.dark {
-  --background: #241d13;
-  --foreground: #e9dcb8;
-  --card: #2f2718;
-  --card-foreground: #e9dcb8;
-  --popover: #2f2718;
-  --popover-foreground: #e9dcb8;
-  --primary: #c9a24b;
-  --primary-foreground: #2a1d0d;
-  --secondary: #392f1c;
-  --secondary-foreground: #e9dcb8;
-  --muted: #2f2718;
-  --muted-foreground: #a89670;
-  --accent: #453a24;
-  --accent-foreground: #e9dcb8;
-  --destructive: #e0684f;
-  --border: #453a24;
-  --input: #453a24;
-  --ring: #c9a24b;
-  --chart-1: #c9a24b;
-  --chart-2: #b06f4f;
-  --chart-3: #6f9298;
-  --chart-4: #7fa070;
-  --chart-5: #e0b563;
-  --sidebar: #2f2718;
-  --sidebar-foreground: #e9dcb8;
-  --sidebar-primary: #c9a24b;
-  --sidebar-primary-foreground: #2a1d0d;
-  --sidebar-accent: #392f1c;
-  --sidebar-accent-foreground: #e9dcb8;
-  --sidebar-border: #453a24;
-  --sidebar-ring: #c9a24b;
+/* ── Paper tooth ────────────────────────────────────────────────────────────
+   A single fixed grain layer. Fixed (not on a scrolling node) so it reads as
+   the texture of the page itself rather than something printed on the
+   content and dragged along with it. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.dark body::after {
+  opacity: 0.05;
+}
+
+/* ── Typographic register ───────────────────────────────────────────────── */
+
+/* Fraunces carries the display voice. WONK on, low optical size: the letter-
+   forms get their cut-metal quirk back, which is the whole reason to choose
+   it over a neutral serif. Only ever at 1.5rem and up — the wonk reads as a
+   defect at body sizes. */
+.display {
+  font-family: var(--font-display);
+  font-variation-settings:
+    "opsz" 48,
+    "SOFT" 20,
+    "WONK" 1;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.06;
+}
+
+/* Eyebrows, stamps, column heads — the typewriter voice of a kept register. */
+.label {
+  font-family: var(--font-typewriter);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+/* ── Ruled sheet ────────────────────────────────────────────────────────────
+   The card treatment: a lighter sheet on the darker ground, held by a
+   hairline. No shadow anywhere in this system — depth is carried by the
+   paper/card value difference alone. */
+.sheet {
+  background: var(--card);
+  border: 1px solid var(--rule);
+}
+
+/* ── Ink plate ──────────────────────────────────────────────────────────────
+   A solid ink field dropped into a light page (the sign-in cover). The spot
+   colour is re-declared to its dark-scheme value inside the plate: #c03f22 is
+   tuned for contrast against paper, and on near-black it goes muddy and stops
+   reading as vermilion at all. */
+/* The plate is a constant, not a themed surface — it is the cover of the book,
+   and a cover does not invert.
+
+   It redefines the palette tokens *locally* rather than just setting its own
+   background and colour. Everything inside is written with the ordinary
+   utilities (`text-paper/60`, `text-vermilion`), and those resolve through
+   --paper / --ink — which flip with the theme. Setting only `background` left
+   the plate correct and its own body copy invisible in dark mode, because
+   `text-paper/60` had quietly become near-black at 60% on near-black. Pinning
+   the tokens here makes the plate a light-on-dark context in both themes. */
+.plate {
+  --paper: #ece2cb;
+  --ink: #1a1710;
+  --vermilion: #e0522d;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Once the page around it is dark too, the cover needs a step of separation
+   and a rule, or the split simply disappears. */
+.dark .plate {
+  --ink: #241f16;
+  border-right: 1px solid var(--rule);
+}
+
+/* ── Marker ─────────────────────────────────────────────────────────────────
+   A ruled label in the spot colour. Set square: the rotation this used to
+   carry read as a novelty rather than as part of the register, and it fought
+   the hairline grid every other element is aligned to. Character comes from
+   the typewriter face and the rule, not from the tilt. */
+.stamp {
+  font-family: var(--font-typewriter);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+  color: var(--vermilion);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+}
+
+/* ── Reveal ─────────────────────────────────────────────────────────────────
+   Flat and short. No blur: this is meant to read as printed matter settling
+   onto the desk, not as a glassy web animation. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(0.75rem);
+  transition:
+    opacity 620ms cubic-bezier(0.32, 0.72, 0, 1),
+    transform 620ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal="in"] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

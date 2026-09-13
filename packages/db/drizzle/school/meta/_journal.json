@@ -15,6 +15,41 @@
       "when": 1786292498665,
       "tag": "0001_lowly_star_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787953679039,
+      "tag": "0002_jittery_tusk",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788295201399,
+      "tag": "0003_wet_pretty_boy",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788408473991,
+      "tag": "0004_melted_juggernaut",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788890835359,
+      "tag": "0005_curly_greymalkin",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789000281678,
+      "tag": "0006_supreme_inhumans",
+      "breakpoints": true
     }
   ]
 }

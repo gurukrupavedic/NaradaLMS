@@ -14,10 +14,12 @@
     "typecheck": "tsc --noEmit",
     "parse:excel": "tsx src/parse-excel-to-json.ts",
     "import:school:data": "tsx src/import-school.ts data",
-    "import:school:grant-passwords": "tsx src/import-school.ts grant-passwords"
+    "import:school:grant-passwords": "tsx src/import-school.ts grant-passwords",
+    "backfill:track-certifications": "tsx src/backfill-track-certifications.ts",
+    "backfill:remove-empty-chapters": "tsx src/backfill-remove-empty-chapters.ts"
   },
   "dependencies": {
-    "@narada/api": "workspace:*",
+    "@narada/api-legacy": "workspace:*",
     "@narada/auth": "workspace:*",
     "@narada/db": "workspace:*",
     "@narada/env": "workspace:*",

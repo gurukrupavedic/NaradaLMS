@@ -1,36 +1,23 @@
 import { z } from 'zod'
 
-export function encodeCursor(data: Record<string, unknown>): string {
-  return Buffer.from(JSON.stringify(data)).toString('base64url')
-}
+export function asCursor<T extends z.ZodObject>(schema: T) {
+  return z
+    .string()
+    .transform((cursor, ctx) => {
+      try {
+        const result = schema.safeParse(decodeCursor(cursor))
+        if (!result.success) {
+          ctx.addIssue({ code: 'custom', message: 'invalid cursor' })
+          return z.NEVER
+        }
 
-function decodeCursor(cursor: string): unknown {
-  return JSON.parse(Buffer.from(cursor, 'base64url').toString())
-}
-
-/**
- * A schema factory that converts an existing Zod schema into one
- * capable of decoding base64-encoded JSON cursors.
- */
-export function asCursor<T>(schema: z.ZodType<T>) {
-  return z.string().transform((cursor, ctx) => {
-    try {
-      const result = schema.safeParse(decodeCursor(cursor))
-      if (!result.success) {
+        return result.data
+      } catch {
         ctx.addIssue({ code: 'custom', message: 'invalid cursor' })
         return z.NEVER
       }
-
-      return result.data
-    } catch {
-      ctx.addIssue({ code: 'custom', message: 'invalid cursor' })
-      return z.NEVER
-    }
-  })
-}
-
-export function compoundCursor<T extends z.ZodRawShape>(shape: T) {
-  return asCursor(z.object(shape))
+    })
+    .optional()
 }
 
 export function paginateResponse<T>(
@@ -44,15 +31,10 @@ export function paginateResponse<T>(
   return { items: page, nextCursor }
 }
 
-export function dateCursorField() {
-  return z.coerce.date()
+function encodeCursor(data: Record<string, unknown>): string {
+  return Buffer.from(JSON.stringify(data)).toString('base64url')
 }
 
-export function nullableDateCursorField() {
-  return z.coerce.date().nullable()
-}
-
-export function uuidCursorField() {
-  // Domain IDs are UUIDv7, so lexicographic ID order is a stable, creation-time tie-breaker.
-  return z.uuid()
+function decodeCursor(cursor: string): unknown {
+  return JSON.parse(Buffer.from(cursor, 'base64url').toString())
 }
