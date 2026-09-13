@@ -38,6 +38,7 @@ export const RegistrationSchema = z.object({
 
   reviewedAt: isoInstant.nullable(),
   reviewedBy: z.uuid().nullable(),
+  convertedProfileId: z.uuid().nullable(),
   createdAt: isoInstant,
 })
 

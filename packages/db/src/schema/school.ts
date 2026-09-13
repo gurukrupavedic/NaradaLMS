@@ -352,10 +352,12 @@ export const exam = pgTable(
   ],
 )
 
-// A prospective student's self-submitted application — not yet a `user`/`profile`. Deliberately
-// holds its own identity fields (name/phone/email/etc.) rather than referencing `profile`: most
-// registrants don't have an account yet, and approving a registration is a separate, manual admin
-// step (matching a school's real review process), not an automatic account/profile creation.
+// A prospective student's self-submitted application — not yet a `user`/`profile` at the time it's
+// filed. Deliberately holds its own identity fields (name/phone/email/etc.) rather than
+// referencing `profile`: most registrants don't have an account yet, and a registration must be
+// able to exist (and be reviewed) before one does. Approving one (apps/api/src/registrations/
+// service.ts) provisions the real `user`/`member`/`profile` rows and records the result here via
+// `convertedProfileId`.
 export const registration = pgTable(
   'registration',
   {
@@ -384,6 +386,9 @@ export const registration = pgTable(
 
     reviewedAt: timestamp('reviewedAt'),
     reviewedBy: uuid('reviewedBy').references(() => profile.id),
+    // Set only on approval — the profile provisioned for this applicant, so an approved
+    // registration's outcome stays traceable instead of just becoming an unlinked 'approved' row.
+    convertedProfileId: uuid('convertedProfileId').references(() => profile.id),
 
     createdAt: timestamp('createdAt').defaultNow().notNull(),
   },

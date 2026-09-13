@@ -1,0 +1,2 @@
+ALTER TABLE "registration" ADD COLUMN "convertedProfileId" uuid;--> statement-breakpoint
+ALTER TABLE "registration" ADD CONSTRAINT "registration_convertedProfileId_profile_id_fk" FOREIGN KEY ("convertedProfileId") REFERENCES "profile"("id") ON DELETE no action ON UPDATE no action;
