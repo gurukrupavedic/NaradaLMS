@@ -22,8 +22,7 @@ COPY packages/otp/package.json     packages/otp/package.json
 COPY packages/storage/package.json packages/storage/package.json
 COPY tools/package.json            tools/package.json
 
-RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # ---- Runtime image ----
 # Extends deps so node_modules are already in place.
