@@ -50,6 +50,35 @@ function toggleTheme() {
   localStorage.setItem('narada-theme', next ? 'dark' : 'light')
 }
 
+// A row of the profile dropdown — label on the left, the same trailing "→" used
+// by every other row-style link in the app (e.g. "Review applications →" on the
+// admin overview), turning vermilion on hover/focus instead of an icon.
+function MenuRow({
+  children,
+  render,
+  onClick,
+}: {
+  children: React.ReactNode
+  render?: React.ReactElement
+  onClick?: () => void
+}) {
+  return (
+    <DropdownMenuItem
+      render={render}
+      onClick={onClick}
+      className="group/row flex items-center justify-between gap-4 rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted last:border-0 focus:bg-ink/[0.03] focus:text-ink"
+    >
+      {children}
+      <span
+        aria-hidden
+        className="text-ink-muted/60 transition-colors group-focus/row:text-vermilion"
+      >
+        →
+      </span>
+    </DropdownMenuItem>
+  )
+}
+
 export function Wordmark({ className }: { className?: string }) {
   return (
     <Link
@@ -134,7 +163,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {profileName ? (
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="flex items-center gap-2 text-ink-muted outline-none transition-colors hover:text-ink data-[popup-open]:text-ink"
+                  className="group flex items-center gap-2 text-ink-muted outline-none transition-colors hover:text-ink data-[popup-open]:text-ink"
                 >
                   <span
                     aria-hidden
@@ -143,37 +172,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     {profileName.charAt(0)}
                   </span>
                   <span className="hidden text-[0.8125rem] sm:inline">{profileName}</span>
-                  <ChevronDown aria-hidden className="size-3 text-ink-muted/70" />
+                  <ChevronDown
+                    aria-hidden
+                    className="size-3 text-ink-muted/70 transition-colors group-data-[popup-open]:text-vermilion"
+                  />
                 </DropdownMenuTrigger>
                 {/* Overrides the primitive's default shadcn look (rounded corners, drop
                     shadow, accent-blue focus ring) — this system carries depth with a single
                     hairline and a card/paper value shift, never a shadow. See .sheet in
-                    globals.css for the same treatment applied to every other floating list. */}
+                    globals.css for the same treatment applied to every other floating list. The
+                    trailing "→" that turns vermilion on focus is the same affordance used by
+                    every other row-style link in the app (see "Review applications →" above). */}
                 <DropdownMenuContent
                   align="end"
                   sideOffset={10}
                   className="min-w-40 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
                 >
                   {profileHref && (
-                    <DropdownMenuItem
-                      render={<Link href={profileHref} />}
-                      className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink"
-                    >
-                      Profile
-                    </DropdownMenuItem>
+                    <MenuRow render={<Link href={profileHref} />}>Profile</MenuRow>
                   )}
-                  <DropdownMenuItem
-                    render={<Link href="/settings" />}
-                    className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink"
-                  >
-                    Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleSignOut}
-                    className="rounded-none px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink"
-                  >
-                    Sign out
-                  </DropdownMenuItem>
+                  <MenuRow render={<Link href="/settings" />}>Settings</MenuRow>
+                  <MenuRow onClick={handleSignOut}>Sign out</MenuRow>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
