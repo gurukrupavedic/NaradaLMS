@@ -19,9 +19,11 @@ import {
 } from '@narada/db'
 // Reusing the live API's own validators rather than re-deriving parallel checks: a bulk import
 // that bypasses the HTTP layer should still never write a row the real API would reject.
-// @narada/api-legacy, not @narada/api: this app is still what's actually deployed in production.
-import { enrollSchema } from '@narada/api-legacy/src/services/enrollment'
-import { createEvaluationSchema } from '@narada/api-legacy/src/services/evaluation'
+// @narada/api, not @narada/api-legacy: railway.json builds apps/api/Dockerfile, and that's the
+// rewritten app (post PR #128) — api-legacy is the pre-rewrite app, kept only as a buildable
+// fallback (docker-compose.yaml's "legacy" profile), not what's actually deployed.
+import { CreateEnrollmentSchema as enrollSchema } from '@narada/api/src/enrollment/schema'
+import { CreateEvaluationSchema as createEvaluationSchema } from '@narada/api/src/evaluations/schema'
 import { requireSchool, upsertOrgMember, upsertSchool } from './school-helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
