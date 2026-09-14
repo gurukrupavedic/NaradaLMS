@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 
+import { ChevronDown } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 import { signOut as signOutRequest } from '@/lib/auth/client'
 import {
@@ -13,6 +15,13 @@ import {
   useSelectedProfileId,
   useSelectedProfileName,
 } from '@/lib/auth/profile-store'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 /**
  * The masthead.
@@ -29,10 +38,6 @@ const NAV = [
   { label: 'Practice', href: '/practice' },
   { label: 'Record', href: '/exams' },
   { label: 'Admin', href: '/admin' },
-  // href is a placeholder — AppShell below swaps it for the signed-in account's own
-  // `/students/:profileId` once the selected profile id is known.
-  { label: 'Profile', href: '/profile' },
-  { label: 'Settings', href: '/settings' },
 ]
 
 // The theme lives on <html>, put there before paint by the root layout. Mirroring
@@ -67,12 +72,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const hasAdminAccess = useHasAdminAccess()
   const selectedProfileId = useSelectedProfileId()
   // Hidden until access resolves, not just when it's false — showing the link and then
-  // yanking it away a moment later reads as more broken than a one-tick-later appearance. Same
-  // reasoning for "Profile": no cookie yet (a page rendered ahead of the client picking one up)
-  // means no destination to link to, so it's simply absent rather than pointing at `/students/`.
+  // yanking it away a moment later reads as more broken than a one-tick-later appearance.
   const nav = NAV.filter(item => item.href !== '/admin' || hasAdminAccess)
-    .filter(item => item.href !== '/profile' || selectedProfileId)
-    .map(item => (item.href === '/profile' ? { ...item, href: `/students/${selectedProfileId}` } : item))
+  // No cookie yet (a page rendered ahead of the client picking one up) means no destination to
+  // link to, so "Profile" is simply absent from the menu rather than pointing at `/students/`.
+  const profileHref = selectedProfileId ? `/students/${selectedProfileId}` : null
 
   function handleSignOut() {
     void signOutRequest().finally(() => {
@@ -128,25 +132,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="hidden dark:inline">Light</span>
             </button>
 
-            {profileName && (
-              <span className="hidden items-center gap-2 sm:flex">
-                <span
-                  aria-hidden
-                  className="grid size-6 place-items-center border border-rule bg-card font-label text-[0.5625rem] text-ink-muted"
+            {profileName ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="flex items-center gap-2 text-ink-muted outline-none transition-colors hover:text-ink data-[popup-open]:text-ink"
                 >
-                  {profileName.charAt(0)}
-                </span>
-                <span className="text-[0.8125rem] text-ink-muted">{profileName}</span>
-              </span>
+                  <span
+                    aria-hidden
+                    className="grid size-6 place-items-center border border-rule bg-card font-label text-[0.5625rem] text-ink-muted"
+                  >
+                    {profileName.charAt(0)}
+                  </span>
+                  <span className="hidden text-[0.8125rem] sm:inline">{profileName}</span>
+                  <ChevronDown aria-hidden className="size-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {profileHref && (
+                    <DropdownMenuItem render={<Link href={profileHref} />}>Profile</DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem render={<Link href="/settings" />}>Settings</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              // No profile name yet (pre-hydration, or none selected) — still offer a way out
+              // rather than trapping the user behind a menu with nothing to anchor it to.
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="label text-ink-muted transition-colors hover:text-ink"
+              >
+                Sign out
+              </button>
             )}
-
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="label text-ink-muted transition-colors hover:text-ink"
-            >
-              Sign out
-            </button>
 
             <button
               type="button"

@@ -13,11 +13,13 @@ import { cn } from '@/lib/utils'
 export function Section({
   title,
   count,
+  action,
   children,
   className,
 }: {
   title: string
   count?: string
+  action?: React.ReactNode
   children: React.ReactNode
   className?: string
 }) {
@@ -27,6 +29,7 @@ export function Section({
         <h2 className="display shrink-0 text-[1.4rem]">{title}</h2>
         <span className="h-px flex-1 bg-rule" />
         {count && <span className="label shrink-0 text-ink-muted">{count}</span>}
+        {action}
       </div>
       {children}
     </section>
