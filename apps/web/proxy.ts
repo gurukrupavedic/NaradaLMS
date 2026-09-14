@@ -14,6 +14,14 @@ import { NextRequest, NextResponse } from 'next/server'
  * other protected route, not a public page that happens to redirect once rendered.
  */
 const SESSION_COOKIE = 'better-auth.session_token'
+// better-auth prefixes its own cookie with `__Secure-` whenever it considers the connection secure
+// (api-next's `API_BASE_URL` starting with `https://`, true on every deployed environment — see
+// better-auth's own `dist/cookies/index.mjs`), so the plain name above only ever matches in local
+// dev over http. Without this, every deployed environment sees `hasSession` as permanently false —
+// `/dashboard` bounces back to `/login` no matter what, which loops right back to profile selection
+// after a real sign-in since `getAuthSession()` there still succeeds (it hits api-next directly and
+// doesn't care which cookie name the browser used).
+const SECURE_SESSION_COOKIE = `__Secure-${SESSION_COOKIE}`
 const PROFILE_COOKIE = 'narada-profile-id'
 // `/link-device` is where a brand-new device shows its code/QR — by definition reached before
 // that device has any session at all, so it has to stay public. `/settings/approve-device` is the
@@ -23,9 +31,8 @@ const PROFILE_COOKIE = 'narada-profile-id'
 const PUBLIC_PATHS = new Set(['/login', '/link-device', '/register'])
 
 function hasSession(request: NextRequest): boolean {
-  return Boolean(
-    request.cookies.get(SESSION_COOKIE) && request.cookies.get(PROFILE_COOKIE),
-  )
+  const session = request.cookies.get(SESSION_COOKIE) ?? request.cookies.get(SECURE_SESSION_COOKIE)
+  return Boolean(session && request.cookies.get(PROFILE_COOKIE))
 }
 
 export function proxy(request: NextRequest) {

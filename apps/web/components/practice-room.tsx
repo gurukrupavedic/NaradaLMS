@@ -85,10 +85,10 @@ function EmptyPracticeRoom({ chapter }: { chapter: ChapterContent }) {
             <h1 className="display mt-2.5 text-[2.25rem]">{chapter.title}</h1>
           </div>
 
-          <div className="flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-2.5">
             <Pill level={chapter.level} size="lg" />
             {chapter.evaluatedAt && (
-              <p className="text-right font-mono text-[0.6875rem] text-ink-muted/75">
+              <p className="font-mono text-[0.6875rem] text-ink-muted/75">
                 marked <Timestamp value={chapter.evaluatedAt} />
               </p>
             )}
@@ -241,10 +241,10 @@ function PracticeRoomView({ chapter }: { chapter: ChapterContent }) {
             <h1 className="display mt-2.5 text-[2.25rem]">{chapter.title}</h1>
           </div>
 
-          <div className="flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-2.5">
             <Pill level={chapter.level} size="lg" />
             {chapter.evaluatedAt && (
-              <p className="text-right font-mono text-[0.6875rem] text-ink-muted/75">
+              <p className="font-mono text-[0.6875rem] text-ink-muted/75">
                 marked <Timestamp value={chapter.evaluatedAt} />
               </p>
             )}
