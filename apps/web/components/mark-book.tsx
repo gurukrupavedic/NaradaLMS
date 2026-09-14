@@ -100,8 +100,15 @@ export function MarkBook({
                 <th
                   scope="row"
                   className={cn(
-                    'sticky left-0 max-w-45 truncate bg-card py-1.5 pr-4 pl-4 text-[0.8125rem] font-normal',
-                    unevaluated && 'bg-transparent',
+                    'sticky left-0 max-w-45 truncate py-1.5 pr-4 pl-4 text-[0.8125rem] font-normal',
+                    // An opaque tint rather than plain bg-card: the sticky column must stay fully
+                    // opaque (or the mark cells scrolling underneath it show through), but it still
+                    // needs to carry the same vermilion "unmarked" cue as the rest of the row, whose
+                    // own bg-vermilion/[0.05] is translucent by design (it isn't the scroll-clipped
+                    // sticky layer, so translucency there is harmless).
+                    unevaluated
+                      ? 'bg-[color-mix(in_srgb,var(--vermilion)_5%,var(--card))]'
+                      : 'bg-card',
                   )}
                 >
                   <Link href={`/students/${student.id}`} className="block truncate hover:text-vermilion">
@@ -117,7 +124,7 @@ export function MarkBook({
                   const canEdit = Boolean(grading && chapterId)
 
                   return (
-                    <td key={chapterCodes[i]} className="p-[3px] text-center align-middle">
+                    <td key={chapterCodes[i]} className="p-px text-center align-middle">
                       <button
                         type="button"
                         disabled={!canEdit}
@@ -134,7 +141,7 @@ export function MarkBook({
                         }
                         title={`${chapterCodes[i]} · ${PROFICIENCY_LABEL[level]}`}
                         className={cn(
-                          'grid h-6 w-full place-items-center font-mono text-[0.5625rem] leading-none',
+                          'grid h-9 w-full place-items-center font-mono text-[0.5625rem] leading-none',
                           CELL_INK[level],
                           level === 'notStarted' && 'border border-dashed border-rule',
                           level === 'level4' && 'ring-1 ring-vermilion ring-inset',
