@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 
+import { ChevronDown } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 import { signOut as signOutRequest } from '@/lib/auth/client'
 import {
@@ -13,6 +15,12 @@ import {
   useSelectedProfileId,
   useSelectedProfileName,
 } from '@/lib/auth/profile-store'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 /**
  * The masthead.
@@ -29,10 +37,6 @@ const NAV = [
   { label: 'Practice', href: '/practice' },
   { label: 'Record', href: '/exams' },
   { label: 'Admin', href: '/admin' },
-  // href is a placeholder — AppShell below swaps it for the signed-in account's own
-  // `/students/:profileId` once the selected profile id is known.
-  { label: 'Profile', href: '/profile' },
-  { label: 'Settings', href: '/settings' },
 ]
 
 // The theme lives on <html>, put there before paint by the root layout. Mirroring
@@ -44,6 +48,35 @@ function toggleTheme() {
   const next = !document.documentElement.classList.contains('dark')
   document.documentElement.classList.toggle('dark', next)
   localStorage.setItem('narada-theme', next ? 'dark' : 'light')
+}
+
+// A row of the profile dropdown — label on the left, the same trailing "→" used
+// by every other row-style link in the app (e.g. "Review applications →" on the
+// admin overview), turning vermilion on hover/focus instead of an icon.
+function MenuRow({
+  children,
+  render,
+  onClick,
+}: {
+  children: React.ReactNode
+  render?: React.ReactElement
+  onClick?: () => void
+}) {
+  return (
+    <DropdownMenuItem
+      render={render}
+      onClick={onClick}
+      className="group/row flex items-center justify-between gap-4 rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted last:border-0 focus:bg-ink/[0.03] focus:text-ink"
+    >
+      {children}
+      <span
+        aria-hidden
+        className="text-ink-muted/60 transition-colors group-focus/row:text-vermilion"
+      >
+        →
+      </span>
+    </DropdownMenuItem>
+  )
 }
 
 export function Wordmark({ className }: { className?: string }) {
@@ -67,12 +100,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const hasAdminAccess = useHasAdminAccess()
   const selectedProfileId = useSelectedProfileId()
   // Hidden until access resolves, not just when it's false — showing the link and then
-  // yanking it away a moment later reads as more broken than a one-tick-later appearance. Same
-  // reasoning for "Profile": no cookie yet (a page rendered ahead of the client picking one up)
-  // means no destination to link to, so it's simply absent rather than pointing at `/students/`.
+  // yanking it away a moment later reads as more broken than a one-tick-later appearance.
   const nav = NAV.filter(item => item.href !== '/admin' || hasAdminAccess)
-    .filter(item => item.href !== '/profile' || selectedProfileId)
-    .map(item => (item.href === '/profile' ? { ...item, href: `/students/${selectedProfileId}` } : item))
+  // No cookie yet (a page rendered ahead of the client picking one up) means no destination to
+  // link to, so "Profile" is simply absent from the menu rather than pointing at `/students/`.
+  const profileHref = selectedProfileId ? `/students/${selectedProfileId}` : null
 
   function handleSignOut() {
     void signOutRequest().finally(() => {
@@ -128,25 +160,52 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="hidden dark:inline">Light</span>
             </button>
 
-            {profileName && (
-              <span className="hidden items-center gap-2 sm:flex">
-                <span
-                  aria-hidden
-                  className="grid size-6 place-items-center border border-rule bg-card font-label text-[0.5625rem] text-ink-muted"
+            {profileName ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="group flex items-center gap-2 text-ink-muted outline-none transition-colors hover:text-ink data-[popup-open]:text-ink"
                 >
-                  {profileName.charAt(0)}
-                </span>
-                <span className="text-[0.8125rem] text-ink-muted">{profileName}</span>
-              </span>
+                  <span
+                    aria-hidden
+                    className="grid size-6 place-items-center border border-rule bg-card font-label text-[0.5625rem] text-ink-muted"
+                  >
+                    {profileName.charAt(0)}
+                  </span>
+                  <span className="hidden text-[0.8125rem] sm:inline">{profileName}</span>
+                  <ChevronDown
+                    aria-hidden
+                    className="size-3 text-ink-muted/70 transition-colors group-data-[popup-open]:text-vermilion"
+                  />
+                </DropdownMenuTrigger>
+                {/* Overrides the primitive's default shadcn look (rounded corners, drop
+                    shadow, accent-blue focus ring) — this system carries depth with a single
+                    hairline and a card/paper value shift, never a shadow. See .sheet in
+                    globals.css for the same treatment applied to every other floating list. The
+                    trailing "→" that turns vermilion on focus is the same affordance used by
+                    every other row-style link in the app (see "Review applications →" above). */}
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={10}
+                  className="min-w-40 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
+                >
+                  {profileHref && (
+                    <MenuRow render={<Link href={profileHref} />}>Profile</MenuRow>
+                  )}
+                  <MenuRow render={<Link href="/settings" />}>Settings</MenuRow>
+                  <MenuRow onClick={handleSignOut}>Sign out</MenuRow>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              // No profile name yet (pre-hydration, or none selected) — still offer a way out
+              // rather than trapping the user behind a menu with nothing to anchor it to.
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="label text-ink-muted transition-colors hover:text-ink"
+              >
+                Sign out
+              </button>
             )}
-
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="label text-ink-muted transition-colors hover:text-ink"
-            >
-              Sign out
-            </button>
 
             <button
               type="button"
