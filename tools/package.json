@@ -14,9 +14,7 @@
     "typecheck": "tsc --noEmit",
     "parse:excel": "tsx src/parse-excel-to-json.ts",
     "import:school:data": "tsx src/import-school.ts data",
-    "import:school:grant-passwords": "tsx src/import-school.ts grant-passwords",
-    "backfill:track-certifications": "tsx src/backfill-track-certifications.ts",
-    "backfill:remove-empty-chapters": "tsx src/backfill-remove-empty-chapters.ts"
+    "import:school:grant-passwords": "tsx src/import-school.ts grant-passwords"
   },
   "dependencies": {
     "@narada/api-legacy": "workspace:*",
