@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename)
 
 const EXCEL_FILE = path.join(
   __dirname,
-  '../../data/SLMTS - ASSESSMENTS - REGISTRATIONS - DE-DUPLICATED 07-10-2026.xlsx',
+  '../../data/SLMTS - ALL REGISTRATIONS - ALL TRACKERS - UPDATED 09-12-2026.xlsx',
 )
 const OUTPUT_DIR = path.join(__dirname, '../../seed-data')
 
@@ -139,7 +139,12 @@ type Report = {
   missingPhoneProfiles: { profileId: string; name: string; identityKey: string }[]
   invalidE164Phones: { userId: string; rawDigits: string; name: string }[]
   ambiguousStudentStatus: { rawValue: string; mappedTo: string; profileId: string; batchCode: string }[]
-  graduatedBatches: { batchCode: string; batchId: string }[]
+  // Batch codes ("BATCH NUMBER (NARADA LMS)", e.g. "VED-2026-GR-2-1") that didn't cleanly parse as
+  // <year>-<GR|BR>-<numeric track>-<index> — either a non-numeric track token ("REM", "ADV", falls
+  // back to track 1) or a trailing suffix like "-CLOSED" (forces the batch to `completed`
+  // regardless of the active-student/current-year rule). Flagged for manual review, not guessed
+  // silently — see parseBatchCode.
+  batchCodeAnomalies: { batchCode: string; sheet: string; reason: string }[]
   enrollmentRoleSkips: {
     profileId: string
     batchId: string
@@ -258,22 +263,58 @@ function toE164(digitsOnly: string): string | null {
   return E164_PATTERN.test(candidate) ? candidate : null
 }
 
-function isGraduatedBatch(batchCode: string, rawTrackNum: unknown): boolean {
-  const code = String(batchCode ?? '').toUpperCase()
-  const trackStr = String(rawTrackNum ?? '').toUpperCase()
-  return code.includes('GRAD') || trackStr.includes('GRAD')
-}
+// "BATCH NUMBER (NARADA LMS)" is the new format's only source of a batch's track and year (the old
+// flat sheet's "Track Number"/"Joining Year"/"LAST Batch Year" columns don't exist anymore) — e.g.
+// "VED-2026-GR-2-1" is track 2, year 2026. "GR"/"BR" is the age-group split (Gruhasta/Brahmachari),
+// not part of the numbering. A handful of codes don't fit cleanly:
+//   - "VED-2026-GR-REM-1" / "VED-2024-GR-ADV-1": "REM"/"ADV" ("remedial"/"advanced") aren't track
+//     numbers — confirmed against the two batches' own student rows (chapter scores populated all
+//     the way through track 7 and into track 8's own chapters/certifications), these are track 8.
+//     Any other non-numeric token still falls back to track 1, flagged rather than guessed at.
+//   - "VED-2026-GR-3-2-CLOSED": a trailing suffix — parses normally but forces `completed` status
+//     regardless of the active-student/current-year rule (see batch-status derivation below).
+const BATCH_CODE_PATTERN = /^VED-(\d{4})-(?:GR|BR)-([A-Za-z0-9]+)-\d+(?:-(.+))?$/i
+const NON_NUMERIC_TRACK_TOKENS: Record<string, number> = { REM: 8, ADV: 8 }
 
-function parseTrackNumber(rawTrackNum: unknown, batchCode: string): number {
-  const parsedFromColumn = parseInt(String(rawTrackNum ?? '').trim(), 10)
-  if (!isNaN(parsedFromColumn) && parsedFromColumn > 0) {
-    return parsedFromColumn
+function parseBatchCode(
+  batchCode: string,
+  sheetName: string,
+  report: Report,
+): { year: number; track: number; forceCompleted: boolean } {
+  const match = batchCode.match(BATCH_CODE_PATTERN)
+  if (!match) {
+    report.batchCodeAnomalies.push({ batchCode, sheet: sheetName, reason: 'does not match VED-<year>-GR|BR-<track>-<index> — defaulting to track 1, current year' })
+    return { year: new Date().getFullYear(), track: 1, forceCompleted: false }
   }
-  const match = batchCode.match(/(?:VED|TRACK)-0*(\d+)/i)
-  if (match && match[1]) {
-    return parseInt(match[1], 10)
+
+  const year = parseInt(match[1], 10)
+  const rawTrack = match[2]
+  const parsedTrack = parseInt(rawTrack, 10)
+  let track = 1
+  if (!isNaN(parsedTrack) && parsedTrack > 0) {
+    track = parsedTrack
+  } else if (NON_NUMERIC_TRACK_TOKENS[rawTrack.toUpperCase()]) {
+    track = NON_NUMERIC_TRACK_TOKENS[rawTrack.toUpperCase()]
+    report.batchCodeAnomalies.push({
+      batchCode,
+      sheet: sheetName,
+      reason: `non-numeric track token "${rawTrack}" — mapped to track ${track} (confirmed via student progress data)`,
+    })
+  } else {
+    report.batchCodeAnomalies.push({
+      batchCode,
+      sheet: sheetName,
+      reason: `non-numeric track token "${rawTrack}" — defaulting to track 1`,
+    })
   }
-  return 1
+
+  const suffix = match[3]
+  const forceCompleted = !!suffix && /closed/i.test(suffix)
+  if (suffix && !forceCompleted) {
+    report.batchCodeAnomalies.push({ batchCode, sheet: sheetName, reason: `unrecognized trailing suffix "${suffix}" — ignored` })
+  }
+
+  return { year, track, forceCompleted }
 }
 
 function sanitizeStudentStatus(rawStatus: unknown): {
@@ -338,6 +379,21 @@ function normalizeName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
+// The new tracker sheets (BR-TRACK N / GR-TRACK N / ALL-INACTIVE) don't share one consistent
+// header spelling for the same real column — e.g. "FULL NAME" vs "Full Name", or a chapter title
+// with an embedded "\r\n" in one sheet and a plain space in another ("Nakshatreshti\r\n 1" vs
+// "Nakshatreshti\r\n1"). Collapsing whitespace and case before comparing makes every sheet's row
+// object look up the same regardless of which sheet it came from.
+function normHeader(header: string): string {
+  return header.replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
+/** Builds a case/whitespace-insensitive field getter for one row, keyed off `normHeader`. */
+function fieldGetter(row: Record<string, any>): (canonicalHeader: string) => any {
+  const byNormalized = new Map(Object.entries(row).map(([k, v]) => [normHeader(k), v]))
+  return (canonicalHeader: string) => byNormalized.get(normHeader(canonicalHeader))
+}
+
 async function run() {
   console.log(`🚀 Loading Excel file: ${EXCEL_FILE}`)
 
@@ -348,16 +404,50 @@ async function run() {
   const workbook = XLSX.readFile(EXCEL_FILE)
 
   const regSheet = workbook.Sheets['Master_Registrations']
-  const assessSheet = workbook.Sheets['Assessments-Master']
-
-  if (!regSheet || !assessSheet) {
+  if (!regSheet) {
     throw new Error(
-      `Could not find required sheets in Excel file. Available sheets: ${workbook.SheetNames.join(', ')}`,
+      `Could not find "Master_Registrations" sheet in Excel file. Available sheets: ${workbook.SheetNames.join(', ')}`,
     )
   }
 
+  // The new export splits what used to be one flat "Assessments-Master" sheet into one sheet per
+  // (age-group, track) pair — "BR"/"GR" being the Brahmachari (<18)/Gruhasta (>=18) age split, not
+  // an extra track — plus "ALL-INACTIVE" for students no longer active in any batch. Each sheet
+  // carries the full cumulative curriculum up to its own reach (a track-8 sheet has all 8 tracks'
+  // columns; a track-1 sheet only has tracks 1-2), so processing every sheet and de-duping chapters
+  // by (normalized) column name reconstructs the same curriculum the old flat sheet had. "PROCESS"
+  // (a rating-scale legend) and "T1C".."T8C" (a redundant per-track certification roster) carry no
+  // data this importer needs and are intentionally not read.
+  const TRACKER_SHEETS: { name: string; forcedStatus?: EnrollmentRow['status'] }[] = [
+    { name: 'BR-TRACK 1' },
+    { name: 'GR-TRACK 1' },
+    { name: 'GR-TRACK 2' },
+    { name: 'BR-TRACK 3' },
+    { name: 'GR-TRACK 3' },
+    { name: 'GR-TRACK 4' },
+    { name: 'GR-TRACK 5' },
+    { name: 'GR-TRACK 6' },
+    { name: 'BR-TRACK 7' },
+    { name: 'GR-TRACK 7' },
+    { name: 'GR-TRACK 8' },
+    // Every row here gets enrollment.status = 'inactive' outright, regardless of its own
+    // "STUDENT STATUS" column value — this sheet's whole reason for existing is "no longer active
+    // in any batch", confirmed against the source data rather than assumed.
+    { name: 'ALL-INACTIVE', forcedStatus: 'inactive' },
+  ]
+  for (const sheet of TRACKER_SHEETS) {
+    if (!workbook.Sheets[sheet.name]) {
+      throw new Error(
+        `Could not find "${sheet.name}" sheet in Excel file. Available sheets: ${workbook.SheetNames.join(', ')}`,
+      )
+    }
+  }
+  // "ALL-INACTIVE" carries the deepest cumulative column set (all 8 tracks) of any single sheet —
+  // used below as the canonical source for chapter/track/certification-column ordering, the same
+  // role the old flat "Assessments-Master" sheet used to play alone.
+  const CANONICAL_CURRICULUM_SHEET = 'ALL-INACTIVE'
+
   const regRows: Record<string, any>[] = XLSX.utils.sheet_to_json(regSheet, { defval: '' })
-  const assessRows: Record<string, any>[] = XLSX.utils.sheet_to_json(assessSheet, { defval: '' })
 
   const report: Report = {
     droppedMetadata:
@@ -365,12 +455,14 @@ async function run() {
       "Most of it (contact/background/agreements) has a real column on `profile` now and " +
       "import-school.ts's `data` command backfills it there. The rest (qualified status, upanayanam, " +
       'reference contacts, consent flags, etc.) still has no home in the schema and is dropped by the ' +
-      'importer, kept here only for whenever that changes.',
+      "importer, kept here only for whenever that changes. Also dropped: each tracker sheet's " +
+      '"L3 Aavarthi Status" columns (a revision-round marker with no home on `evaluation` either) — ' +
+      'only the paired "L4 Cert Status (Auto Update)" column feeds track-certifications.json.',
     phoneCollisions: [],
     missingPhoneProfiles: [],
     invalidE164Phones: [],
     ambiguousStudentStatus: [],
-    graduatedBatches: [],
+    batchCodeAnomalies: [],
     enrollmentRoleSkips: [],
     duplicateRealEmails: [],
     resolvedEmailOverrides: [],
@@ -380,15 +472,14 @@ async function run() {
   }
 
   // ==========================================
-  // Tracks: 1-8 structural tracks + one synthetic "Graduated" pseudo-track so graduated cohorts'
-  // batch.trackId can stay NOT NULL without a schema change.
+  // Tracks: 1-8 structural tracks. No "Graduated" pseudo-track anymore — the new export has no
+  // "GRAD" batch codes at all (confirmed against the full 91-batch-code set), so that concept
+  // doesn't apply to this data.
   // ==========================================
   const tracksMap = new Map<number, TrackRow>()
   for (let i = 1; i <= 8; i++) {
     tracksMap.set(i, { id: uuidv7(), name: `Track ${i}`, order: i })
   }
-  const GRADUATED_TRACK_NUM = 9
-  tracksMap.set(GRADUATED_TRACK_NUM, { id: uuidv7(), name: 'Graduated', order: GRADUATED_TRACK_NUM })
 
   const usersByPhone = new Map<string, UserRow>()
   // Every created user, by id — lets getOrCreateTeacher below resolve a matched registrant's
@@ -405,12 +496,14 @@ async function run() {
   const teachersByName = new Map<string, { user: UserRow; profile: ProfileRow }>()
   const chaptersMap = new Map<string, ChapterRow>()
   const batchesMap = new Map<string, BatchRow>()
-  const batchTrackNumbers = new Map<string, number | null>()
-  // Max "LAST Batch Year" seen across each batch's own students — verified clean (zero batches
-  // have students disagreeing on this value), and a far better active/completed signal than
-  // enrollment presence alone (every batch has at least one enrollment by construction).
-  const batchLastYears = new Map<string, number>()
-  let maxDataYear = 0
+  // Year/track parsed from each batch's own code (e.g. "VED-2026-GR-2-1" -> year 2026, track 2) —
+  // every row for a given batch code carries the same value by construction, so this is set once
+  // per batch, not per row.
+  const batchYears = new Map<string, number>()
+  const batchTrackNumbers = new Map<string, number>()
+  // Batch codes with a "-CLOSED" suffix (see parseBatchCode) — always `completed`, regardless of
+  // the active-student/current-year rule below.
+  const forceCompletedBatches = new Set<string>()
   const enrollmentsByKey = new Map<string, EnrollmentRow>()
   const evaluations: EvaluationRow[] = []
   const trackCertifications: TrackCertificationRow[] = []
@@ -656,57 +749,72 @@ async function run() {
   }
 
   // ==========================================
-  // PHASE 2: Chapters & tracks from assessment columns
+  // PHASE 2: Chapters & tracks from the canonical tracker sheet's columns
   // ==========================================
   console.log('📊 Mapping chapters to tracks...')
 
-  const metadataColumns = new Set([
-    'Joining Year',
-    'Track Number',
-    'LAST Batch Year',
-    'Category',
-    'Batch Number',
-    'WhatsApp Batch Name',
-    'GURUVU GARU 1',
-    'GURUVU GARU 2 / TA',
-    'GURUVU GARU 3 / TA',
-    'Student Status',
-    'LAST 4-WEEKS ATTENDANCE',
-    'OVERALL AKSHARA / SWARA JNANAM',
-    'OVERALL EXAM BACKLOG',
-    'Roll Number',
-    'Last Name',
-    'First Name',
-    'Full Name',
-    'Country Code',
-    'Phone Number',
-    'Time zone',
-    'YOB',
-  ])
+  // Metadata columns shared by every tracker sheet (BR-TRACK N / GR-TRACK N / ALL-INACTIVE) —
+  // matched case/whitespace-insensitively via normHeader, since sheets don't agree on casing
+  // ("FULL NAME" vs "Full Name") or embedded "\r\n"s.
+  const trackerMetadataColumns = new Set(
+    [
+      'Primary Key',
+      'COUNTRY CODE',
+      'Phone Number',
+      'YOB',
+      'Last Name',
+      'First Name',
+      'BATCH NUMBER (NARADA LMS)',
+      'GURUVU GARU 1',
+      'GURUVU GARU 2',
+      'GURUVU GARU 3',
+      'STUDENT STATUS (ACTIVE / BREAK)',
+      'LAST 4-WEEKS ATTENDANCE',
+      'OVERALL AKSHARA / SWARA JNANAM',
+      'OVERALL EXAM BACKLOG',
+      'Roll Number (Sorted by Last Name)',
+      'FULL NAME',
+      'Time zone',
+    ].map(normHeader),
+  )
+  // Stray columns with no student data behind them anywhere in the workbook — a blank-header
+  // artifact ("__EMPTY", "__EMPTY_1", ...) or a leftover formula-helper column ("XLOOKUP"), neither
+  // of which is a real chapter.
+  const isJunkColumn = (col: string) => /^__EMPTY(_\d+)?$/.test(col) || normHeader(col) === 'xlookup'
+  // The new format's replacement for the old single "TRACK N CERTIFICATION EXAM STATUS" column: a
+  // pair of columns closing out each track's chapters — "L3 Aavarthi Status" (a revision-round
+  // marker, dropped — see droppedMetadata above) and "L4 Cert Status (Auto Update)" (the actual
+  // certification result, feeding track-certifications.json exactly like the old single column
+  // did). SheetJS suffixes repeated header names ("_1", "_2", ...), so match by prefix.
+  const isAavarthiColumn = (col: string) => normHeader(col).startsWith('l3 aavarthi status')
+  const isCertColumn = (col: string) => normHeader(col).startsWith('l4 cert status')
 
-  if (assessRows.length > 0) {
-    const allHeaders = Object.keys(assessRows[0])
-    // SheetJS's `sheet_to_json` names a column with a blank header cell "__EMPTY", "__EMPTY_1", ...
-    // — 31 such columns trail Track 8's certification column in the real sheet, all blank for
-    // every single student (verified: zero non-empty cells across the whole assessment sheet).
-    // Real spreadsheet formatting artifacts, not unlabeled chapters — without this filter they
-    // became 31 fake published "chapters" with titles like "__EMPTY_12".
-    const isBlankHeaderColumn = (col: string) => /^__EMPTY(_\d+)?$/.test(col)
-    const assessmentColumns = allHeaders.filter(
-      col => !metadataColumns.has(col) && !isBlankHeaderColumn(col),
+  const canonicalRows: Record<string, any>[] = XLSX.utils.sheet_to_json(
+    workbook.Sheets[CANONICAL_CURRICULUM_SHEET],
+    { defval: '' },
+  )
+  if (canonicalRows.length > 0) {
+    const allHeaders = Object.keys(canonicalRows[0])
+    const curriculumColumns = allHeaders.filter(
+      col => !trackerMetadataColumns.has(normHeader(col)) && !isJunkColumn(col),
     )
 
     let currentTrackNum = 1
     let orderInTrack = 1
 
-    for (const colName of assessmentColumns) {
-      const trackObj = tracksMap.get(currentTrackNum)!
-      const isCertificationColumn = /TRACK\s*\d+\s*CERTIFICATION/i.test(colName)
+    for (const colName of curriculumColumns) {
+      if (isAavarthiColumn(colName)) continue
 
-      if (isCertificationColumn) {
+      const trackObj = tracksMap.get(currentTrackNum)!
+
+      if (isCertColumn(colName)) {
         // The certification result belongs to the track this column is closing out, not the one
         // about to start — record it before `currentTrackNum` advances below.
         certificationColumnTrackIds.set(colName, trackObj.id)
+        if (currentTrackNum < 8) {
+          currentTrackNum++
+          orderInTrack = 1
+        }
       } else if (!chaptersMap.has(colName)) {
         chaptersMap.set(colName, {
           id: uuidv7(),
@@ -718,29 +826,29 @@ async function run() {
           script: null,
         })
       }
-
-      if (isCertificationColumn) {
-        if (currentTrackNum < 8) {
-          currentTrackNum++
-          orderInTrack = 1
-        }
-      }
     }
+  }
 
-    // ==========================================
-    // PHASE 3: Batches, enrollments, evaluations
-    // ==========================================
-    console.log('👥 Mapping batches, enrollments, and evaluations...')
+  // ==========================================
+  // PHASE 3: Batches, enrollments, evaluations
+  // ==========================================
+  console.log('👥 Mapping batches, enrollments, and evaluations...')
 
-    for (const row of assessRows) {
-      const rawBatchCode =
-        row['WhatsApp Batch Name'] || `TRACK-${row['Track Number']}-BATCH-${row['Batch Number']}`
-      const isGrad = isGraduatedBatch(rawBatchCode, row['Track Number'])
-      const parsedTrackNumber = isGrad ? GRADUATED_TRACK_NUM : parseTrackNumber(row['Track Number'], rawBatchCode)
-      const trackObj = tracksMap.get(parsedTrackNumber) ?? tracksMap.get(1)!
+  for (const sheet of TRACKER_SHEETS) {
+    const rows: Record<string, any>[] = XLSX.utils.sheet_to_json(workbook.Sheets[sheet.name], { defval: '' })
+
+    for (const row of rows) {
+      const get = fieldGetter(row)
+      const rawBatchCode = String(get('BATCH NUMBER (NARADA LMS)') ?? '').trim()
+      if (!rawBatchCode) {
+        report.droppedRowsMissingIdentity.push({ sheet: sheet.name, reason: 'no BATCH NUMBER (NARADA LMS) value' })
+        continue
+      }
 
       let batchRecord = batchesMap.get(rawBatchCode)
       if (!batchRecord) {
+        const { year, track: parsedTrackNumber, forceCompleted } = parseBatchCode(rawBatchCode, sheet.name, report)
+        const trackObj = tracksMap.get(parsedTrackNumber) ?? tracksMap.get(1)!
         batchRecord = {
           id: uuidv7(),
           trackId: trackObj.id,
@@ -750,36 +858,33 @@ async function run() {
           meetingUrl: null,
         }
         batchesMap.set(rawBatchCode, batchRecord)
-        batchTrackNumbers.set(rawBatchCode, isGrad ? null : parsedTrackNumber)
-        if (isGrad) report.graduatedBatches.push({ batchCode: rawBatchCode, batchId: batchRecord.id })
+        batchYears.set(rawBatchCode, year)
+        batchTrackNumbers.set(rawBatchCode, parsedTrackNumber)
+        if (forceCompleted) forceCompletedBatches.add(rawBatchCode)
       }
 
-      const lastBatchYear = parseInt(String(row['LAST Batch Year'] ?? '').trim(), 10)
-      if (!isNaN(lastBatchYear)) {
-        batchLastYears.set(rawBatchCode, Math.max(batchLastYears.get(rawBatchCode) ?? 0, lastBatchYear))
-        maxDataYear = Math.max(maxDataYear, lastBatchYear)
-      }
-
-      const phone = resolvePhone(sanitizePhone(row['Country Code'], row['Phone Number']))
-      const firstName = row['First Name'] || ''
-      const lastName = row['Last Name'] || ''
-      const yob = row['YOB'] || ''
+      const phone = resolvePhone(sanitizePhone(get('COUNTRY CODE'), get('Phone Number')))
+      const firstName = get('First Name') || ''
+      const lastName = get('Last Name') || ''
+      const yob = get('YOB') || ''
 
       const studentProfile = getOrCreateProfile({
         phone,
         yob,
         firstName,
         lastName,
-        fallbackFullName: row['Full Name'],
+        fallbackFullName: get('FULL NAME'),
       })
 
-      const trackNumberForJoin = batchTrackNumbers.get(rawBatchCode)
-      const joiningYear = row['Joining Year'] || '2024'
-      const calculatedJoinedAt = trackNumberForJoin === 1 ? `${joiningYear}-01-01` : null
-      const { status: parsedStudentStatus, matched } = sanitizeStudentStatus(row['Student Status'])
+      const batchYear = batchYears.get(rawBatchCode)!
+      const calculatedJoinedAt = batchTrackNumbers.get(rawBatchCode) === 1 ? `${batchYear}-01-01` : null
+
+      const { status: parsedStudentStatus, matched } = sheet.forcedStatus
+        ? { status: sheet.forcedStatus, matched: true }
+        : sanitizeStudentStatus(get('STUDENT STATUS (ACTIVE / BREAK)'))
       if (!matched) {
         report.ambiguousStudentStatus.push({
-          rawValue: String(row['Student Status'] ?? ''),
+          rawValue: String(get('STUDENT STATUS (ACTIVE / BREAK)') ?? ''),
           mappedTo: parsedStudentStatus,
           profileId: studentProfile.id,
           batchCode: rawBatchCode,
@@ -788,19 +893,19 @@ async function run() {
 
       addEnrollment(studentProfile.id, batchRecord.id, 'student', parsedStudentStatus, calculatedJoinedAt)
 
-      const guru1 = getOrCreateTeacher(row['GURUVU GARU 1'])
+      const guru1 = getOrCreateTeacher(get('GURUVU GARU 1'))
       if (guru1) addEnrollment(guru1.profile.id, batchRecord.id, 'instructor', 'active', calculatedJoinedAt)
 
-      const guru2 = getOrCreateTeacher(row['GURUVU GARU 2 / TA'])
+      const guru2 = getOrCreateTeacher(get('GURUVU GARU 2'))
       if (guru2) addEnrollment(guru2.profile.id, batchRecord.id, 'ta', 'active', calculatedJoinedAt)
 
-      const guru3 = getOrCreateTeacher(row['GURUVU GARU 3 / TA'])
+      const guru3 = getOrCreateTeacher(get('GURUVU GARU 3'))
       if (guru3) addEnrollment(guru3.profile.id, batchRecord.id, 'ta', 'active', calculatedJoinedAt)
 
       const evaluator = guru1 ?? getOrCreateTeacher('Teacher')!
 
       for (const [chapterTitle, chapterData] of chaptersMap.entries()) {
-        const level = mapScoreToLevel(row[chapterTitle])
+        const level = mapScoreToLevel(get(chapterTitle))
         if (level) {
           evaluations.push({
             id: uuidv7(),
@@ -813,7 +918,7 @@ async function run() {
       }
 
       for (const [columnName, trackId] of certificationColumnTrackIds.entries()) {
-        const level = mapScoreToLevel(row[columnName])
+        const level = mapScoreToLevel(get(columnName))
         if (level) {
           trackCertifications.push({
             id: uuidv7(),
@@ -860,35 +965,33 @@ async function run() {
   }
 
   // Batch status: no source column gives this directly, so it's derived (and always flagged for
-  // review). Primary signal is "LAST Batch Year" — verified consistent within every batch — a
-  // batch is 'active' if its students' most recent batch year matches the newest year seen
-  // anywhere in the dataset, 'completed' otherwise. Falls back to "has a student enrollment" only
-  // for the rare batch with no year data at all (none exist in the current spreadsheet, but the
-  // fallback is kept and flagged distinctly in case future data has gaps).
-  const studentEnrollmentCountByBatch = new Map<string, number>()
+  // review). Rule (per product decision): a batch is 'active' if any of its student enrollments is
+  // itself 'active', OR its own code's year is the current calendar year — 'completed' otherwise. A
+  // "-CLOSED" batch code (see parseBatchCode) always wins as 'completed', regardless of the above.
+  const currentYear = new Date().getFullYear()
+  const hasActiveStudentByBatch = new Map<string, boolean>()
   for (const enr of enrollmentsByKey.values()) {
-    if (enr.role === 'student') {
-      studentEnrollmentCountByBatch.set(enr.batchId, (studentEnrollmentCountByBatch.get(enr.batchId) ?? 0) + 1)
+    if (enr.role === 'student' && enr.status === 'active') {
+      hasActiveStudentByBatch.set(enr.batchId, true)
     }
   }
   for (const [batchCode, batchRow] of batchesMap.entries()) {
-    const lastYear = batchLastYears.get(batchCode)
-    if (lastYear !== undefined && maxDataYear > 0) {
-      batchRow.status = lastYear >= maxDataYear ? 'active' : 'completed'
-      report.batchStatusDefaults.push({
-        batchCode: batchRow.code,
-        status: batchRow.status,
-        reason: `LAST Batch Year ${lastYear} (newest in dataset: ${maxDataYear})`,
-      })
+    if (forceCompletedBatches.has(batchCode)) {
+      batchRow.status = 'completed'
+      report.batchStatusDefaults.push({ batchCode, status: 'completed', reason: '"-CLOSED" batch code' })
       continue
     }
 
-    const hasStudents = (studentEnrollmentCountByBatch.get(batchRow.id) ?? 0) > 0
-    batchRow.status = hasStudents ? 'active' : 'completed'
+    const batchYear = batchYears.get(batchCode)!
+    const hasActiveStudent = hasActiveStudentByBatch.get(batchRow.id) ?? false
+    const isCurrentYear = batchYear === currentYear
+    batchRow.status = hasActiveStudent || isCurrentYear ? 'active' : 'completed'
     report.batchStatusDefaults.push({
-      batchCode: batchRow.code,
+      batchCode,
       status: batchRow.status,
-      reason: `no LAST Batch Year data — fell back to enrollment presence (${hasStudents ? 'has' : 'no'} active student enrollments)`,
+      reason:
+        `year ${batchYear}${isCurrentYear ? ' (current)' : ''}, ` +
+        `${hasActiveStudent ? 'has' : 'no'} active student enrollment`,
     })
   }
 
@@ -936,6 +1039,7 @@ async function run() {
    teacher identities merged into an existing registrant (same person, one identity): ${report.teacherIdentityMerges.length}
    invalid E.164 phone numbers (no login capability yet): ${report.invalidE164Phones.length}
    ambiguous student-status values: ${report.ambiguousStudentStatus.length}
+   batch code anomalies (non-numeric track / unrecognized suffix): ${report.batchCodeAnomalies.length}
    registration-metadata.json: ${registrationMetadata.length} rows (import-school.ts backfills most fields onto profile)
    review seed-data/_report.json before running the importer.
   `)
