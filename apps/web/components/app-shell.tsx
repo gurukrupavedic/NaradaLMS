@@ -19,7 +19,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
@@ -144,15 +143,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     {profileName.charAt(0)}
                   </span>
                   <span className="hidden text-[0.8125rem] sm:inline">{profileName}</span>
-                  <ChevronDown aria-hidden className="size-3.5" />
+                  <ChevronDown aria-hidden className="size-3 text-ink-muted/70" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                {/* Overrides the primitive's default shadcn look (rounded corners, drop
+                    shadow, accent-blue focus ring) — this system carries depth with a single
+                    hairline and a card/paper value shift, never a shadow. See .sheet in
+                    globals.css for the same treatment applied to every other floating list. */}
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={10}
+                  className="min-w-40 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
+                >
                   {profileHref && (
-                    <DropdownMenuItem render={<Link href={profileHref} />}>Profile</DropdownMenuItem>
+                    <DropdownMenuItem
+                      render={<Link href={profileHref} />}
+                      className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink"
+                    >
+                      Profile
+                    </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem render={<Link href="/settings" />}>Settings</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
+                  <DropdownMenuItem
+                    render={<Link href="/settings" />}
+                    className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink"
+                  >
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="rounded-none px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink"
+                  >
+                    Sign out
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
