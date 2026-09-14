@@ -92,7 +92,24 @@ wrong app's rules.
    Run that once per new terminal session, and again if you switch which environment you're working
    on. (On fish: `set -gx (cat .env.staging | grep -v '^#' | xargs -L1 echo)` is fussier — easiest is
    to temporarily use `bash` for this runbook.)
-5. **Confirm `USE_TWILIO_API=true` and `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` /
+5. **Also `export NODE_ENV=production` in that same shell, every time — this is not optional.**
+   `packages/env/src/load.ts` (imported by every `tools/src/*.ts` command in this runbook) does:
+   ```js
+   if (process.env.NODE_ENV !== 'production') {
+     config({ path: '.../packages/env/.env', override: true })
+   }
+   ```
+   `override: true` means it **silently overwrites whatever `DATABASE_URL` (and everything else)
+   you just sourced from `.env.staging`/`.env.production` with local dev's `.env`** — every single
+   time, unless `NODE_ENV` is already `'production'`. Plain `psql` isn't affected (it's not a Node
+   process, dotenv never runs), which is exactly what makes this dangerous: your `psql "$DATABASE_URL"`
+   verification queries will correctly hit staging/production, while every `pnpm exec tsx ...`
+   command silently no-ops against your local database instead — with no error, no warning, just the
+   wrong org getting migrated/queried/imported into. **Verify this actually worked** by re-running
+   something read-only first, e.g. `cd tools && pnpm exec tsx src/schools.ts migrate` (no `--slug`)
+   and confirming the org id(s) it prints match what `psql` showed you for this environment, not
+   whatever `slmts` org exists in your local dev database.
+6. **Confirm `USE_TWILIO_API=true` and `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` /
    `TWILIO_VERIFY_SERVICE_SID` are all set** in the file from step 4 (they came from Railway's own
    variables, so if they're missing there, they're missing on the environment itself — go set them
    on the `api` service before continuing). Sign-in is phone-number OTP only
@@ -100,7 +117,7 @@ wrong app's rules.
    `USE_TWILIO_API` defaults to `false` and the API silently logs OTP codes to its own console
    instead of sending them, so **nobody can actually receive a code to log in**. Confirm this before
    importing anyone real into this environment, not after.
-6. Read access to run verification `psql` queries against this environment (the tunneled
+7. Read access to run verification `psql` queries against this environment (the tunneled
    `DATABASE_URL` from step 4 already grants this — `psql "$DATABASE_URL"` connects through the same
    tunnel as everything else here).
 
@@ -206,7 +223,7 @@ runbook's own Steps 3 and 8, which all prompt for it.
 
 This creates a real `user` row with `isSuperAdmin: true`. Once created, they log in the same way
 everyone else does: enter their phone number in the app, receive a Twilio Verify OTP (assuming
-prerequisite 5 above is actually satisfied on this environment), enter the code.
+prerequisite 6 above is actually satisfied on this environment), enter the code.
 
 ---
 
@@ -386,3 +403,8 @@ able to use the app.
   the other.
 - Don't forget to close the tunnel (Ctrl+C in its terminal) once you're done with an environment —
   it's a live SSH session to a real database for as long as it's open.
+- Don't run any `pnpm exec tsx ...` command in this runbook without `NODE_ENV=production` set in
+  that same shell (Prerequisite 5) — without it, every one of those commands silently operates on
+  your local dev database instead of staging/production, with no error printed. `psql` isn't
+  affected by this, which is exactly what makes it easy to miss: your verification queries look
+  right while the actual write command did nothing you intended.
