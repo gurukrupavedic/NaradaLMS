@@ -1,8 +1,8 @@
 # Staging/production runbook: apply pending migrations + import the SLMTS roster
 
-**Audience:** whoever has staging or production database credentials (Railway → the relevant
-environment's API service → Variables tab). Written to be followed step-by-step; each step says
-what to run, what you should see, and how to check it actually worked before moving on.
+**Audience:** whoever has Railway access to the `narada` project's staging or production
+environment. Written to be followed step-by-step; each step says what to run, what you should see,
+and how to check it actually worked before moving on.
 
 **Run this once per environment** — staging first, then production. Each environment is a separate
 Railway environment/service with its own Postgres database and its own credentials; nothing here is
@@ -40,30 +40,69 @@ wrong app's rules.
 1. Latest `main` checked out locally, `pnpm install` run. `pnpm db:migrate:public`,
    `pnpm schools:migrate`, and `pnpm exec tsx src/import-school.ts` (from `tools/`) all need to
    exist — they're part of `main` today, no specific PR gate to check for anymore.
-2. **This environment's credentials**, obtained from Railway (Project → the environment's API
-   service → Variables tab), not from `packages/env/.env.sops` — that file only holds the team's
-   shared *local dev* config (`DATABASE_URL` pointing at `localhost`), not staging/production
-   secrets.
-3. Save those values to a **separate, local-only file** named for the environment — e.g.
-   `.env.staging` or `.env.production` at the repo root. Do **not** overwrite your regular `.env`
-   (used for local dev) and do **not** commit this file. Every command below loads it explicitly
-   into the shell rather than relying on the default `.env`:
+2. **Railway CLI installed and logged in** (`railway whoami` should show your account). Find the
+   `narada` project's ID once with `railway status --json` (or `railway status` for the
+   human-readable form) — every command below needs it explicitly via `--project`, rather than
+   relying on whatever happens to be linked in your current directory, so a stray `railway link` in
+   some other project can't silently point a command at the wrong one.
+3. **Open a local tunnel to this environment's database — never use the public connection string.**
+   In its own terminal tab, run (substituting the real project ID from step 2 — `Postgres-J_f2` is
+   the current Postgres service name; confirm with `railway status --project <PROJECT_ID> --environment staging`
+   if it's ever been renamed or recreated):
+   ```sh
+   railway connect Postgres-J_f2 --project <PROJECT_ID> --environment staging --ssh --tunnel-only
+   ```
+   (`--environment production` for the production pass.) `--ssh` forces the tunnel over Railway's
+   private SSH path instead of the database's public TCP proxy — don't omit it just because the
+   service happens to have a public proxy domain that would otherwise work; the whole point here is
+   to never touch that. `--tunnel-only` skips launching `psql` itself and just holds the tunnel open,
+   printing something like:
+   ```
+   PostgreSQL tunnel open — point an external client at:
+
+     Host:     127.0.0.1
+     Port:     <ephemeral-port>
+     User:     postgres
+     Password: <redacted>
+     Database: railway
+
+     URL:      postgresql://postgres:<redacted>@127.0.0.1:<ephemeral-port>/railway
+
+   Press Ctrl+C to close the tunnel.
+   ```
+   **Leave this terminal running for your entire session against this environment.** The port is
+   ephemeral and only valid while the tunnel is open — if it dies (closed terminal, network blip),
+   every command below will start failing to connect, and you'll need to restart the tunnel and
+   pick up the new port in the next step. Don't reuse a URL from an earlier tunnel run.
+4. **Pull this environment's other variables, then override `DATABASE_URL` with the tunnel's local
+   URL:**
+   ```sh
+   railway variable list --service api --project <PROJECT_ID> --environment staging --kv > .env.staging
+   ```
+   (`.env.production` / `--environment production` for the production pass.) This is a
+   **separate, local-only file** — do **not** overwrite your regular `.env` (used for local dev,
+   pointing at `packages/env/.env.sops`'s shared dev config) and do **not** commit this file. Then
+   open it and replace its `DATABASE_URL=...` line with the `URL:` value the tunnel printed in step
+   3 — every other variable in the file (auth secrets, storage, Twilio) stays exactly as Railway has
+   it; only the database connection changes to go through your local tunnel instead of the network.
+   Load it into your shell before any command in this runbook:
    ```sh
    set -a && source .env.staging && set +a   # or .env.production
    ```
-   Run that once per new terminal session before any command in this runbook, and again if you
-   switch which environment you're working on. (On fish: `set -gx (cat .env.staging | grep -v '^#' | xargs -L1 echo)`
-   is fussier — easiest is to temporarily use `bash` for this runbook.)
-4. **Confirm `USE_TWILIO_API=true` and `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` /
-   `TWILIO_VERIFY_SERVICE_SID` are all set** on this environment's API service (Railway Variables
-   tab — not something this runbook's local shell env needs, since sign-in happens through the
-   deployed API, not this CLI). Sign-in is phone-number OTP only (`emailAndPassword.enabled: false`
-   in `packages/auth/src/index.ts`) — if these aren't set, `USE_TWILIO_API` defaults to `false` and
-   the API silently logs OTP codes to its own console instead of sending them, so **nobody can
-   actually receive a code to log in**. Confirm this before importing anyone real into this
-   environment, not after.
-5. Read access to run verification `psql` queries against this environment (the `DATABASE_URL` from
-   step 2 already grants this).
+   Run that once per new terminal session, and again if you switch which environment you're working
+   on. (On fish: `set -gx (cat .env.staging | grep -v '^#' | xargs -L1 echo)` is fussier — easiest is
+   to temporarily use `bash` for this runbook.)
+5. **Confirm `USE_TWILIO_API=true` and `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` /
+   `TWILIO_VERIFY_SERVICE_SID` are all set** in the file from step 4 (they came from Railway's own
+   variables, so if they're missing there, they're missing on the environment itself — go set them
+   on the `api` service before continuing). Sign-in is phone-number OTP only
+   (`emailAndPassword.enabled: false` in `packages/auth/src/index.ts`) — if these aren't set,
+   `USE_TWILIO_API` defaults to `false` and the API silently logs OTP codes to its own console
+   instead of sending them, so **nobody can actually receive a code to log in**. Confirm this before
+   importing anyone real into this environment, not after.
+6. Read access to run verification `psql` queries against this environment (the tunneled
+   `DATABASE_URL` from step 4 already grants this — `psql "$DATABASE_URL"` connects through the same
+   tunnel as everything else here).
 
 ---
 
@@ -167,7 +206,7 @@ runbook's own Steps 3 and 8, which all prompt for it.
 
 This creates a real `user` row with `isSuperAdmin: true`. Once created, they log in the same way
 everyone else does: enter their phone number in the app, receive a Twilio Verify OTP (assuming
-prerequisite 4 above is actually satisfied on this environment), enter the code.
+prerequisite 5 above is actually satisfied on this environment), enter the code.
 
 ---
 
@@ -339,6 +378,11 @@ able to use the app.
   isn't built to handle safely.
 - Don't use the shared `packages/env/.env.sops` file for any of this — it holds local dev config,
   not staging/production secrets.
+- Don't pull `DATABASE_URL` from the Railway dashboard's public connection string, and don't run
+  `railway connect` without `--ssh` — see Prerequisite 3. Everything in this runbook is meant to go
+  through the local SSH tunnel, never the public proxy.
 - Don't assume staging and production are in the same state — re-check Step 5 and the Step 2
   super-admin check independently in each environment; don't carry an assumption from one over to
   the other.
+- Don't forget to close the tunnel (Ctrl+C in its terminal) once you're done with an environment —
+  it's a live SSH session to a real database for as long as it's open.
