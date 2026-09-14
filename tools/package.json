@@ -17,7 +17,7 @@
     "import:school:grant-passwords": "tsx src/import-school.ts grant-passwords"
   },
   "dependencies": {
-    "@narada/api-legacy": "workspace:*",
+    "@narada/api": "workspace:*",
     "@narada/auth": "workspace:*",
     "@narada/db": "workspace:*",
     "@narada/env": "workspace:*",

@@ -532,9 +532,9 @@ importers:
 
   tools:
     dependencies:
-      '@narada/api-legacy':
+      '@narada/api':
         specifier: workspace:*
-        version: link:../apps/api-legacy
+        version: link:../apps/api
       '@narada/auth':
         specifier: workspace:*
         version: link:../packages/auth
