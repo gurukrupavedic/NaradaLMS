@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import WaveSurfer from 'wavesurfer.js'
-import RegionsPlugin, { type Region } from 'wavesurfer.js/plugins/regions'
+import Peaks, { type PeaksInstance } from 'peaks.js'
 
 import { cn } from '@/lib/utils'
 import { ApiError } from '@/lib/api/client'
@@ -12,8 +11,6 @@ import type { ApiAudioAsset, ApiScriptSegment } from '@/lib/api/api-types'
 
 type Row = { segmentId: string; start: number; end: number }
 
-const REGION_COLOR = 'rgba(196, 74, 42, 0.18)' // vermilion, translucent
-
 function toRows(segments: ApiScriptSegment[], mappings: ApiAudioAsset['mappings']): Row[] {
   return segments.map(s => {
     const mapping = mappings.find(m => m.segmentId === s.id)
@@ -22,9 +19,11 @@ function toRows(segments: ApiScriptSegment[], mappings: ApiAudioAsset['mappings'
 }
 
 /**
- * A real waveform (wavesurfer.js) with one draggable/resizable region per segment, plus a
- * "tap pass" mode — play the audio and press Space at each line's onset, same interaction as
- * https://abesmon.github.io/lyric-timer/ — which is far faster for a continuous recitation than
+ * A real waveform, built on Peaks.js (BBC's open-source library for exactly this: labeled,
+ * draggable audio segments over a waveform, the same building block behind real captioning/
+ * transcription tools) — one editable segment per script line, plus a "tap pass" mode — play the
+ * audio and press Space at each line's onset, same interaction as
+ * https://abesmon.github.io/lyric-timer/ — which times a continuous recitation far faster than
  * placing every boundary by hand. Both paths write to the same `rows` state; either can finish
  * what the other started.
  */
@@ -37,14 +36,16 @@ export function WaveformMappingEditor({
   asset: ApiAudioAsset
   segments: ApiScriptSegment[]
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const waveSurferRef = useRef<WaveSurfer | null>(null)
-  const regionsRef = useRef<RegionsPlugin | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const zoomviewRef = useRef<HTMLDivElement | null>(null)
+  const overviewRef = useRef<HTMLDivElement | null>(null)
+  const peaksRef = useRef<PeaksInstance | null>(null)
   const rowsRef = useRef<Row[]>(toRows(segments, asset.mappings))
   const suppressNextSyncRef = useRef(false)
 
   const [rows, setRows] = useState<Row[]>(() => toRows(segments, asset.mappings))
   const [selected, setSelected] = useState<number | null>(null)
+  const [ready, setReady] = useState(false)
   const [duration, setDuration] = useState(asset.duration)
   const [playing, setPlaying] = useState(false)
   const [tapPass, setTapPass] = useState<{ boundaries: number[] } | null>(null)
@@ -56,66 +57,68 @@ export function WaveformMappingEditor({
     rowsRef.current = rows
   }, [rows])
 
-  // wavesurfer owns the canvas imperatively — this effect is the one place that ever touches it,
-  // torn down and rebuilt only if the audio itself changes.
+  // Peaks owns the waveform canvases imperatively — this effect is the one place that ever
+  // touches it, torn down and rebuilt only if the audio itself changes.
   useEffect(() => {
-    if (!containerRef.current) return
-    const regions = RegionsPlugin.create()
-    const ws = WaveSurfer.create({
-      container: containerRef.current,
-      waveColor: '#c9c2b4',
-      progressColor: '#1a1a1a',
-      cursorColor: '#c44a2a',
-      height: 96,
-      url: asset.url,
-      plugins: [regions],
-    })
-    waveSurferRef.current = ws
-    regionsRef.current = regions
+    if (!audioRef.current || !zoomviewRef.current || !overviewRef.current) return
+    let cancelled = false
 
-    ws.on('ready', d => {
-      setDuration(d)
-      syncRegions(regions, rowsRef.current, segments, d)
-    })
-    ws.on('play', () => setPlaying(true))
-    ws.on('pause', () => setPlaying(false))
-    ws.on('finish', () => setPlaying(false))
+    Peaks.init(
+      {
+        mediaElement: audioRef.current,
+        zoomview: { container: zoomviewRef.current },
+        overview: { container: overviewRef.current },
+        webAudio: { audioContext: new AudioContext() },
+        segmentOptions: { markers: true, overlay: true },
+        keyboard: false,
+      },
+      (err, peaksInstance) => {
+        if (cancelled || err || !peaksInstance) return
+        peaksRef.current = peaksInstance
+        setDuration(peaksInstance.player.getDuration())
+        setReady(true)
+        syncSegments(peaksInstance, rowsRef.current)
 
-    regions.on('region-updated', (region: Region) => {
-      suppressNextSyncRef.current = true
-      setRows(prev =>
-        prev.map(r => (r.segmentId === region.id ? { ...r, start: region.start, end: region.end } : r)),
-      )
-    })
-    regions.on('region-clicked', (region: Region, e: MouseEvent) => {
-      e.stopPropagation()
-      const index = segments.findIndex(s => s.id === region.id)
-      if (index >= 0) setSelected(index)
-    })
+        peaksInstance.on('segments.dragend', event => {
+          suppressNextSyncRef.current = true
+          const seg = event.segment
+          setRows(prev =>
+            prev.map(r => (r.segmentId === seg.id ? { ...r, start: seg.startTime, end: seg.endTime } : r)),
+          )
+        })
+        peaksInstance.on('segments.click', event => {
+          const index = segments.findIndex(s => s.id === event.segment.id)
+          if (index >= 0) setSelected(index)
+        })
+        peaksInstance.on('player.playing', () => setPlaying(true))
+        peaksInstance.on('player.pause', () => setPlaying(false))
+        peaksInstance.on('player.ended', () => setPlaying(false))
+      },
+    )
 
     return () => {
-      ws.destroy()
-      waveSurferRef.current = null
-      regionsRef.current = null
+      cancelled = true
+      peaksRef.current?.destroy()
+      peaksRef.current = null
+      setReady(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset.url])
 
-  // Redraw regions whenever rows change from outside a drag (row edits, tap-pass progress) — the
-  // drag itself already updates `rows` via 'region-updated' above, so this only fires for the
+  // Redraw segments whenever rows change from outside a drag (row edits, tap-pass progress) — a
+  // drag itself already updates `rows` via 'segments.dragend' above, so this only fires for the
   // other direction and never fights the user mid-drag.
   useEffect(() => {
     if (suppressNextSyncRef.current) {
       suppressNextSyncRef.current = false
       return
     }
-    const regions = regionsRef.current
-    if (regions && duration > 0) syncRegions(regions, rows, segments, duration)
-  }, [rows, segments, duration])
+    const peaksInstance = peaksRef.current
+    if (peaksInstance && ready) syncSegments(peaksInstance, rows)
+  }, [rows, segments, ready])
 
   function finishTapPass(boundaries: number[]) {
-    const ws = waveSurferRef.current
-    const end = ws?.getDuration() || duration
+    const end = peaksRef.current?.player.getDuration() || duration
     setRows(
       segments.map((s, i) => ({
         segmentId: s.id,
@@ -124,7 +127,7 @@ export function WaveformMappingEditor({
       })),
     )
     setTapPass(null)
-    waveSurferRef.current?.pause()
+    peaksRef.current?.player.pause()
   }
 
   useEffect(() => {
@@ -133,9 +136,9 @@ export function WaveformMappingEditor({
     function onKeyDown(e: KeyboardEvent) {
       if (e.code !== 'Space' && e.key !== 'Enter') return
       e.preventDefault()
-      const ws = waveSurferRef.current
-      if (!ws) return
-      const boundaries = [...activePass.boundaries, ws.getCurrentTime()]
+      const peaksInstance = peaksRef.current
+      if (!peaksInstance) return
+      const boundaries = [...activePass.boundaries, peaksInstance.player.getCurrentTime()]
       if (boundaries.length >= segments.length) {
         finishTapPass(boundaries)
       } else {
@@ -150,13 +153,13 @@ export function WaveformMappingEditor({
   function startTapPass() {
     setSelected(null)
     setTapPass({ boundaries: [] })
-    waveSurferRef.current?.setTime(0)
-    void waveSurferRef.current?.play()
+    peaksRef.current?.player.seek(0)
+    void peaksRef.current?.player.play()
   }
 
   function stopTapPass() {
     setTapPass(null)
-    waveSurferRef.current?.pause()
+    peaksRef.current?.player.pause()
   }
 
   function updateRow(index: number, patch: Partial<Row>) {
@@ -164,7 +167,7 @@ export function WaveformMappingEditor({
   }
 
   function markAtPlayhead(index: number, field: 'start' | 'end') {
-    const time = waveSurferRef.current?.getCurrentTime() ?? 0
+    const time = peaksRef.current?.player.getCurrentTime() ?? 0
     updateRow(index, { [field]: time })
   }
 
@@ -192,13 +195,16 @@ export function WaveformMappingEditor({
         </button>
       </div>
 
-      <div ref={containerRef} className="mt-2.5 cursor-pointer" />
+      <audio ref={audioRef} src={asset.url} crossOrigin="anonymous" className="hidden" />
+      <div ref={zoomviewRef} className="mt-2.5 h-24 bg-ink/[0.03]" />
+      <div ref={overviewRef} className="mt-1 h-10 bg-ink/[0.03]" />
 
       <div className="mt-2 flex items-center gap-3">
         <button
           type="button"
-          onClick={() => (playing ? waveSurferRef.current?.pause() : void waveSurferRef.current?.play())}
-          className="label shrink-0 bg-ink px-2.5 py-1.5 text-paper"
+          onClick={() => (playing ? peaksRef.current?.player.pause() : void peaksRef.current?.player.play())}
+          disabled={!ready}
+          className="label shrink-0 bg-ink px-2.5 py-1.5 text-paper disabled:opacity-40"
         >
           {playing ? '❚❚ Pause' : '▶ Play'}
         </button>
@@ -216,7 +222,7 @@ export function WaveformMappingEditor({
           <button
             type="button"
             onClick={startTapPass}
-            disabled={segments.length === 0}
+            disabled={!ready || segments.length === 0}
             className="label text-ink-muted transition-colors hover:text-vermilion disabled:opacity-40"
           >
             ⏱ Start tap pass
@@ -297,18 +303,10 @@ export function WaveformMappingEditor({
   )
 }
 
-function syncRegions(regions: RegionsPlugin, rows: Row[], segments: ApiScriptSegment[], duration: number) {
-  regions.clearRegions()
-  rows.forEach((row, i) => {
-    if (!(row.end > row.start) || duration <= 0) return
-    regions.addRegion({
-      id: row.segmentId,
-      start: row.start,
-      end: row.end,
-      color: REGION_COLOR,
-      content: `${i + 1}`,
-      drag: true,
-      resize: true,
-    })
-  })
+function syncSegments(peaksInstance: PeaksInstance, rows: Row[]) {
+  peaksInstance.segments.removeAll()
+  const toAdd = rows
+    .map((row, i) => ({ id: row.segmentId, startTime: row.start, endTime: row.end, editable: true, labelText: `${i + 1}` }))
+    .filter(row => row.endTime > row.startTime)
+  if (toAdd.length > 0) peaksInstance.segments.add(toAdd)
 }
