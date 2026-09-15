@@ -1,15 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { Pipeline } from '@/components/admin/pipeline'
-import { ScriptEditor } from '@/components/admin/script-editor'
-import { AudioUploader } from '@/components/admin/audio-uploader'
-import { AudioMappingEditor } from '@/components/admin/audio-mapping-editor'
-import { ResegmentEditor } from '@/components/admin/resegment-editor'
 import type { CatalogChapter, ScriptCode } from '@/lib/mock-catalog'
-import type { ApiScriptKey } from '@/lib/api/api-types'
 
 const SCRIPTS: ScriptCode[] = ['sa', 'te', 'en']
 
@@ -24,6 +19,7 @@ const SCRIPTS: ScriptCode[] = ['sa', 'te', 'en']
  * already rejected.
  */
 export function ChapterRow({
+  trackId,
   chapter,
   isFirst,
   isLast,
@@ -35,6 +31,7 @@ export function ChapterRow({
   onAskDelete,
   onDelete,
 }: {
+  trackId: string
   chapter: CatalogChapter
   isFirst: boolean
   isLast: boolean
@@ -47,11 +44,6 @@ export function ChapterRow({
   onDelete: () => void
 }) {
   const published = chapter.status === 'published'
-  // Local, not lifted like `isEditing`/`isConfirmingDelete` — this only matters while the row's
-  // own edit panel is open, and unmounts (resetting cleanly) the moment it closes, so there's no
-  // cross-row state to coordinate the way `editingId`/`confirmDeleteId` in `track-editor.tsx` do.
-  const [contentPanel, setContentPanel] = useState<'scripts' | 'audio' | 'resegment' | null>(null)
-  const [scriptTab, setScriptTab] = useState<ApiScriptKey>('sa')
 
   return (
     <li className="border-b border-rule-soft last:border-0">
@@ -215,95 +207,28 @@ export function ChapterRow({
             )}
           </div>
 
-          {/* The pipeline stages are file operations, not fields — each is its own endpoint and
-              its own upload, unlike the code/title fields above. Unlike those fields, though, this
-              saves for real (see `lib/api/client.ts`'s doc comment) — it doesn't revert on reload. */}
-          <div className="mt-5 border-t border-rule-soft pt-4">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="label text-ink-muted">Content</span>
-              <button
-                type="button"
-                onClick={() => setContentPanel(p => (p === 'scripts' ? null : 'scripts'))}
-                aria-pressed={contentPanel === 'scripts'}
-                className={cn(
-                  'label border px-2.5 py-1.5 transition-colors',
-                  contentPanel === 'scripts'
-                    ? 'border-vermilion text-vermilion'
-                    : chapter.content.hasText
-                      ? 'border-rule text-ink-muted'
-                      : 'border-dashed border-rule text-ink-muted/70 hover:text-ink',
-                )}
-              >
-                {chapter.content.hasText ? '✓ Scripts' : 'Scripts'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setContentPanel(p => (p === 'audio' ? null : 'audio'))}
-                aria-pressed={contentPanel === 'audio'}
-                className={cn(
-                  'label border px-2.5 py-1.5 transition-colors',
-                  contentPanel === 'audio'
-                    ? 'border-vermilion text-vermilion'
-                    : chapter.content.audioCount > 0
-                      ? 'border-rule text-ink-muted'
-                      : 'border-dashed border-rule text-ink-muted/70 hover:text-ink',
-                )}
-              >
-                {chapter.content.audioCount > 0 ? `✓ Audio (${chapter.content.audioCount})` : 'Audio'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setContentPanel(p => (p === 'resegment' ? null : 'resegment'))}
-                aria-pressed={contentPanel === 'resegment'}
-                className={cn(
-                  'label border px-2.5 py-1.5 transition-colors',
-                  contentPanel === 'resegment'
-                    ? 'border-vermilion text-vermilion'
-                    : 'border-dashed border-rule text-ink-muted/70 hover:text-ink',
-                )}
-              >
-                Resegment
-              </button>
-              <span className="label text-ink-muted/60">— saves immediately</span>
-            </div>
-
-            {contentPanel === 'scripts' && (
-              <div className="mt-4 border border-rule-soft p-4">
-                <div className="flex items-center gap-px border border-rule">
-                  {SCRIPTS.map(code => (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => setScriptTab(code)}
-                      aria-pressed={scriptTab === code}
-                      className={cn(
-                        'label px-2.5 py-1.5 transition-colors',
-                        scriptTab === code
-                          ? 'bg-ink text-paper'
-                          : 'text-ink-muted hover:bg-ink/[0.04] hover:text-ink',
-                      )}
-                    >
-                      {code.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-4">
-                  <ScriptEditor chapterId={chapter.id} script={scriptTab} />
-                </div>
-              </div>
-            )}
-
-            {contentPanel === 'audio' && (
-              <div className="mt-4 space-y-5 border border-rule-soft p-4">
-                <AudioUploader chapterId={chapter.id} />
-                <AudioMappingEditor chapterId={chapter.id} />
-              </div>
-            )}
-
-            {contentPanel === 'resegment' && (
-              <div className="mt-4 border border-rule-soft p-4">
-                <ResegmentEditor chapterId={chapter.id} />
-              </div>
+          {/* Script text, audio takes, and their timestamp mappings all live on their own
+              dedicated page now — a chapter's content is enough material (a rich-text script per
+              language, a waveform per audio take) that it needs its own screen, not an accordion
+              nested inside this row. */}
+          <div className="mt-5 flex items-center gap-2.5 border-t border-rule-soft pt-4">
+            <span className="label text-ink-muted">Content</span>
+            <Link
+              href={`/admin/tracks/${trackId}/chapters/${chapter.id}`}
+              className={cn(
+                'label border px-2.5 py-1.5 transition-colors',
+                chapter.content.hasText || chapter.content.audioCount > 0
+                  ? 'border-rule text-ink-muted hover:border-vermilion hover:text-vermilion'
+                  : 'border-dashed border-rule text-ink-muted/70 hover:border-vermilion hover:text-vermilion',
+              )}
+            >
+              {chapter.content.hasText || chapter.content.audioCount > 0
+                ? `Edit content →`
+                : 'Add content →'}
+            </Link>
+            {chapter.content.hasText && <span className="label text-ink-muted/60">✓ Scripts</span>}
+            {chapter.content.audioCount > 0 && (
+              <span className="label text-ink-muted/60">✓ Audio ({chapter.content.audioCount})</span>
             )}
           </div>
         </div>
