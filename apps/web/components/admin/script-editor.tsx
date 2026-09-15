@@ -8,6 +8,7 @@ import { ApiError } from '@/lib/api/client'
 import { chapterAuthoringDetailQuery } from '@/lib/query/options'
 import { useSaveChapterScript } from '@/lib/query/use-content-mutations'
 import { SegmentSplitter } from '@/components/admin/segment-splitter'
+import { RichTextField } from '@/components/admin/rich-text-field'
 import type { ApiScriptKey, ApiScriptText } from '@/lib/api/api-types'
 
 const SCRIPT_LABEL: Record<ApiScriptKey, { label: string; short: string; fontClass: string }> = {
@@ -100,15 +101,12 @@ function ScriptEditorForm({
         </label>
       </div>
 
-      <label className="block">
+      <div>
         <span className="label text-ink-muted">Text</span>
-        <textarea
-          value={text}
-          onChange={e => handleTextChange(e.target.value)}
-          rows={6}
-          className="mt-1.5 w-full resize-y border border-rule bg-paper p-2.5 text-[0.9375rem] leading-relaxed focus:border-vermilion focus:outline-none"
-        />
-      </label>
+        <div className="mt-1.5">
+          <RichTextField value={text} onChangeText={handleTextChange} fontClass={fontClass} />
+        </div>
+      </div>
 
       <SegmentSplitter text={text} segments={segments} onChange={setSegments} fontClass={fontClass} />
 

@@ -223,6 +223,7 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
             {chapters.map((chapter, index) => (
               <ChapterRow
                 key={chapter.id}
+                trackId={trackId}
                 chapter={chapter}
                 isFirst={index === 0}
                 isLast={index === chapters.length - 1}
