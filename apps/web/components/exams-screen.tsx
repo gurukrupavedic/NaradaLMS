@@ -6,7 +6,7 @@ import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
-import { Pill, PillKey } from '@/components/proficiency-pill'
+import { Pill } from '@/components/proficiency-pill'
 import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
@@ -78,7 +78,6 @@ export function ExamsScreen() {
 
         <Reveal delay={60}>
           <Section title="Certification record" count={`${certified}/${total} tracks`}>
-            <PillKey />
             <CertificationRecord rows={certifications} />
           </Section>
         </Reveal>
