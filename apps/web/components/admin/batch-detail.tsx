@@ -192,7 +192,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
         <button
           type="button"
           onClick={() => setAddOpen(true)}
-          className="label shrink-0 border border-ink/25 px-3 py-1.5 transition-colors hover:border-vermilion hover:text-vermilion"
+          className="label shrink-0 rounded-full bg-vermilion px-3.5 py-1.5 text-paper transition-colors hover:bg-vermilion/90"
         >
           + Add student
         </button>

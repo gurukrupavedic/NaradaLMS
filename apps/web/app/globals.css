@@ -42,6 +42,13 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
+  /* Without this, the browser has no idea this page is light-on-dark-capable and assumes a
+     light UA scheme everywhere — harmless for painted content, but a newly-promoted compositing
+     layer (any `transform`/`opacity` transition, e.g. components/drawer.tsx sliding in) gets its
+     backing store cleared to that assumed-light default for the first frame, flashing white
+     through .dark's actual dark background before the real paint lands on top of it. */
+  color-scheme: light;
+
   /* ── Ground and sheets ── */
   --paper: #efe6d0;
   --card: #faf5e6;
@@ -109,6 +116,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --paper: #17150f;
   --card: #201d16;
   --ink: #ece2cb;
