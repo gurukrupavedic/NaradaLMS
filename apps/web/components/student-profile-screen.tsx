@@ -12,7 +12,7 @@ import { TrackLadder, type LadderTrack } from '@/components/track-ladder'
 import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
-import { MoveBatchDrawer } from '@/components/admin/move-batch-drawer'
+import { MoveBatchDrawer, type MovableBatch } from '@/components/admin/move-batch-drawer'
 import { profileDetailQuery } from '@/lib/query/options'
 import { buildCertificationRows, buildLearningTracks } from '@/lib/api/reshape'
 import { isCertified } from '@/lib/proficiency'
@@ -38,7 +38,7 @@ const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
 export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const { data, error } = useQuery(profileDetailQuery(profileId))
   const isAdmin = useHasAdminAccess()
-  const [moveTarget, setMoveTarget] = useState<LadderTrack | null>(null)
+  const [moveOpen, setMoveOpen] = useState(false)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
@@ -50,6 +50,14 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const certifiedCount = certifications.filter(c => isCertified(c.level)).length
   const trackNameById = new Map(dashboard.tracks.map(track => [track.id, track.name]))
 
+  // Every batch this profile could plausibly be moved out of — anything they're still active or
+  // upcoming in, across every track, not just one. `TrackLadder` renders `id` per track, but the
+  // move drawer needs the batch's own id (a different uuid), hence the separate list here rather
+  // than reusing `learningTracks` directly.
+  const movableBatches: MovableBatch[] = learningTracks
+    .filter((track): track is LadderTrack & { batchId: string } => track.batchId !== null && track.batchStatus !== 'completed')
+    .map(track => ({ batchId: track.batchId, batchCode: track.batchCode ?? '', trackName: track.name }))
+
   return (
     <>
       <Standing
@@ -60,6 +68,17 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           { value: String(dashboard.memberships.length), label: 'Batches' },
           { value: `${certifiedCount}/${certifications.length}`, label: 'Certified' },
         ]}
+        action={
+          isAdmin && movableBatches.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setMoveOpen(true)}
+              className="label text-ink-muted transition-colors hover:text-vermilion"
+            >
+              Move to another batch →
+            </button>
+          ) : undefined
+        }
       />
 
       <div className="mx-auto max-w-5xl space-y-12 px-5 py-9">
@@ -146,20 +165,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
               <PillKey />
               <div className="space-y-4">
                 {learningTracks.map(track => (
-                  <div key={track.id} className="space-y-2">
-                    <TrackLadder track={track} defaultOpen={false} />
-                    {isAdmin && track.batchId && track.batchStatus !== 'completed' && (
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => setMoveTarget(track)}
-                          className="label text-ink-muted transition-colors hover:text-vermilion"
-                        >
-                          Move to another batch →
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <TrackLadder key={track.id} track={track} defaultOpen={false} />
                 ))}
               </div>
             </Section>
@@ -205,14 +211,13 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
         )}
       </div>
 
-      {moveTarget && moveTarget.batchId && (
+      {movableBatches.length > 0 && (
         <MoveBatchDrawer
-          open={moveTarget !== null}
-          onOpenChange={open => !open && setMoveTarget(null)}
+          open={moveOpen}
+          onOpenChange={setMoveOpen}
           profileId={profile.id}
           profileName={profile.name}
-          fromBatchId={moveTarget.batchId}
-          fromBatchCode={moveTarget.batchCode ?? ''}
+          fromBatches={movableBatches}
         />
       )}
     </>

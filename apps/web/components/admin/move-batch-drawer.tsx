@@ -8,47 +8,82 @@ import { adminBatchesQuery } from '@/lib/query/options'
 import { useMoveEnrollment } from '@/lib/query/use-enrollment-mutations'
 import { Drawer } from '@/components/drawer'
 
+export type MovableBatch = { batchId: string; batchCode: string; trackName: string }
+
 /**
- * The admin "move to another batch" flow, opened from a student's profile (components/student-
- * profile-screen.tsx) rather than from the batch they're currently in — an admin looking at one
- * student's record already has the "who" and the "from"; this drawer only needs to ask "to where."
- * Filters the batch list client-side (there's no dedicated batch-search endpoint, and the admin
- * overview already loads the full list for its own table) rather than a search box per keystroke.
+ * The admin "move to another batch" flow, opened from a student's own profile (components/
+ * student-profile-screen.tsx) rather than from the batch they're currently in — an admin looking
+ * at one student's record already has the "who"; this drawer only needs "from which of their
+ * current batches" (skipped entirely when there's just one) and "to where." Filters the
+ * destination list client-side (there's no dedicated batch-search endpoint, and the admin overview
+ * already loads the full list for its own table) rather than a search box per keystroke.
  */
 export function MoveBatchDrawer({
   open,
   onOpenChange,
   profileId,
   profileName,
-  fromBatchId,
-  fromBatchCode,
+  fromBatches,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   profileId: string
   profileName: string
-  fromBatchId: string
-  fromBatchCode: string
+  fromBatches: MovableBatch[]
 }) {
   const [query, setQuery] = useState('')
+  const [fromBatchId, setFromBatchId] = useState(fromBatches[0]?.batchId ?? '')
+
+  // Reset to the first candidate and clear the search every time the drawer opens — adjusted
+  // during render (see add-student-drawer.tsx's own note on why not an effect) rather than
+  // carrying over whatever was left selected/typed the last time it was open.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setFromBatchId(fromBatches[0]?.batchId ?? '')
+      setQuery('')
+    }
+  }
+
+  const fromBatch = fromBatches.find(b => b.batchId === fromBatchId) ?? fromBatches[0]
   const { data: allBatches } = useQuery(adminBatchesQuery())
-  const move = useMoveEnrollment(fromBatchCode, fromBatchId)
+  const move = useMoveEnrollment(fromBatch?.batchCode ?? '', fromBatch?.batchId ?? '')
 
   const destinations = (allBatches ? [...allBatches.active, ...allBatches.upcoming] : [])
-    .filter(row => row.id !== fromBatchId)
+    .filter(row => row.id !== fromBatch?.batchId)
     .filter(row => row.code.toLowerCase().includes(query.trim().toLowerCase()))
 
   function handleMove(toBatchId: string, toBatchCode: string) {
+    if (!fromBatch) return
     move.mutate({ profileId, toBatchId, toBatchCode })
   }
 
   return (
-    <Drawer
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Move to another batch"
-      description={`${profileName} — currently in ${fromBatchCode}`}
-    >
+    <Drawer open={open} onOpenChange={onOpenChange} title="Move to another batch" description={profileName}>
+      {fromBatches.length > 1 ? (
+        <label className="mb-4 block">
+          <span className="label block text-ink-muted">Moving from</span>
+          <select
+            value={fromBatchId}
+            onChange={e => setFromBatchId(e.target.value)}
+            className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.9375rem] focus:border-vermilion focus:outline-none"
+          >
+            {fromBatches.map(b => (
+              <option key={b.batchId} value={b.batchId}>
+                {b.batchCode} · {b.trackName}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        fromBatch && (
+          <p className="mb-4 text-[0.8125rem] text-ink-muted">
+            Currently in {fromBatch.batchCode} ({fromBatch.trackName}).
+          </p>
+        )
+      )}
+
       <input
         autoFocus
         value={query}
