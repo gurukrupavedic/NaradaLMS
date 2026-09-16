@@ -115,12 +115,18 @@ export async function findForStudentInBatch(
   )
 }
 
-export async function insert(
+/** The one write path into `evaluation` — a single-cell grade and a bulk "promote" both funnel
+ * here via service.ts's `createEvaluations` (one item or many; an empty array is a valid no-op,
+ * e.g. every item filtered out for already being certified). */
+export async function insertMany(
   db: SchoolDb,
-  data: CreateEvaluationData & { batchId: string; evaluatorId: string },
-): Promise<Evaluation | undefined> {
-  const rows = await db.insert(evaluation).values(data).returning()
-  return rows.at(0)
+  rows: (CreateEvaluationData & { batchId: string; evaluatorId: string })[],
+): Promise<Evaluation[]> {
+  if (rows.length === 0) {
+    return []
+  }
+
+  return db.insert(evaluation).values(rows).returning()
 }
 
 /**

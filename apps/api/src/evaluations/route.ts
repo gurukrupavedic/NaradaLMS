@@ -3,8 +3,8 @@ import * as z from 'zod'
 
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { CreateEvaluationSchema, FindEvaluationsSchema } from './schema'
-import { createEvaluation, findByBatch, findByStudent } from './service'
+import { CreateEvaluationsSchema, FindEvaluationsSchema } from './schema'
+import { createEvaluations, findByBatch, findByStudent } from './service'
 
 // mergeParams: mounted at /batches/:batchId/evaluations in routes.ts — this router needs the
 // parent mount path's :batchId, not just its own path segments.
@@ -35,13 +35,15 @@ router.get(
   }),
 )
 
+// One or many evaluations per request — the grade dialog sends one item, the roster grid's
+// "Promote to L3" sends one per not-yet-L3 chapter (see service.ts's `createEvaluations`).
 router.post(
   '/',
   profileRoute(async ({ req, res, db, access, profile }) => {
     const { batchId } = await parse(BatchParamsSchema, req.params)
     access.requireCanCreateEvaluation(batchId)
-    const data = await parse(CreateEvaluationSchema, req.body)
-    const created = await createEvaluation({ db }, batchId, profile.id, data)
+    const data = await parse(CreateEvaluationsSchema, req.body)
+    const created = await createEvaluations({ db }, batchId, profile.id, data)
     res.status(201).json({ data: created })
   }),
 )

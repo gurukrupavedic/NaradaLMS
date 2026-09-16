@@ -2,11 +2,19 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { MoreHorizontal } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { PROFICIENCY_LABEL, PROFICIENCY_SHORT, type ProficiencyLevel } from '@/lib/proficiency'
 import type { RosterStudent } from '@/lib/mock-dashboard'
 import { GradeDialog, type GradeDialogTarget, type GradeMutation } from '@/components/grade-dialog'
+import type { SetLevelInput } from '@/lib/query/use-evaluation-mutations'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 /**
  * The mark book.
@@ -31,6 +39,15 @@ import { GradeDialog, type GradeDialogTarget, type GradeMutation } from '@/compo
  * mutating the mark shown.
  */
 
+// The subset of `useMutation`'s return value the row menu actually needs — same structural-typing
+// move as grade-dialog.tsx's own `GradeMutation`, so this component doesn't need to know or care
+// that the caller happens to be using react-query. Takes the same item shape `useSetEvaluations`
+// (and the single-cell grade dialog's `useSetEvaluation`) already send — "promote" is just that
+// same bulk write, called with the rows this file itself computes below.
+export type PromoteMutation = {
+  mutateAsync: (items: SetLevelInput[]) => Promise<unknown>
+}
+
 const CELL_INK: Record<ProficiencyLevel, string> = {
   notStarted: 'bg-mark-not-started text-ink-muted/35',
   absent: 'bg-mark-absent/25 text-ink-muted',
@@ -47,6 +64,7 @@ export function MarkBook({
   students,
   className,
   grading,
+  promote,
 }: {
   chapterCodes: string[]
   // Parallel to chapterCodes — both required to enable grading (see this file's own doc comment).
@@ -55,6 +73,10 @@ export function MarkBook({
   students: RosterStudent[]
   className?: string
   grading?: GradeMutation
+  // "Show profile" is always in the row menu; "Promote to L3" only appears when a mutation is
+  // actually wired to satisfy it (same optional-prop gate as `grading`) — a read-only history view
+  // passes neither and gets a menu with just the one, always-safe item.
+  promote?: PromoteMutation
 }) {
   const [target, setTarget] = useState<GradeDialogTarget | null>(null)
 
@@ -93,6 +115,17 @@ export function MarkBook({
             // the page to find. It gets the only vermilion on the grid.
             const unevaluated = student.current === null
 
+            // The exact rows "Promote to L3" needs to send — every chapter this student isn't
+            // already at L3 or L4 on. Computed here from the grid already on screen rather than
+            // asked of the server (which still independently re-checks it — see
+            // use-evaluation-mutations.ts's `useSetEvaluations` doc comment — so a stale view here
+            // just means fewer rows land, never a wrong one).
+            const promoteItems: SetLevelInput[] = student.marks.flatMap((level, i) => {
+              const chapterId = chapterIds?.[i]
+              if (!chapterId || level === 'level3' || level === 'level4') return []
+              return [{ studentId: student.id, chapterId, level: 'level3' as const }]
+            })
+
             return (
               <tr
                 key={student.id}
@@ -115,9 +148,10 @@ export function MarkBook({
                       : 'bg-card',
                   )}
                 >
-                  <Link href={`/students/${student.id}`} className="block truncate hover:text-vermilion">
-                    {student.name}
-                  </Link>
+                  <div className="flex items-center gap-1">
+                    <span className="min-w-0 flex-1 truncate">{student.name}</span>
+                    <StudentMenu student={student} promote={promote} promoteItems={promoteItems} />
+                  </div>
                   {student.city && (
                     <span className="label block text-ink-muted">{student.city}</span>
                   )}
@@ -125,7 +159,12 @@ export function MarkBook({
 
                 {student.marks.map((level, i) => {
                   const chapterId = chapterIds?.[i]
-                  const canEdit = Boolean(grading && chapterId)
+                  // A certified chapter is never editable from here, even with a mutation wired up
+                  // — L4 only ever comes from an exam result (exams/service.ts's recordExamResult),
+                  // and the server enforces this too (createEvaluations silently drops a write that
+                  // would land on one), but disabling the cell means a teacher never sees the dialog
+                  // open just to get rejected on submit.
+                  const canEdit = Boolean(grading && chapterId) && level !== 'level4'
 
                   return (
                     <td key={chapterCodes[i]} className="p-1 text-center align-middle">
@@ -183,5 +222,76 @@ export function MarkBook({
         />
       )}
     </div>
+  )
+}
+
+/**
+ * The row's three-dot trigger, replacing what used to be the student name itself acting as the
+ * link to their profile. A single click on a name is one keystroke away from a misclick against
+ * the mark cells beside it, and it buried "promote" with nowhere to put it — a menu gives both
+ * actions an explicit target instead of overloading the name.
+ */
+function StudentMenu({
+  student,
+  promote,
+  promoteItems,
+}: {
+  student: RosterStudent
+  promote?: PromoteMutation
+  promoteItems: SetLevelInput[]
+}) {
+  const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle')
+
+  async function handlePromote() {
+    if (!promote || promoteItems.length === 0) return
+    setStatus('pending')
+    try {
+      await promote.mutateAsync(promoteItems)
+      setStatus('idle')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={`Actions for ${student.name}`}
+        title={status === 'error' ? 'Could not promote to L3 — try again' : undefined}
+        className={cn(
+          'shrink-0 rounded p-0.5 outline-none transition-colors hover:text-ink data-[popup-open]:text-ink',
+          status === 'error' ? 'text-vermilion' : 'text-ink-muted/70',
+        )}
+      >
+        <MoreHorizontal className="size-4" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        sideOffset={6}
+        className="min-w-40 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
+      >
+        {promote && (
+          <DropdownMenuItem
+            disabled={status === 'pending' || promoteItems.length === 0}
+            onClick={handlePromote}
+            className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink data-disabled:opacity-50"
+          >
+            {status === 'pending' ? 'Promoting…' : 'Promote to L3'}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem
+          render={<Link href={`/students/${student.id}`} />}
+          className="group/row flex items-center justify-between gap-4 rounded-none px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink"
+        >
+          Show profile
+          <span
+            aria-hidden
+            className="text-ink-muted/60 transition-colors group-focus/row:text-vermilion"
+          >
+            →
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
