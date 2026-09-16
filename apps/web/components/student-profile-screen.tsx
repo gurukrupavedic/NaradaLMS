@@ -8,11 +8,11 @@ import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
 import { PillKey } from '@/components/proficiency-pill'
-import { TrackLadder, type LadderTrack } from '@/components/track-ladder'
+import { TrackLadder } from '@/components/track-ladder'
 import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
-import { MoveBatchDrawer, type MovableBatch } from '@/components/admin/move-batch-drawer'
+import { MoveBatchDrawer } from '@/components/admin/move-batch-drawer'
 import { profileDetailQuery } from '@/lib/query/options'
 import { buildCertificationRows, buildLearningTracks } from '@/lib/api/reshape'
 import { isCertified } from '@/lib/proficiency'
@@ -50,13 +50,10 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const certifiedCount = certifications.filter(c => isCertified(c.level)).length
   const trackNameById = new Map(dashboard.tracks.map(track => [track.id, track.name]))
 
-  // Every batch this profile could plausibly be moved out of — anything they're still active or
-  // upcoming in, across every track, not just one. `TrackLadder` renders `id` per track, but the
-  // move drawer needs the batch's own id (a different uuid), hence the separate list here rather
-  // than reusing `learningTracks` directly.
-  const movableBatches: MovableBatch[] = learningTracks
-    .filter((track): track is LadderTrack & { batchId: string } => track.batchId !== null && track.batchStatus !== 'completed')
-    .map(track => ({ batchId: track.batchId, batchCode: track.batchCode ?? '', trackName: track.name }))
+  // Assumes a profile holds at most one live batch at a time (true of every real profile today —
+  // see move-batch-drawer.tsx's own doc comment); `.find` rather than every candidate, since
+  // there's nowhere yet for an admin to pick among more than one.
+  const movableTrack = learningTracks.find(track => track.batchId !== null && track.batchStatus !== 'completed')
 
   return (
     <>
@@ -69,7 +66,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           { value: `${certifiedCount}/${certifications.length}`, label: 'Certified' },
         ]}
         action={
-          isAdmin && movableBatches.length > 0 ? (
+          isAdmin && movableTrack ? (
             <button
               type="button"
               onClick={() => setMoveOpen(true)}
@@ -211,13 +208,14 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
         )}
       </div>
 
-      {movableBatches.length > 0 && (
+      {movableTrack && movableTrack.batchId && (
         <MoveBatchDrawer
           open={moveOpen}
           onOpenChange={setMoveOpen}
           profileId={profile.id}
           profileName={profile.name}
-          fromBatches={movableBatches}
+          fromBatchId={movableTrack.batchId}
+          fromBatchCode={movableTrack.batchCode ?? ''}
         />
       )}
     </>
