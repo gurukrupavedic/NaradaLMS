@@ -3,8 +3,8 @@ import * as z from 'zod'
 
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { CreateEnrollmentSchema } from './schema'
-import { enroll, unenroll } from './service'
+import { CreateEnrollmentSchema, MoveEnrollmentSchema } from './schema'
+import { enroll, moveEnrollment, unenroll } from './service'
 
 // mergeParams: mounted at /batches/:batchId/members in routes.ts — this router needs the parent
 // mount path's :batchId, not just its own path segments. optionalProfileRoute (not profileRoute)
@@ -33,6 +33,21 @@ router.delete(
     access.requireCanRemoveEnrollment(batchId)
     await unenroll(db, batchId, profileId)
     res.status(204).send()
+  }),
+)
+
+// Moving a profile to a different batch touches both rosters, so it's gated on both permissions —
+// an instructor for `batchId` who isn't also an instructor (or admin) for `toBatchId` can't move
+// someone into a roster they don't manage, and vice versa for removing them from this one.
+router.post(
+  '/:profileId/move',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { batchId, profileId } = await parse(MemberParamsSchema, req.params)
+    const { toBatchId } = await parse(MoveEnrollmentSchema, req.body)
+    access.requireCanRemoveEnrollment(batchId)
+    access.requireCanCreateEnrollment(toBatchId)
+    const moved = await moveEnrollment(db, batchId, toBatchId, profileId)
+    res.status(200).json({ data: moved })
   }),
 )
 

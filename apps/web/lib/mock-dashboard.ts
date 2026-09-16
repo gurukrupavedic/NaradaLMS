@@ -51,6 +51,7 @@ export type SittingRow = {
 }
 
 export type AdminBatchRow = {
+  id: string
   code: string
   track: string
   status: 'upcoming' | 'active' | 'completed'
@@ -66,7 +67,6 @@ export type ClassSlot = { day: string; time: string; durationMinutes: number }
 export type BatchStaff = { name: string; role: 'instructor' | 'ta' }
 
 export type AdminBatchDetail = AdminBatchRow & {
-  id: string
   trackId: string
   startDate: string | null
   meetingUrl: string | null

@@ -118,6 +118,7 @@ export function buildLadderTrack(
     id: track.id,
     name: track.name,
     order: track.order,
+    batchId: membership?.id ?? null,
     batchCode: membership?.code ?? null,
     batchStatus: membership?.status ?? null,
     chapters,

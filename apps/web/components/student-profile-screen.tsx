@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { ScreenSkeleton } from '@/components/skeletons'
@@ -11,10 +12,12 @@ import { TrackLadder } from '@/components/track-ladder'
 import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
+import { MoveBatchDrawer } from '@/components/admin/move-batch-drawer'
 import { profileDetailQuery } from '@/lib/query/options'
 import { buildCertificationRows, buildLearningTracks } from '@/lib/api/reshape'
 import { isCertified } from '@/lib/proficiency'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
+import { useHasAdminAccess } from '@/lib/auth/profile-store'
 import type { ApiProfile } from '@/lib/api/api-types'
 
 const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
@@ -34,6 +37,8 @@ const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
  */
 export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const { data, error } = useQuery(profileDetailQuery(profileId))
+  const isAdmin = useHasAdminAccess()
+  const [moveOpen, setMoveOpen] = useState(false)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
@@ -45,6 +50,11 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const certifiedCount = certifications.filter(c => isCertified(c.level)).length
   const trackNameById = new Map(dashboard.tracks.map(track => [track.id, track.name]))
 
+  // Assumes a profile holds at most one live batch at a time (true of every real profile today —
+  // see move-batch-drawer.tsx's own doc comment); `.find` rather than every candidate, since
+  // there's nowhere yet for an admin to pick among more than one.
+  const movableTrack = learningTracks.find(track => track.batchId !== null && track.batchStatus !== 'completed')
+
   return (
     <>
       <Standing
@@ -55,6 +65,17 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           { value: String(dashboard.memberships.length), label: 'Batches' },
           { value: `${certifiedCount}/${certifications.length}`, label: 'Certified' },
         ]}
+        action={
+          isAdmin && movableTrack ? (
+            <button
+              type="button"
+              onClick={() => setMoveOpen(true)}
+              className="label shrink-0 rounded-full bg-vermilion px-3.5 py-1.5 text-paper transition-colors hover:bg-vermilion/90"
+            >
+              Change batch
+            </button>
+          ) : undefined
+        }
       />
 
       <div className="mx-auto max-w-5xl space-y-12 px-5 py-9">
@@ -186,6 +207,17 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           </Reveal>
         )}
       </div>
+
+      {movableTrack && movableTrack.batchId && (
+        <MoveBatchDrawer
+          open={moveOpen}
+          onOpenChange={setMoveOpen}
+          profileId={profile.id}
+          profileName={profile.name}
+          fromBatchId={movableTrack.batchId}
+          fromBatchCode={movableTrack.batchCode ?? ''}
+        />
+      )}
     </>
   )
 }

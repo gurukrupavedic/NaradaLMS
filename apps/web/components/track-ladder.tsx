@@ -31,6 +31,7 @@ export type LadderTrack = {
   // right for the dashboard's own "what's next" framing but not for a page whose whole point
   // is a plain, findable list.
   order: number
+  batchId: string | null
   batchCode: string | null
   batchStatus: 'upcoming' | 'active' | 'completed' | null
   started: number

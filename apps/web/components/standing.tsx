@@ -7,6 +7,9 @@ interface StandingProps {
   headline: string
   meta?: string
   stats?: Stat[]
+  // Sits above the stats box, right-aligned — a page-level action (e.g. "Move to another
+  // batch →" on components/student-profile-screen.tsx) rather than one more stat.
+  action?: React.ReactNode
   className?: string
 }
 
@@ -20,7 +23,7 @@ interface StandingProps {
  * Devanagari face instead of a browser fallback, and sits at 4% so it reads as
  * a blind-embossed mark in the paper rather than a decoration on top of it.
  */
-export function Standing({ eyebrow, headline, meta, stats = [], className }: StandingProps) {
+export function Standing({ eyebrow, headline, meta, stats = [], action, className }: StandingProps) {
   return (
     <header className={cn('relative overflow-hidden border-b border-rule', className)}>
       <span
@@ -38,17 +41,22 @@ export function Standing({ eyebrow, headline, meta, stats = [], className }: Sta
           {meta && <p className="mt-3 max-w-prose text-[0.875rem] text-ink-muted">{meta}</p>}
         </div>
 
-        {stats.length > 0 && (
-          <dl className="flex shrink-0 divide-x divide-rule border-y border-rule">
-            {stats.map(stat => (
-              <div key={stat.label} className="px-5 py-3 first:pl-0 last:pr-0">
-                <dt className="label text-ink-muted">{stat.label}</dt>
-                <dd className="mt-1.5 font-mono text-2xl leading-none font-medium">
-                  {stat.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
+        {(action || stats.length > 0) && (
+          <div className="flex shrink-0 flex-col items-end gap-3">
+            {action}
+            {stats.length > 0 && (
+              <dl className="flex divide-x divide-rule border-y border-rule">
+                {stats.map(stat => (
+                  <div key={stat.label} className="px-5 py-3 first:pl-0 last:pr-0">
+                    <dt className="label text-ink-muted">{stat.label}</dt>
+                    <dd className="mt-1.5 font-mono text-2xl leading-none font-medium">
+                      {stat.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
         )}
       </div>
     </header>
