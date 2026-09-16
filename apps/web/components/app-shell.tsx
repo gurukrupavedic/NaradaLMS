@@ -86,7 +86,7 @@ export function Wordmark({ className }: { className?: string }) {
       className={cn('display text-[1.35rem] leading-none tracking-tight', className)}
       aria-label="Narada — home"
     >
-      Narada<span className="text-vermilion">'s</span>
+      Narada<span className="text-vermilion">&apos;s</span>
     </Link>
   )
 }

@@ -206,7 +206,7 @@ export default function LoginPage() {
 
         <div className="relative">
           <span className="display text-[1.6rem] leading-none">
-            Narada<span className="text-vermilion">'s</span>
+            Narada<span className="text-vermilion">&apos;s</span>
           </span>
         </div>
 
@@ -228,7 +228,7 @@ export default function LoginPage() {
       <main className="flex flex-col justify-center px-6 py-12 sm:px-14">
         <div className="mx-auto w-full max-w-sm">
           <span className="display text-[1.5rem] lg:hidden">
-            Narada<span className="text-vermilion">'s</span>
+            Narada<span className="text-vermilion">&apos;s</span>
           </span>
 
           {/* A ruled step counter — where you are in a three-part form, set
