@@ -70,6 +70,16 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
   return fetchApi<ApiProfileDetail>(`/profiles/${profileId}/detail`)
 }
 
+// GET /v1/profiles/search — admin-only (AccessPolicy.requireCanSearchProfiles). Backs the "add a
+// student" search in components/admin/roster-editor.tsx; `excludeBatchId` filters out profiles
+// already on that batch's roster at the query level, so results are always someone actually
+// addable.
+export async function searchProfiles(query: string, excludeBatchId: string): Promise<ApiProfile[]> {
+  const params = new URLSearchParams({ excludeBatchId })
+  if (query.trim()) params.set('query', query.trim())
+  return fetchApi<ApiProfile[]>(`/profiles/search?${params.toString()}`)
+}
+
 // ── Registrations ────────────────────────────────────────────────────────────
 
 export type SubmitRegistrationInput = {
@@ -287,6 +297,7 @@ export function isBatchOpenForEnrollment(batch: {
 function toAdminBatchRow(batch: ApiBatchWithRole, trackName: string): AdminBatchRow {
   const staffMember = batch.members.find(m => m.role === 'instructor')
   return {
+    id: batch.id,
     code: batch.code,
     track: trackName,
     status: batch.status,
@@ -352,7 +363,6 @@ export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
 
   return {
     ...row,
-    id: batch.id,
     trackId: batch.trackId,
     startDate: batch.startDate,
     meetingUrl: batch.meetingUrl,
@@ -406,6 +416,30 @@ export async function fetchOpenBatches(): Promise<ApiOpenBatch[]> {
 // caller renders directly (409 "batch is full", "already enrolled in this batch", etc.).
 export async function selfEnrollInBatch(batchId: string): Promise<void> {
   await mutateApi(`/batches/${batchId}/enroll`, 'POST')
+}
+
+// POST /v1/batches/:batchId/members — admin (or an instructor/ta of this batch) adding an
+// arbitrary profile to its roster. Distinct from `selfEnrollInBatch` above: no open-enrollment
+// window or capacity check gates this, since the caller's own batch permission *is* the
+// authorization (AccessPolicy.requireCanCreateEnrollment).
+export async function enrollProfile(
+  batchId: string,
+  profileId: string,
+  role: 'student' | 'ta' | 'instructor',
+): Promise<void> {
+  await mutateApi(`/batches/${batchId}/members`, 'POST', { profileId, role })
+}
+
+// POST /v1/batches/:batchId/members/:profileId/move — moves a profile already on this roster to a
+// different batch, preserving their role, in one atomic step server-side (apps/api/src/enrollment/
+// service.ts::moveEnrollment) rather than an unenroll-then-enroll pair that could leave neither
+// roster if the second call failed.
+export async function moveEnrollmentToBatch(
+  fromBatchId: string,
+  profileId: string,
+  toBatchId: string,
+): Promise<void> {
+  await mutateApi(`/batches/${fromBatchId}/members/${profileId}/move`, 'POST', { toBatchId })
 }
 
 // POST /v1/batches/:batchId/enrollment/open — admin-only. Opens the batch for self-enrollment

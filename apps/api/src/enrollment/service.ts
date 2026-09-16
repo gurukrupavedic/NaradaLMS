@@ -82,6 +82,44 @@ export async function unenroll(db: SchoolDb, batchId: string, profileId: string)
 }
 
 /**
+ * Moves a profile from one batch to another, preserving whatever role they already held, in a
+ * single transaction — the two-step unenroll-then-enroll an admin might otherwise do by hand
+ * could leave the roster with neither if the second half failed. 404 if the profile isn't
+ * enrolled in `fromBatchId`; 409 if they're already enrolled in `toBatchId` (this also covers
+ * `fromBatchId === toBatchId`, since that enrollment is found there too before anything is
+ * deleted).
+ */
+export async function moveEnrollment(
+  db: SchoolDbClient,
+  fromBatchId: string,
+  toBatchId: string,
+  profileId: string,
+): Promise<Enrollment> {
+  return db.transaction(async tx => {
+    const current = await repository.findEnrollment(tx, profileId, fromBatchId)
+    if (!current) {
+      throw notFound()
+    }
+
+    if (await repository.findEnrollment(tx, profileId, toBatchId)) {
+      throw conflict('profile is already enrolled in the destination batch')
+    }
+
+    const removed = await repository.deleteEnrollment(tx, fromBatchId, profileId)
+    if (!removed) {
+      throw internalError()
+    }
+
+    const row = await repository.insertEnrollment(tx, toBatchId, { profileId, role: current.role })
+    if (!row) {
+      throw internalError()
+    }
+
+    return row
+  })
+}
+
+/**
  * A student enrolling *themselves* in an open batch (POST /batches/:batchId/enroll) — a narrower,
  * differently-authorized action from admin `enroll` above (which takes an arbitrary profileId/role
  * and is gated on a batch permission): here the batch's own open-enrollment window *is* the

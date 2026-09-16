@@ -14,6 +14,7 @@ import {
   fetchProfileDetail,
   fetchRegistration,
   fetchRegistrations,
+  searchProfiles,
 } from '@/lib/api/resources'
 import type { ApiRegistrationStatus } from '@/lib/api/api-types'
 
@@ -67,6 +68,11 @@ export const keys = {
 
   profiles: {
     detail: (profileId: string) => ['profiles', 'detail', profileId] as const,
+    // Prefix key — invalidating this catches every in-flight search regardless of query text or
+    // excludeBatchId, for a mutation (enroll/move) that can change who's addable to any batch.
+    searchAll: ['profiles', 'search'] as const,
+    search: (query: string, excludeBatchId: string) =>
+      ['profiles', 'search', query, excludeBatchId] as const,
   },
 } as const
 
@@ -173,4 +179,15 @@ export const profileDetailQuery = (profileId: string) =>
   queryOptions({
     queryKey: keys.profiles.detail(profileId),
     queryFn: () => fetchProfileDetail(profileId),
+  })
+
+// The admin "add a student" search (components/admin/roster-editor.tsx). Keyed on the query text
+// itself, not just the batch — each keystroke is its own cache entry rather than one entry the
+// next keystroke overwrites, which is what lets backspacing to an earlier search show its result
+// instantly instead of refetching.
+export const profileSearchQuery = (query: string, excludeBatchId: string) =>
+  queryOptions({
+    queryKey: keys.profiles.search(query, excludeBatchId),
+    queryFn: () => searchProfiles(query, excludeBatchId),
+    enabled: query.trim().length > 0,
   })

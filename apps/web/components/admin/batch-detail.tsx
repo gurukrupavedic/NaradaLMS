@@ -10,6 +10,7 @@ import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
 import { PillKey } from '@/components/proficiency-pill'
 import { MarkBook } from '@/components/mark-book'
+import { RosterEditor } from '@/components/admin/roster-editor'
 import { Notice } from '@/components/notice'
 import { ApiError } from '@/lib/api/client'
 import { isBatchOpenForEnrollment } from '@/lib/api/resources'
@@ -202,6 +203,8 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
           </div>
         </>
       )}
+
+      <RosterEditor batch={batch} />
     </Section>
   )
 }

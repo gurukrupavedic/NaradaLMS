@@ -9,3 +9,8 @@ export const CreateEnrollmentSchema = z.object({
   profileId: z.uuid(),
   role: enrollmentRoleSchema,
 })
+
+export type MoveEnrollmentData = z.infer<typeof MoveEnrollmentSchema>
+export const MoveEnrollmentSchema = z.object({
+  toBatchId: z.uuid(),
+})

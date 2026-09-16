@@ -2,7 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDb, SchoolDbClient } from '@narada/db'
 
-import { assertStudentEnrolledInBatch, enroll, resolveQualifyingBatch, selfEnroll, unenroll } from './service'
+import {
+  assertStudentEnrolledInBatch,
+  enroll,
+  moveEnrollment,
+  resolveQualifyingBatch,
+  selfEnroll,
+  unenroll,
+} from './service'
 import * as repository from './repository'
 import * as batchesRepository from '../batches/repository'
 
@@ -154,6 +161,71 @@ describe('unenroll', () => {
     vi.mocked(repository.deleteEnrollment).mockResolvedValue(false)
 
     await expect(unenroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
+  })
+})
+
+describe('moveEnrollment', () => {
+  // Same stub-the-callback approach as `selfEnroll`'s suite below.
+  const tx = {}
+  const transactionMock = vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback(tx))
+  const db = { transaction: transactionMock } as unknown as SchoolDbClient
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    transactionMock.mockImplementation(async callback => callback(tx))
+  })
+
+  it('deletes the source enrollment and inserts one in the destination batch, preserving role', async () => {
+    vi.mocked(repository.findEnrollment)
+      .mockResolvedValueOnce({ role: 'student' }) // source lookup
+      .mockResolvedValueOnce(undefined) // destination lookup
+    vi.mocked(repository.deleteEnrollment).mockResolvedValue(true)
+    const row = {
+      profileId: 'profile-1',
+      batchId: 'batch-2',
+      role: 'student' as const,
+      status: 'active' as const,
+      joinedAt: new Date(),
+      leftDate: null,
+    }
+    vi.mocked(repository.insertEnrollment).mockResolvedValue(row)
+
+    await expect(moveEnrollment(db, 'batch-1', 'batch-2', 'profile-1')).resolves.toEqual(row)
+    expect(repository.deleteEnrollment).toHaveBeenCalledWith(tx, 'batch-1', 'profile-1')
+    expect(repository.insertEnrollment).toHaveBeenCalledWith(tx, 'batch-2', {
+      profileId: 'profile-1',
+      role: 'student',
+    })
+  })
+
+  it('rejects with 404 when the profile is not enrolled in the source batch', async () => {
+    vi.mocked(repository.findEnrollment).mockResolvedValue(undefined)
+
+    await expect(moveEnrollment(db, 'batch-1', 'batch-2', 'profile-1')).rejects.toMatchObject({
+      statusCode: 404,
+    })
+    expect(repository.deleteEnrollment).not.toHaveBeenCalled()
+  })
+
+  it('rejects with 409 when already enrolled in the destination batch', async () => {
+    vi.mocked(repository.findEnrollment)
+      .mockResolvedValueOnce({ role: 'student' }) // source lookup
+      .mockResolvedValueOnce({ role: 'student' }) // destination lookup
+    vi.mocked(repository.deleteEnrollment).mockResolvedValue(true)
+
+    await expect(moveEnrollment(db, 'batch-1', 'batch-2', 'profile-1')).rejects.toMatchObject({
+      statusCode: 409,
+    })
+    expect(repository.deleteEnrollment).not.toHaveBeenCalled()
+  })
+
+  it('rejects with 409 rather than moving when the source and destination batch are the same', async () => {
+    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student' })
+
+    await expect(moveEnrollment(db, 'batch-1', 'batch-1', 'profile-1')).rejects.toMatchObject({
+      statusCode: 409,
+    })
+    expect(repository.deleteEnrollment).not.toHaveBeenCalled()
   })
 })
 
