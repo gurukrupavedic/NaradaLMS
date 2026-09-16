@@ -148,10 +148,7 @@ export function MarkBook({
                       : 'bg-card',
                   )}
                 >
-                  <div className="flex items-center gap-1">
-                    <span className="min-w-0 flex-1 truncate">{student.name}</span>
-                    <StudentMenu student={student} promote={promote} promoteItems={promoteItems} />
-                  </div>
+                  <StudentMenu student={student} promote={promote} promoteItems={promoteItems} />
                   {student.city && (
                     <span className="label block text-ink-muted">{student.city}</span>
                   )}
@@ -226,10 +223,11 @@ export function MarkBook({
 }
 
 /**
- * The row's three-dot trigger, replacing what used to be the student name itself acting as the
- * link to their profile. A single click on a name is one keystroke away from a misclick against
- * the mark cells beside it, and it buried "promote" with nowhere to put it — a menu gives both
- * actions an explicit target instead of overloading the name.
+ * The row's name cell, replacing what used to be the student name itself acting as the link to
+ * their profile. The whole cell is the trigger, not just the trailing dots — matching the old
+ * link's full-width hit target rather than shrinking it to a small icon a teacher has to aim for.
+ * The dots are still drawn to signal "this opens a menu," since the row no longer just goes
+ * straight to the profile the way a plain link did.
  */
 function StudentMenu({
   student,
@@ -259,11 +257,12 @@ function StudentMenu({
         aria-label={`Actions for ${student.name}`}
         title={status === 'error' ? 'Could not promote to L3 — try again' : undefined}
         className={cn(
-          'shrink-0 rounded p-0.5 outline-none transition-colors hover:text-ink data-[popup-open]:text-ink',
-          status === 'error' ? 'text-vermilion' : 'text-ink-muted/70',
+          'flex w-full items-center gap-1 text-left outline-none transition-colors hover:text-vermilion data-[popup-open]:text-vermilion',
+          status === 'error' && 'text-vermilion',
         )}
       >
-        <MoreHorizontal className="size-4" aria-hidden />
+        <span className="min-w-0 flex-1 truncate">{student.name}</span>
+        <MoreHorizontal className="size-4 shrink-0 text-ink-muted/70" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
