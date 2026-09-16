@@ -72,7 +72,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
               onClick={() => setMoveOpen(true)}
               className="label shrink-0 rounded-full bg-vermilion px-3.5 py-1.5 text-paper transition-colors hover:bg-vermilion/90"
             >
-              Move to another batch →
+              Change batch
             </button>
           ) : undefined
         }

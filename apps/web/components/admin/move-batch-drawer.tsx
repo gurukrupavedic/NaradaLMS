@@ -49,7 +49,7 @@ export function MoveBatchDrawer({
     <Drawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Move to another batch"
+      title="Change batch"
       description={`${profileName} — currently in ${fromBatchCode}`}
     >
       <input
