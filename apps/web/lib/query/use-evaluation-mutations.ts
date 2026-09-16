@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { createEvaluation } from '@/lib/api/resources'
+import { createEvaluation, createEvaluations } from '@/lib/api/resources'
 import type { ProficiencyLevel } from '@/lib/proficiency'
 
 export type SetLevelInput = {
@@ -24,6 +24,25 @@ export function useSetEvaluation(batchId: string, invalidateKey: readonly unknow
 
   return useMutation({
     mutationFn: (input: SetLevelInput) => createEvaluation(batchId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: invalidateKey })
+    },
+  })
+}
+
+/**
+ * The bulk sibling of {@link useSetEvaluation} — same endpoint, same invalidation, but for the
+ * roster grid's "Promote to L3" row action (components/mark-book.tsx), which sends one item per
+ * not-yet-L3 chapter in a single request rather than looping `useSetEvaluation` once per chapter.
+ * mark-book.tsx computes the item list itself from the grid it already has on screen; the server
+ * still independently drops any item that would overwrite an already-certified L4 chapter (see
+ * apps/api/src/evaluations/service.ts's `createEvaluations`).
+ */
+export function useSetEvaluations(batchId: string, invalidateKey: readonly unknown[]) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (items: SetLevelInput[]) => createEvaluations(batchId, items),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: invalidateKey })
     },

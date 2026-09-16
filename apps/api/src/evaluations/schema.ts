@@ -39,3 +39,9 @@ export const CreateEvaluationSchema = EvaluationSchema.pick({
   level: teacherGradableLevelSchema,
   notes: z.string().optional(),
 })
+
+// The wire shape for `POST /batches/:batchId/evaluations` — always an array, even for the grade
+// dialog's own single cell. One request shape for both call sites means one validation/insert path
+// in service.ts's `createEvaluations`, not a single-item endpoint and a separate bulk one.
+export type CreateEvaluationsData = z.infer<typeof CreateEvaluationsSchema>
+export const CreateEvaluationsSchema = z.array(CreateEvaluationSchema).min(1)

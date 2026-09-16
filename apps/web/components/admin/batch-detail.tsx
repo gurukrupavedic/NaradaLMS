@@ -17,7 +17,7 @@ import { isBatchOpenForEnrollment } from '@/lib/api/resources'
 import { adminBatchQuery, catalogTrackQuery, keys } from '@/lib/query/options'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useCloseBatchEnrollment, useOpenBatchEnrollment } from '@/lib/query/use-batch-mutations'
-import { useSetEvaluation } from '@/lib/query/use-evaluation-mutations'
+import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/mock-dashboard'
 
 const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Completed' } as const
@@ -182,6 +182,7 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
  */
 function RosterSection({ batch }: { batch: AdminBatchDetail }) {
   const setLevel = useSetEvaluation(batch.id, keys.batches.detail(batch.code))
+  const promote = useSetEvaluations(batch.id, keys.batches.detail(batch.code))
   const [addOpen, setAddOpen] = useState(false)
 
   return (
@@ -208,6 +209,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
             chapterTitles={batch.chapterTitles}
             students={batch.roster}
             grading={setLevel}
+            promote={promote}
           />
         </div>
       )}

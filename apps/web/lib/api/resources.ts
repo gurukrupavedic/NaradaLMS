@@ -387,10 +387,13 @@ export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
 }
 
 // POST /v1/batches/:batchId/evaluations — a teacher/TA, or (AccessPolicy.requireCanCreateEvaluation)
-// a school admin, marks a student's level on one chapter. Evaluations are append-only history (see
-// reshape.ts's `latestLevelByChapterId`): "editing" a grade means recording a new one, not mutating
-// an old row — the most recent `evaluatedAt` simply becomes the roster's new current mark for that
-// chapter.
+// a school admin, marks one or more students' levels on one or more chapters, in a single request.
+// Evaluations are append-only history (see reshape.ts's `latestLevelByChapterId`): "editing" a
+// grade means recording a new one, not mutating an old row — the most recent `evaluatedAt` simply
+// becomes the roster's new current mark for that chapter. The server silently drops any item that
+// would overwrite an already-certified (exam-graded) L4 chapter — see
+// apps/api/src/evaluations/service.ts's `createEvaluations` for why that has to happen there and
+// not here.
 export type CreateEvaluationInput = {
   studentId: string
   chapterId: string
@@ -398,8 +401,20 @@ export type CreateEvaluationInput = {
   notes?: string
 }
 
+export async function createEvaluations(
+  batchId: string,
+  items: CreateEvaluationInput[],
+): Promise<ApiEvaluation[]> {
+  return mutateApi<ApiEvaluation[]>(`/batches/${batchId}/evaluations`, 'POST', items)
+}
+
+// The mark book's own grade dialog only ever grades one cell — a thin wrapper over
+// `createEvaluations` rather than a separate endpoint. The server rejects with a 409 if that one
+// item lands on an already-certified chapter (see `createEvaluations`'s own doc comment above),
+// which surfaces here as a normal `ApiError` for the dialog to show.
 export async function createEvaluation(batchId: string, data: CreateEvaluationInput): Promise<ApiEvaluation> {
-  return mutateApi<ApiEvaluation>(`/batches/${batchId}/evaluations`, 'POST', data)
+  const [created] = await createEvaluations(batchId, [data])
+  return created!
 }
 
 // ── Open enrollment (student self-service) ──────────────────────────────────
