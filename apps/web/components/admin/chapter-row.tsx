@@ -104,7 +104,7 @@ export function ChapterRow({
             onClick={() => onChange({ status: published ? 'draft' : 'published' })}
             aria-pressed={published}
             className={cn(
-              'label w-20 shrink-0 border px-2 py-1.5 text-center transition-colors',
+              'label min-w-24 shrink-0 whitespace-nowrap border px-2 py-1.5 text-center transition-colors',
               published
                 ? 'border-rule text-ink'
                 : 'border-dashed border-rule text-ink-muted hover:text-ink',
