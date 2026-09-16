@@ -171,9 +171,7 @@ describe('recordExamResult', () => {
   // Stubs `transaction` to actually invoke the callback with a fake `tx` and let the callback's
   // throw propagate, mimicking real Drizzle behavior (rather than just resolving statically) —
   // this is what proves the mapped error propagates out of `context.db.transaction(...)`.
-  const transactionMock = vi.fn(async (callback: (tx: unknown) => Promise<unknown>) =>
-    callback({}),
-  )
+  const transactionMock = vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback({}))
   const db = { transaction: transactionMock } as unknown as SchoolDbClient
   const context = { db }
 
@@ -193,7 +191,7 @@ describe('recordExamResult', () => {
     studentId: 'student-1',
     chapterId: 'chapter-1',
     batchId: 'batch-1',
-    level: 'level1' as const,
+    level: 'level4' as const,
     notes: null,
     evaluatorId: 'evaluator-1',
     evaluatedAt: new Date(),
@@ -216,7 +214,7 @@ describe('recordExamResult', () => {
     })
 
     await expect(
-      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' }),
+      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' }),
     ).rejects.toMatchObject({
       statusCode: 422,
       message: 'student, chapter, or evaluator no longer exists',
@@ -233,7 +231,7 @@ describe('recordExamResult', () => {
       performedAt: new Date(),
     })
 
-    await recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' })
+    await recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' })
 
     expect(repository.insertEvaluation).toHaveBeenCalledWith(
       {},
@@ -241,7 +239,7 @@ describe('recordExamResult', () => {
     )
   })
 
-  it("calls repository.complete with existing.status as the expectedStatus argument", async () => {
+  it('calls repository.complete with existing.status as the expectedStatus argument', async () => {
     vi.mocked(repository.complete).mockResolvedValue({
       ...existingExam,
       status: 'completed',
@@ -249,7 +247,7 @@ describe('recordExamResult', () => {
       performedAt: new Date(),
     })
 
-    await recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' })
+    await recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' })
 
     expect(repository.complete).toHaveBeenCalledWith(
       {},
@@ -272,7 +270,7 @@ describe('recordExamResult', () => {
       })
 
     await expect(
-      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' }),
+      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' }),
     ).rejects.toMatchObject({
       statusCode: 409,
       message: 'a result was already recorded for this exam',
@@ -289,7 +287,7 @@ describe('recordExamResult', () => {
       .mockResolvedValueOnce({ ...existingExam, status: 'cancelled' as const, evaluationId: null })
 
     await expect(
-      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' }),
+      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' }),
     ).rejects.toMatchObject({
       statusCode: 409,
       message: 'exam status changed concurrently',
@@ -306,7 +304,7 @@ describe('recordExamResult', () => {
       .mockResolvedValueOnce(undefined)
 
     await expect(
-      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' }),
+      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' }),
     ).rejects.toMatchObject({
       statusCode: 404,
     })

@@ -19,8 +19,12 @@ import { PROFICIENCY_LABEL, PROFICIENCY_ORDER, type ProficiencyLevel } from '@/l
  */
 
 // `notStarted` means "no evaluation exists yet" — a teacher grading a chapter picks a real
-// outcome, never that placeholder (same exclusion the legacy dialog made).
-const GRADABLE_LEVELS = PROFICIENCY_ORDER.filter(level => level !== 'notStarted')
+// outcome, never that placeholder (same exclusion the legacy dialog made). `level4` is excluded
+// too: that grade only certifies an exam result (see exams/service.ts's recordExamResult), never
+// a teacher's own evaluation.
+const GRADABLE_LEVELS = PROFICIENCY_ORDER.filter(
+  level => level !== 'notStarted' && level !== 'level4',
+)
 
 export type GradeDialogTarget = {
   studentId: string
@@ -85,9 +89,10 @@ function GradeForm({
   grading: GradeMutation
   onCancel: () => void
 }) {
-  const [level, setLevel] = useState<ProficiencyLevel>(
-    target.currentLevel === 'notStarted' ? 'level1' : target.currentLevel,
-  )
+  // `notStarted` and `level4` both fall outside GRADABLE_LEVELS — neither is a teacher's own
+  // pick (the latter is an exam-only certification), so both default to the same starting point.
+  const isGradable = target.currentLevel !== 'notStarted' && target.currentLevel !== 'level4'
+  const [level, setLevel] = useState<ProficiencyLevel>(isGradable ? target.currentLevel : 'level1')
   const [notes, setNotes] = useState('')
 
   function handleSubmit(e: React.FormEvent) {
@@ -120,7 +125,9 @@ function GradeForm({
                 onClick={() => setLevel(candidate)}
                 className={cn(
                   'flex items-center gap-2 border px-3 py-2 text-left text-[0.8125rem] transition-colors',
-                  selected ? 'border-vermilion bg-vermilion/[0.06]' : 'border-rule hover:bg-ink/[0.03]',
+                  selected
+                    ? 'border-vermilion bg-vermilion/[0.06]'
+                    : 'border-rule hover:bg-ink/[0.03]',
                 )}
               >
                 <Pill level={candidate} size="sm" />
