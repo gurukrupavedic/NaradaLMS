@@ -34,8 +34,8 @@ import {
 
 const NAV = [
   { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Practice', href: '/practice' },
-  { label: 'Record', href: '/exams' },
+  { label: 'Learning', href: '/practice' },
+  { label: 'Exams', href: '/exams' },
   { label: 'Admin', href: '/admin' },
 ]
 
@@ -86,7 +86,7 @@ export function Wordmark({ className }: { className?: string }) {
       className={cn('display text-[1.35rem] leading-none tracking-tight', className)}
       aria-label="Narada — home"
     >
-      Narada<span className="text-vermilion">.</span>
+      Narada<span className="text-vermilion">&apos;s</span>
     </Link>
   )
 }
