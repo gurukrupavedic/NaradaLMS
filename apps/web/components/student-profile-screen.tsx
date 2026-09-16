@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { ScreenSkeleton } from '@/components/skeletons'
@@ -7,14 +8,16 @@ import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
 import { PillKey } from '@/components/proficiency-pill'
-import { TrackLadder } from '@/components/track-ladder'
+import { TrackLadder, type LadderTrack } from '@/components/track-ladder'
 import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
+import { MoveBatchDrawer } from '@/components/admin/move-batch-drawer'
 import { profileDetailQuery } from '@/lib/query/options'
 import { buildCertificationRows, buildLearningTracks } from '@/lib/api/reshape'
 import { isCertified } from '@/lib/proficiency'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
+import { useHasAdminAccess } from '@/lib/auth/profile-store'
 import type { ApiProfile } from '@/lib/api/api-types'
 
 const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
@@ -34,6 +37,8 @@ const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
  */
 export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const { data, error } = useQuery(profileDetailQuery(profileId))
+  const isAdmin = useHasAdminAccess()
+  const [moveTarget, setMoveTarget] = useState<LadderTrack | null>(null)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
@@ -141,7 +146,20 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
               <PillKey />
               <div className="space-y-4">
                 {learningTracks.map(track => (
-                  <TrackLadder key={track.id} track={track} defaultOpen={false} />
+                  <div key={track.id} className="space-y-2">
+                    <TrackLadder track={track} defaultOpen={false} />
+                    {isAdmin && track.batchId && track.batchStatus !== 'completed' && (
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setMoveTarget(track)}
+                          className="label text-ink-muted transition-colors hover:text-vermilion"
+                        >
+                          Move to another batch →
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </Section>
@@ -186,6 +204,17 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           </Reveal>
         )}
       </div>
+
+      {moveTarget && moveTarget.batchId && (
+        <MoveBatchDrawer
+          open={moveTarget !== null}
+          onOpenChange={open => !open && setMoveTarget(null)}
+          profileId={profile.id}
+          profileName={profile.name}
+          fromBatchId={moveTarget.batchId}
+          fromBatchCode={moveTarget.batchCode ?? ''}
+        />
+      )}
     </>
   )
 }

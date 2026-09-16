@@ -6,11 +6,11 @@ import { keys } from '@/lib/query/options'
 import { enrollProfile, moveEnrollmentToBatch } from '@/lib/api/resources'
 
 /**
- * Admin "add a student" (components/admin/roster-editor.tsx). Besides this batch's own detail
- * view (the roster it renders comes straight from `GET /batches/:batchId`), every cached profile
- * search is invalidated too — the profile just added is now enrolled here, so a search result
- * still showing its "Add" button, unrefreshed, would let the admin re-click into a 409 the search
- * itself could have prevented.
+ * Admin "add a student" (components/admin/add-student-drawer.tsx). Besides this batch's own
+ * detail view (the roster it renders comes straight from `GET /batches/:batchId`), every cached
+ * profile search is invalidated too — the profile just added is now enrolled here, so a search
+ * result still showing its "Add" button, unrefreshed, would let the admin re-click into a 409 the
+ * search itself could have prevented.
  */
 export function useEnrollProfile(code: string, batchId: string) {
   const queryClient = useQueryClient()
@@ -26,9 +26,11 @@ export function useEnrollProfile(code: string, batchId: string) {
 }
 
 /**
- * Admin "move to another batch" (components/admin/roster-editor.tsx). Invalidates both batches'
- * detail queries — the source loses a roster row, the destination gains one — plus the profile
- * search cache, since the move can change who's addable to either.
+ * Admin "move to another batch" (components/admin/move-batch-drawer.tsx, opened from a student's
+ * own profile). Invalidates both batches' detail queries — the source loses a roster row, the
+ * destination gains one — the moved profile's own detail query (its "Learning" ladder shows the
+ * batch it's in, per track), and the profile search cache, since the move can change who's
+ * addable to either batch.
  */
 export function useMoveEnrollment(code: string, batchId: string) {
   const queryClient = useQueryClient()
@@ -39,6 +41,7 @@ export function useMoveEnrollment(code: string, batchId: string) {
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: keys.batches.detail(code) })
       void queryClient.invalidateQueries({ queryKey: keys.batches.detail(variables.toBatchCode) })
+      void queryClient.invalidateQueries({ queryKey: keys.profiles.detail(variables.profileId) })
       void queryClient.invalidateQueries({ queryKey: keys.profiles.searchAll })
     },
   })

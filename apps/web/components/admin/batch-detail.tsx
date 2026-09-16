@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 
@@ -10,7 +11,7 @@ import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
 import { PillKey } from '@/components/proficiency-pill'
 import { MarkBook } from '@/components/mark-book'
-import { RosterEditor } from '@/components/admin/roster-editor'
+import { AddStudentDrawer } from '@/components/admin/add-student-drawer'
 import { Notice } from '@/components/notice'
 import { ApiError } from '@/lib/api/client'
 import { isBatchOpenForEnrollment } from '@/lib/api/resources'
@@ -182,29 +183,38 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
  */
 function RosterSection({ batch }: { batch: AdminBatchDetail }) {
   const setLevel = useSetEvaluation(batch.id, keys.batches.detail(batch.code))
+  const [addOpen, setAddOpen] = useState(false)
 
   return (
     <Section title="Roster" count={`${batch.roster.length} enrolled · ${batch.chapterCodes.length} chapters`}>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PillKey />
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          className="label shrink-0 border border-ink/25 px-3 py-1.5 transition-colors hover:border-vermilion hover:text-vermilion"
+        >
+          + Add student
+        </button>
+      </div>
+
       {batch.roster.length === 0 ? (
         <p className="sheet px-4 py-7 text-center text-[0.875rem] text-ink-muted">
           Nobody is enrolled in this batch yet.
         </p>
       ) : (
-        <>
-          <PillKey />
-          <div className="sheet">
-            <MarkBook
-              chapterCodes={batch.chapterCodes}
-              chapterIds={batch.chapterIds}
-              chapterTitles={batch.chapterTitles}
-              students={batch.roster}
-              grading={setLevel}
-            />
-          </div>
-        </>
+        <div className="sheet">
+          <MarkBook
+            chapterCodes={batch.chapterCodes}
+            chapterIds={batch.chapterIds}
+            chapterTitles={batch.chapterTitles}
+            students={batch.roster}
+            grading={setLevel}
+          />
+        </div>
       )}
 
-      <RosterEditor batch={batch} />
+      <AddStudentDrawer batch={batch} open={addOpen} onOpenChange={setAddOpen} />
     </Section>
   )
 }
