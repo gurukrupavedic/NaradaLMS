@@ -15,11 +15,6 @@ export const PROFICIENCY_ORDER: ProficiencyLevel[] = [
   'level4',
 ]
 
-// The levels that actually sit on the scale, in order. `notStarted` and
-// `absent` are states, not rungs — they are rendered as an empty rung and a
-// hatched one respectively, and never occupy a position on the ramp.
-export const GRADED_LEVELS: ProficiencyLevel[] = ['level1', 'level2', 'level3', 'level4']
-
 // L1 marks "done with classroom instruction, not yet examined by a TA" — a
 // real, common resting state (there's a whole population of students sitting
 // there), not a synonym for "started." L2/L3 are intermediate exam results;

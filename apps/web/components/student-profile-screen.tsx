@@ -7,7 +7,6 @@ import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
-import { PillKey } from '@/components/proficiency-pill'
 import { TrackLadder } from '@/components/track-ladder'
 import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
@@ -159,7 +158,6 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
         {learningTracks.length > 0 && (
           <Reveal delay={80}>
             <Section title="Learning" count={`${learningTracks.length} tracks`}>
-              <PillKey />
               <div className="space-y-4">
                 {learningTracks.map(track => (
                   <TrackLadder key={track.id} track={track} defaultOpen={false} />

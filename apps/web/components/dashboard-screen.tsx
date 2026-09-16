@@ -6,7 +6,6 @@ import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { Archive, Section } from '@/components/section'
-import { PillKey } from '@/components/proficiency-pill'
 import { TrackLadder } from '@/components/track-ladder'
 import { TeachingList } from '@/components/teaching-list'
 import { OpenBatchPicker } from '@/components/open-batch-picker'
@@ -122,7 +121,6 @@ export function DashboardScreen() {
         {(hasActiveBatch || returning) && (
           <Reveal delay={60}>
             <Section title="Your practice" count={`${learningTracks.length} tracks`}>
-              <PillKey />
               <div className="space-y-4">
                 {learningTracks.map(track => (
                   <TrackLadder

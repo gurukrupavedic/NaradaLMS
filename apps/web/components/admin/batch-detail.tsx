@@ -9,7 +9,6 @@ import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
-import { PillKey } from '@/components/proficiency-pill'
 import { MarkBook } from '@/components/mark-book'
 import { AddStudentDrawer } from '@/components/admin/add-student-drawer'
 import { Notice } from '@/components/notice'
@@ -187,8 +186,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
 
   return (
     <Section title="Roster" count={`${batch.roster.length} enrolled · ${batch.chapterCodes.length} chapters`}>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <PillKey />
+      <div className="flex justify-end">
         <button
           type="button"
           onClick={() => setAddOpen(true)}

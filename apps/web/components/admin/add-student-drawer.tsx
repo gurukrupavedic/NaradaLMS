@@ -12,8 +12,8 @@ import type { AdminBatchDetail } from '@/lib/mock-dashboard'
 const SEARCH_DEBOUNCE_MS = 300
 
 /**
- * The admin "add a student" flow, opened from the "+ Add student" button beside the roster's
- * proficiency legend (components/admin/batch-detail.tsx). A drawer rather than an inline box: the
+ * The admin "add a student" flow, opened from the roster's "+ Add student" button
+ * (components/admin/batch-detail.tsx). A drawer rather than an inline box: the
  * search itself can turn up dozens of matches, and the roster/mark book underneath shouldn't have
  * to make room for a list that long every time an admin so much as glances at this batch.
  */

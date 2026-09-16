@@ -1,6 +1,5 @@
 import { cn } from '@/lib/utils'
 import {
-  GRADED_LEVELS,
   LEVEL_INK,
   LEVEL_TEXT,
   PROFICIENCY_LABEL,
@@ -11,7 +10,7 @@ import {
 /**
  * Proficiency as a solid, labelled chip — the mark book's own cell treatment
  * (colour fill + short code), pulled out for the one-level-at-a-time spots: a
- * chapter row, a certification row, the legend.
+ * chapter row, a certification row.
  *
  * This replaces four small beads on a thread, which read cleanly once the
  * scale was a single deepening ink but got hard to tell apart once colour
@@ -56,21 +55,5 @@ export function Pill({ level, size = 'md', className }: PillProps) {
     >
       {PROFICIENCY_SHORT[level]}
     </span>
-  )
-}
-
-/**
- * One key, once, above the thing it decodes — never repeated per row.
- */
-export function PillKey({ className }: { className?: string }) {
-  return (
-    <div className={cn('flex flex-wrap items-center gap-x-5 gap-y-2', className)}>
-      {GRADED_LEVELS.map(level => (
-        <span key={level} className="flex items-center gap-2">
-          <Pill level={level} size="sm" />
-          <span className="label text-ink-muted">{PROFICIENCY_LABEL[level]}</span>
-        </span>
-      ))}
-    </div>
   )
 }
