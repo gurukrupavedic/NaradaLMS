@@ -1,6 +1,6 @@
 import * as z from 'zod'
 
-import { examStatus, proficiencyLevel } from '@narada/db'
+import { examStatus } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
 import { isoInstant, requireNonEmpty } from '../utils/validate'
@@ -9,7 +9,6 @@ import { EvaluationSchema } from '../evaluations/schema'
 
 const PAGE_SIZE = 20
 
-export const proficiencyLevelSchema = z.enum(proficiencyLevel.enumValues)
 export const examStatusSchema = z.enum(examStatus.enumValues)
 
 export type Exam = z.infer<typeof ExamSchema>
@@ -52,9 +51,11 @@ export const UpdateExamSchema = requireNonEmpty(
     }),
 )
 
+// An exam result only ever certifies — `level4` is the sole outcome an exam can record. A teacher's
+// own evaluation covers every other level (see evaluations/schema.ts's teacherGradableLevelSchema).
 export type RecordExamResultData = z.infer<typeof RecordExamResultSchema>
 export const RecordExamResultSchema = z.object({
-  level: proficiencyLevelSchema,
+  level: z.literal('level4'),
   notes: z.string().optional(),
 })
 

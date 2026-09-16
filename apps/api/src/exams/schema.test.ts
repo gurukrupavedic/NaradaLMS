@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { CreateExamSchema, UpdateExamSchema } from './schema'
+import { CreateExamSchema, RecordExamResultSchema, UpdateExamSchema } from './schema'
 
 // Explicit factory (rather than the real module) so importing `./schema` doesn't pull in
 // `@narada/db` at import time and trigger real env-var validation — never loads.
@@ -46,6 +46,21 @@ describe('CreateExamSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+})
+
+describe('RecordExamResultSchema', () => {
+  it('accepts level4 — the only outcome an exam can certify', () => {
+    const result = RecordExamResultSchema.safeParse({ level: 'level4' })
+    expect(result.success).toBe(true)
+  })
+
+  it.each(['absent', 'level1', 'level2', 'level3'] as const)(
+    'rejects %s — that grade belongs to a teacher evaluation, not an exam result',
+    level => {
+      const result = RecordExamResultSchema.safeParse({ level })
+      expect(result.success).toBe(false)
+    },
+  )
 })
 
 describe('UpdateExamSchema', () => {

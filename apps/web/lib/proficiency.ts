@@ -1,10 +1,4 @@
-export type ProficiencyLevel =
-  | 'notStarted'
-  | 'absent'
-  | 'level1'
-  | 'level2'
-  | 'level3'
-  | 'level4'
+export type ProficiencyLevel = 'notStarted' | 'absent' | 'level1' | 'level2' | 'level3' | 'level4'
 
 export const PROFICIENCY_ORDER: ProficiencyLevel[] = [
   'notStarted',
@@ -15,10 +9,12 @@ export const PROFICIENCY_ORDER: ProficiencyLevel[] = [
   'level4',
 ]
 
-// L1 marks "done with classroom instruction, not yet examined by a TA" — a
-// real, common resting state (there's a whole population of students sitting
-// there), not a synonym for "started." L2/L3 are intermediate exam results;
-// L4 is the only one that also certifies the track (see `isCertified`).
+// L1 marks "done with classroom instruction" — a real, common resting state
+// (there's a whole population of students sitting there), not a synonym for
+// "started." L1-L3 are all a teacher's own grades; L4 is the exception — it
+// only ever comes from an exam evaluation, never the teacher directly (see
+// apps/api/src/evaluations/schema.ts's teacherGradableLevelSchema) — and it's
+// the only one that also certifies the track (see `isCertified`).
 export const PROFICIENCY_LABEL: Record<ProficiencyLevel, string> = {
   notStarted: 'Not Started',
   absent: 'Absent',

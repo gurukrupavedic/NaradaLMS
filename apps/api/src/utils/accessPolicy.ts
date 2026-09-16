@@ -6,7 +6,10 @@ import {
   type SchoolDbClient,
   type SchoolProfile,
 } from '@narada/db'
-import { hasBatchPermission as roleHasBatchPermission, type BatchPermissions } from '@narada/auth/permissions'
+import {
+  hasBatchPermission as roleHasBatchPermission,
+  type BatchPermissions,
+} from '@narada/auth/permissions'
 
 import { forbidden } from '../error'
 import { hasSharedInstructorEnrollment } from '../enrollment/service'
@@ -175,7 +178,9 @@ export class AccessPolicy {
    */
   public async getProfileBatchListScope(targetProfileId: string): Promise<BatchReadScope> {
     if (targetProfileId === this.profileId) {
-      return this.isSchoolAdmin() ? { kind: 'all' } : { kind: 'enrolled', profileId: targetProfileId }
+      return this.isSchoolAdmin()
+        ? { kind: 'all' }
+        : { kind: 'enrolled', profileId: targetProfileId }
     }
 
     if (this.isSchoolAdmin()) {
@@ -295,10 +300,14 @@ export class AccessPolicy {
     throw forbidden()
   }
 
-  // Recording a result is a status-changing update to the exam (PARITY_PLAN.md §11.6), so it's
-  // gated by the same exam:update permission as requireCanUpdateExam, not a separate action.
-  public requireCanRecordEvaluation(exam: Exam): void {
-    this.requireCanUpdateExam(exam)
+  // Deliberately narrower than requireCanUpdateExam (a batch instructor/TA can reschedule or
+  // cancel their own exam, but not certify one) — recording a result is what grants `level4`, so
+  // it's gated on school-admin status alone, independent of any batch role. See
+  // evaluations/schema.ts's teacherGradableLevelSchema for the other half of that split.
+  public requireCanRecordEvaluation(_exam: Exam): void {
+    if (!this.isSchoolAdmin()) {
+      throw forbidden()
+    }
   }
 
   /**
@@ -344,7 +353,8 @@ export class AccessPolicy {
   }
 
   public requireCanReadStudentEvaluations(batchId: string, studentId: string): void {
-    const permission = studentId === this.profileId ? EVALUATION_READ_PERMISSION : EVALUATION_CREATE_PERMISSION
+    const permission =
+      studentId === this.profileId ? EVALUATION_READ_PERMISSION : EVALUATION_CREATE_PERMISSION
     if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, permission)) {
       return
     }
@@ -402,7 +412,10 @@ export class AccessPolicy {
       return
     }
 
-    if (this.profileId && (await hasSharedInstructorEnrollment(this.db, this.profileId, targetProfileId))) {
+    if (
+      this.profileId &&
+      (await hasSharedInstructorEnrollment(this.db, this.profileId, targetProfileId))
+    ) {
       return
     }
 

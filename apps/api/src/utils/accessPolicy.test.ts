@@ -93,7 +93,7 @@ describe('AccessPolicy.load / normalizeSchoolRole (DD-010)', () => {
 })
 
 describe('AccessPolicy#hasBatchPermission / requireCanReadBatch', () => {
-  it('grants a batch permission the actor\'s own enrollment role satisfies', async () => {
+  it("grants a batch permission the actor's own enrollment role satisfies", async () => {
     mockMembership('member')
 
     const access = await AccessPolicy.load({
@@ -191,14 +191,22 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
 
   it('getExamVisibility returns "all" for a school admin with no active profile', async () => {
     mockMembership('admin')
-    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
 
     expect(access.getExamVisibility()).toEqual({ kind: 'all' })
   })
 
   it('getExamVisibility denies a plain member with no active profile (no school evaluation:read)', async () => {
     mockMembership('member')
-    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
 
     expect(() => access.getExamVisibility()).toThrow()
   })
@@ -268,7 +276,7 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
     expect((visibility as { batchIds: string[] }).batchIds.sort()).toEqual(['batch-1', 'batch-3'])
   })
 
-  it('requireCanReadExam allows the exam\'s own student, an admin, or a manageable batch role', async () => {
+  it("requireCanReadExam allows the exam's own student, an admin, or a manageable batch role", async () => {
     mockMembership('member')
     const access = await AccessPolicy.load({
       db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
@@ -316,7 +324,7 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
     expect(() => superAdminAccess.requireCanCreateExam('batch-1')).not.toThrow()
   })
 
-  it('requireCanUpdateExam and requireCanRecordEvaluation both gate on exam:update in the exam\'s batch', async () => {
+  it("requireCanUpdateExam gates on exam:update in the exam's batch (instructor/TA, not a student)", async () => {
     mockMembership('member')
     const access = await AccessPolicy.load({
       db: schoolDbWithEnrollments([
@@ -329,7 +337,6 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
     })
 
     expect(() => access.requireCanUpdateExam(examIn('batch-1'))).not.toThrow()
-    expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).not.toThrow()
     // students hold exam:read, not exam:update, in their own batch
     expect(() => access.requireCanUpdateExam(examIn('batch-2'))).toThrow()
   })
@@ -344,7 +351,48 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
     })
 
     expect(() => access.requireCanUpdateExam(examIn('batch-1'))).toThrow()
+  })
+
+  it('requireCanRecordEvaluation is school-admin only — an instructor/TA can update the exam but not certify a result', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([
+        { batchId: 'batch-1', role: 'instructor' },
+        { batchId: 'batch-2', role: 'ta' },
+      ]),
+      school,
+      user: user(),
+      profile,
+    })
+
     expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).toThrow()
+    expect(() => access.requireCanRecordEvaluation(examIn('batch-2'))).toThrow()
+  })
+
+  it.each(['owner', 'admin'] as const)(
+    'requireCanRecordEvaluation allows a school %s regardless of their own batch role',
+    async role => {
+      mockMembership(role)
+      const access = await AccessPolicy.load({
+        db: schoolDbWithEnrollments([]),
+        school,
+        user: user(),
+        profile,
+      })
+
+      expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).not.toThrow()
+    },
+  )
+
+  it('requireCanRecordEvaluation allows a super admin', async () => {
+    mockMembership(undefined)
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+    })
+
+    expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).not.toThrow()
   })
 })
 
@@ -420,11 +468,19 @@ describe('AccessPolicy — evaluations (§10.3–§10.5)', () => {
 describe('AccessPolicy#requireCanSearchProfiles', () => {
   it('allows a school admin, denies a plain member', async () => {
     mockMembership('admin')
-    const adminAccess = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    const adminAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
     expect(() => adminAccess.requireCanSearchProfiles()).not.toThrow()
 
     mockMembership('member')
-    const memberAccess = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    const memberAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
     expect(() => memberAccess.requireCanSearchProfiles()).toThrow()
   })
 })
@@ -614,14 +670,22 @@ describe('AccessPolicy#requireCanViewProfile', () => {
 describe('AccessPolicy#getContentReadView', () => {
   it('a school admin gets the authoring view', async () => {
     mockMembership('admin')
-    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
 
     expect(access.getContentReadView()).toEqual({ kind: 'authoring' })
   })
 
   it('an ordinary member gets the learner-preview view, not authoring', async () => {
     mockMembership('member')
-    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
 
     expect(access.getContentReadView()).toEqual({ kind: 'learnerPreview' })
   })
@@ -641,14 +705,22 @@ describe('AccessPolicy#getContentReadView', () => {
 describe('AccessPolicy#requireCanUpdateContent', () => {
   it('a school admin may update content', async () => {
     mockMembership('admin')
-    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
 
     expect(() => access.requireCanUpdateContent()).not.toThrow()
   })
 
   it('an ordinary member may not update content', async () => {
     mockMembership('member')
-    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
 
     expect(() => access.requireCanUpdateContent()).toThrow()
   })
