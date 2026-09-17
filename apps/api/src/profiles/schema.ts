@@ -11,10 +11,11 @@ export const ProfileSchema = z.object({
   name: z.string().min(1),
   phone: z.string().nullable(),
   city: z.string().nullable(),
-  // The rest of these mirror `registration`'s own fields exactly — only ever populated by
-  // `registrations/service.ts::provisionApprovedApplicant` copying an approved application across,
-  // never client-supplied (see `CreateProfileSchema`/`UpdateProfileSchema` below), so a profile
-  // created directly via `POST /profiles` simply carries the empty/null defaults.
+  // The rest of these mirror `registration`'s own fields exactly and are only ever populated at
+  // creation by `registrations/service.ts::provisionApprovedApplicant` copying an approved
+  // application across — `CreateProfileSchema` below never accepts them, so a profile created
+  // directly via `POST /profiles` simply carries the empty/null defaults. A subset is later
+  // self-editable via `UpdateProfileSchema` (see its own doc comment).
   email: z.email().nullable(),
   yearOfBirth: z.number().int().nullable(),
   countryTimeZone: z.string().nullable(),
@@ -42,12 +43,22 @@ export const CreateProfileSchema = ProfileSchema.pick({
   city: true,
 })
 
+// The student's own "edit my profile" surface. Deliberately excludes: `phone`, since it's the
+// BetterAuth login credential (phone-OTP sign-in) — changing it needs its own re-verification
+// flow, not a silent profile-details edit; `currentProficiency`, which is teacher/exam-assessed,
+// never self-reported after registration; `parentNames` and the `*Agreed` columns, which are
+// signed at registration; and `comments`, which is staff-only. Zod strips the unlisted keys
+// rather than rejecting them, same as `UpdateBatchSchema` dropping `trackId` (see PARITY_PLAN.md).
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>
 export const UpdateProfileSchema = requireNonEmpty(
   ProfileSchema.pick({
     name: true,
-    phone: true,
     city: true,
+    email: true,
+    yearOfBirth: true,
+    learningGoal: true,
+    spokenLanguages: true,
+    readLanguages: true,
   }).partial(),
 )
 

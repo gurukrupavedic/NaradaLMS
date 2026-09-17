@@ -11,7 +11,7 @@ vi.mock('@narada/db', () => ({
   },
 }))
 
-import { ProfileBatchesQuerySchema, ProfileSchema } from './schema'
+import { ProfileBatchesQuerySchema, ProfileSchema, UpdateProfileSchema } from './schema'
 
 const validProfile = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -60,6 +60,53 @@ describe('ProfileSchema', () => {
       comments: null,
     })
     expect(result.success).toBe(true)
+  })
+})
+
+describe('UpdateProfileSchema (student self-edit)', () => {
+  it('accepts the self-editable contact/background fields', () => {
+    const result = UpdateProfileSchema.safeParse({
+      name: 'Anjali Rao',
+      city: 'Hyderabad',
+      email: 'anjali@example.com',
+      yearOfBirth: 2005,
+      learningGoal: 'Fluency',
+      spokenLanguages: ['Telugu'],
+      readLanguages: [],
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('allows explicit null to clear a nullable field', () => {
+    const result = UpdateProfileSchema.safeParse({ email: null })
+    expect(result.success).toBe(true)
+  })
+
+  it('strips phone rather than accepting it — phone is the login credential, not self-editable here', () => {
+    const result = UpdateProfileSchema.safeParse({ name: 'Anjali Rao', phone: '+15551234567' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).not.toHaveProperty('phone')
+    }
+  })
+
+  it('strips teacher/registration-owned fields (currentProficiency, parentNames, dressCodeAgreed, comments)', () => {
+    const result = UpdateProfileSchema.safeParse({
+      name: 'Anjali Rao',
+      currentProficiency: 'level2',
+      parentNames: ['Someone'],
+      dressCodeAgreed: true,
+      comments: 'injected',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).toEqual({ name: 'Anjali Rao' })
+    }
+  })
+
+  it('rejects an empty update', () => {
+    const result = UpdateProfileSchema.safeParse({})
+    expect(result.success).toBe(false)
   })
 })
 

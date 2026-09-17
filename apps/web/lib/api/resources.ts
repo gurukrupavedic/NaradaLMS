@@ -70,6 +70,22 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
   return fetchApi<ApiProfileDetail>(`/profiles/${profileId}/detail`)
 }
 
+// PATCH /v1/profiles/:profileId — the student's own "edit my profile" form
+// (components/edit-profile-dialog.tsx). Server-side ownership check (`updateOwned`) means this
+// only ever succeeds against the caller's own profile. `phone` is deliberately not part of this
+// input — it's the BetterAuth login credential, excluded server-side too
+// (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`).
+export type UpdateProfileInput = Partial<
+  Pick<
+    ApiProfile,
+    'name' | 'city' | 'email' | 'yearOfBirth' | 'learningGoal' | 'spokenLanguages' | 'readLanguages'
+  >
+>
+
+export async function updateProfile(profileId: string, patch: UpdateProfileInput): Promise<ApiProfile> {
+  return mutateApi<ApiProfile>(`/profiles/${profileId}`, 'PATCH', patch)
+}
+
 // GET /v1/profiles/search — admin-only (AccessPolicy.requireCanSearchProfiles). Backs the "add a
 // student" search in components/admin/roster-editor.tsx; `excludeBatchId` filters out profiles who
 // already hold a live seat on that batch's roster at the query level (apps/api/src/profiles/
