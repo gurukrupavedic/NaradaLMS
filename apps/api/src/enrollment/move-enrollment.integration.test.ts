@@ -36,6 +36,7 @@ describe('moveEnrollment', () => {
     await expect(findEnrollment(world.schoolDb, instructor.id, fromBatch.id)).resolves.toBeUndefined()
     await expect(findEnrollment(world.schoolDb, instructor.id, toBatch.id)).resolves.toEqual({
       role: 'instructor',
+      status: 'active',
     })
   })
 
@@ -65,6 +66,7 @@ describe('moveEnrollment', () => {
     ).rejects.toMatchObject({ statusCode: 409 })
     await expect(findEnrollment(world.schoolDb, student.id, fromBatch.id)).resolves.toEqual({
       role: 'student',
+      status: 'active',
     })
   })
 })

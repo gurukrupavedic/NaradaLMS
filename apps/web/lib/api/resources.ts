@@ -71,9 +71,10 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
 }
 
 // GET /v1/profiles/search — admin-only (AccessPolicy.requireCanSearchProfiles). Backs the "add a
-// student" search in components/admin/roster-editor.tsx; `excludeBatchId` filters out profiles
-// already on that batch's roster at the query level, so results are always someone actually
-// addable.
+// student" search in components/admin/roster-editor.tsx; `excludeBatchId` filters out profiles who
+// already hold a live seat on that batch's roster at the query level (apps/api/src/profiles/
+// repository.ts::search), so results are always someone actually addable — a profile on a break
+// there is deliberately left in, since adding them back reactivates that same enrollment.
 export async function searchProfiles(query: string, excludeBatchId: string): Promise<ApiProfile[]> {
   const params = new URLSearchParams({ excludeBatchId })
   if (query.trim()) params.set('query', query.trim())
@@ -382,7 +383,6 @@ export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
     roster,
     enrollmentOpensAt: batch.enrollmentOpensAt,
     enrollmentClosesAt: batch.enrollmentClosesAt,
-    capacity: batch.capacity,
   }
 }
 
@@ -427,22 +427,34 @@ export async function fetchOpenBatches(): Promise<ApiOpenBatch[]> {
 }
 
 // POST /v1/batches/:batchId/enroll — self-enrolls the signed-in profile as a student. The server
-// enforces the open-window/capacity/duplicate checks; a rejection surfaces as an ApiError the
-// caller renders directly (409 "batch is full", "already enrolled in this batch", etc.).
+// enforces the open-window/duplicate checks; a rejection surfaces as an ApiError the caller
+// renders directly (409 "already enrolled in this batch", etc.).
 export async function selfEnrollInBatch(batchId: string): Promise<void> {
   await mutateApi(`/batches/${batchId}/enroll`, 'POST')
 }
 
 // POST /v1/batches/:batchId/members — admin (or an instructor/ta of this batch) adding an
 // arbitrary profile to its roster. Distinct from `selfEnrollInBatch` above: no open-enrollment
-// window or capacity check gates this, since the caller's own batch permission *is* the
-// authorization (AccessPolicy.requireCanCreateEnrollment).
+// window gates this, since the caller's own batch permission *is* the authorization
+// (AccessPolicy.requireCanCreateEnrollment). If the profile already has a non-active (e.g. on a
+// break) enrollment row in this batch, the server reactivates it in place rather than conflicting
+// (apps/api/src/enrollment/service.ts::enroll) — searchProfiles below already surfaces such a
+// profile as a normal, addable candidate for exactly this reason.
 export async function enrollProfile(
   batchId: string,
   profileId: string,
   role: 'student' | 'ta' | 'instructor',
 ): Promise<void> {
   await mutateApi(`/batches/${batchId}/members`, 'POST', { profileId, role })
+}
+
+// POST /v1/batches/:batchId/members/:profileId/break — the mark book's "Mark on break" row action
+// (components/mark-book.tsx). Server-side (apps/api/src/enrollment/service.ts::putOnBreak) this
+// flips the enrollment's status to 'break' rather than deleting it — the seat frees up and the
+// student drops off `buildRoster`'s output (reshape.ts), but their record and evaluation history
+// survive.
+export async function putStudentOnBreak(batchId: string, profileId: string): Promise<void> {
+  await mutateApi(`/batches/${batchId}/members/${profileId}/break`, 'POST')
 }
 
 // POST /v1/batches/:batchId/members/:profileId/move — moves a profile already on this roster to a
@@ -473,9 +485,7 @@ export async function closeBatchEnrollment(batchId: string): Promise<void> {
 // real column: checked, it sends the current instant as `enrollmentOpensAt` with no
 // `enrollmentClosesAt` (open-ended, same shape `openBatchEnrollment` produces on an existing
 // batch); unchecked, it sends neither, leaving the new batch closed the way every batch was
-// before this form existed. No `capacity` field — every batch gets the server's own
-// `DEFAULT_BATCH_CAPACITY` (apps/api/src/batches/schema.ts) since there's no admin-facing way to
-// set it per batch today.
+// before this form existed.
 export type CreateBatchInput = {
   trackId: string
   code: string

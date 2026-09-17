@@ -4,7 +4,7 @@ import * as z from 'zod'
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateEnrollmentSchema, MoveEnrollmentSchema } from './schema'
-import { enroll, moveEnrollment, unenroll } from './service'
+import { enroll, moveEnrollment, putOnBreak, unenroll } from './service'
 
 // mergeParams: mounted at /batches/:batchId/members in routes.ts — this router needs the parent
 // mount path's :batchId, not just its own path segments. optionalProfileRoute (not profileRoute)
@@ -32,6 +32,19 @@ router.delete(
     const { batchId, profileId } = await parse(MemberParamsSchema, req.params)
     access.requireCanRemoveEnrollment(batchId)
     await unenroll(db, batchId, profileId)
+    res.status(204).send()
+  }),
+)
+
+// A teacher taking a student off the active roster without deleting their enrollment (see
+// `service.ts::putOnBreak`) — gated the same as DELETE above, since it's the same "you manage this
+// roster" permission that lets a teacher remove someone from it outright.
+router.post(
+  '/:profileId/break',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { batchId, profileId } = await parse(MemberParamsSchema, req.params)
+    access.requireCanRemoveEnrollment(batchId)
+    await putOnBreak(db, batchId, profileId)
     res.status(204).send()
   }),
 )

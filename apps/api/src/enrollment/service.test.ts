@@ -6,6 +6,7 @@ import {
   assertStudentEnrolledInBatch,
   enroll,
   moveEnrollment,
+  putOnBreak,
   resolveQualifyingBatch,
   selfEnroll,
   unenroll,
@@ -20,8 +21,9 @@ vi.mock('./repository', () => ({
   findEnrollment: vi.fn(),
   profileExists: vi.fn(),
   insertEnrollment: vi.fn(),
+  reactivateEnrollment: vi.fn(),
   deleteEnrollment: vi.fn(),
-  countActiveStudentEnrollments: vi.fn(),
+  updateEnrollmentStatus: vi.fn(),
 }))
 
 // Same reasoning as the `./repository` mock above — `selfEnroll` is the one function here that
@@ -74,7 +76,7 @@ describe('assertStudentEnrolledInBatch', () => {
   })
 
   it('resolves when the target holds a student enrollment in this exact batch', async () => {
-    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student' })
+    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student', status: 'active' })
 
     await expect(
       assertStudentEnrolledInBatch(db, 'student-1', 'batch-1'),
@@ -91,7 +93,7 @@ describe('assertStudentEnrolledInBatch', () => {
   })
 
   it('rejects with a 422 when the target is enrolled in this batch as instructor/ta, not student', async () => {
-    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'instructor' })
+    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'instructor', status: 'active' })
 
     await expect(
       assertStudentEnrolledInBatch(db, 'student-1', 'batch-1'),
@@ -133,13 +135,33 @@ describe('enroll', () => {
     expect(repository.insertEnrollment).not.toHaveBeenCalled()
   })
 
-  it('rejects with 409 when the profile is already enrolled in this batch', async () => {
+  it('rejects with 409 when the profile already holds an active enrollment in this batch', async () => {
     vi.mocked(repository.profileExists).mockResolvedValue(true)
-    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student' })
+    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student', status: 'active' })
 
     await expect(
       enroll(db, 'batch-1', { profileId: 'profile-1', role: 'student' }),
     ).rejects.toMatchObject({ statusCode: 409 })
+    expect(repository.insertEnrollment).not.toHaveBeenCalled()
+  })
+
+  it('reactivates, rather than conflicting, when the existing enrollment is on a break', async () => {
+    vi.mocked(repository.profileExists).mockResolvedValue(true)
+    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student', status: 'break' })
+    const row = {
+      profileId: 'profile-1',
+      batchId: 'batch-1',
+      role: 'student' as const,
+      status: 'active' as const,
+      joinedAt: new Date(),
+      leftDate: null,
+    }
+    vi.mocked(repository.reactivateEnrollment).mockResolvedValue(row)
+
+    await expect(
+      enroll(db, 'batch-1', { profileId: 'profile-1', role: 'student' }),
+    ).resolves.toEqual(row)
+    expect(repository.reactivateEnrollment).toHaveBeenCalledWith(db, 'batch-1', 'profile-1', 'student')
     expect(repository.insertEnrollment).not.toHaveBeenCalled()
   })
 })
@@ -164,6 +186,27 @@ describe('unenroll', () => {
   })
 })
 
+describe('putOnBreak', () => {
+  const db = {} as SchoolDb
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('resolves when a row was updated to break', async () => {
+    vi.mocked(repository.updateEnrollmentStatus).mockResolvedValue(true)
+
+    await expect(putOnBreak(db, 'batch-1', 'profile-1')).resolves.toBeUndefined()
+    expect(repository.updateEnrollmentStatus).toHaveBeenCalledWith(db, 'batch-1', 'profile-1', 'break')
+  })
+
+  it('rejects with 404 when there was no such enrollment to update', async () => {
+    vi.mocked(repository.updateEnrollmentStatus).mockResolvedValue(false)
+
+    await expect(putOnBreak(db, 'batch-1', 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
+  })
+})
+
 describe('moveEnrollment', () => {
   // Same stub-the-callback approach as `selfEnroll`'s suite below.
   const tx = {}
@@ -177,7 +220,7 @@ describe('moveEnrollment', () => {
 
   it('deletes the source enrollment and inserts one in the destination batch, preserving role', async () => {
     vi.mocked(repository.findEnrollment)
-      .mockResolvedValueOnce({ role: 'student' }) // source lookup
+      .mockResolvedValueOnce({ role: 'student', status: 'active' }) // source lookup
       .mockResolvedValueOnce(undefined) // destination lookup
     vi.mocked(repository.deleteEnrollment).mockResolvedValue(true)
     const row = {
@@ -209,8 +252,8 @@ describe('moveEnrollment', () => {
 
   it('rejects with 409 when already enrolled in the destination batch', async () => {
     vi.mocked(repository.findEnrollment)
-      .mockResolvedValueOnce({ role: 'student' }) // source lookup
-      .mockResolvedValueOnce({ role: 'student' }) // destination lookup
+      .mockResolvedValueOnce({ role: 'student', status: 'active' }) // source lookup
+      .mockResolvedValueOnce({ role: 'student', status: 'active' }) // destination lookup
     vi.mocked(repository.deleteEnrollment).mockResolvedValue(true)
 
     await expect(moveEnrollment(db, 'batch-1', 'batch-2', 'profile-1')).rejects.toMatchObject({
@@ -220,7 +263,7 @@ describe('moveEnrollment', () => {
   })
 
   it('rejects with 409 rather than moving when the source and destination batch are the same', async () => {
-    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student' })
+    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student', status: 'active' })
 
     await expect(moveEnrollment(db, 'batch-1', 'batch-1', 'profile-1')).rejects.toMatchObject({
       statusCode: 409,
@@ -245,14 +288,12 @@ describe('selfEnroll', () => {
     meetingUrl: null,
     enrollmentOpensAt: new Date('2026-01-01T00:00:00Z'),
     enrollmentClosesAt: new Date('2026-12-31T00:00:00Z'),
-    capacity: null,
   }
 
   beforeEach(() => {
     vi.resetAllMocks()
     transactionMock.mockImplementation(async callback => callback(tx))
     vi.mocked(repository.findEnrollment).mockResolvedValue(undefined)
-    vi.mocked(repository.countActiveStudentEnrollments).mockResolvedValue(new Map())
   })
 
   it('enrolls the profile as a student when the batch is open and has room', async () => {
@@ -315,38 +356,12 @@ describe('selfEnroll', () => {
 
   it('rejects with 409 when already enrolled in this batch', async () => {
     vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue(openBatch)
-    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student' })
+    vi.mocked(repository.findEnrollment).mockResolvedValue({ role: 'student', status: 'active' })
 
     await expect(selfEnroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({
       statusCode: 409,
       message: 'already enrolled in this batch',
     })
     expect(repository.insertEnrollment).not.toHaveBeenCalled()
-  })
-
-  it('rejects with 409 when the batch is at capacity', async () => {
-    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue({ ...openBatch, capacity: 2 })
-    vi.mocked(repository.countActiveStudentEnrollments).mockResolvedValue(new Map([['batch-1', 2]]))
-
-    await expect(selfEnroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({
-      statusCode: 409,
-      message: 'batch is full',
-    })
-    expect(repository.insertEnrollment).not.toHaveBeenCalled()
-  })
-
-  it('enrolls when under capacity', async () => {
-    vi.mocked(batchesRepository.findByIdForUpdate).mockResolvedValue({ ...openBatch, capacity: 2 })
-    vi.mocked(repository.countActiveStudentEnrollments).mockResolvedValue(new Map([['batch-1', 1]]))
-    vi.mocked(repository.insertEnrollment).mockResolvedValue({
-      profileId: 'profile-1',
-      batchId: 'batch-1',
-      role: 'student',
-      status: 'active',
-      joinedAt: new Date(),
-      leftDate: null,
-    })
-
-    await expect(selfEnroll(db, 'batch-1', 'profile-1')).resolves.toMatchObject({ profileId: 'profile-1' })
   })
 })

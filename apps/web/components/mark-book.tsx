@@ -48,6 +48,13 @@ export type PromoteMutation = {
   mutateAsync: (items: SetLevelInput[]) => Promise<unknown>
 }
 
+// Same structural-typing move as `PromoteMutation` above, for the row menu's "Mark on break" —
+// takes just the student's id (`RosterStudent.id`, their profileId), since the mutation already
+// closes over which batch it's acting on (see use-enrollment-mutations.ts's `useSetOnBreak`).
+export type OnBreakMutation = {
+  mutateAsync: (studentId: string) => Promise<unknown>
+}
+
 const CELL_INK: Record<ProficiencyLevel, string> = {
   notStarted: 'bg-mark-not-started text-ink-muted/35',
   absent: 'bg-mark-absent/25 text-ink-muted',
@@ -65,6 +72,7 @@ export function MarkBook({
   className,
   grading,
   promote,
+  onBreak,
 }: {
   chapterCodes: string[]
   // Parallel to chapterCodes — both required to enable grading (see this file's own doc comment).
@@ -73,10 +81,11 @@ export function MarkBook({
   students: RosterStudent[]
   className?: string
   grading?: GradeMutation
-  // "Show profile" is always in the row menu; "Promote to L3" only appears when a mutation is
-  // actually wired to satisfy it (same optional-prop gate as `grading`) — a read-only history view
-  // passes neither and gets a menu with just the one, always-safe item.
+  // "Show profile" is always in the row menu; "Promote to L3" and "Mark on break" only appear when
+  // a mutation is actually wired to satisfy them (same optional-prop gate as `grading`) — a
+  // read-only history view passes neither and gets a menu with just the one, always-safe item.
   promote?: PromoteMutation
+  onBreak?: OnBreakMutation
 }) {
   const [target, setTarget] = useState<GradeDialogTarget | null>(null)
 
@@ -150,7 +159,12 @@ export function MarkBook({
                 >
                   <div className="flex items-center gap-1">
                     <span className="min-w-0 flex-1 truncate">{student.name}</span>
-                    <StudentMenu student={student} promote={promote} promoteItems={promoteItems} />
+                    <StudentMenu
+                      student={student}
+                      promote={promote}
+                      promoteItems={promoteItems}
+                      onBreak={onBreak}
+                    />
                   </div>
                   {student.city && (
                     <span className="label block text-ink-muted">{student.city}</span>
@@ -235,12 +249,17 @@ function StudentMenu({
   student,
   promote,
   promoteItems,
+  onBreak,
 }: {
   student: RosterStudent
   promote?: PromoteMutation
   promoteItems: SetLevelInput[]
+  onBreak?: OnBreakMutation
 }) {
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle')
+  // Its own status, distinct from `status` above — the two row actions are independent writes and
+  // a teacher could plausibly retry one without the other having failed.
+  const [breakStatus, setBreakStatus] = useState<'idle' | 'pending' | 'error'>('idle')
 
   async function handlePromote() {
     if (!promote || promoteItems.length === 0) return
@@ -253,14 +272,33 @@ function StudentMenu({
     }
   }
 
+  async function handleBreak() {
+    if (!onBreak) return
+    setBreakStatus('pending')
+    try {
+      await onBreak.mutateAsync(student.id)
+      setBreakStatus('idle')
+    } catch {
+      setBreakStatus('error')
+    }
+  }
+
+  const hasError = status === 'error' || breakStatus === 'error'
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Actions for ${student.name}`}
-        title={status === 'error' ? 'Could not promote to L3 — try again' : undefined}
+        title={
+          status === 'error'
+            ? 'Could not promote to L3 — try again'
+            : breakStatus === 'error'
+              ? 'Could not mark on break — try again'
+              : undefined
+        }
         className={cn(
           'shrink-0 rounded p-0.5 outline-none transition-colors hover:text-ink data-[popup-open]:text-ink',
-          status === 'error' ? 'text-vermilion' : 'text-ink-muted/70',
+          hasError ? 'text-vermilion' : 'text-ink-muted/70',
         )}
       >
         <MoreHorizontal className="size-4" aria-hidden />
@@ -277,6 +315,15 @@ function StudentMenu({
             className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink data-disabled:opacity-50"
           >
             {status === 'pending' ? 'Promoting…' : 'Promote to L3'}
+          </DropdownMenuItem>
+        )}
+        {onBreak && (
+          <DropdownMenuItem
+            disabled={breakStatus === 'pending'}
+            onClick={handleBreak}
+            className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink data-disabled:opacity-50"
+          >
+            {breakStatus === 'pending' ? 'Marking on break…' : 'Mark on break'}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem

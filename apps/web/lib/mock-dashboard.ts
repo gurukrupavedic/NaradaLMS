@@ -84,7 +84,6 @@ export type AdminBatchDetail = AdminBatchRow & {
   roster: RosterStudent[]
   enrollmentOpensAt: string | null
   enrollmentClosesAt: string | null
-  capacity: number | null
 }
 
 export function summariseRoster(roster: RosterStudent[]) {

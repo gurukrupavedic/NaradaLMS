@@ -51,7 +51,15 @@ export async function assertStudentEnrolledInBatch(
   }
 }
 
-/** Adds a profile to a batch's roster. 404 if the target profile doesn't exist; 409 if already enrolled. */
+/**
+ * Adds a profile to a batch's roster. 404 if the target profile doesn't exist; 409 if they already
+ * hold a live (`'active'`) seat here. A profile with an existing but non-active row (on a break —
+ * see `putOnBreak` below — or dropped/inactive) isn't a conflict: this reactivates that same row
+ * in place (status back to `'active'`, role set to whatever was just requested) rather than
+ * erroring, since `profiles/repository.ts::search`'s `excludeBatchId` filter now only excludes
+ * `'active'` members, so a break student shows back up as an addable candidate here in the first
+ * place.
+ */
 export async function enroll(
   db: SchoolDb,
   batchId: string,
@@ -61,8 +69,18 @@ export async function enroll(
     throw notFound()
   }
 
-  if (await repository.findEnrollment(db, data.profileId, batchId)) {
-    throw conflict('profile is already enrolled in this batch')
+  const existing = await repository.findEnrollment(db, data.profileId, batchId)
+  if (existing) {
+    if (existing.status === 'active') {
+      throw conflict('profile is already enrolled in this batch')
+    }
+
+    const reactivated = await repository.reactivateEnrollment(db, batchId, data.profileId, data.role)
+    if (!reactivated) {
+      throw internalError()
+    }
+
+    return reactivated
   }
 
   const row = await repository.insertEnrollment(db, batchId, data)
@@ -77,6 +95,21 @@ export async function enroll(
 export async function unenroll(db: SchoolDb, batchId: string, profileId: string): Promise<void> {
   const removed = await repository.deleteEnrollment(db, batchId, profileId)
   if (!removed) {
+    throw notFound()
+  }
+}
+
+/**
+ * Puts a student's enrollment in this batch on a break: `apps/web`'s roster views only render
+ * `'active'` members, so they drop off the mark book teachers see — but, unlike `unenroll`, the
+ * enrollment row itself survives (same "status transition, not delete" shape as a profile
+ * deactivation — see `repository.ts::findQualifyingBatches`'s own doc comment), so their history
+ * stays intact and `enroll` above can reactivate them later (see its own doc comment) instead of
+ * re-enrolling from scratch. 404 if no such enrollment exists.
+ */
+export async function putOnBreak(db: SchoolDb, batchId: string, profileId: string): Promise<void> {
+  const updated = await repository.updateEnrollmentStatus(db, batchId, profileId, 'break')
+  if (!updated) {
     throw notFound()
   }
 }
@@ -125,9 +158,11 @@ export async function moveEnrollment(
  * and is gated on a batch permission): here the batch's own open-enrollment window *is* the
  * authorization, and the enrollee is always the caller's own profile as a student.
  *
- * Runs inside one transaction with the batch row locked (`findByIdForUpdate`) so two students
- * racing for the last seat can't both read "room left" and both succeed — everything else in this
- * file takes a plain `SchoolDb` because it never needs that; this is the one exception.
+ * Runs inside one transaction with the batch row locked (`findByIdForUpdate`) so two racing
+ * self-enroll calls for the same profile+batch (e.g. a doubled-up click) can't both pass the
+ * "not already enrolled" check before either commits — without the lock, the loser would hit a raw
+ * `enrollment` primary-key violation instead of the clean 409 below. Everything else in this file
+ * takes a plain `SchoolDb` because it never needs that; this is the one exception.
  */
 export async function selfEnroll(db: SchoolDbClient, batchId: string, profileId: string): Promise<Enrollment> {
   return db.transaction(async tx => {
@@ -147,13 +182,6 @@ export async function selfEnroll(db: SchoolDbClient, batchId: string, profileId:
 
     if (await repository.findEnrollment(tx, profileId, batchId)) {
       throw conflict('already enrolled in this batch')
-    }
-
-    if (batchRow.capacity !== null) {
-      const counts = await repository.countActiveStudentEnrollments(tx, [batchId])
-      if ((counts.get(batchId) ?? 0) >= batchRow.capacity) {
-        throw conflict('batch is full')
-      }
     }
 
     const row = await repository.insertEnrollment(tx, batchId, { profileId, role: 'student' })

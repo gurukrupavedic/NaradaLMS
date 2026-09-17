@@ -434,7 +434,6 @@ export async function createBatch(
     meetingUrl?: string | null
     enrollmentOpensAt?: Date | null
     enrollmentClosesAt?: Date | null
-    capacity?: number | null
   },
 ): Promise<BatchRow> {
   const rows = await world.schoolDb
@@ -447,7 +446,6 @@ export async function createBatch(
       meetingUrl: overrides?.meetingUrl ?? null,
       enrollmentOpensAt: overrides?.enrollmentOpensAt ?? null,
       enrollmentClosesAt: overrides?.enrollmentClosesAt ?? null,
-      capacity: overrides?.capacity ?? null,
     })
     .returning()
 

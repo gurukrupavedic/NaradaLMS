@@ -254,7 +254,14 @@ export function buildRoster(
   teachingEvaluations: ApiEvaluation[],
 ): RosterStudent[] {
   const orderedChapters = [...trackChapters].sort((a, b) => a.order - b.order)
-  const students = membership.members.filter(member => member.role === 'student')
+  // A student put on a break (mark-book.tsx's "Mark on break" row action) keeps their `enrollment`
+  // row — see apps/api/src/enrollment/service.ts's `putOnBreak` doc comment — so this is the one
+  // place that has to filter them back out: everything downstream of `buildRoster` (both the
+  // admin batch-detail grid and the teacher's own dashboard) only ever sees this function's
+  // output, so a student stops showing up here the moment their status isn't 'active' anymore.
+  const students = membership.members.filter(
+    member => member.role === 'student' && member.status === 'active',
+  )
 
   return students.map(student => {
     const byChapter = latestLevelByChapterId(

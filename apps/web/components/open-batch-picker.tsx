@@ -48,7 +48,6 @@ export function OpenBatchPicker({ returning }: { returning: boolean }) {
 
 function OpenBatchRow({ batch }: { batch: ApiOpenBatch }) {
   const enroll = useSelfEnroll()
-  const full = batch.seatsRemaining === 0
 
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-rule-soft px-4 py-3.5 last:border-0">
@@ -66,19 +65,13 @@ function OpenBatchRow({ batch }: { batch: ApiOpenBatch }) {
         </span>
       </div>
 
-      {batch.seatsRemaining !== null && (
-        <span className="label shrink-0 text-ink-muted">
-          {batch.seatsRemaining} {batch.seatsRemaining === 1 ? 'seat' : 'seats'} left
-        </span>
-      )}
-
       <button
         type="button"
-        disabled={enroll.isPending || full}
+        disabled={enroll.isPending}
         onClick={() => enroll.mutate(batch.id)}
         className="label shrink-0 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
       >
-        {enroll.isPending ? 'Joining…' : full ? 'Full' : 'Join'}
+        {enroll.isPending ? 'Joining…' : 'Join'}
       </button>
 
       {enroll.isError && (

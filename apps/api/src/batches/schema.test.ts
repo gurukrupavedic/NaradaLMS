@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { CreateBatchSchema, DEFAULT_BATCH_CAPACITY, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
+import { CreateBatchSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
 
 // Explicit factory (rather than the real module) so importing `./schema` doesn't pull in
 // `@narada/db` at import time and trigger real env-var validation — never loads.
@@ -65,25 +65,6 @@ describe('CreateBatchSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  // No admin-facing UI sets capacity per batch today — every new batch gets this same hard cap
-  // unless a caller explicitly overrides it (see schema.ts's own doc comment).
-  it('defaults capacity to DEFAULT_BATCH_CAPACITY when omitted', () => {
-    const result = CreateBatchSchema.safeParse({ trackId, code: 'B1' })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.capacity).toBe(DEFAULT_BATCH_CAPACITY)
-    }
-  })
-
-  it('still honors an explicit capacity, including explicit null (uncapped)', () => {
-    const capped = CreateBatchSchema.safeParse({ trackId, code: 'B1', capacity: 30 })
-    expect(capped.success).toBe(true)
-    if (capped.success) expect(capped.data.capacity).toBe(30)
-
-    const uncapped = CreateBatchSchema.safeParse({ trackId, code: 'B1', capacity: null })
-    expect(uncapped.success).toBe(true)
-    if (uncapped.success) expect(uncapped.data.capacity).toBeNull()
-  })
 })
 
 describe('UpdateBatchSchema', () => {

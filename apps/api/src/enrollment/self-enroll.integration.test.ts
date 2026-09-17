@@ -34,7 +34,10 @@ describe('selfEnroll', () => {
     const row = await selfEnroll(world.schoolDb, batch.id, student.id)
 
     expect(row).toMatchObject({ profileId: student.id, batchId: batch.id, role: 'student', status: 'active' })
-    await expect(findEnrollment(world.schoolDb, student.id, batch.id)).resolves.toEqual({ role: 'student' })
+    await expect(findEnrollment(world.schoolDb, student.id, batch.id)).resolves.toEqual({
+      role: 'student',
+      status: 'active',
+    })
   })
 
   it('rejects with 404 for a nonexistent batch', async () => {
@@ -103,34 +106,21 @@ describe('selfEnroll', () => {
     await expect(selfEnroll(world.schoolDb, batch.id, student.id)).rejects.toMatchObject({ statusCode: 409 })
   })
 
-  it('rejects with 409 once the batch is at capacity', async () => {
-    world = await createTestSchool()
-    const track = await createTrack(world)
-    const batch = await createBatch(world, track, { ...openWindow, capacity: 1 })
-    const first = await createProfile(world)
-    const second = await createProfile(world)
-    await selfEnroll(world.schoolDb, batch.id, first.id)
-
-    await expect(selfEnroll(world.schoolDb, batch.id, second.id)).rejects.toMatchObject({
-      statusCode: 409,
-      message: 'batch is full',
-    })
-  })
-
   // The real reason `findByIdForUpdate` locks the batch row rather than just checking-then-
-  // inserting: two students racing for the single remaining seat must not both read "room left"
-  // before either commits. Real concurrent connections against real Postgres, not a mocked
-  // transaction — the guarantee being tested is the database's own row lock, not application code.
-  it('under real concurrency, exactly one of two racing enrollments wins the last seat', async () => {
+  // inserting: two racing calls for the *same* profile must not both pass the "not already
+  // enrolled" check before either commits — otherwise the loser would hit a raw `enrollment`
+  // primary-key violation instead of a clean 409. Real concurrent connections against real
+  // Postgres, not a mocked transaction — the guarantee being tested is the database's own row
+  // lock, not application code.
+  it('under real concurrency, exactly one of two racing self-enroll calls for the same profile wins', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, { ...openWindow, capacity: 1 })
-    const first = await createProfile(world)
-    const second = await createProfile(world)
+    const batch = await createBatch(world, track, openWindow)
+    const student = await createProfile(world)
 
     const results = await Promise.allSettled([
-      selfEnroll(world.schoolDb, batch.id, first.id),
-      selfEnroll(world.schoolDb, batch.id, second.id),
+      selfEnroll(world.schoolDb, batch.id, student.id),
+      selfEnroll(world.schoolDb, batch.id, student.id),
     ])
 
     const fulfilled = results.filter(r => r.status === 'fulfilled')

@@ -18,6 +18,7 @@ import { adminBatchQuery, catalogTrackQuery, keys } from '@/lib/query/options'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useCloseBatchEnrollment, useOpenBatchEnrollment } from '@/lib/query/use-batch-mutations'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
+import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/mock-dashboard'
 
 const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Completed' } as const
@@ -183,6 +184,7 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
 function RosterSection({ batch }: { batch: AdminBatchDetail }) {
   const setLevel = useSetEvaluation(batch.id, keys.batches.detail(batch.code))
   const promote = useSetEvaluations(batch.id, keys.batches.detail(batch.code))
+  const onBreak = useSetOnBreak(batch.id, keys.batches.detail(batch.code))
   const [addOpen, setAddOpen] = useState(false)
 
   return (
@@ -210,6 +212,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
             students={batch.roster}
             grading={setLevel}
             promote={promote}
+            onBreak={onBreak}
           />
         </div>
       )}
@@ -225,9 +228,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
  * inputs — an admin doesn't think in opens-at/closes-at timestamps, only "can students join right
  * now or not," so that's the one thing this control asks (see
  * `use-batch-mutations.ts::useOpenBatchEnrollment`/`useCloseBatchEnrollment`, which resolve it to
- * the actual columns server-side). No capacity control here — every batch gets the same hard cap
- * at creation (`DEFAULT_BATCH_CAPACITY`, apps/api/src/batches/schema.ts) until per-batch capacity
- * comes back.
+ * the actual columns server-side). No capacity control here — batches have no seat cap at all.
  */
 function EnrollmentSection({ batch }: { batch: AdminBatchDetail }) {
   const isOpenNow = isBatchOpenForEnrollment(batch)
