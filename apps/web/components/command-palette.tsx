@@ -168,6 +168,7 @@ export function CommandPalette() {
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handleGlobalKeyDown(e: KeyboardEvent) {
@@ -180,6 +181,16 @@ export function CommandPalette() {
     document.addEventListener('keydown', handleGlobalKeyDown)
     return () => document.removeEventListener('keydown', handleGlobalKeyDown)
   }, [])
+
+  // Arrow-key navigation moves `activeIndex`, but nothing about a plain `<ul>`/`<li>` list scrolls
+  // its container along with it — unlike cmdk's Command (which this app doesn't use; see
+  // `components/ui/`), a highlighted row past the visible edge just stays off-screen. `block:
+  // 'nearest'` is a no-op when the row's already visible, so this doesn't fight mouse hover either.
+  useEffect(() => {
+    listRef.current
+      ?.querySelector(`[data-index="${activeIndex}"]`)
+      ?.scrollIntoView({ block: 'nearest' })
+  }, [activeIndex])
 
   // Enabled only while open: rendering the palette at all (via AppShell, on every page) shouldn't
   // by itself cost a fetch — opening it is the trigger, the same way visiting the pages that
@@ -314,7 +325,7 @@ export function CommandPalette() {
               <span className="label shrink-0 text-ink-muted/60">Esc</span>
             </div>
 
-            <div className="max-h-[60vh] overflow-y-auto">
+            <div ref={listRef} className="max-h-[60vh] overflow-y-auto">
               {trimmedQuery.length === 0 ? (
                 <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
                   Start typing to search across the school.
@@ -343,6 +354,7 @@ export function CommandPalette() {
                           <li key={`${result.kind}-${result.id}`}>
                             <button
                               type="button"
+                              data-index={index}
                               onClick={() => navigateTo(result)}
                               onMouseEnter={() => setActiveIndex(index)}
                               className={cn(
