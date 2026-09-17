@@ -4,17 +4,18 @@ import { useState } from 'react'
 import { Dialog } from '@base-ui/react/dialog'
 
 import { ApiError } from '@/lib/api/client'
-import type { ApiProfile } from '@/lib/api/api-types'
+import type { ApiProfile, ApiProficiencyLevel } from '@/lib/api/api-types'
 import type { UpdateProfileInput } from '@/lib/api/resources'
+import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
 
 /**
  * The student's own "edit my profile" form, opened from `components/student-profile-screen.tsx`
- * only when the viewer is looking at their own profile. Deliberately narrower than the full
- * registration form: `phone` is excluded (it's the BetterAuth login credential — changing it
- * needs its own re-verification flow, not this form) and so are the teacher/registration-owned
- * fields (`currentProficiency`, `parentNames`, the `*Agreed` columns, `comments`) — the server
- * enforces the same boundary independently (`apps/api/src/profiles/schema.ts`'s
- * `UpdateProfileSchema`), this is just the matching client-side surface.
+ * only when the viewer is looking at their own profile. Every registration-derived field is
+ * editable here except `phone` and `yearOfBirth` — `phone` is the BetterAuth login credential
+ * (changing it needs its own re-verification flow, not this form), `yearOfBirth` is treated as
+ * fixed once recorded. The server enforces the same boundary independently
+ * (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`), this is just the matching
+ * client-side surface.
  */
 
 // The subset of `useMutation`'s return value this dialog needs — see grade-dialog.tsx's identical
@@ -68,10 +69,19 @@ function EditProfileForm({
   const [name, setName] = useState(profile.name)
   const [city, setCity] = useState(profile.city ?? '')
   const [email, setEmail] = useState(profile.email ?? '')
-  const [yearOfBirth, setYearOfBirth] = useState(profile.yearOfBirth?.toString() ?? '')
+  const [countryTimeZone, setCountryTimeZone] = useState(profile.countryTimeZone ?? '')
   const [learningGoal, setLearningGoal] = useState(profile.learningGoal ?? '')
+  const [currentProficiency, setCurrentProficiency] = useState<ApiProficiencyLevel | ''>(
+    profile.currentProficiency ?? '',
+  )
   const [spokenLanguages, setSpokenLanguages] = useState(profile.spokenLanguages)
   const [readLanguages, setReadLanguages] = useState(profile.readLanguages)
+  const [parentNames, setParentNames] = useState(profile.parentNames)
+  const [dressCodeAgreed, setDressCodeAgreed] = useState(profile.dressCodeAgreed)
+  const [noMeatAgreed, setNoMeatAgreed] = useState(profile.noMeatAgreed)
+  const [noAlcoholAgreed, setNoAlcoholAgreed] = useState(profile.noAlcoholAgreed)
+  const [noSmokingAgreed, setNoSmokingAgreed] = useState(profile.noSmokingAgreed)
+  const [comments, setComments] = useState(profile.comments ?? '')
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -83,10 +93,17 @@ function EditProfileForm({
         name: trimmedName,
         city: city.trim() || null,
         email: email.trim() || null,
-        yearOfBirth: yearOfBirth.trim() ? Number(yearOfBirth) : null,
+        countryTimeZone: countryTimeZone.trim() || null,
         learningGoal: learningGoal.trim() || null,
+        currentProficiency: currentProficiency || null,
         spokenLanguages,
         readLanguages,
+        parentNames,
+        dressCodeAgreed,
+        noMeatAgreed,
+        noAlcoholAgreed,
+        noSmokingAgreed,
+        comments: comments.trim() || null,
       },
       { onSuccess: onCancel },
     )
@@ -97,8 +114,8 @@ function EditProfileForm({
       <div>
         <Dialog.Title className="display text-[1.125rem]">Edit profile</Dialog.Title>
         <Dialog.Description className="mt-1 text-[0.8125rem] text-ink-muted">
-          Contact and background details. Your phone number is used to sign in and can&apos;t be
-          changed here.
+          Your phone number and year of birth can&apos;t be changed here — phone is used to sign
+          in.
         </Dialog.Description>
       </div>
 
@@ -112,17 +129,22 @@ function EditProfileForm({
         placeholder="you@example.com"
       />
       <TextField
-        label="Year of birth"
-        type="number"
-        value={yearOfBirth}
-        onChange={setYearOfBirth}
-        placeholder="2005"
+        label="Time zone"
+        value={countryTimeZone}
+        onChange={setCountryTimeZone}
+        placeholder="IST (UTC+5:30)"
       />
       <TextAreaField
         label="Learning goal"
         value={learningGoal}
         onChange={setLearningGoal}
         placeholder="Fluency, exam prep, …"
+      />
+      <SelectField
+        label="Self-reported starting point"
+        value={currentProficiency}
+        onChange={setCurrentProficiency}
+        options={SELF_REPORTED_PROFICIENCY_OPTIONS}
       />
       <TagListField
         label="Languages you speak"
@@ -136,6 +158,42 @@ function EditProfileForm({
         onChange={setReadLanguages}
         placeholder="English"
       />
+      <TagListField
+        label="Parent / guardian name(s)"
+        values={parentNames}
+        onChange={setParentNames}
+        placeholder="Parent's name"
+      />
+      <TextAreaField
+        label="Comments"
+        value={comments}
+        onChange={setComments}
+        placeholder="Anything the reviewing teacher should know."
+      />
+
+      <div className="space-y-3">
+        <FieldLabel label="Agreements" />
+        <CheckboxField
+          label="I agree to follow the school's dress code."
+          checked={dressCodeAgreed}
+          onChange={setDressCodeAgreed}
+        />
+        <CheckboxField
+          label="I agree not to eat meat while enrolled."
+          checked={noMeatAgreed}
+          onChange={setNoMeatAgreed}
+        />
+        <CheckboxField
+          label="I agree not to drink alcohol while enrolled."
+          checked={noAlcoholAgreed}
+          onChange={setNoAlcoholAgreed}
+        />
+        <CheckboxField
+          label="I agree not to smoke while enrolled."
+          checked={noSmokingAgreed}
+          onChange={setNoSmokingAgreed}
+        />
+      </div>
 
       {updating.isError && (
         <p className="text-[0.8125rem] text-vermilion">
@@ -193,6 +251,58 @@ function TextField({
         required={required}
         className="mt-2 w-full border border-rule bg-transparent p-2.5 text-[0.8125rem] placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
       />
+    </label>
+  )
+}
+
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string
+  value: ApiProficiencyLevel | ''
+  onChange: (value: ApiProficiencyLevel | '') => void
+  options: { value: ApiProficiencyLevel; label: string }[]
+}) {
+  return (
+    <label className="block">
+      <FieldLabel label={label} />
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value as ApiProficiencyLevel | '')}
+        className="mt-2 w-full border border-rule bg-transparent p-2.5 text-[0.8125rem] text-ink focus:border-vermilion focus:outline-none"
+      >
+        <option value="">Prefer not to say</option>
+        {options.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function CheckboxField({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <label className="flex items-start gap-3">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+        className="mt-0.5 size-4 shrink-0 accent-vermilion"
+      />
+      <span className="text-[0.8125rem] leading-relaxed text-ink">{label}</span>
     </label>
   )
 }

@@ -64,15 +64,22 @@ describe('ProfileSchema', () => {
 })
 
 describe('UpdateProfileSchema (student self-edit)', () => {
-  it('accepts the self-editable contact/background fields', () => {
+  it('accepts every registration-derived field except phone and yearOfBirth', () => {
     const result = UpdateProfileSchema.safeParse({
       name: 'Anjali Rao',
       city: 'Hyderabad',
       email: 'anjali@example.com',
-      yearOfBirth: 2005,
+      countryTimeZone: 'IST (UTC+5:30)',
       learningGoal: 'Fluency',
+      currentProficiency: 'level2',
       spokenLanguages: ['Telugu'],
       readLanguages: [],
+      parentNames: ['Parent One'],
+      dressCodeAgreed: true,
+      noMeatAgreed: true,
+      noAlcoholAgreed: false,
+      noSmokingAgreed: true,
+      comments: 'Anything the reviewing teacher should know.',
     })
     expect(result.success).toBe(true)
   })
@@ -82,21 +89,11 @@ describe('UpdateProfileSchema (student self-edit)', () => {
     expect(result.success).toBe(true)
   })
 
-  it('strips phone rather than accepting it — phone is the login credential, not self-editable here', () => {
-    const result = UpdateProfileSchema.safeParse({ name: 'Anjali Rao', phone: '+15551234567' })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data).not.toHaveProperty('phone')
-    }
-  })
-
-  it('strips teacher/registration-owned fields (currentProficiency, parentNames, dressCodeAgreed, comments)', () => {
+  it('strips phone and yearOfBirth rather than accepting them', () => {
     const result = UpdateProfileSchema.safeParse({
       name: 'Anjali Rao',
-      currentProficiency: 'level2',
-      parentNames: ['Someone'],
-      dressCodeAgreed: true,
-      comments: 'injected',
+      phone: '+15551234567',
+      yearOfBirth: 2005,
     })
     expect(result.success).toBe(true)
     if (result.success) {

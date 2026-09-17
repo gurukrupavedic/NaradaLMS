@@ -14,8 +14,8 @@ export const ProfileSchema = z.object({
   // The rest of these mirror `registration`'s own fields exactly and are only ever populated at
   // creation by `registrations/service.ts::provisionApprovedApplicant` copying an approved
   // application across — `CreateProfileSchema` below never accepts them, so a profile created
-  // directly via `POST /profiles` simply carries the empty/null defaults. A subset is later
-  // self-editable via `UpdateProfileSchema` (see its own doc comment).
+  // directly via `POST /profiles` simply carries the empty/null defaults. All but `yearOfBirth`
+  // are later self-editable via `UpdateProfileSchema` (see its own doc comment).
   email: z.email().nullable(),
   yearOfBirth: z.number().int().nullable(),
   countryTimeZone: z.string().nullable(),
@@ -43,22 +43,29 @@ export const CreateProfileSchema = ProfileSchema.pick({
   city: true,
 })
 
-// The student's own "edit my profile" surface. Deliberately excludes: `phone`, since it's the
-// BetterAuth login credential (phone-OTP sign-in) — changing it needs its own re-verification
-// flow, not a silent profile-details edit; `currentProficiency`, which is teacher/exam-assessed,
-// never self-reported after registration; `parentNames` and the `*Agreed` columns, which are
-// signed at registration; and `comments`, which is staff-only. Zod strips the unlisted keys
-// rather than rejecting them, same as `UpdateBatchSchema` dropping `trackId` (see PARITY_PLAN.md).
+// The student's own "edit my profile" surface: every registration-derived field — all originally
+// self-reported by the registrant themselves, per `registration-form.tsx`, not staff-entered —
+// except `phone` and `yearOfBirth`. `phone` is the BetterAuth login credential (phone-OTP
+// sign-in), so changing it needs its own re-verification flow, not a silent profile-details edit;
+// `yearOfBirth` is treated as fixed once recorded. Zod strips those two unlisted keys rather than
+// rejecting them, same as `UpdateBatchSchema` dropping `trackId` (see PARITY_PLAN.md).
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>
 export const UpdateProfileSchema = requireNonEmpty(
   ProfileSchema.pick({
     name: true,
     city: true,
     email: true,
-    yearOfBirth: true,
+    countryTimeZone: true,
     learningGoal: true,
+    currentProficiency: true,
     spokenLanguages: true,
     readLanguages: true,
+    parentNames: true,
+    dressCodeAgreed: true,
+    noMeatAgreed: true,
+    noAlcoholAgreed: true,
+    noSmokingAgreed: true,
+    comments: true,
   }).partial(),
 )
 

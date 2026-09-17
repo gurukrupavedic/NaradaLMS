@@ -72,13 +72,27 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
 
 // PATCH /v1/profiles/:profileId — the student's own "edit my profile" form
 // (components/edit-profile-dialog.tsx). Server-side ownership check (`updateOwned`) means this
-// only ever succeeds against the caller's own profile. `phone` is deliberately not part of this
-// input — it's the BetterAuth login credential, excluded server-side too
-// (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`).
+// only ever succeeds against the caller's own profile. `phone` and `yearOfBirth` are deliberately
+// not part of this input — `phone` is the BetterAuth login credential, `yearOfBirth` is treated as
+// fixed once recorded — both excluded server-side too (`apps/api/src/profiles/schema.ts`'s
+// `UpdateProfileSchema`).
 export type UpdateProfileInput = Partial<
   Pick<
     ApiProfile,
-    'name' | 'city' | 'email' | 'yearOfBirth' | 'learningGoal' | 'spokenLanguages' | 'readLanguages'
+    | 'name'
+    | 'city'
+    | 'email'
+    | 'countryTimeZone'
+    | 'learningGoal'
+    | 'currentProficiency'
+    | 'spokenLanguages'
+    | 'readLanguages'
+    | 'parentNames'
+    | 'dressCodeAgreed'
+    | 'noMeatAgreed'
+    | 'noAlcoholAgreed'
+    | 'noSmokingAgreed'
+    | 'comments'
   >
 >
 
