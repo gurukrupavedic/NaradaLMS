@@ -47,7 +47,12 @@ export type ApiProfile = {
 // `lib/auth/profile-store.ts`'s `useHasAdminAccess`).
 export type ApiAuthProfile = {
   isSuperAdmin: boolean
-  memberships: { organizationId: string; organizationName: string; organizationSlug: string; role: string }[]
+  memberships: {
+    organizationId: string
+    organizationName: string
+    organizationSlug: string
+    role: string
+  }[]
 }
 
 export type ApiChapter = {

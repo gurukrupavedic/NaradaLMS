@@ -4,6 +4,7 @@ import {
   fetchAdminBatch,
   fetchAdminBatches,
   fetchAuthProfile,
+  fetchBatchesWithRoster,
   fetchCatalogTrack,
   fetchCatalogTracks,
   fetchChapter,
@@ -50,6 +51,10 @@ export const keys = {
     all: ['batches'] as const,
     detail: (code: string) => ['batches', code] as const,
     open: ['batches', 'open'] as const,
+    // The command palette's own batch/student search — a distinct cache entry from `all` above
+    // even though it hits the same endpoint, since it keeps the raw roster `all`'s own fetcher
+    // discards after reshaping (see `fetchBatchesWithRoster`'s doc comment).
+    withRoster: ['batches', 'withRoster'] as const,
   },
 
   catalog: {
@@ -190,4 +195,14 @@ export const profileSearchQuery = (query: string, excludeBatchId: string) =>
     queryKey: keys.profiles.search(query, excludeBatchId),
     queryFn: () => searchProfiles(query, excludeBatchId),
     enabled: query.trim().length > 0,
+  })
+
+// The command palette's batch/student search (components/command-palette.tsx). No server-side
+// `enabled`-by-query-text gate here the way `profileSearchQuery`/the old `globalSearchQuery` had —
+// the palette fetches this once (per its own `enabled: open`) and filters the *result* client-side
+// on every keystroke, rather than sending a request per keystroke.
+export const batchesWithRosterQuery = () =>
+  queryOptions({
+    queryKey: keys.batches.withRoster,
+    queryFn: fetchBatchesWithRoster,
   })

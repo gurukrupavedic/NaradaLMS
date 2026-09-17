@@ -151,7 +151,11 @@ describe('findById', () => {
   })
 
   it('returns the profile, registration-derived fields included', async () => {
-    const withRegistrationFields = { ...baseProfile, email: 'ada@example.com', learningGoal: 'Fluency' }
+    const withRegistrationFields = {
+      ...baseProfile,
+      email: 'ada@example.com',
+      learningGoal: 'Fluency',
+    }
     vi.mocked(repository.findById).mockResolvedValue(withRegistrationFields)
 
     await expect(findById(context, 'profile-1')).resolves.toEqual(withRegistrationFields)

@@ -2,6 +2,7 @@ import { and, eq, isNull, notInArray } from 'drizzle-orm'
 
 import { enrollment, profile, type PublicDb, type SchoolDb } from '@narada/db'
 
+import { tokenMatch } from '../utils/search'
 import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
 
 const SEARCH_LIMIT = 25
@@ -62,10 +63,11 @@ export async function findById(db: SchoolDb, id: string): Promise<Profile | unde
  */
 export async function search(db: SchoolDb, options: SearchProfilesQuery): Promise<Profile[]> {
   return db.query.profile.findMany({
-    where: (t, { and, ilike, isNull: isNullCol }) => {
+    where: (t, { and, isNull: isNullCol }) => {
       const conditions = [isNullCol(t.deletedAt)]
       if (options.query) {
-        conditions.push(ilike(t.name, `%${options.query}%`))
+        const match = tokenMatch(options.query, [t.name])
+        if (match) conditions.push(match)
       }
 
       if (options.excludeBatchId) {
@@ -75,7 +77,12 @@ export async function search(db: SchoolDb, options: SearchProfilesQuery): Promis
             db
               .select({ profileId: enrollment.profileId })
               .from(enrollment)
-              .where(and(eq(enrollment.batchId, options.excludeBatchId), eq(enrollment.status, 'active'))),
+              .where(
+                and(
+                  eq(enrollment.batchId, options.excludeBatchId),
+                  eq(enrollment.status, 'active'),
+                ),
+              ),
           ),
         )
       }
@@ -110,7 +117,11 @@ type ProfileRegistrationFields = Partial<
 
 export async function insert(
   db: SchoolDb,
-  values: CreateProfileData & { userId: string; phone: string | null; city: string | null } & ProfileRegistrationFields,
+  values: CreateProfileData & {
+    userId: string
+    phone: string | null
+    city: string | null
+  } & ProfileRegistrationFields,
 ): Promise<Profile | undefined> {
   const rows = await db.insert(profile).values(values).returning(profileColumns)
   return rows.at(0)
