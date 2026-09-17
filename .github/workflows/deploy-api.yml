@@ -21,19 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup
-
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-
-      # Same migrate-before-deploy ordering and reasoning as deploy-api-staging.yml's identical
-      # step: additive schema changes are safe to apply ahead of the new code that uses them, and
-      # `railway run` inherits this environment's own DATABASE_URL rather than duplicating secrets.
-      - name: Apply pending database migrations
-        run: railway run --service "$RAILWAY_SERVICE" --environment production pnpm run ci:migrate
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_ID }}
 
       - name: Deploy API to Railway
         run: railway up --service "$RAILWAY_SERVICE" --environment production
