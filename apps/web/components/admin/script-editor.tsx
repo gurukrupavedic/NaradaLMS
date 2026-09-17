@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils'
 import { ApiError } from '@/lib/api/client'
 import { chapterAuthoringDetailQuery } from '@/lib/query/options'
 import { useSaveChapterScript } from '@/lib/query/use-content-mutations'
-import { formatSegments, parseSegments } from '@/lib/segment-text'
+import { SegmentSplitter } from '@/components/admin/segment-splitter'
+import { RichTextField } from '@/components/admin/rich-text-field'
 import type { ApiScriptKey, ApiScriptText } from '@/lib/api/api-types'
 
 const SCRIPT_LABEL: Record<ApiScriptKey, { label: string; short: string; fontClass: string }> = {
@@ -34,9 +35,9 @@ export function ScriptEditor({ chapterId, script }: { chapterId: string; script:
 }
 
 /**
- * One script's text + segment offsets. Segment boundaries are entered as plain `start,end` pairs,
- * one per line — character offsets into the text above, not a visual scrubber (see the plan's own
- * non-goals: marking segments by ear/eye is real future work, not this pass).
+ * One script's text + segment offsets. Segment boundaries are placed visually via `SegmentSplitter`
+ * (click between characters to split), which always derives from — and writes back — exact
+ * character offsets into the text above.
  */
 function ScriptEditorForm({
   chapterId,
@@ -53,22 +54,23 @@ function ScriptEditorForm({
   const [short, setShort] = useState(existing?.short ?? defaults.short)
   const [fontClass, setFontClass] = useState(existing?.fontClass ?? defaults.fontClass)
   const [text, setText] = useState(existing?.text ?? '')
-  const [segmentsText, setSegmentsText] = useState(existing ? formatSegments(existing.segments) : '')
-  const [parseError, setParseError] = useState<string | null>(null)
+  const [segments, setSegments] = useState(existing?.segments.map(({ start, end }) => ({ start, end })) ?? [])
 
   const mutation = useSaveChapterScript(chapterId)
 
+  function handleTextChange(nextText: string) {
+    setText(nextText)
+    // Editing the text invalidates any segment boundary past the new length — drop those splits
+    // rather than let a stale offset point past the end of the (now shorter) text.
+    setSegments(prev => prev.filter(s => s.end <= nextText.length))
+  }
+
   function handleSave() {
-    const segments = parseSegments(segmentsText)
-    if (!segments) {
-      setParseError('Segments must be one "start,end" pair per line, e.g. "0,12".')
-      return
-    }
-    setParseError(null)
+    if (segments.length === 0) return
     mutation.mutate({ script, data: { label, short, fontClass, text, segments } })
   }
 
-  const errorMessage = parseError ?? (mutation.error instanceof ApiError ? mutation.error.message : null)
+  const errorMessage = mutation.error instanceof ApiError ? mutation.error.message : null
 
   return (
     <div className="space-y-3.5">
@@ -99,26 +101,14 @@ function ScriptEditorForm({
         </label>
       </div>
 
-      <label className="block">
+      <div>
         <span className="label text-ink-muted">Text</span>
-        <textarea
-          value={text}
-          onChange={e => setText(e.target.value)}
-          rows={6}
-          className="mt-1.5 w-full resize-y border border-rule bg-paper p-2.5 text-[0.9375rem] leading-relaxed focus:border-vermilion focus:outline-none"
-        />
-      </label>
+        <div className="mt-1.5">
+          <RichTextField value={text} onChangeText={handleTextChange} fontClass={fontClass} />
+        </div>
+      </div>
 
-      <label className="block">
-        <span className="label text-ink-muted">Segments — one &quot;start,end&quot; pair per line</span>
-        <textarea
-          value={segmentsText}
-          onChange={e => setSegmentsText(e.target.value)}
-          rows={4}
-          className="mt-1.5 w-full resize-y border border-rule bg-paper p-2.5 font-mono text-[0.8125rem] focus:border-vermilion focus:outline-none"
-          placeholder="0,12&#10;13,28"
-        />
-      </label>
+      <SegmentSplitter text={text} segments={segments} onChange={setSegments} fontClass={fontClass} />
 
       {errorMessage && <p className="label text-vermilion">{errorMessage}</p>}
 
@@ -126,10 +116,12 @@ function ScriptEditorForm({
         <button
           type="button"
           onClick={handleSave}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || segments.length === 0}
           className={cn(
             'label border border-rule px-3 py-1.5 transition-colors',
-            mutation.isPending ? 'text-ink-muted/50' : 'text-ink hover:border-vermilion hover:text-vermilion',
+            mutation.isPending || segments.length === 0
+              ? 'text-ink-muted/50'
+              : 'text-ink hover:border-vermilion hover:text-vermilion',
           )}
         >
           {mutation.isPending ? 'Saving…' : 'Save script'}
