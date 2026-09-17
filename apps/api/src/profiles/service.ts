@@ -2,6 +2,7 @@ import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 
 import { forbidden, internalError, notFound } from '../error'
 import type { User } from '../session'
+import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
 import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
 
@@ -62,13 +63,40 @@ export async function createProfile(
   return row
 }
 
-/** Ownership is enforced by `repository.updateOwned`'s SQL predicate; a foreign-owned profile 404s the same as a missing one. */
+/**
+ * Ownership is enforced by `repository.updateOwned`'s SQL predicate; a foreign-owned profile 404s
+ * the same as a missing one.
+ *
+ * When the patch touches `city`, `state`, or `country`, `countryTimeZone` is re-derived
+ * (`utils/timezone.ts::deriveTimeZone`) from the *effective* location — the patch merged onto
+ * whatever isn't being changed — rather than just the fields present in this call. A patch that
+ * only changes `city` still needs the profile's existing `state`/`country` to resolve correctly,
+ * so this reads the current location first (via the same ownership-checked query `updateOwned`
+ * uses) rather than guessing from partial input.
+ */
 export async function updateProfile(
   context: ProfileServiceContext,
   id: string,
   data: UpdateProfileData,
 ): Promise<Profile> {
-  const row = await repository.updateOwned(context.db, id, context.user.id, data)
+  let patch: UpdateProfileData & { countryTimeZone?: string | null } = data
+  if (data.city !== undefined || data.state !== undefined || data.country !== undefined) {
+    const current = await repository.findOwnedLocationFields(context.db, id, context.user.id)
+    if (!current) {
+      throw notFound()
+    }
+
+    patch = {
+      ...data,
+      countryTimeZone: deriveTimeZone({
+        city: data.city !== undefined ? data.city : current.city,
+        state: data.state !== undefined ? data.state : current.state,
+        country: data.country !== undefined ? data.country : current.country,
+      }),
+    }
+  }
+
+  const row = await repository.updateOwned(context.db, id, context.user.id, patch)
   if (!row) {
     throw notFound()
   }

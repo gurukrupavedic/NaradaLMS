@@ -70,6 +70,38 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
   return fetchApi<ApiProfileDetail>(`/profiles/${profileId}/detail`)
 }
 
+// PATCH /v1/profiles/:profileId — the student's own "edit my profile" form
+// (components/edit-profile-dialog.tsx). Server-side ownership check (`updateOwned`) means this
+// only ever succeeds against the caller's own profile. `phone` and `yearOfBirth` are deliberately
+// not part of this input — `phone` is the BetterAuth login credential, `yearOfBirth` is treated as
+// fixed once recorded — both excluded server-side too (`apps/api/src/profiles/schema.ts`'s
+// `UpdateProfileSchema`). `countryTimeZone` is excluded for a different reason: it's derived
+// server-side from `city`/`state`/`country` whenever any of those change, never set directly.
+export type UpdateProfileInput = Partial<
+  Pick<
+    ApiProfile,
+    | 'name'
+    | 'city'
+    | 'state'
+    | 'country'
+    | 'email'
+    | 'learningGoal'
+    | 'currentProficiency'
+    | 'spokenLanguages'
+    | 'readLanguages'
+    | 'parentNames'
+    | 'dressCodeAgreed'
+    | 'noMeatAgreed'
+    | 'noAlcoholAgreed'
+    | 'noSmokingAgreed'
+    | 'comments'
+  >
+>
+
+export async function updateProfile(profileId: string, patch: UpdateProfileInput): Promise<ApiProfile> {
+  return mutateApi<ApiProfile>(`/profiles/${profileId}`, 'PATCH', patch)
+}
+
 // GET /v1/profiles/search — admin-only (AccessPolicy.requireCanSearchProfiles). Backs the "add a
 // student" search in components/admin/roster-editor.tsx; `excludeBatchId` filters out profiles who
 // already hold a live seat on that batch's roster at the query level (apps/api/src/profiles/
@@ -83,6 +115,8 @@ export async function searchProfiles(query: string, excludeBatchId: string): Pro
 
 // ── Registrations ────────────────────────────────────────────────────────────
 
+// `countryTimeZone` deliberately isn't part of this input — apps/api derives it server-side from
+// city/state/country (`utils/timezone.ts::deriveTimeZone`) rather than accepting it directly.
 export type SubmitRegistrationInput = {
   firstName: string
   lastName: string
@@ -90,7 +124,8 @@ export type SubmitRegistrationInput = {
   yearOfBirth?: number | null
   email?: string | null
   city?: string | null
-  countryTimeZone?: string | null
+  state?: string | null
+  country?: string | null
   learningGoal?: string | null
   currentProficiency?: ApiProficiencyLevel | null
   spokenLanguages?: string[]

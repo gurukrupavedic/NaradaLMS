@@ -40,9 +40,14 @@ export async function findById(db: SchoolDb, id: string): Promise<Registration |
   })
 }
 
+/**
+ * Accepts `countryTimeZone` on top of `CreateRegistrationData`'s own fields — never
+ * applicant-supplied (see `RegistrationSchema`'s doc comment), but `service.ts::submit` derives
+ * and includes it server-side before inserting.
+ */
 export async function insert(
   db: SchoolDb,
-  data: CreateRegistrationData,
+  data: CreateRegistrationData & { countryTimeZone: string | null },
 ): Promise<Registration | undefined> {
   const rows = await db.insert(registration).values(data).returning()
   return rows.at(0)

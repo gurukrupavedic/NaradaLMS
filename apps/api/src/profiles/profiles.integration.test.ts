@@ -18,7 +18,7 @@ import {
   type TestWorld,
 } from '../testing/fixtures'
 import * as repository from './repository'
-import { findById } from './service'
+import { findById, updateProfile } from './service'
 
 let world: TestWorld | undefined
 
@@ -139,6 +139,49 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
       expect(qualifying).toHaveLength(0)
     },
   )
+})
+
+describe('updateProfile (student self-edit) — countryTimeZone re-derivation', () => {
+  function actor(userId: string): User {
+    return { id: userId, isSuperAdmin: false } as User
+  }
+
+  it('derives countryTimeZone from the patch, merged onto the existing city, when state/country change but city does not', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-tz-1', city: 'Cambridge' })
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-1') }
+
+    const updated = await updateProfile(context, profileRow.id, { state: 'MA', country: 'US' })
+
+    expect(updated.countryTimeZone).toBe('America/New_York')
+    expect(updated.city).toBe('Cambridge')
+  })
+
+  it('leaves a previously derived countryTimeZone untouched when the patch touches neither city, state, nor country', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-tz-2', city: 'Cambridge' })
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-2') }
+
+    await updateProfile(context, profileRow.id, { state: 'MA', country: 'US' })
+    const updated = await updateProfile(context, profileRow.id, { name: 'Renamed' })
+
+    expect(updated.name).toBe('Renamed')
+    expect(updated.countryTimeZone).toBe('America/New_York')
+  })
+
+  it('re-derives from scratch when city changes but state/country do not', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-tz-3', city: 'Cambridge' })
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-3') }
+
+    await updateProfile(context, profileRow.id, { state: 'TG', country: 'IN' })
+    const updated = await updateProfile(context, profileRow.id, { city: 'Hyderabad' })
+
+    expect(updated.countryTimeZone).toBe('Asia/Kolkata')
+  })
 })
 
 describe('admin-deactivation (DD-011 §9)', () => {

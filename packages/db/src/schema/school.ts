@@ -44,6 +44,18 @@ export const profile = pgTable(
     // (no registration behind it) stays valid.
     email: text('email'),
     yearOfBirth: integer('yearOfBirth'),
+    // ISO 3166-2 subdivision code (e.g. 'MA', 'TG') and ISO 3166-1 alpha-2 country code (e.g.
+    // 'US', 'IN') — codes rather than display names so `country-state-city` can re-derive a
+    // human-readable name ("Massachusetts", "India") and the coordinates `utils/timezone.ts`
+    // needs, from a stable identifier that never drifts with spelling/casing. `state` is null for
+    // a country with no formal subdivisions in that dataset.
+    state: text('state'),
+    country: text('country'),
+    // An IANA identifier (e.g. 'America/New_York'), never client-supplied directly — derived
+    // server-side from city/state/country by `utils/timezone.ts::deriveTimeZone` whenever any of
+    // those change (see `profiles/service.ts::updateProfile`). Display formatting (offset,
+    // abbreviation) happens at render time so it's always correct for the current DST state,
+    // rather than baked into the stored string.
     countryTimeZone: text('countryTimeZone'),
     learningGoal: text('learningGoal'),
     currentProficiency: proficiencyLevel('currentProficiency'),
@@ -402,6 +414,10 @@ export const registration = pgTable(
     phone: text('phone').notNull(),
     email: text('email'),
     city: text('city'),
+    // Same shape as `profile`'s own columns — see that table's doc comment for why these are
+    // codes, and why `countryTimeZone` is server-derived rather than applicant-supplied.
+    state: text('state'),
+    country: text('country'),
     countryTimeZone: text('countryTimeZone'),
 
     learningGoal: text('learningGoal'),

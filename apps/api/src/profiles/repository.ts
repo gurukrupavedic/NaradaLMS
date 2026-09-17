@@ -19,6 +19,8 @@ const profileColumns = {
   city: profile.city,
   email: profile.email,
   yearOfBirth: profile.yearOfBirth,
+  state: profile.state,
+  country: profile.country,
   countryTimeZone: profile.countryTimeZone,
   learningGoal: profile.learningGoal,
   currentProficiency: profile.currentProficiency,
@@ -114,12 +116,36 @@ export async function insert(
   return rows.at(0)
 }
 
-/** The `userId` predicate enforces ownership in SQL; a foreign-owned profile matches zero rows rather than being fetched and checked afterward. */
+/**
+ * The current city/state/country for an owned profile, read before an update that touches any of
+ * them — `service.ts::updateProfile` needs the *effective* (patch-merged-onto-current) location to
+ * re-derive `countryTimeZone` even when a patch only changes one of the three fields. The `userId`
+ * predicate enforces ownership on this read too, consistent with `updateOwned` below: a
+ * foreign-owned profile matches zero rows rather than leaking its location to the caller.
+ */
+export async function findOwnedLocationFields(
+  db: SchoolDb,
+  id: string,
+  userId: string,
+): Promise<{ city: string | null; state: string | null; country: string | null } | undefined> {
+  return db.query.profile.findFirst({
+    where: (t, { and, eq }) => and(eq(t.id, id), eq(t.userId, userId)),
+    columns: { city: true, state: true, country: true },
+  })
+}
+
+/**
+ * The `userId` predicate enforces ownership in SQL; a foreign-owned profile matches zero rows
+ * rather than being fetched and checked afterward. Accepts `countryTimeZone` on top of
+ * `UpdateProfileData`'s own fields — that column is never client-writable (see
+ * `UpdateProfileSchema`'s doc comment), but `service.ts::updateProfile` re-derives and includes it
+ * server-side whenever the location changes.
+ */
 export async function updateOwned(
   db: SchoolDb,
   id: string,
   userId: string,
-  data: UpdateProfileData,
+  data: UpdateProfileData & { countryTimeZone?: string | null },
 ): Promise<Profile | undefined> {
   const rows = await db
     .update(profile)

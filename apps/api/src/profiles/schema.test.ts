@@ -11,7 +11,7 @@ vi.mock('@narada/db', () => ({
   },
 }))
 
-import { ProfileBatchesQuerySchema, ProfileSchema } from './schema'
+import { ProfileBatchesQuerySchema, ProfileSchema, UpdateProfileSchema } from './schema'
 
 const validProfile = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -21,6 +21,8 @@ const validProfile = {
   city: 'Hyderabad',
   email: 'anjali@example.com',
   yearOfBirth: 2005,
+  state: 'TG',
+  country: 'IN',
   countryTimeZone: 'Asia/Kolkata',
   learningGoal: 'Fluency',
   currentProficiency: 'level1',
@@ -47,6 +49,8 @@ describe('ProfileSchema', () => {
       ...validProfile,
       email: null,
       yearOfBirth: null,
+      state: null,
+      country: null,
       countryTimeZone: null,
       learningGoal: null,
       currentProficiency: null,
@@ -60,6 +64,52 @@ describe('ProfileSchema', () => {
       comments: null,
     })
     expect(result.success).toBe(true)
+  })
+})
+
+describe('UpdateProfileSchema (student self-edit)', () => {
+  it('accepts every registration-derived field except phone, yearOfBirth, and countryTimeZone', () => {
+    const result = UpdateProfileSchema.safeParse({
+      name: 'Anjali Rao',
+      city: 'Hyderabad',
+      state: 'TG',
+      country: 'IN',
+      email: 'anjali@example.com',
+      learningGoal: 'Fluency',
+      currentProficiency: 'level2',
+      spokenLanguages: ['Telugu'],
+      readLanguages: [],
+      parentNames: ['Parent One'],
+      dressCodeAgreed: true,
+      noMeatAgreed: true,
+      noAlcoholAgreed: false,
+      noSmokingAgreed: true,
+      comments: 'Anything the reviewing teacher should know.',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('allows explicit null to clear a nullable field', () => {
+    const result = UpdateProfileSchema.safeParse({ email: null })
+    expect(result.success).toBe(true)
+  })
+
+  it('strips phone, yearOfBirth, and countryTimeZone rather than accepting them', () => {
+    const result = UpdateProfileSchema.safeParse({
+      name: 'Anjali Rao',
+      phone: '+15551234567',
+      yearOfBirth: 2005,
+      countryTimeZone: 'Asia/Kolkata',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).toEqual({ name: 'Anjali Rao' })
+    }
+  })
+
+  it('rejects an empty update', () => {
+    const result = UpdateProfileSchema.safeParse({})
+    expect(result.success).toBe(false)
   })
 })
 

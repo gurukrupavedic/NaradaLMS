@@ -12,11 +12,15 @@ import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
 import { MoveBatchDrawer } from '@/components/admin/move-batch-drawer'
+import { EditProfileDialog } from '@/components/edit-profile-dialog'
 import { profileDetailQuery } from '@/lib/query/options'
 import { buildCertificationRows, buildLearningTracks } from '@/lib/api/reshape'
 import { isCertified } from '@/lib/proficiency'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
-import { useHasAdminAccess } from '@/lib/auth/profile-store'
+import { useHasAdminAccess, useSelectedProfileId } from '@/lib/auth/profile-store'
+import { useUpdateProfile } from '@/lib/query/use-profile-mutations'
+import { formatLocation } from '@/lib/geo'
+import { formatTimeZone } from '@/lib/timezone'
 import type { ApiProfile } from '@/lib/api/api-types'
 
 const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
@@ -37,7 +41,10 @@ const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
 export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const { data, error } = useQuery(profileDetailQuery(profileId))
   const isAdmin = useHasAdminAccess()
+  const isSelf = useSelectedProfileId() === profileId
   const [moveOpen, setMoveOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const updating = useUpdateProfile(profileId)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
@@ -65,14 +72,27 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           { value: `${certifiedCount}/${certifications.length}`, label: 'Certified' },
         ]}
         action={
-          isAdmin && movableTrack ? (
-            <button
-              type="button"
-              onClick={() => setMoveOpen(true)}
-              className="label shrink-0 rounded-full bg-vermilion px-3.5 py-1.5 text-paper transition-colors hover:bg-vermilion/90"
-            >
-              Change batch
-            </button>
+          isSelf || (isAdmin && movableTrack) ? (
+            <div className="flex shrink-0 items-center gap-2">
+              {isSelf && (
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="label border border-ink/25 px-3.5 py-1.5 text-ink transition-colors hover:border-vermilion hover:text-vermilion"
+                >
+                  Edit profile
+                </button>
+              )}
+              {isAdmin && movableTrack && (
+                <button
+                  type="button"
+                  onClick={() => setMoveOpen(true)}
+                  className="label rounded-full bg-vermilion px-3.5 py-1.5 text-paper transition-colors hover:bg-vermilion/90"
+                >
+                  Change batch
+                </button>
+              )}
+            </div>
           ) : undefined
         }
       />
@@ -91,8 +111,11 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
                 <dt className="label mt-5 text-ink-muted">City</dt>
                 <dd className="mt-2 text-[0.9375rem]">{profile.city ?? '—'}</dd>
 
+                <dt className="label mt-5 text-ink-muted">Location</dt>
+                <dd className="mt-2 text-[0.9375rem]">{formatLocation(profile.state, profile.country) ?? '—'}</dd>
+
                 <dt className="label mt-5 text-ink-muted">Time zone</dt>
-                <dd className="mt-2 text-[0.9375rem]">{profile.countryTimeZone ?? '—'}</dd>
+                <dd className="mt-2 text-[0.9375rem]">{formatTimeZone(profile.countryTimeZone) ?? '—'}</dd>
 
                 <dt className="label mt-5 text-ink-muted">Year of birth</dt>
                 <dd className="mt-2 text-[0.9375rem]">{profile.yearOfBirth ?? '—'}</dd>
@@ -214,6 +237,15 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           profileName={profile.name}
           fromBatchId={movableTrack.batchId}
           fromBatchCode={movableTrack.batchCode ?? ''}
+        />
+      )}
+
+      {isSelf && (
+        <EditProfileDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          profile={profile}
+          updating={updating}
         />
       )}
     </>

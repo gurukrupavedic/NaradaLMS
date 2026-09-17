@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDbClient, organization } from '@narada/db'
 
-import { deactivateByAdmin, deleteById, findById, searchProfiles } from './service'
+import { deactivateByAdmin, deleteById, findById, searchProfiles, updateProfile } from './service'
 import * as repository from './repository'
 import type { Profile } from './schema'
 
@@ -43,6 +43,8 @@ const baseProfile: Profile = {
   city: null,
   email: null,
   yearOfBirth: null,
+  state: null,
+  country: null,
   countryTimeZone: null,
   learningGoal: null,
   currentProficiency: null,
@@ -113,6 +115,33 @@ describe('searchProfiles', () => {
       searchProfiles(context, { query: 'ada', excludeBatchId: undefined }),
     ).resolves.toEqual(results)
     expect(repository.search).toHaveBeenCalledWith(db, { query: 'ada', excludeBatchId: undefined })
+  })
+})
+
+describe('updateProfile (student self-edit)', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('delegates to repository.updateOwned, scoped to the caller as owner', async () => {
+    const updated = { ...baseProfile, name: 'Ada Updated', email: 'ada@example.com' }
+    vi.mocked(repository.updateOwned).mockResolvedValue(updated)
+
+    await expect(
+      updateProfile(context, 'profile-1', { name: 'Ada Updated', email: 'ada@example.com' }),
+    ).resolves.toEqual(updated)
+    expect(repository.updateOwned).toHaveBeenCalledWith(db, 'profile-1', 'user-1', {
+      name: 'Ada Updated',
+      email: 'ada@example.com',
+    })
+  })
+
+  it('404s a missing or foreign-owned profile', async () => {
+    vi.mocked(repository.updateOwned).mockResolvedValue(undefined)
+
+    await expect(updateProfile(context, 'profile-1', { name: 'X' })).rejects.toMatchObject({
+      statusCode: 404,
+    })
   })
 })
 
