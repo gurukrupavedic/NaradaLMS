@@ -61,13 +61,13 @@ export const auth = betterAuth({
       roles: { owner, admin, member },
     }),
     phoneNumber({
-      // Twilio Verify owns OTP generation and expiry itself, so the `code` this plugin would
-      // otherwise generate locally is unused — sendOTP just triggers a Twilio Verify send.
+      // @narada/otp generates and owns the code itself (so the `code` this plugin would otherwise
+      // generate locally is unused) — Twilio here is just an SMS delivery channel for it.
       sendOTP: async ({ phoneNumber }) => {
         await sendOtpMessage(phoneNumber)
       },
-      // Delegates verification to Twilio Verify's check endpoint instead of the plugin's
-      // built-in code comparison, since Twilio never told us what code it sent.
+      // Verified against the code @narada/otp generated and stored, not Twilio's own check
+      // endpoint, since Twilio no longer picks the code.
       verifyOTP: async ({ phoneNumber, code }) => {
         return verifyOtpCode(phoneNumber, code)
       },
