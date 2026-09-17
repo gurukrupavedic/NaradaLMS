@@ -11,23 +11,35 @@ import { useHasAdminAccess } from '@/lib/auth/profile-store'
 import { batchesWithRosterQuery, catalogTracksQuery, registrationsQuery } from '@/lib/query/options'
 import type { ApiBatchWithRole, ApiRegistration } from '@/lib/api/api-types'
 import type { CatalogTrack } from '@/lib/mock-catalog'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 
 /**
  * The command palette — Cmd/Ctrl+K anywhere in the app, or the "Search" button in `AppShell`'s
- * header. Unlike the first version of this feature, there's no dedicated search endpoint: opening
- * the palette simply subscribes to the same TanStack Query caches the rest of the app already
- * populates (`catalogTracksQuery`, `batchesWithRosterQuery`, `registrationsQuery`), and every
- * keystroke filters that already-fetched data client-side rather than sending a request. If you'd
- * already visited a page that warmed one of those caches, opening the palette costs nothing extra;
- * if not, opening it *is* what warms it — completeness no longer depends on which pages you
- * happened to click through first.
+ * header. Built on cmdk's `Command` (`components/ui/command.tsx`, shadcn's own primitive for
+ * this) rather than a hand-rolled list, so keyboard highlight, scroll-into-view, and selection are
+ * cmdk's problem, not ours — the same reasoning that motivated switching in the first place.
  *
- * Every one of those underlying endpoints already scopes its response server-side to what the
- * caller is allowed to see (an admin's self-lookup resolves to every batch in the school, anyone
- * else's to just their own; content read view drops drafts for a non-admin), so filtering the
- * result client-side can't show anyone more than they could already reach by browsing.
- * Registrations are the one category still fetched only for `hasAdminAccess` — anyone else's
- * request would just 403.
+ * `shouldFilter={false}`: cmdk's own filter matches a single search string per item, but this
+ * needs `tokenMatch`-style multi-word/multi-field matching across several already-cached queries
+ * (see `buildGroups` below), so filtering stays ours — cmdk only owns *which of the items we hand
+ * it* is currently highlighted and how the list scrolls to follow that.
+ *
+ * There's no dedicated search endpoint: opening the palette simply subscribes to the same
+ * TanStack Query caches the rest of the app already populates (`catalogTracksQuery`, a
+ * `batchesWithRosterQuery`, `registrationsQuery`), and every keystroke filters that already-fetched
+ * data client-side rather than sending a request. Every one of those underlying endpoints already
+ * scopes its response server-side to what the caller is allowed to see (an admin's self-lookup
+ * resolves to every batch in the school, anyone else's to just their own; content read view drops
+ * drafts for a non-admin), so filtering the result client-side can't show anyone more than they
+ * could already reach by browsing. Registrations are the one category still fetched only for
+ * `hasAdminAccess` — anyone else's request would just 403.
  */
 
 const RESULT_LIMIT = 6
@@ -166,9 +178,7 @@ export function CommandPalette() {
   const hasAdminAccess = Boolean(useHasAdminAccess())
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
-  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handleGlobalKeyDown(e: KeyboardEvent) {
@@ -181,16 +191,6 @@ export function CommandPalette() {
     document.addEventListener('keydown', handleGlobalKeyDown)
     return () => document.removeEventListener('keydown', handleGlobalKeyDown)
   }, [])
-
-  // Arrow-key navigation moves `activeIndex`, but nothing about a plain `<ul>`/`<li>` list scrolls
-  // its container along with it — unlike cmdk's Command (which this app doesn't use; see
-  // `components/ui/`), a highlighted row past the visible edge just stays off-screen. `block:
-  // 'nearest'` is a no-op when the row's already visible, so this doesn't fight mouse hover either.
-  useEffect(() => {
-    listRef.current
-      ?.querySelector(`[data-index="${activeIndex}"]`)
-      ?.scrollIntoView({ block: 'nearest' })
-  }, [activeIndex])
 
   // Enabled only while open: rendering the palette at all (via AppShell, on every page) shouldn't
   // by itself cost a fetch — opening it is the trigger, the same way visiting the pages that
@@ -247,42 +247,14 @@ export function CommandPalette() {
     rejectedQuery.data,
   ])
 
-  const flat = useMemo(() => groups.flatMap(g => g.results), [groups])
-
-  // Reset the selection whenever the query changes, so an old row's position doesn't carry over to
-  // an unrelated new result set. Adjusted during render (React's own pattern for this) rather than
-  // in an effect, which would cascade an extra render on every keystroke.
-  const [settledQuery, setSettledQuery] = useState(query)
-  if (settledQuery !== query) {
-    setSettledQuery(query)
-    setActiveIndex(0)
-  }
-
   function handleOpenChange(next: boolean) {
     setOpen(next)
-    if (!next) {
-      setQuery('')
-      setActiveIndex(0)
-    }
+    if (!next) setQuery('')
   }
 
   function navigateTo(result: SearchResult) {
     router.push(hrefFor(result))
     handleOpenChange(false)
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setActiveIndex(i => (flat.length === 0 ? 0 : (i + 1) % flat.length))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setActiveIndex(i => (flat.length === 0 ? 0 : (i - 1 + flat.length) % flat.length))
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      const selected = flat[activeIndex]
-      if (selected) navigateTo(selected)
-    }
   }
 
   return (
@@ -305,61 +277,71 @@ export function CommandPalette() {
           <Dialog.Backdrop className="fixed inset-0 z-40 bg-ink/40 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
           <Dialog.Popup
             initialFocus={inputRef}
-            className="fixed top-[14%] left-1/2 z-50 w-[calc(100%-2.5rem)] max-w-xl -translate-x-1/2 border border-rule bg-card shadow-none outline-none data-[ending-style]:opacity-0 data-[starting-style]:opacity-0"
-            onKeyDown={handleKeyDown}
+            className="fixed top-[14%] left-1/2 z-50 w-[calc(100%-2.5rem)] max-w-xl -translate-x-1/2 overflow-hidden border border-rule bg-card shadow-none outline-none data-[ending-style]:opacity-0 data-[starting-style]:opacity-0"
           >
             <Dialog.Title className="sr-only">Search</Dialog.Title>
             <Dialog.Description className="sr-only">
               Search students, batches, tracks, chapters, and registrations.
             </Dialog.Description>
 
-            <div className="flex items-center gap-3 border-b border-rule px-4 py-3">
-              <Search className="size-4 shrink-0 text-ink-muted" aria-hidden />
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search students, batches, tracks, chapters…"
-                className="flex-1 bg-transparent text-[0.9375rem] text-ink outline-none placeholder:text-ink-muted/50"
-              />
-              <span className="label shrink-0 text-ink-muted/60">Esc</span>
-            </div>
+            <Command shouldFilter={false} className="bg-card text-ink">
+              <div className="flex items-center gap-3 border-b border-rule px-4 py-3">
+                <Search className="size-4 shrink-0 text-ink-muted" aria-hidden />
+                <CommandInput
+                  ref={inputRef}
+                  value={query}
+                  onValueChange={setQuery}
+                  placeholder="Search students, batches, tracks, chapters…"
+                  className="text-[0.9375rem] text-ink placeholder:text-ink-muted/50"
+                />
+                <span className="label shrink-0 text-ink-muted/60">Esc</span>
+              </div>
 
-            <div ref={listRef} className="max-h-[60vh] overflow-y-auto">
-              {trimmedQuery.length === 0 ? (
-                <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
-                  Start typing to search across the school.
-                </p>
-              ) : isError ? (
-                <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
-                  Couldn&rsquo;t search right now.
-                </p>
-              ) : isLoading ? (
-                <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">Loading…</p>
-              ) : flat.length === 0 ? (
-                <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
-                  No matches for &ldquo;{trimmedQuery}&rdquo;.
-                </p>
-              ) : (
-                groups.map(group => (
-                  <div key={group.kind} className="border-b border-rule-soft last:border-0">
-                    <p className="label px-4 pt-3 pb-1 text-ink-muted/70">
-                      {KIND_LABEL[group.kind]}
-                    </p>
-                    <ul>
-                      {group.results.map(result => {
-                        const index = flat.indexOf(result)
-                        const Icon = KIND_ICON[result.kind]
-                        return (
-                          <li key={`${result.kind}-${result.id}`}>
-                            <button
-                              type="button"
-                              data-index={index}
-                              onClick={() => navigateTo(result)}
-                              onMouseEnter={() => setActiveIndex(index)}
+              <CommandList className="max-h-[60vh]">
+                {trimmedQuery.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
+                    Start typing to search across the school.
+                  </p>
+                ) : isError ? (
+                  <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
+                    Couldn&rsquo;t search right now.
+                  </p>
+                ) : isLoading ? (
+                  <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">Loading…</p>
+                ) : (
+                  <>
+                    <CommandEmpty className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
+                      No matches for &ldquo;{trimmedQuery}&rdquo;.
+                    </CommandEmpty>
+                    {groups.map(group => (
+                      <CommandGroup
+                        key={group.kind}
+                        // A styled element, not a bare string: cmdk renders `heading` inside its
+                        // own `[cmdk-group-heading]` wrapper div, which never gets a className of
+                        // its own — only reachable via a parent-level arbitrary descendant
+                        // selector (`**:[[cmdk-group-heading]]:...`, as `components/ui/command.tsx`
+                        // does for its own defaults). That works for plain Tailwind utilities, but
+                        // this app's `.label` typography is a hand-written CSS class, not a
+                        // Tailwind-generated one, so it never matched through that selector —
+                        // passing a real element here sets it directly on something we render.
+                        // The `!` overrides force out `command.tsx`'s own px-2/py-1.5 padding on
+                        // the wrapper div — same-specificity utilities on the same element (its
+                        // `px-2` vs. this `px-4`) don't reliably resolve by source order otherwise.
+                        heading={
+                          <span className="label text-ink-muted/70">{KIND_LABEL[group.kind]}</span>
+                        }
+                        className="border-b border-rule-soft pb-1 last:border-0 **:[[cmdk-group-heading]]:px-4! **:[[cmdk-group-heading]]:pt-3! **:[[cmdk-group-heading]]:pb-1!"
+                      >
+                        {group.results.map(result => {
+                          const Icon = KIND_ICON[result.kind]
+                          return (
+                            <CommandItem
+                              key={`${result.kind}-${result.id}`}
+                              value={`${result.kind}-${result.id}`}
+                              onSelect={() => navigateTo(result)}
                               className={cn(
-                                'flex w-full items-center gap-3 px-4 py-2.5 text-left text-[0.8125rem] transition-colors',
-                                index === activeIndex ? 'bg-ink/[0.04] text-ink' : 'text-ink-muted',
+                                'px-4 py-2.5 text-[0.8125rem] text-ink-muted',
+                                'data-[selected=true]:bg-ink/[0.04] data-[selected=true]:text-ink',
                               )}
                             >
                               <Icon className="size-4 shrink-0 text-ink-muted/70" aria-hidden />
@@ -369,15 +351,15 @@ export function CommandPalette() {
                                   {result.subtitle}
                                 </span>
                               )}
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                ))
-              )}
-            </div>
+                            </CommandItem>
+                          )
+                        })}
+                      </CommandGroup>
+                    ))}
+                  </>
+                )}
+              </CommandList>
+            </Command>
           </Dialog.Popup>
         </Dialog.Portal>
       </Dialog.Root>
