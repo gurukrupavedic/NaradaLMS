@@ -40,8 +40,24 @@ jobs:
           # in the working tree, so the wrong ref here deploys the wrong code.
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
+      - uses: ./.github/actions/setup
+
       - name: Install Railway CLI
         run: npm install -g @railway/cli
+
+      # Migrations run before the deploy, not after: this repo's schema changes are additive
+      # (nullable/defaulted columns — see e.g. packages/db/src/schema/school.ts's own convention),
+      # so old code tolerates the new columns existing early, but new code would 500 on the old
+      # schema if this ran the other way round. `railway run` executes the command locally with
+      # this Railway service's own environment variables injected (DATABASE_URL etc.) — the same
+      # ones the deployed API already runs with — rather than duplicating them as GitHub secrets.
+      # Uses tools/src/ci-migrate.ts, not the interactive `schools migrate` CLI: see that script's
+      # own doc comment for why a human-operator phone prompt doesn't apply to a CI job.
+      - name: Apply pending database migrations
+        run: railway run --service "$RAILWAY_SERVICE" --environment staging pnpm run ci:migrate
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_ID }}
 
       # No --detach: the command streams the build and exits non-zero if it
       # fails, so a broken image shows up as a failed action rather than a green
