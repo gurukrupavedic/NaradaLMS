@@ -2,18 +2,9 @@ import '@narada/env/load'
 import { defineCommand, runMain } from 'citty'
 import { eq } from 'drizzle-orm'
 
-import {
-  dropSchoolSchema,
-  member,
-  migrateExistingSchool,
-  needsLegacyMigrationBackfill,
-  organization,
-  provisionSchool,
-  publicDb,
-  shutdownPools,
-  uuidv7,
-} from '@narada/db'
+import { dropSchoolSchema, member, organization, provisionSchool, publicDb, shutdownPools, uuidv7 } from '@narada/db'
 import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
+import { migrateSchools } from './schoolsMigration'
 
 const create = defineCommand({
   meta: { description: 'Create a school organization and provision its Postgres schema.' },
@@ -64,7 +55,11 @@ const migrate = defineCommand({
   async run({ args }) {
     const operatorPhone = await promptSuperAdminPhone()
     await requireSuperAdminByPhone(operatorPhone)
-    await migrateSchools({ slug: args.slug, dryRun: args.dryRun })
+    try {
+      await migrateSchools({ slug: args.slug, dryRun: args.dryRun })
+    } finally {
+      await shutdownPools()
+    }
   },
 })
 
@@ -136,50 +131,6 @@ async function createSchool(input: {
   } finally {
     await shutdownPools()
   }
-}
-
-async function migrateSchools(input: { slug?: string; dryRun: boolean }) {
-  try {
-    const schools = input.slug
-      ? [await requireSchoolBySlug(input.slug)]
-      : await publicDb.query.organization.findMany()
-
-    for (const school of schools) {
-      if (input.dryRun) {
-        const wouldBackfillLegacyTracking = await needsLegacyMigrationBackfill(school.id)
-        console.log(
-          JSON.stringify({
-            id: school.id,
-            slug: school.slug,
-            dryRun: true,
-            wouldBackfillLegacyTracking,
-          }),
-        )
-        continue
-      }
-
-      const { backfilledLegacyTracking } = await migrateExistingSchool(school.id)
-      console.log(
-        JSON.stringify({
-          id: school.id,
-          slug: school.slug,
-          migrated: true,
-          backfilledLegacyTracking,
-        }),
-      )
-    }
-  } finally {
-    await shutdownPools()
-  }
-}
-
-async function requireSchoolBySlug(slug: string) {
-  const school = await publicDb.query.organization.findFirst({ where: (t, { eq }) => eq(t.slug, slug) })
-  if (!school) {
-    throw new Error(`No school with slug \`${slug}\``)
-  }
-
-  return school
 }
 
 async function findUserIdByEmail(email: string) {
