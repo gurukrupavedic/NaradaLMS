@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { keys } from '@/lib/query/options'
-import { enrollProfile, moveEnrollmentToBatch } from '@/lib/api/resources'
+import { enrollProfile, moveEnrollmentToBatch, putStudentOnBreak } from '@/lib/api/resources'
 
 /**
  * Admin "add a student" (components/admin/add-student-drawer.tsx). Besides this batch's own
@@ -43,6 +43,24 @@ export function useMoveEnrollment(code: string, batchId: string) {
       void queryClient.invalidateQueries({ queryKey: keys.batches.detail(variables.toBatchCode) })
       void queryClient.invalidateQueries({ queryKey: keys.profiles.detail(variables.profileId) })
       void queryClient.invalidateQueries({ queryKey: keys.profiles.searchAll })
+    },
+  })
+}
+
+/**
+ * The mark book's "Mark on break" row action (components/mark-book.tsx, wired from
+ * components/admin/batch-detail.tsx and components/teaching-list.tsx) — same batchId/invalidateKey
+ * shape as use-evaluation-mutations.ts's useSetEvaluation, since the two screens read from
+ * different endpoints (`GET /batches/:id` vs. `GET /me/dashboard`) and each needs its own query
+ * invalidated once the student drops off the roster.
+ */
+export function useSetOnBreak(batchId: string, invalidateKey: readonly unknown[]) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (profileId: string) => putStudentOnBreak(batchId, profileId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: invalidateKey })
     },
   })
 }

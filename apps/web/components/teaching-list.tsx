@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { MarkBook } from '@/components/mark-book'
 import { keys } from '@/lib/query/options'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
+import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
 import type { TeachingBatch } from '@/lib/mock-dashboard'
 
 const ROLE_LABEL: Record<TeachingBatch['role'], string> = { instructor: 'Teacher', ta: 'TA' }
@@ -36,6 +37,7 @@ function TeachingRow({
   const [open, setOpen] = useState(defaultOpen)
   const setLevel = useSetEvaluation(batch.batchId, keys.dashboard)
   const promote = useSetEvaluations(batch.batchId, keys.dashboard)
+  const onBreak = useSetOnBreak(batch.batchId, keys.dashboard)
 
   return (
     <div>
@@ -85,6 +87,7 @@ function TeachingRow({
             students={batch.students}
             grading={setLevel}
             promote={promote}
+            onBreak={onBreak}
           />
         </div>
       )}

@@ -110,6 +110,9 @@ export type ApiBatchMember = {
   city: string | null
   role: ApiEnrollmentRole
   joinedAt: string | null
+  // This member's own enrollment status in this batch — see reshape.ts's `buildRoster`, the one
+  // place that reads it (to drop a student put on a break off the mark book).
+  status: ApiEnrollmentStatus
 }
 
 export type ApiBatch = {
@@ -121,10 +124,10 @@ export type ApiBatch = {
   meetingUrl: string | null
   // A student can self-enroll (POST /batches/:batchId/enroll) only while the batch is open:
   // `enrollmentOpensAt` set and in the past, and `enrollmentClosesAt` either null (open-ended) or
-  // still in the future. `enrollmentOpensAt: null` means never open. `capacity: null` means uncapped.
+  // still in the future. `enrollmentOpensAt: null` means never open. No seat cap — every open
+  // batch takes any number of students.
   enrollmentOpensAt: string | null
   enrollmentClosesAt: string | null
-  capacity: number | null
 }
 
 export type ApiBatchDetail = ApiBatch & { members: ApiBatchMember[]; classSlots: ApiClassSlot[] }
@@ -136,12 +139,11 @@ export type ApiBatchWithRole = ApiBatchDetail & {
   enrollmentStatus: ApiEnrollmentStatus | null
 }
 
-// GET /v1/batches/open — a student's own "batches I can join" view: schedule and remaining seats,
-// never the roster (unlike ApiBatchDetail). `seatsRemaining: null` means uncapped, not "none left".
+// GET /v1/batches/open — a student's own "batches I can join" view: schedule, never the roster
+// (unlike ApiBatchDetail).
 export type ApiOpenBatch = ApiBatch & {
   trackName: string
   classSlots: ApiClassSlot[]
-  seatsRemaining: number | null
 }
 
 export type ApiProficiencyLevel =

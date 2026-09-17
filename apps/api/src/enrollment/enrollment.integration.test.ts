@@ -40,6 +40,7 @@ describe('enroll', () => {
     expect(row.role).toBe('student')
     await expect(findEnrollment(world.schoolDb, studentProfile.id, batchRow.id)).resolves.toEqual({
       role: 'student',
+      status: 'active',
     })
   })
 
@@ -121,7 +122,7 @@ describe('unenroll', () => {
     ).resolves.toBeUndefined()
     await expect(
       findEnrollment(world.schoolDb, studentProfile.id, batchB.id),
-    ).resolves.toEqual({ role: 'student' })
+    ).resolves.toEqual({ role: 'student', status: 'active' })
   })
 })
 

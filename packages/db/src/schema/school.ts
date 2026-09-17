@@ -265,13 +265,10 @@ export const batch = pgTable('batch', {
   // open" — an admin opts a batch in explicitly rather than every batch silently becoming joinable
   // the moment it's 'upcoming'. `enrollmentClosesAt: null` means open-ended (no scheduled close),
   // not closed — that's what lets an admin "just open it" (`POST /batches/:id/enrollment/open`)
-  // without having to pick an end date. `capacity` null means unlimited. No admin-facing UI sets
-  // this per batch today — `CreateBatchSchema` (apps/api/src/batches/schema.ts) defaults every new
-  // batch to `DEFAULT_BATCH_CAPACITY` instead — but the column stays nullable/settable at the API
-  // level in case per-batch capacity comes back.
+  // without having to pick an end date. No batch has a seat cap — every open batch takes any number
+  // of students.
   enrollmentOpensAt: timestamp('enrollmentOpensAt'),
   enrollmentClosesAt: timestamp('enrollmentClosesAt'),
-  capacity: integer('capacity'),
 })
 
 // A batch typically meets multiple times a week (e.g. Mon/Wed/Fri), each potentially at a

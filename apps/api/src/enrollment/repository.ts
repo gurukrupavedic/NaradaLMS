@@ -1,34 +1,10 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 
 import { batch, enrollment, profile, type SchoolDb } from '@narada/db'
 
 import type { CreateEnrollmentData } from './schema'
 
 export type Enrollment = typeof enrollment.$inferSelect
-
-/** Active student headcount per batch, for capacity checks (`enrollment/service.ts::selfEnroll`,
- * `batches/repository.ts::findOpen`) — 'break'/'dropped'/'inactive' don't hold a seat, and a TA/
- * instructor never counted against a batch's *student* capacity to begin with. Batches with no
- * enrollment at all are simply absent from the returned map, not present with a `0` — every call
- * site already treats a missing entry as zero (`?? 0`). */
-export async function countActiveStudentEnrollments(
-  db: SchoolDb,
-  batchIds: string[],
-): Promise<Map<string, number>> {
-  if (batchIds.length === 0) {
-    return new Map()
-  }
-
-  const rows = await db
-    .select({ batchId: enrollment.batchId, count: sql<number>`count(*)::int` })
-    .from(enrollment)
-    .where(
-      and(inArray(enrollment.batchId, batchIds), eq(enrollment.role, 'student'), eq(enrollment.status, 'active')),
-    )
-    .groupBy(enrollment.batchId)
-
-  return new Map(rows.map(row => [row.batchId, row.count]))
-}
 
 // Deliberately returns every qualifying batch rather than `.limit(1)`-ing to one — the caller
 // (`resolveQualifyingBatch`) must reject ambiguity when a student qualifies for more than one
@@ -62,10 +38,10 @@ export async function findEnrollment(
   db: SchoolDb,
   profileId: string,
   batchId: string,
-): Promise<{ role: typeof enrollment.$inferSelect.role } | undefined> {
+): Promise<{ role: Enrollment['role']; status: Enrollment['status'] } | undefined> {
   return db.query.enrollment.findFirst({
     where: (t, { and, eq }) => and(eq(t.profileId, profileId), eq(t.batchId, batchId)),
-    columns: { role: true },
+    columns: { role: true, status: true },
   })
 }
 
@@ -103,6 +79,42 @@ export async function deleteEnrollment(
     .returning({ profileId: enrollment.profileId })
 
   return rows.length > 0
+}
+
+/** Returns whether a row was actually updated — the service turns `false` into a 404. Unlike
+ * `deleteEnrollment`, the row survives with its new status (see `enrollment/service.ts::putOnBreak`
+ * for why a break isn't a delete). */
+export async function updateEnrollmentStatus(
+  db: SchoolDb,
+  batchId: string,
+  profileId: string,
+  status: Enrollment['status'],
+): Promise<boolean> {
+  const rows = await db
+    .update(enrollment)
+    .set({ status })
+    .where(and(eq(enrollment.batchId, batchId), eq(enrollment.profileId, profileId)))
+    .returning({ profileId: enrollment.profileId })
+
+  return rows.length > 0
+}
+
+/** Reactivates an existing (non-active) enrollment row in place, setting both its status back to
+ * `'active'` and its role to whatever the caller just asked for — see `enrollment/service.ts::enroll`'s
+ * doc comment for why re-adding someone who's on a break goes through this instead of `insertEnrollment`. */
+export async function reactivateEnrollment(
+  db: SchoolDb,
+  batchId: string,
+  profileId: string,
+  role: Enrollment['role'],
+): Promise<Enrollment | undefined> {
+  const rows = await db
+    .update(enrollment)
+    .set({ status: 'active', role })
+    .where(and(eq(enrollment.batchId, batchId), eq(enrollment.profileId, profileId)))
+    .returning()
+
+  return rows.at(0)
 }
 
 // True when instructorProfileId currently holds an instructor/ta enrollment in a batch that

@@ -1,14 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { destroyTestWorld } from '../testing/cleanup'
-import {
-  createBatch,
-  createProfile,
-  createTestSchool,
-  createTrack,
-  enroll,
-  type TestWorld,
-} from '../testing/fixtures'
+import { createBatch, createTestSchool, createTrack, type TestWorld } from '../testing/fixtures'
 import { findOpenBatches } from './service'
 
 let world: TestWorld | undefined
@@ -79,41 +72,4 @@ describe('findOpenBatches', () => {
     expect(items.map(item => item.id)).toEqual([open.id])
   })
 
-  it('reports seatsRemaining as null for an uncapped batch, and a real count for a capped one', async () => {
-    world = await createTestSchool()
-    const track = await createTrack(world)
-    const uncapped = await createBatch(world, track, {
-      enrollmentOpensAt: new Date(Date.now() - HOUR),
-      enrollmentClosesAt: new Date(Date.now() + HOUR),
-      capacity: null,
-    })
-    const capped = await createBatch(world, track, {
-      enrollmentOpensAt: new Date(Date.now() - HOUR),
-      enrollmentClosesAt: new Date(Date.now() + HOUR),
-      capacity: 3,
-    })
-    const student = await createProfile(world)
-    await enroll(world, student, capped, 'student')
-
-    const items = await findOpenBatches({ db: world.schoolDb })
-
-    expect(items.find(item => item.id === uncapped.id)?.seatsRemaining).toBeNull()
-    expect(items.find(item => item.id === capped.id)?.seatsRemaining).toBe(2)
-  })
-
-  it("doesn't count an instructor/ta or a non-active enrollment against capacity", async () => {
-    world = await createTestSchool()
-    const track = await createTrack(world)
-    const capped = await createBatch(world, track, {
-      enrollmentOpensAt: new Date(Date.now() - HOUR),
-      enrollmentClosesAt: new Date(Date.now() + HOUR),
-      capacity: 2,
-    })
-    const instructor = await createProfile(world)
-    await enroll(world, instructor, capped, 'instructor')
-
-    const items = await findOpenBatches({ db: world.schoolDb })
-
-    expect(items.find(item => item.id === capped.id)?.seatsRemaining).toBe(2)
-  })
 })

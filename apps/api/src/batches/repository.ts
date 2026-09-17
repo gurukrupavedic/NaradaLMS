@@ -2,7 +2,6 @@ import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql, type SQL } f
 
 import { batch, batchClassSlot, enrollment, type SchoolDb } from '@narada/db'
 
-import { countActiveStudentEnrollments } from '../enrollment/repository'
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
 import type {
@@ -133,7 +132,7 @@ export async function findAccessibleWithDetail(
     enrollments: {
       profileId: string
       role: BatchWithRole['members'][number]['role']
-      status: BatchWithRole['enrollmentStatus']
+      status: NonNullable<BatchWithRole['enrollmentStatus']>
       joinedAt: Date | null
       profile: { name: string; phone: string | null; city: string | null }
     }[]
@@ -150,6 +149,7 @@ export async function findAccessibleWithDetail(
         city: e.profile.city,
         role: e.role,
         joinedAt: e.joinedAt,
+        status: e.status,
       })),
       classSlots: classSlots.map(toClassSlot),
       role: own?.role ?? null,
@@ -213,8 +213,8 @@ export async function findById(db: SchoolDb, id: string): Promise<Batch | undefi
 
 /** Row-locking read for `enrollment/service.ts::selfEnroll`'s transaction — the relational query
  * API (`db.query.batch.findFirst`) has no `FOR UPDATE`, so this drops to the plain query builder.
- * Locking the batch row serializes concurrent self-enroll attempts on it, so two students racing
- * for the last seat can't both read "1 seat left" and both succeed. */
+ * Locking the batch row serializes concurrent self-enroll attempts on it, so two racing calls for
+ * the same profile can't both pass the "not already enrolled" check before either commits. */
 export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Batch | undefined> {
   const rows = await db.select().from(batch).where(eq(batch.id, id)).for('update')
   return rows.at(0)
@@ -223,8 +223,8 @@ export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Batch
 /**
  * Batches currently open for self-enrollment: `enrollmentOpensAt` is set and in the past, and
  * `enrollmentClosesAt` is either unset (open-ended) or still in the future (see the column's own
- * doc comment in packages/db/src/schema/school.ts). `seatsRemaining` is `null` for an uncapped
- * batch, never a number standing in for "unlimited".
+ * doc comment in packages/db/src/schema/school.ts). No seat cap to check against — every open
+ * batch takes any number of students.
  */
 export async function findOpen(db: SchoolDb): Promise<OpenBatch[]> {
   const now = new Date()
@@ -239,18 +239,12 @@ export async function findOpen(db: SchoolDb): Promise<OpenBatch[]> {
     orderBy: (t, { asc: ascCol }) => ascCol(t.code),
   })
 
-  const capacitatedIds = rows.filter(row => row.capacity !== null).map(row => row.id)
-  const counts = await countActiveStudentEnrollments(db, capacitatedIds)
-
   return rows.map(row => {
     const { classSlots, track: trackRow, ...batchRow } = row
-    const seatsRemaining =
-      batchRow.capacity === null ? null : Math.max(0, batchRow.capacity - (counts.get(row.id) ?? 0))
     return {
       ...batchRow,
       trackName: trackRow.name,
       classSlots: classSlots.map(toClassSlot),
-      seatsRemaining,
     }
   })
 }
@@ -276,6 +270,7 @@ export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<Bat
       city: e.profile.city,
       role: e.role,
       joinedAt: e.joinedAt,
+      status: e.status,
     })),
     classSlots: classSlots.map(toClassSlot),
   }
@@ -344,6 +339,7 @@ export async function findAllMembershipsWithDetail(
         city: e.profile.city,
         role: e.role,
         joinedAt: e.joinedAt,
+        status: e.status,
       })),
       classSlots: classSlots.map(toClassSlot),
       role: own?.role ?? null,

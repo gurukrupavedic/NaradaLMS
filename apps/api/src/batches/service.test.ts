@@ -31,7 +31,7 @@ describe('createBatch', () => {
     })
 
     await expect(
-      createBatch(context, { trackId: 'missing-track', code: 'BATCH-1', capacity: null }),
+      createBatch(context, { trackId: 'missing-track', code: 'BATCH-1' }),
     ).rejects.toMatchObject({
       statusCode: 422,
       message: 'unknown or invalid track',
@@ -44,7 +44,7 @@ describe('createBatch', () => {
     })
 
     await expect(
-      createBatch(context, { trackId: 'track-1', code: 'DUP', capacity: null }),
+      createBatch(context, { trackId: 'track-1', code: 'DUP' }),
     ).rejects.toMatchObject({
       statusCode: 409,
       message: 'a batch with this code already exists',
@@ -56,7 +56,7 @@ describe('createBatch', () => {
     vi.mocked(repository.insert).mockRejectedValue(original)
 
     await expect(
-      createBatch(context, { trackId: 'track-1', code: 'X', capacity: null }),
+      createBatch(context, { trackId: 'track-1', code: 'X' }),
     ).rejects.toBe(original)
   })
 })
@@ -93,7 +93,6 @@ describe('findByIdWithMembers', () => {
       meetingUrl: null,
       enrollmentOpensAt: null,
       enrollmentClosesAt: null,
-      capacity: null,
       members: [
         {
           profileId: 'profile-1',
@@ -102,6 +101,7 @@ describe('findByIdWithMembers', () => {
           city: null,
           role: 'student' as const,
           joinedAt: new Date(),
+          status: 'active' as const,
         },
       ],
       classSlots: [],
@@ -154,7 +154,6 @@ describe('setClassSlots', () => {
       meetingUrl: null,
       enrollmentOpensAt: null,
       enrollmentClosesAt: null,
-      capacity: null,
     })
     const newSlots = [{ dayOfWeek: 1, time: '09:00', durationMinutes: 60 }]
     vi.mocked(repository.insertClassSlots).mockResolvedValue(newSlots)
@@ -181,7 +180,6 @@ describe('setClassSlots', () => {
       meetingUrl: null,
       enrollmentOpensAt: null,
       enrollmentClosesAt: null,
-      capacity: null,
     })
     vi.mocked(repository.insertClassSlots).mockResolvedValue([])
 
