@@ -7,6 +7,7 @@ import {
   chapterScript,
   chapterScriptSegment,
   enrollment,
+  enrollmentRequest,
   evaluation,
   exam,
   getSchoolDb,
@@ -43,6 +44,7 @@ export type StagedUploadRow = typeof stagedUpload.$inferSelect
 export type BatchRow = typeof batch.$inferSelect
 export type BatchClassSlotRow = typeof batchClassSlot.$inferSelect
 export type EnrollmentRow = typeof enrollment.$inferSelect
+export type EnrollmentRequestRow = typeof enrollmentRequest.$inferSelect
 export type EvaluationRow = typeof evaluation.$inferSelect
 export type ExamRow = typeof exam.$inferSelect
 export type TrackCertificationRow = typeof trackCertification.$inferSelect
@@ -491,6 +493,32 @@ export async function enroll(
 
   const row = rows.at(0)
   if (!row) throw new Error('enroll: insert returned no row')
+  return row
+}
+
+export async function createEnrollmentRequest(
+  world: TestWorld,
+  profileRow: ProfileRow,
+  batchRow: BatchRow,
+  overrides?: {
+    status?: EnrollmentRequestRow['status']
+    reviewedAt?: Date | null
+    reviewedBy?: string | null
+  },
+): Promise<EnrollmentRequestRow> {
+  const rows = await world.schoolDb
+    .insert(enrollmentRequest)
+    .values({
+      profileId: profileRow.id,
+      batchId: batchRow.id,
+      status: overrides?.status ?? 'pending',
+      reviewedAt: overrides?.reviewedAt ?? null,
+      reviewedBy: overrides?.reviewedBy ?? null,
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createEnrollmentRequest: insert returned no row')
   return row
 }
 

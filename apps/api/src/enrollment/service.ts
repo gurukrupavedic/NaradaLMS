@@ -1,6 +1,5 @@
 import type { SchoolDb, SchoolDbClient } from '@narada/db'
 
-import * as batchesRepository from '../batches/repository'
 import { conflict, internalError, notFound, unprocessable } from '../error'
 import * as repository from './repository'
 import type { CreateEnrollmentData } from './schema'
@@ -144,47 +143,6 @@ export async function moveEnrollment(
     }
 
     const row = await repository.insertEnrollment(tx, toBatchId, { profileId, role: current.role })
-    if (!row) {
-      throw internalError()
-    }
-
-    return row
-  })
-}
-
-/**
- * A student enrolling *themselves* in an open batch (POST /batches/:batchId/enroll) — a narrower,
- * differently-authorized action from admin `enroll` above (which takes an arbitrary profileId/role
- * and is gated on a batch permission): here the batch's own open-enrollment window *is* the
- * authorization, and the enrollee is always the caller's own profile as a student.
- *
- * Runs inside one transaction with the batch row locked (`findByIdForUpdate`) so two racing
- * self-enroll calls for the same profile+batch (e.g. a doubled-up click) can't both pass the
- * "not already enrolled" check before either commits — without the lock, the loser would hit a raw
- * `enrollment` primary-key violation instead of the clean 409 below. Everything else in this file
- * takes a plain `SchoolDb` because it never needs that; this is the one exception.
- */
-export async function selfEnroll(db: SchoolDbClient, batchId: string, profileId: string): Promise<Enrollment> {
-  return db.transaction(async tx => {
-    const batchRow = await batchesRepository.findByIdForUpdate(tx, batchId)
-    if (!batchRow) {
-      throw notFound()
-    }
-
-    const now = new Date()
-    const isOpen =
-      batchRow.enrollmentOpensAt !== null &&
-      batchRow.enrollmentOpensAt <= now &&
-      (batchRow.enrollmentClosesAt === null || now <= batchRow.enrollmentClosesAt)
-    if (!isOpen) {
-      throw conflict('batch is not currently open for enrollment')
-    }
-
-    if (await repository.findEnrollment(tx, profileId, batchId)) {
-      throw conflict('already enrolled in this batch')
-    }
-
-    const row = await repository.insertEnrollment(tx, batchId, { profileId, role: 'student' })
     if (!row) {
       throw internalError()
     }

@@ -18,6 +18,8 @@ import type {
   ApiBatchWithRole,
   ApiChapterDetail,
   ApiDashboard,
+  ApiEnrollmentRequest,
+  ApiEnrollmentRequestStatus,
   ApiEvaluation,
   ApiOpenBatch,
   ApiProficiencyLevel,
@@ -204,6 +206,10 @@ export type DashboardPayload = {
   // whose last batch completed — components/open-batch-picker.tsx is what the dashboard shows
   // instead whenever this is false, in either case.
   hasActiveBatch: boolean
+  // Every batch this profile has already asked to join and is still waiting on an admin/instructor
+  // to approve — components/open-batch-picker.tsx uses this to show "Pending approval" instead of
+  // a "Join" button for those rows.
+  pendingBatchIds: string[]
 }
 
 async function fetchStudentDashboard(): Promise<ApiDashboard> {
@@ -267,6 +273,7 @@ export async function fetchDashboard(): Promise<DashboardPayload> {
         }
       : null,
     hasActiveBatch,
+    pendingBatchIds: data.pendingBatchIds,
   }
 }
 
@@ -508,16 +515,39 @@ export async function fetchOpenBatches(): Promise<ApiOpenBatch[]> {
   return fetchApi<ApiOpenBatch[]>('/batches/open')
 }
 
-// POST /v1/batches/:batchId/enroll — self-enrolls the signed-in profile as a student. The server
-// enforces the open-window/duplicate checks; a rejection surfaces as an ApiError the caller
-// renders directly (409 "already enrolled in this batch", etc.).
-export async function selfEnrollInBatch(batchId: string): Promise<void> {
-  await mutateApi(`/batches/${batchId}/enroll`, 'POST')
+// POST /v1/batches/:batchId/enroll — files a pending request to join, for the signed-in profile
+// as a student; an admin/instructor must approve it (apps/api/src/enrollmentRequests) before the
+// student is actually seated. The server enforces the open-window/duplicate checks; a rejection
+// surfaces as an ApiError the caller renders directly (409 "already enrolled in this batch", 409
+// "a request to join this batch is already pending", etc.).
+export async function requestBatchEnrollment(batchId: string): Promise<ApiEnrollmentRequest> {
+  return mutateApi<ApiEnrollmentRequest>(`/batches/${batchId}/enroll`, 'POST')
+}
+
+// GET /v1/enrollment-requests?status=... — admin/instructor review queue for batch-join requests
+// (components/admin/registration-review.tsx's sibling: same "same place as pending registrations"
+// screen, a different underlying resource). Scoped server-side to batches the caller manages
+// (AccessPolicy.getEnrollmentRequestVisibility) unless they're a school admin.
+export async function fetchEnrollmentRequests(
+  status: ApiEnrollmentRequestStatus,
+): Promise<ApiEnrollmentRequest[]> {
+  return fetchAllPages<ApiEnrollmentRequest>(
+    cursor => `/enrollment-requests?status=${status}&limit=100${cursor ? `&cursor=${cursor}` : ''}`,
+  )
+}
+
+export async function approveEnrollmentRequest(id: string): Promise<ApiEnrollmentRequest> {
+  return mutateApi<ApiEnrollmentRequest>(`/enrollment-requests/${id}/approve`, 'POST')
+}
+
+export async function rejectEnrollmentRequest(id: string): Promise<ApiEnrollmentRequest> {
+  return mutateApi<ApiEnrollmentRequest>(`/enrollment-requests/${id}/reject`, 'POST')
 }
 
 // POST /v1/batches/:batchId/members — admin (or an instructor/ta of this batch) adding an
-// arbitrary profile to its roster. Distinct from `selfEnrollInBatch` above: no open-enrollment
-// window gates this, since the caller's own batch permission *is* the authorization
+// arbitrary profile to its roster directly. Distinct from `requestBatchEnrollment` above: no
+// open-enrollment window or approval step gates this, since the caller's own batch permission *is*
+// the authorization
 // (AccessPolicy.requireCanCreateEnrollment). If the profile already has a non-active (e.g. on a
 // break) enrollment row in this batch, the server reactivates it in place rather than conflicting
 // (apps/api/src/enrollment/service.ts::enroll) — searchProfiles below already surfaces such a

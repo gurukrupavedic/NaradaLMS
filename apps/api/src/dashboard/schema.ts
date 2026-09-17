@@ -18,4 +18,8 @@ export type DashboardData = {
   upcomingExams: ExamWithDetail[]
   teaching: TeachingSummary[]
   pastBatchesByStudent: PastBatchesEntry[]
+  // Every batch this profile has a request pending on (`enrollmentRequests/service.ts::request`)
+  // — components/open-batch-picker.tsx uses this to show "pending approval" instead of a "Join"
+  // button for a batch the reader already asked to join, without a second round-trip per row.
+  pendingBatchIds: string[]
 }

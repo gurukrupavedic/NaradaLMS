@@ -4,6 +4,7 @@ import type { SchoolDbClient } from '@narada/db'
 
 import { getDashboardData } from './service'
 import * as batchesRepository from '../batches/repository'
+import * as enrollmentRequestsRepository from '../enrollmentRequests/repository'
 import * as evaluationsRepository from '../evaluations/repository'
 import * as examsRepository from '../exams/repository'
 import * as tracksRepository from '../tracks/repository'
@@ -12,6 +13,9 @@ import * as tracksService from '../tracks/service'
 vi.mock('../batches/repository', () => ({
   findAllMembershipsWithDetail: vi.fn(),
   findAllForProfiles: vi.fn(),
+}))
+vi.mock('../enrollmentRequests/repository', () => ({
+  findPendingBatchIdsForProfile: vi.fn(),
 }))
 vi.mock('../evaluations/repository', () => ({
   findAllForStudent: vi.fn(),
@@ -42,6 +46,7 @@ beforeEach(() => {
   vi.mocked(evaluationsRepository.findForChaptersAndStudents).mockResolvedValue([])
   vi.mocked(batchesRepository.findAllForProfiles).mockResolvedValue(new Map())
   vi.mocked(tracksRepository.findCertificationsForStudent).mockResolvedValue([])
+  vi.mocked(enrollmentRequestsRepository.findPendingBatchIdsForProfile).mockResolvedValue([])
 })
 
 describe('getDashboardData', () => {

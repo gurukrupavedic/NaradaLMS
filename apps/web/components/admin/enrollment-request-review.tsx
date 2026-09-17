@@ -1,29 +1,33 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Section } from '@/components/section'
-import { registrationsQuery } from '@/lib/query/options'
-import { useApproveRegistration, useRejectRegistration } from '@/lib/query/use-registration-mutations'
-import type { ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
+import { enrollmentRequestsQuery } from '@/lib/query/options'
+import {
+  useApproveEnrollmentRequest,
+  useRejectEnrollmentRequest,
+} from '@/lib/query/use-enrollment-request-mutations'
+import type { ApiEnrollmentRequest, ApiEnrollmentRequestStatus } from '@/lib/api/api-types'
 
-const TABS: { status: ApiRegistrationStatus; label: string }[] = [
+const TABS: { status: ApiEnrollmentRequestStatus; label: string }[] = [
   { status: 'pending', label: 'Pending' },
   { status: 'approved', label: 'Approved' },
   { status: 'rejected', label: 'Rejected' },
 ]
 
-// The applications half of /admin/registrations (components/admin/admin-registrations-screen.tsx
+// The batch-requests half of /admin/registrations (components/admin/admin-registrations-screen.tsx
 // owns the page's shared `Standing` header and the "Applications"/"Batch requests" switch above
-// this) — the public registration form's pending/approved/rejected queue.
-export function RegistrationReview() {
-  const [status, setStatus] = useState<ApiRegistrationStatus>('pending')
-  const { data: registrations, error } = useQuery(registrationsQuery(status))
+// this) — same pending/approved/rejected shape as `RegistrationReview`, a different underlying
+// resource: an already-enrolled student asking to join a specific open batch
+// (apps/api/src/enrollmentRequests), not a prospective applicant with no account yet.
+export function EnrollmentRequestReview() {
+  const [status, setStatus] = useState<ApiEnrollmentRequestStatus>('pending')
+  const { data: requests, error } = useQuery(enrollmentRequestsQuery(status))
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-5 py-9">
@@ -46,18 +50,18 @@ export function RegistrationReview() {
 
       {error ? (
         <ScreenError error={error} />
-      ) : !registrations ? (
+      ) : !requests ? (
         <ScreenSkeleton rows={6} />
       ) : (
-        <Section title={TABS.find(t => t.status === status)!.label} count={`${registrations.length}`}>
-          {registrations.length === 0 ? (
+        <Section title={TABS.find(t => t.status === status)!.label} count={`${requests.length}`}>
+          {requests.length === 0 ? (
             <p className="sheet px-4 py-7 text-center text-[0.875rem] text-ink-muted">
-              No {status} registrations.
+              No {status} batch requests.
             </p>
           ) : (
             <ol className="sheet">
-              {registrations.map(registration => (
-                <RegistrationRow key={registration.id} registration={registration} />
+              {requests.map(request => (
+                <EnrollmentRequestRow key={request.id} request={request} />
               ))}
             </ol>
           )}
@@ -67,36 +71,30 @@ export function RegistrationReview() {
   )
 }
 
-function RegistrationRow({ registration }: { registration: ApiRegistration }) {
-  const approve = useApproveRegistration()
-  const reject = useRejectRegistration()
+function EnrollmentRequestRow({ request }: { request: ApiEnrollmentRequest }) {
+  const approve = useApproveEnrollmentRequest()
+  const reject = useRejectEnrollmentRequest()
   const pending = approve.isPending || reject.isPending
 
   return (
     <li className="flex flex-wrap items-center gap-4 border-b border-rule-soft px-4 py-3 last:border-0">
-      <Link
-        href={`/admin/registrations/${registration.id}`}
-        className="min-w-0 flex-1 underline decoration-vermilion/40 decoration-1 underline-offset-4 transition-colors hover:decoration-vermilion"
-      >
-        <span className="block text-[0.9375rem]">
-          {registration.firstName} {registration.lastName}
-        </span>
+      <div className="min-w-0 flex-1">
+        <span className="block text-[0.9375rem]">{request.studentName}</span>
         <span className="label mt-0.5 block text-ink-muted">
-          {registration.phone}
-          {registration.city && ` · ${registration.city}`}
+          {request.trackName} · {request.batchCode}
         </span>
-      </Link>
+      </div>
 
       <span className="label shrink-0 text-ink-muted">
-        {formatDistanceToNow(new Date(registration.createdAt), { addSuffix: true })}
+        {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}
       </span>
 
-      {registration.status === 'pending' && (
+      {request.status === 'pending' && (
         <div className="flex shrink-0 gap-2">
           <button
             type="button"
             disabled={pending}
-            onClick={() => reject.mutate(registration.id)}
+            onClick={() => reject.mutate(request.id)}
             className="label border border-rule px-3 py-1.5 text-ink-muted transition-colors hover:border-vermilion hover:text-vermilion disabled:pointer-events-none disabled:opacity-50"
           >
             Reject
@@ -104,7 +102,7 @@ function RegistrationRow({ registration }: { registration: ApiRegistration }) {
           <button
             type="button"
             disabled={pending}
-            onClick={() => approve.mutate(registration.id)}
+            onClick={() => approve.mutate(request.id)}
             className="label bg-ink px-3 py-1.5 text-paper transition-opacity disabled:opacity-50"
           >
             Approve

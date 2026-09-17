@@ -7,25 +7,26 @@ import {
   closeBatchEnrollment,
   createBatch,
   openBatchEnrollment,
-  selfEnrollInBatch,
+  requestBatchEnrollment,
   type CreateBatchInput,
 } from '@/lib/api/resources'
 
 /**
- * Joining a batch changes two things the cache can't reconcile on its own: the dashboard's
- * `hasActiveBatch`/`memberships` (a brand new membership, not an edit to one already cached) and
- * every other open batch's `seatsRemaining` (one seat gone, possibly at any of them if the
- * reader had several tabs open). Invalidating both, rather than writing an optimistic patch, is
- * the simpler correct choice for an action a reader takes once and then leaves this screen.
+ * Requesting to join a batch changes the one thing the cache can't reconcile on its own: the
+ * dashboard's `pendingBatchIds` (components/open-batch-picker.tsx uses this to swap a batch's
+ * "Join" button for a disabled "Pending approval" once the request lands) — no seat is taken yet,
+ * that only happens once an admin/instructor approves the request, so `keys.batches.open` doesn't
+ * need invalidating here. Not optimistic, matching the review mutations
+ * (`use-enrollment-request-mutations.ts`) — a request a reader files once and then leaves this
+ * screen for costs nothing to wait on.
  */
-export function useSelfEnroll() {
+export function useRequestEnrollment() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (batchId: string) => selfEnrollInBatch(batchId),
+    mutationFn: (batchId: string) => requestBatchEnrollment(batchId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: keys.dashboard })
-      void queryClient.invalidateQueries({ queryKey: keys.batches.open })
     },
   })
 }

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
-import { selfEnroll } from '../enrollment/service'
+import { request as requestEnrollment } from '../enrollmentRequests/service'
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
@@ -97,14 +97,16 @@ router.post(
 )
 
 // The student's own counterpart to admin enrollment (POST /batches/:batchId/members, in
-// ../enrollment/route.ts) — always enrolls the caller's own active profile as a student, gated by
-// the batch's own open-enrollment window rather than a batch permission. `profileRoute`, not
-// `optionalProfileRoute`: there is no meaningful "enroll myself" with no self to enroll.
+// ../enrollment/route.ts) — files a pending request to join as a student rather than seating them
+// directly; an admin/instructor must approve it (../enrollmentRequests/route.ts) first. Still
+// gated by the batch's own open-enrollment window rather than a batch permission — that window is
+// what authorizes *asking*, not being seated. `profileRoute`, not `optionalProfileRoute`: there is
+// no meaningful "request to join" with no self to enroll.
 router.post(
   '/:batchId/enroll',
   profileRoute(async ({ req, res, db, profile }) => {
     const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    const row = await selfEnroll(db, batchId, profile.id)
+    const row = await requestEnrollment(db, batchId, profile.id)
     res.status(201).json({ data: row })
   }),
 )

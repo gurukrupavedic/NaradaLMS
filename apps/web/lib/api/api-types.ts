@@ -243,6 +243,25 @@ export type ApiDashboard = {
   upcomingExams: ApiExam[]
   teaching: { batchId: string; evaluations: ApiEvaluation[] }[]
   pastBatchesByStudent: { studentId: string; batches: ApiBatch[] }[]
+  pendingBatchIds: string[]
+}
+
+// GET/POST /v1/enrollment-requests — a student's request to join an open batch
+// (POST /v1/batches/:batchId/enroll), awaiting an admin/instructor's approval before
+// `enrollment/service.ts::enroll` actually seats them (see apps/api/src/enrollmentRequests/schema.ts).
+export type ApiEnrollmentRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export type ApiEnrollmentRequest = {
+  id: string
+  status: ApiEnrollmentRequestStatus
+  profileId: string
+  studentName: string
+  batchId: string
+  batchCode: string
+  trackName: string
+  reviewedAt: string | null
+  reviewedBy: string | null
+  createdAt: string
 }
 
 // GET /v1/profiles/:profileId/detail — the profile page's data: full contact/background detail

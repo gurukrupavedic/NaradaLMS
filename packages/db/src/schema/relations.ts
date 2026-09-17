@@ -12,6 +12,7 @@ import {
   batch,
   batchClassSlot,
   enrollment,
+  enrollmentRequest,
   evaluation,
   exam,
   profile,
@@ -118,6 +119,20 @@ export const batchClassSlotRelations = relations(batchClassSlot, ({ one }) => ({
 export const enrollmentRelations = relations(enrollment, ({ one }) => ({
   profile: one(profile, { fields: [enrollment.profileId], references: [profile.id] }),
   batch: one(batch, { fields: [enrollment.batchId], references: [batch.id] }),
+}))
+
+export const enrollmentRequestRelations = relations(enrollmentRequest, ({ one }) => ({
+  profile: one(profile, {
+    fields: [enrollmentRequest.profileId],
+    references: [profile.id],
+    relationName: 'enrollmentRequestApplicant',
+  }),
+  batch: one(batch, { fields: [enrollmentRequest.batchId], references: [batch.id] }),
+  reviewer: one(profile, {
+    fields: [enrollmentRequest.reviewedBy],
+    references: [profile.id],
+    relationName: 'enrollmentRequestReviewer',
+  }),
 }))
 
 export const evaluationRelations = relations(evaluation, ({ one }) => ({

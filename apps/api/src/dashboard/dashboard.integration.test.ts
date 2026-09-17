@@ -111,6 +111,7 @@ describe('getDashboardData (real Postgres, end to end)', () => {
       upcomingExams: [],
       teaching: [],
       pastBatchesByStudent: [],
+      pendingBatchIds: [],
     })
   })
 

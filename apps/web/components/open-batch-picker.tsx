@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Section } from '@/components/section'
 import { ApiError } from '@/lib/api/client'
 import { openBatchesQuery } from '@/lib/query/options'
-import { useSelfEnroll } from '@/lib/query/use-batch-mutations'
+import { useRequestEnrollment } from '@/lib/query/use-batch-mutations'
 import type { ApiOpenBatch } from '@/lib/api/api-types'
 
 const DAY_LABEL = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -14,10 +14,20 @@ const DAY_LABEL = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
  * What a profile with no live batch seat sees instead of the (otherwise misleading) bare syllabus
  * view — shown for two distinct situations that end up needing the exact same screen: someone
  * just approved with no enrollment history at all, and someone returning from a break or whose
- * last cohort ended. `returning` only changes the copy; the mechanism (list what's open, join one)
- * is identical either way.
+ * last cohort ended. `returning` only changes the copy; the mechanism (list what's open, ask to
+ * join one) is identical either way.
+ *
+ * `pendingBatchIds` (dashboard-screen.tsx's own `data.pendingBatchIds`) marks a batch this profile
+ * has already requested — asking again would just hit the server's 409, so those rows show
+ * "Pending approval" instead of a clickable "Request to join" button.
  */
-export function OpenBatchPicker({ returning }: { returning: boolean }) {
+export function OpenBatchPicker({
+  returning,
+  pendingBatchIds,
+}: {
+  returning: boolean
+  pendingBatchIds: string[]
+}) {
   const { data: batches, error } = useQuery(openBatchesQuery())
 
   return (
@@ -38,7 +48,7 @@ export function OpenBatchPicker({ returning }: { returning: boolean }) {
       ) : (
         <ol className="sheet">
           {batches.map(batch => (
-            <OpenBatchRow key={batch.id} batch={batch} />
+            <OpenBatchRow key={batch.id} batch={batch} pending={pendingBatchIds.includes(batch.id)} />
           ))}
         </ol>
       )}
@@ -46,8 +56,8 @@ export function OpenBatchPicker({ returning }: { returning: boolean }) {
   )
 }
 
-function OpenBatchRow({ batch }: { batch: ApiOpenBatch }) {
-  const enroll = useSelfEnroll()
+function OpenBatchRow({ batch, pending }: { batch: ApiOpenBatch; pending: boolean }) {
+  const enroll = useRequestEnrollment()
 
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-rule-soft px-4 py-3.5 last:border-0">
@@ -65,14 +75,18 @@ function OpenBatchRow({ batch }: { batch: ApiOpenBatch }) {
         </span>
       </div>
 
-      <button
-        type="button"
-        disabled={enroll.isPending}
-        onClick={() => enroll.mutate(batch.id)}
-        className="label shrink-0 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
-      >
-        {enroll.isPending ? 'Joining…' : 'Join'}
-      </button>
+      {pending || enroll.isSuccess ? (
+        <span className="label shrink-0 border border-rule px-4 py-2 text-ink-muted">Pending approval</span>
+      ) : (
+        <button
+          type="button"
+          disabled={enroll.isPending}
+          onClick={() => enroll.mutate(batch.id)}
+          className="label shrink-0 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
+        >
+          {enroll.isPending ? 'Requesting…' : 'Request to join'}
+        </button>
+      )}
 
       {enroll.isError && (
         <p className="w-full text-[0.8125rem] text-vermilion">

@@ -223,10 +223,12 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
 }
 
 /**
- * The one place an admin opens a batch to self-enrollment (components/open-batch-picker.tsx is
- * the student-facing result). A single "Open"/"Close" toggle rather than a pair of datetime-local
- * inputs — an admin doesn't think in opens-at/closes-at timestamps, only "can students join right
- * now or not," so that's the one thing this control asks (see
+ * The one place an admin opens a batch to student-filed join requests
+ * (components/open-batch-picker.tsx is the student-facing result; a request still needs approving
+ * on /admin/registrations before it seats anyone — components/admin/enrollment-request-review.tsx).
+ * A single "Open"/"Close" toggle rather than a pair of datetime-local inputs — an admin doesn't
+ * think in opens-at/closes-at timestamps, only "can students ask to join right now or not," so
+ * that's the one thing this control asks (see
  * `use-batch-mutations.ts::useOpenBatchEnrollment`/`useCloseBatchEnrollment`, which resolve it to
  * the actual columns server-side). No capacity control here — batches have no seat cap at all.
  */
@@ -252,8 +254,8 @@ function EnrollmentSection({ batch }: { batch: AdminBatchDetail }) {
         </button>
         <span className="text-[0.875rem] text-ink-muted">
           {isOpenNow
-            ? 'Students can self-enroll in this batch right now.'
-            : 'Students cannot self-enroll in this batch.'}
+            ? 'Students can request to join this batch right now.'
+            : 'Students cannot request to join this batch.'}
         </span>
         {toggle.isError && (
           <p className="w-full text-[0.8125rem] text-vermilion">

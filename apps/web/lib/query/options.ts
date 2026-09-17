@@ -10,6 +10,7 @@ import {
   fetchChapter,
   fetchChapterDetail,
   fetchDashboard,
+  fetchEnrollmentRequests,
   fetchExams,
   fetchOpenBatches,
   fetchProfileDetail,
@@ -17,7 +18,7 @@ import {
   fetchRegistrations,
   searchProfiles,
 } from '@/lib/api/resources'
-import type { ApiRegistrationStatus } from '@/lib/api/api-types'
+import type { ApiEnrollmentRequestStatus, ApiRegistrationStatus } from '@/lib/api/api-types'
 
 /**
  * Query keys, in one place.
@@ -69,6 +70,13 @@ export const keys = {
     all: ['registrations'] as const,
     list: (status: ApiRegistrationStatus) => ['registrations', 'list', status] as const,
     detail: (id: string) => ['registrations', 'detail', id] as const,
+  },
+
+  enrollmentRequests: {
+    // Same prefix-key shape as `registrations` above — an approve/reject mutation invalidates
+    // this to catch every status tab at once.
+    all: ['enrollmentRequests'] as const,
+    list: (status: ApiEnrollmentRequestStatus) => ['enrollmentRequests', 'list', status] as const,
   },
 
   profiles: {
@@ -178,6 +186,12 @@ export const registrationQuery = (id: string) =>
   queryOptions({
     queryKey: keys.registrations.detail(id),
     queryFn: () => fetchRegistration(id),
+  })
+
+export const enrollmentRequestsQuery = (status: ApiEnrollmentRequestStatus) =>
+  queryOptions({
+    queryKey: keys.enrollmentRequests.list(status),
+    queryFn: () => fetchEnrollmentRequests(status),
   })
 
 export const profileDetailQuery = (profileId: string) =>

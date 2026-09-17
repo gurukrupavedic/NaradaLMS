@@ -19,7 +19,7 @@ export const BatchSchema = z.object({
   status: batchStatusSchema,
   startDate: isoInstant.nullable(),
   meetingUrl: httpsUrl.nullable(),
-  // A student can self-enroll (POST /batches/:batchId/enroll) only while `now()` falls between
+  // A student can request to join (POST /batches/:batchId/enroll) only while `now()` falls between
   // these two — see the column's own doc comment in packages/db/src/schema/school.ts.
   enrollmentOpensAt: isoInstant.nullable(),
   enrollmentClosesAt: isoInstant.nullable(),
