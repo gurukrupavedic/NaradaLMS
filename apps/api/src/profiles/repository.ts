@@ -1,8 +1,7 @@
-import { and, eq, inArray, isNull, notInArray } from 'drizzle-orm'
+import { and, eq, isNull, notInArray } from 'drizzle-orm'
 
 import { enrollment, profile, type PublicDb, type SchoolDb } from '@narada/db'
 
-import type { BatchReadScope } from '../utils/accessPolicy'
 import { tokenMatch } from '../utils/search'
 import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
 
@@ -54,27 +53,15 @@ export async function findById(db: SchoolDb, id: string): Promise<Profile | unde
 }
 
 /**
- * Backs both the admin "enroll a student" search and the command-palette global search
- * (`search/service.ts`) — the only two reasons to search across more than one's own profile
- * (`findByUserId`). `excludeBatchId` filters out profiles who already hold a *live* (`'active'`)
- * seat in that batch at the query level, so `SEARCH_LIMIT` still returns useful candidates rather
- * than being eaten by already-enrolled matches — a profile on a break there
- * (`enrollment/service.ts::putOnBreak`) is deliberately left findable, since `enroll`'s own
- * conflict check (`enrollment/service.ts::enroll`) reactivates a non-active row instead of
- * rejecting it, and an admin can't do that for someone this search hides from them.
- *
- * `scope` reuses `AccessPolicy#getBatchVisibility`'s vocabulary rather than inventing a parallel
- * one: an admin (`{kind: 'all'}`) can search every profile in the school, exactly like they can
- * list every batch; anyone else (`{kind: 'enrolled', profileId}`) can only search profiles who
- * share at least one *live* batch with them — the same roster a batch's own `GET /batches/:id`
- * already shows to every member of it (every batch role holds `enrollment:read`), so this isn't a
- * new disclosure, just the same information reachable a second way.
+ * Backs the admin "enroll a student" search — the only reason to search across every profile in
+ * the school rather than just one's own (`findByUserId`). `excludeBatchId` filters out profiles
+ * who already hold a *live* (`'active'`) seat in that batch at the query level, so `SEARCH_LIMIT`
+ * still returns useful candidates rather than being eaten by already-enrolled matches — a profile
+ * on a break there (`enrollment/service.ts::putOnBreak`) is deliberately left findable, since
+ * `enroll`'s own conflict check (`enrollment/service.ts::enroll`) reactivates a non-active row
+ * instead of rejecting it, and an admin can't do that for someone this search hides from them.
  */
-export async function search(
-  db: SchoolDb,
-  options: SearchProfilesQuery,
-  scope: BatchReadScope,
-): Promise<Profile[]> {
+export async function search(db: SchoolDb, options: SearchProfilesQuery): Promise<Profile[]> {
   return db.query.profile.findMany({
     where: (t, { and, isNull: isNullCol }) => {
       const conditions = [isNullCol(t.deletedAt)]
@@ -94,31 +81,6 @@ export async function search(
                 and(
                   eq(enrollment.batchId, options.excludeBatchId),
                   eq(enrollment.status, 'active'),
-                ),
-              ),
-          ),
-        )
-      }
-
-      if (scope.kind === 'enrolled') {
-        conditions.push(
-          inArray(
-            t.id,
-            db
-              .select({ profileId: enrollment.profileId })
-              .from(enrollment)
-              .where(
-                inArray(
-                  enrollment.batchId,
-                  db
-                    .select({ batchId: enrollment.batchId })
-                    .from(enrollment)
-                    .where(
-                      and(
-                        eq(enrollment.profileId, scope.profileId),
-                        eq(enrollment.status, 'active'),
-                      ),
-                    ),
                 ),
               ),
           ),

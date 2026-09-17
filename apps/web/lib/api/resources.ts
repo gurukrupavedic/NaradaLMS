@@ -26,7 +26,6 @@ import type {
   ApiRegistration,
   ApiRegistrationStatus,
   ApiScriptKey,
-  ApiSearchResult,
   ApiTrack,
 } from '@/lib/api/api-types'
 import {
@@ -123,11 +122,18 @@ export async function searchProfiles(query: string, excludeBatchId: string): Pro
   return fetchApi<ApiProfile[]>(`/profiles/search?${params.toString()}`)
 }
 
-// GET /v1/search?q=... — admin-only (AccessPolicy.requireCanSearch). Backs the command palette
-// (components/command-palette.tsx): a single query fanned out server-side across students,
-// batches, tracks, chapters, and registrations at once.
-export async function globalSearch(query: string): Promise<ApiSearchResult[]> {
-  return fetchApi<ApiSearchResult[]>(`/search?q=${encodeURIComponent(query)}`)
+// GET /v1/profiles/:profileId/batches?withDetail=true — the raw batch+roster shape, dedicated to
+// the command palette's batch/student search (components/command-palette.tsx). Deliberately not
+// shared with `fetchAdminBatchesWithTracks` above even though it hits the same endpoint: that one
+// discards `members` once it reshapes into `AdminBatchRow`, and the palette needs exactly the
+// roster this throws away. The self-lookup scoping is the same either way — an admin gets every
+// batch in the school, anyone else gets just their own.
+export async function fetchBatchesWithRoster(): Promise<ApiBatchWithRole[]> {
+  const profileId = getSelectedProfileId()
+  const { items } = await fetchApi<{ items: ApiBatchWithRole[] }>(
+    `/profiles/${profileId}/batches?withDetail=true&limit=100`,
+  )
+  return items
 }
 
 // ── Registrations ────────────────────────────────────────────────────────────

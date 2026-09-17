@@ -112,13 +112,9 @@ describe('searchProfiles', () => {
     vi.mocked(repository.search).mockResolvedValue(results)
 
     await expect(
-      searchProfiles(context, { query: 'ada', excludeBatchId: undefined }, { kind: 'all' }),
+      searchProfiles(context, { query: 'ada', excludeBatchId: undefined }),
     ).resolves.toEqual(results)
-    expect(repository.search).toHaveBeenCalledWith(
-      db,
-      { query: 'ada', excludeBatchId: undefined },
-      { kind: 'all' },
-    )
+    expect(repository.search).toHaveBeenCalledWith(db, { query: 'ada', excludeBatchId: undefined })
   })
 })
 

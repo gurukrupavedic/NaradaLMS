@@ -38,7 +38,7 @@ router.get(
   optionalProfileRoute(async ({ req, res, db, school, user, access }) => {
     access.requireCanSearchProfiles()
     const query = await parse(SearchProfilesQuerySchema, req.query)
-    const profiles = await searchProfiles({ db, school, user }, query, access.getBatchVisibility())
+    const profiles = await searchProfiles({ db, school, user }, query)
     res.status(200).json({ data: profiles })
   }),
 )

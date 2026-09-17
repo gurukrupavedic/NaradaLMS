@@ -4,6 +4,7 @@ import {
   fetchAdminBatch,
   fetchAdminBatches,
   fetchAuthProfile,
+  fetchBatchesWithRoster,
   fetchCatalogTrack,
   fetchCatalogTracks,
   fetchChapter,
@@ -14,7 +15,6 @@ import {
   fetchProfileDetail,
   fetchRegistration,
   fetchRegistrations,
-  globalSearch,
   searchProfiles,
 } from '@/lib/api/resources'
 import type { ApiRegistrationStatus } from '@/lib/api/api-types'
@@ -51,6 +51,10 @@ export const keys = {
     all: ['batches'] as const,
     detail: (code: string) => ['batches', code] as const,
     open: ['batches', 'open'] as const,
+    // The command palette's own batch/student search — a distinct cache entry from `all` above
+    // even though it hits the same endpoint, since it keeps the raw roster `all`'s own fetcher
+    // discards after reshaping (see `fetchBatchesWithRoster`'s doc comment).
+    withRoster: ['batches', 'withRoster'] as const,
   },
 
   catalog: {
@@ -75,10 +79,6 @@ export const keys = {
     search: (query: string, excludeBatchId: string) =>
       ['profiles', 'search', query, excludeBatchId] as const,
   },
-
-  // Keyed on the query text itself, same reasoning as `profiles.search` above — each keystroke is
-  // its own cache entry.
-  globalSearch: (query: string) => ['search', query] as const,
 } as const
 
 /**
@@ -197,11 +197,12 @@ export const profileSearchQuery = (query: string, excludeBatchId: string) =>
     enabled: query.trim().length > 0,
   })
 
-// The command palette (components/command-palette.tsx). Unlike `profileSearchQuery`, this has no
-// `excludeBatchId` axis — it's one global index, not scoped to a particular roster edit.
-export const globalSearchQuery = (query: string) =>
+// The command palette's batch/student search (components/command-palette.tsx). No server-side
+// `enabled`-by-query-text gate here the way `profileSearchQuery`/the old `globalSearchQuery` had —
+// the palette fetches this once (per its own `enabled: open`) and filters the *result* client-side
+// on every keystroke, rather than sending a request per keystroke.
+export const batchesWithRosterQuery = () =>
   queryOptions({
-    queryKey: keys.globalSearch(query),
-    queryFn: () => globalSearch(query),
-    enabled: query.trim().length > 0,
+    queryKey: keys.batches.withRoster,
+    queryFn: fetchBatchesWithRoster,
   })

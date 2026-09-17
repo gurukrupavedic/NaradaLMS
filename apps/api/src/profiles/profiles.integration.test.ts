@@ -248,7 +248,7 @@ describe('search (admin "enroll a student" support)', () => {
     await createProfile(world, { name: 'Ada Anderson' })
     await createProfile(world, { name: 'Zed Zephyr' })
 
-    const results = await repository.search(world.schoolDb, { query: 'a' }, { kind: 'all' })
+    const results = await repository.search(world.schoolDb, { query: 'a' })
 
     expect(results.map(r => r.name)).toEqual(['Ada Anderson', 'Bea Baker'])
   })
@@ -260,11 +260,7 @@ describe('search (admin "enroll a student" support)', () => {
 
     // "kumar ravi" is not a substring of "Ravi Kumar" — a plain `ilike` over the full query would
     // miss this even though every word the reader typed is right there.
-    const results = await repository.search(
-      world.schoolDb,
-      { query: 'kumar ravi' },
-      { kind: 'all' },
-    )
+    const results = await repository.search(world.schoolDb, { query: 'kumar ravi' })
 
     expect(results.map(r => r.id)).toEqual([match.id])
   })
@@ -277,11 +273,7 @@ describe('search (admin "enroll a student" support)', () => {
     const unenrolledProfile = await createProfile(world, { name: 'Not Yet Enrolled' })
     await enroll(world, enrolledProfile, batchRow, 'student')
 
-    const results = await repository.search(
-      world.schoolDb,
-      { excludeBatchId: batchRow.id },
-      { kind: 'all' },
-    )
+    const results = await repository.search(world.schoolDb, { excludeBatchId: batchRow.id })
 
     expect(results.map(r => r.id)).toContain(unenrolledProfile.id)
     expect(results.map(r => r.id)).not.toContain(enrolledProfile.id)
@@ -292,11 +284,7 @@ describe('search (admin "enroll a student" support)', () => {
     const deactivated = await createProfile(world, { name: 'Deactivated Person' })
     await repository.softDeleteOwned(world.schoolDb, deactivated.id, deactivated.userId)
 
-    const results = await repository.search(
-      world.schoolDb,
-      { query: 'Deactivated' },
-      { kind: 'all' },
-    )
+    const results = await repository.search(world.schoolDb, { query: 'Deactivated' })
 
     expect(results).toHaveLength(0)
   })
@@ -306,45 +294,9 @@ describe('search (admin "enroll a student" support)', () => {
     await createProfile(world)
     await createProfile(world)
 
-    const results = await repository.search(world.schoolDb, {}, { kind: 'all' })
+    const results = await repository.search(world.schoolDb, {})
 
     expect(results.length).toBeGreaterThanOrEqual(2)
-  })
-
-  it("scoped to 'enrolled', only matches profiles sharing a live batch with the scope's profileId", async () => {
-    world = await createTestSchool()
-    const trackRow = await createTrack(world)
-    const myBatch = await createBatch(world, trackRow)
-    const otherBatch = await createBatch(world, trackRow)
-    const me = await createProfile(world, { name: 'Me' })
-    const batchmate = await createProfile(world, { name: 'Batchmate' })
-    const stranger = await createProfile(world, { name: 'Stranger' })
-    await enroll(world, me, myBatch, 'student')
-    await enroll(world, batchmate, myBatch, 'student')
-    await enroll(world, stranger, otherBatch, 'student')
-
-    const results = await repository.search(
-      world.schoolDb,
-      {},
-      { kind: 'enrolled', profileId: me.id },
-    )
-
-    expect(results.map(r => r.id).sort()).toEqual([batchmate.id, me.id].sort())
-    expect(results.map(r => r.id)).not.toContain(stranger.id)
-  })
-
-  it("scoped to 'enrolled' with no batches at all, matches nothing", async () => {
-    world = await createTestSchool()
-    const lonelyProfile = await createProfile(world, { name: 'Lonely' })
-    await createProfile(world, { name: 'Someone Else' })
-
-    const results = await repository.search(
-      world.schoolDb,
-      {},
-      { kind: 'enrolled', profileId: lonelyProfile.id },
-    )
-
-    expect(results).toHaveLength(0)
   })
 })
 

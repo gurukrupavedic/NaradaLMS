@@ -7,28 +7,44 @@ import { Dialog } from '@base-ui/react/dialog'
 import { BookOpen, ClipboardList, FileText, Search, UserPlus, Users } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { globalSearchQuery } from '@/lib/query/options'
-import type { ApiSearchResult, ApiSearchResultKind } from '@/lib/api/api-types'
+import { useHasAdminAccess } from '@/lib/auth/profile-store'
+import { batchesWithRosterQuery, catalogTracksQuery, registrationsQuery } from '@/lib/query/options'
+import type { ApiBatchWithRole, ApiRegistration } from '@/lib/api/api-types'
+import type { CatalogTrack } from '@/lib/mock-catalog'
 
 /**
  * The command palette — Cmd/Ctrl+K anywhere in the app, or the "Search" button in `AppShell`'s
- * header. One text field fanned out server-side (`GET /v1/search`) across students, batches,
- * tracks, chapters, and registrations, rather than five separate lookups the reader would
- * otherwise have to know to run.
+ * header. Unlike the first version of this feature, there's no dedicated search endpoint: opening
+ * the palette simply subscribes to the same TanStack Query caches the rest of the app already
+ * populates (`catalogTracksQuery`, `batchesWithRosterQuery`, `registrationsQuery`), and every
+ * keystroke filters that already-fetched data client-side rather than sending a request. If you'd
+ * already visited a page that warmed one of those caches, opening the palette costs nothing extra;
+ * if not, opening it *is* what warms it — completeness no longer depends on which pages you
+ * happened to click through first.
  *
- * Mounted for every signed-in caller, not just admins — the endpoint itself scopes each category
- * to what that caller could already see by browsing (their own batchmates, published chapters,
- * registrations skipped outright for anyone who isn't a school admin), so there's no separate
- * "does this caller get search at all" gate here. A caller with no active profile selected yet
- * (and no admin role either) will 403 on every non-admin-visible category — `isError` below
- * degrades that to a plain "couldn't search" message rather than a stuck spinner.
+ * Every one of those underlying endpoints already scopes its response server-side to what the
+ * caller is allowed to see (an admin's self-lookup resolves to every batch in the school, anyone
+ * else's to just their own; content read view drops drafts for a non-admin), so filtering the
+ * result client-side can't show anyone more than they could already reach by browsing.
+ * Registrations are the one category still fetched only for `hasAdminAccess` — anyone else's
+ * request would just 403.
  */
 
-const DEBOUNCE_MS = 200
+const RESULT_LIMIT = 6
 
-const KIND_ORDER: ApiSearchResultKind[] = ['student', 'batch', 'track', 'chapter', 'registration']
+type ResultKind = 'student' | 'batch' | 'track' | 'chapter' | 'registration'
 
-const KIND_LABEL: Record<ApiSearchResultKind, string> = {
+type SearchResult = {
+  kind: ResultKind
+  id: string
+  code: string | null
+  title: string
+  subtitle: string | null
+}
+
+const KIND_ORDER: ResultKind[] = ['student', 'batch', 'track', 'chapter', 'registration']
+
+const KIND_LABEL: Record<ResultKind, string> = {
   student: 'Students',
   batch: 'Batches',
   track: 'Tracks',
@@ -36,17 +52,15 @@ const KIND_LABEL: Record<ApiSearchResultKind, string> = {
   registration: 'Registrations',
 }
 
-const KIND_ICON: Record<ApiSearchResultKind, React.ComponentType<{ className?: string }>> = {
+const KIND_ICON: Record<ResultKind, React.ComponentType<{ className?: string }>> = {
   student: Users,
   batch: ClipboardList,
   track: BookOpen,
   chapter: FileText,
-  // Distinct from `batch`'s icon (both used ClipboardList before) — a registration and a batch
-  // are visually indistinguishable rows otherwise, undermining the point of grouping by category.
   registration: UserPlus,
 }
 
-function hrefFor(result: ApiSearchResult): string {
+function hrefFor(result: SearchResult): string {
   switch (result.kind) {
     case 'student':
       return `/students/${result.id}`
@@ -61,41 +75,175 @@ function hrefFor(result: ApiSearchResult): string {
   }
 }
 
+/** Every token in `query` must appear, case-insensitively, somewhere across `texts` — mirrors
+ * `apps/api/src/utils/search.ts`'s `tokenMatch`, so "1 track" still finds "Track 1" here too. */
+function matchesQuery(query: string, texts: (string | null | undefined)[]): boolean {
+  const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return false
+  const haystacks = texts.filter((t): t is string => Boolean(t)).map(t => t.toLowerCase())
+  return (
+    tokens.length > 0 &&
+    haystacks.length > 0 &&
+    tokens.every(token => haystacks.some(h => h.includes(token)))
+  )
+}
+
+function buildGroups(
+  query: string,
+  data: { tracks: CatalogTrack[]; batches: ApiBatchWithRole[]; registrations: ApiRegistration[] },
+): { kind: ResultKind; results: SearchResult[] }[] {
+  const trackNameById = new Map(data.tracks.map(t => [t.id, t.name]))
+
+  const trackResults: SearchResult[] = data.tracks
+    .filter(t => matchesQuery(query, [t.name]))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, RESULT_LIMIT)
+    .map(t => ({ kind: 'track', id: t.id, code: null, title: t.name, subtitle: null }))
+
+  const chapterResults: SearchResult[] = data.tracks
+    .flatMap(t => t.chapters.map(c => ({ ...c, trackName: t.name })))
+    .filter(c => matchesQuery(query, [c.title, c.code]))
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .slice(0, RESULT_LIMIT)
+    .map(c => ({ kind: 'chapter', id: c.id, code: c.code, title: c.title, subtitle: c.trackName }))
+
+  const batchResults: SearchResult[] = data.batches
+    .filter(b => matchesQuery(query, [b.code]))
+    .sort((a, b) => a.code.localeCompare(b.code))
+    .slice(0, RESULT_LIMIT)
+    .map(b => ({
+      kind: 'batch',
+      id: b.id,
+      code: b.code,
+      title: b.code,
+      subtitle: trackNameById.get(b.trackId) ?? null,
+    }))
+
+  // Deduped by profileId — the same person can show up on more than one batch's roster.
+  const studentsById = new Map<string, SearchResult>()
+  for (const batch of data.batches) {
+    for (const member of batch.members) {
+      if (!studentsById.has(member.profileId) && matchesQuery(query, [member.name])) {
+        studentsById.set(member.profileId, {
+          kind: 'student',
+          id: member.profileId,
+          code: null,
+          title: member.name,
+          subtitle: member.city,
+        })
+      }
+    }
+  }
+  const studentResults = [...studentsById.values()]
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .slice(0, RESULT_LIMIT)
+
+  const registrationResults: SearchResult[] = data.registrations
+    .filter(r => matchesQuery(query, [r.firstName, r.lastName, r.email, r.phone]))
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+    .slice(0, RESULT_LIMIT)
+    .map(r => ({
+      kind: 'registration',
+      id: r.id,
+      code: null,
+      title: `${r.firstName} ${r.lastName}`,
+      subtitle: r.status,
+    }))
+
+  const byKind: Record<ResultKind, SearchResult[]> = {
+    student: studentResults,
+    batch: batchResults,
+    track: trackResults,
+    chapter: chapterResults,
+    registration: registrationResults,
+  }
+
+  return KIND_ORDER.map(kind => ({ kind, results: byKind[kind] })).filter(g => g.results.length > 0)
+}
+
 export function CommandPalette() {
   const router = useRouter()
+  const hasAdminAccess = Boolean(useHasAdminAccess())
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         setOpen(o => !o)
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleGlobalKeyDown)
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown)
   }, [])
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query), DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [query])
+  // Enabled only while open: rendering the palette at all (via AppShell, on every page) shouldn't
+  // by itself cost a fetch — opening it is the trigger, the same way visiting the pages that
+  // otherwise populate these caches would be.
+  const catalogQuery = useQuery({ ...catalogTracksQuery(), enabled: open })
+  const batchesQuery = useQuery({ ...batchesWithRosterQuery(), enabled: open })
+  const pendingQuery = useQuery({
+    ...registrationsQuery('pending'),
+    enabled: open && hasAdminAccess,
+  })
+  const approvedQuery = useQuery({
+    ...registrationsQuery('approved'),
+    enabled: open && hasAdminAccess,
+  })
+  const rejectedQuery = useQuery({
+    ...registrationsQuery('rejected'),
+    enabled: open && hasAdminAccess,
+  })
 
-  const { data: results, isFetching, isError } = useQuery(globalSearchQuery(debouncedQuery))
-  const groups = useMemo(() => groupByKind(results ?? []), [results])
+  const isLoading =
+    catalogQuery.isLoading ||
+    batchesQuery.isLoading ||
+    (hasAdminAccess &&
+      (pendingQuery.isLoading || approvedQuery.isLoading || rejectedQuery.isLoading))
+
+  const isError =
+    catalogQuery.isError ||
+    batchesQuery.isError ||
+    (hasAdminAccess && (pendingQuery.isError || approvedQuery.isError || rejectedQuery.isError))
+
+  const trimmedQuery = query.trim()
+
+  const groups = useMemo(() => {
+    if (!open || trimmedQuery.length === 0) return []
+    return buildGroups(trimmedQuery, {
+      tracks: catalogQuery.data ?? [],
+      batches: batchesQuery.data ?? [],
+      registrations: hasAdminAccess
+        ? [
+            ...(pendingQuery.data ?? []),
+            ...(approvedQuery.data ?? []),
+            ...(rejectedQuery.data ?? []),
+          ]
+        : [],
+    })
+  }, [
+    open,
+    trimmedQuery,
+    catalogQuery.data,
+    batchesQuery.data,
+    hasAdminAccess,
+    pendingQuery.data,
+    approvedQuery.data,
+    rejectedQuery.data,
+  ])
+
   const flat = useMemo(() => groups.flatMap(g => g.results), [groups])
 
-  // Reset the selection whenever the settled query changes, so an old row's position doesn't
-  // carry over to an unrelated new result set. Adjusted during render (React's own pattern for
-  // this) rather than in an effect, which would cascade an extra render on every keystroke.
-  const [settledForIndex, setSettledForIndex] = useState(debouncedQuery)
-  if (settledForIndex !== debouncedQuery) {
-    setSettledForIndex(debouncedQuery)
+  // Reset the selection whenever the query changes, so an old row's position doesn't carry over to
+  // an unrelated new result set. Adjusted during render (React's own pattern for this) rather than
+  // in an effect, which would cascade an extra render on every keystroke.
+  const [settledQuery, setSettledQuery] = useState(query)
+  if (settledQuery !== query) {
+    setSettledQuery(query)
     setActiveIndex(0)
   }
 
@@ -103,12 +251,11 @@ export function CommandPalette() {
     setOpen(next)
     if (!next) {
       setQuery('')
-      setDebouncedQuery('')
       setActiveIndex(0)
     }
   }
 
-  function navigateTo(result: ApiSearchResult) {
+  function navigateTo(result: SearchResult) {
     router.push(hrefFor(result))
     handleOpenChange(false)
   }
@@ -168,7 +315,7 @@ export function CommandPalette() {
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto">
-              {debouncedQuery.trim().length === 0 ? (
+              {trimmedQuery.length === 0 ? (
                 <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
                   Start typing to search across the school.
                 </p>
@@ -176,11 +323,11 @@ export function CommandPalette() {
                 <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
                   Couldn&rsquo;t search right now.
                 </p>
-              ) : isFetching && flat.length === 0 ? (
-                <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">Searching…</p>
+              ) : isLoading ? (
+                <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">Loading…</p>
               ) : flat.length === 0 ? (
                 <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
-                  No matches for &ldquo;{debouncedQuery}&rdquo;.
+                  No matches for &ldquo;{trimmedQuery}&rdquo;.
                 </p>
               ) : (
                 groups.map(group => (
@@ -223,13 +370,5 @@ export function CommandPalette() {
         </Dialog.Portal>
       </Dialog.Root>
     </>
-  )
-}
-
-function groupByKind(
-  results: ApiSearchResult[],
-): { kind: ApiSearchResultKind; results: ApiSearchResult[] }[] {
-  return KIND_ORDER.map(kind => ({ kind, results: results.filter(r => r.kind === kind) })).filter(
-    group => group.results.length > 0,
   )
 }
