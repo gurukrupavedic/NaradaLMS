@@ -88,6 +88,33 @@ describe('search repository', () => {
       (await repository.searchRegistrations(world.schoolDb, 'ravi@example')).map(r => r.id),
     ).toEqual([match.id])
   })
+
+  it('matches every word of a multi-word query regardless of order (tokenMatch)', async () => {
+    world = await createTestSchool()
+    const track1 = await createTrack(world, { name: 'Track 1' })
+    await createTrack(world, { name: 'Track 2' })
+    const batchRow = await createBatch(world, track1, { code: 'VED-01-2026-BR-1' })
+    const chapterRow = await createChapter(world, track1, { title: 'Bhagavad Gita', code: 'ch-9' })
+    const registrationRow = await createRegistration(world, {
+      firstName: 'Ravi',
+      lastName: 'Kumar',
+    })
+
+    // "1 track" is not a substring of "Track 1" — a plain `ilike('%1 track%')` would miss this
+    // exactly the way the command palette's users hit in practice (see PR discussion).
+    expect((await repository.searchTracks(world.schoolDb, '1 track')).map(r => r.id)).toEqual([
+      track1.id,
+    ])
+    expect((await repository.searchBatches(world.schoolDb, '2026 ved br')).map(r => r.id)).toEqual([
+      batchRow.id,
+    ])
+    expect(
+      (await repository.searchChapters(world.schoolDb, 'gita bhagavad')).map(r => r.id),
+    ).toEqual([chapterRow.id])
+    expect(
+      (await repository.searchRegistrations(world.schoolDb, 'kumar ravi')).map(r => r.id),
+    ).toEqual([registrationRow.id])
+  })
 })
 
 describe('search service', () => {

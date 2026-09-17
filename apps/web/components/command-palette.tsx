@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { Dialog } from '@base-ui/react/dialog'
-import { BookOpen, ClipboardList, FileText, Search, Users } from 'lucide-react'
+import { BookOpen, ClipboardList, FileText, Search, UserPlus, Users } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { globalSearchQuery } from '@/lib/query/options'
@@ -37,7 +37,9 @@ const KIND_ICON: Record<ApiSearchResultKind, React.ComponentType<{ className?: s
   batch: ClipboardList,
   track: BookOpen,
   chapter: FileText,
-  registration: ClipboardList,
+  // Distinct from `batch`'s icon (both used ClipboardList before) — a registration and a batch
+  // are visually indistinguishable rows otherwise, undermining the point of grouping by category.
+  registration: UserPlus,
 }
 
 function hrefFor(result: ApiSearchResult): string {

@@ -122,7 +122,11 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
       const batchRow = await createBatch(world, trackRow)
       await enroll(world, studentProfile, batchRow, 'student')
 
-      await repository.softDeleteOwned(world.schoolDb, studentProfile.id, 'user-deactivated-student')
+      await repository.softDeleteOwned(
+        world.schoolDb,
+        studentProfile.id,
+        'user-deactivated-student',
+      )
 
       // The enrollment row is still there...
       const stillEnrolled = await world.schoolDb.query.enrollment.findFirst({
@@ -149,7 +153,9 @@ describe('updateProfile (student self-edit) — countryTimeZone re-derivation', 
   it('derives countryTimeZone from the patch, merged onto the existing city, when state/country change but city does not', async () => {
     world = await createTestSchool()
     const profileRow = await createProfile(world, { userId: 'user-tz-1', city: 'Cambridge' })
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const orgSchool = { id: world.orgId } as unknown as Parameters<
+      typeof updateProfile
+    >[0]['school']
     const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-1') }
 
     const updated = await updateProfile(context, profileRow.id, { state: 'MA', country: 'US' })
@@ -161,7 +167,9 @@ describe('updateProfile (student self-edit) — countryTimeZone re-derivation', 
   it('leaves a previously derived countryTimeZone untouched when the patch touches neither city, state, nor country', async () => {
     world = await createTestSchool()
     const profileRow = await createProfile(world, { userId: 'user-tz-2', city: 'Cambridge' })
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const orgSchool = { id: world.orgId } as unknown as Parameters<
+      typeof updateProfile
+    >[0]['school']
     const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-2') }
 
     await updateProfile(context, profileRow.id, { state: 'MA', country: 'US' })
@@ -174,7 +182,9 @@ describe('updateProfile (student self-edit) — countryTimeZone re-derivation', 
   it('re-derives from scratch when city changes but state/country do not', async () => {
     world = await createTestSchool()
     const profileRow = await createProfile(world, { userId: 'user-tz-3', city: 'Cambridge' })
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const orgSchool = { id: world.orgId } as unknown as Parameters<
+      typeof updateProfile
+    >[0]['school']
     const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-3') }
 
     await updateProfile(context, profileRow.id, { state: 'TG', country: 'IN' })
@@ -243,6 +253,18 @@ describe('search (admin "enroll a student" support)', () => {
     expect(results.map(r => r.name)).toEqual(['Ada Anderson', 'Bea Baker'])
   })
 
+  it('matches every word of a multi-word query regardless of order', async () => {
+    world = await createTestSchool()
+    const match = await createProfile(world, { name: 'Ravi Kumar' })
+    await createProfile(world, { name: 'Someone Else' })
+
+    // "kumar ravi" is not a substring of "Ravi Kumar" — a plain `ilike` over the full query would
+    // miss this even though every word the reader typed is right there.
+    const results = await repository.search(world.schoolDb, { query: 'kumar ravi' })
+
+    expect(results.map(r => r.id)).toEqual([match.id])
+  })
+
   it('excludes profiles already enrolled in excludeBatchId', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
@@ -292,7 +314,9 @@ describe('profile detail access (self, admin, shared teacher, stranger)', () => 
     const userRow = await createUser(world)
     await createMembership(world, userRow.id, { role: 'member' })
     const studentProfile = await createProfile(world, { userId: userRow.id })
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof AccessPolicy.load>[0]['school']
+    const orgSchool = { id: world.orgId } as unknown as Parameters<
+      typeof AccessPolicy.load
+    >[0]['school']
 
     const access = await AccessPolicy.load({
       db: world.schoolDb,
@@ -302,8 +326,13 @@ describe('profile detail access (self, admin, shared teacher, stranger)', () => 
     })
 
     await expect(access.requireCanViewProfile(studentProfile.id)).resolves.toBeUndefined()
-    const detail = await findById({ db: world.schoolDb, school: orgSchool, user: actor(userRow.id) }, studentProfile.id)
-    await expect(getDashboardData({ db: world.schoolDb }, detail.id, detail.name)).resolves.toBeDefined()
+    const detail = await findById(
+      { db: world.schoolDb, school: orgSchool, user: actor(userRow.id) },
+      studentProfile.id,
+    )
+    await expect(
+      getDashboardData({ db: world.schoolDb }, detail.id, detail.name),
+    ).resolves.toBeDefined()
   })
 
   it('a school admin can view any profile', async () => {
@@ -312,7 +341,9 @@ describe('profile detail access (self, admin, shared teacher, stranger)', () => 
     await createMembership(world, adminUserRow.id, { role: 'admin' })
     const adminProfile = await createProfile(world, { userId: adminUserRow.id })
     const studentProfile = await createProfile(world)
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof AccessPolicy.load>[0]['school']
+    const orgSchool = { id: world.orgId } as unknown as Parameters<
+      typeof AccessPolicy.load
+    >[0]['school']
 
     const access = await AccessPolicy.load({
       db: world.schoolDb,
@@ -334,7 +365,9 @@ describe('profile detail access (self, admin, shared teacher, stranger)', () => 
     const studentProfile = await createProfile(world)
     await enroll(world, teacherProfile, batchRow, 'instructor')
     await enroll(world, studentProfile, batchRow, 'student')
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof AccessPolicy.load>[0]['school']
+    const orgSchool = { id: world.orgId } as unknown as Parameters<
+      typeof AccessPolicy.load
+    >[0]['school']
 
     const access = await AccessPolicy.load({
       db: world.schoolDb,
@@ -352,7 +385,9 @@ describe('profile detail access (self, admin, shared teacher, stranger)', () => 
     await createMembership(world, strangerUserRow.id, { role: 'member' })
     const strangerProfile = await createProfile(world, { userId: strangerUserRow.id })
     const studentProfile = await createProfile(world)
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof AccessPolicy.load>[0]['school']
+    const orgSchool = { id: world.orgId } as unknown as Parameters<
+      typeof AccessPolicy.load
+    >[0]['school']
 
     const access = await AccessPolicy.load({
       db: world.schoolDb,

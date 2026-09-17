@@ -1,6 +1,8 @@
-import { and, eq, ilike, or } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 import { batch, chapter, registration, track, type SchoolDb } from '@narada/db'
+
+import { tokenMatch } from '../utils/search'
 
 // Small and fixed rather than paginated — this backs a command palette, not a list screen; a
 // query with more than a handful of matches per category is a query the reader should narrow, not
@@ -15,7 +17,7 @@ export type BatchSearchRow = {
 
 export async function searchBatches(db: SchoolDb, q: string): Promise<BatchSearchRow[]> {
   return db.query.batch.findMany({
-    where: ilike(batch.code, `%${q}%`),
+    where: tokenMatch(q, [batch.code]),
     columns: { id: true, code: true },
     with: { track: { columns: { name: true } } },
     orderBy: (t, { asc }) => asc(t.code),
@@ -27,7 +29,7 @@ export type TrackSearchRow = { id: string; name: string }
 
 export async function searchTracks(db: SchoolDb, q: string): Promise<TrackSearchRow[]> {
   return db.query.track.findMany({
-    where: ilike(track.name, `%${q}%`),
+    where: tokenMatch(q, [track.name]),
     columns: { id: true, name: true },
     orderBy: (t, { asc }) => asc(t.name),
     limit: RESULT_LIMIT,
@@ -47,10 +49,7 @@ export type ChapterSearchRow = {
 // is exactly who this search is for.
 export async function searchChapters(db: SchoolDb, q: string): Promise<ChapterSearchRow[]> {
   return db.query.chapter.findMany({
-    where: and(
-      eq(chapter.archived, false),
-      or(ilike(chapter.title, `%${q}%`), ilike(chapter.code, `%${q}%`)),
-    ),
+    where: and(eq(chapter.archived, false), tokenMatch(q, [chapter.title, chapter.code])),
     columns: { id: true, code: true, title: true },
     with: { track: { columns: { name: true } } },
     orderBy: (t, { asc }) => asc(t.title),
@@ -71,12 +70,12 @@ export async function searchRegistrations(
   q: string,
 ): Promise<RegistrationSearchRow[]> {
   return db.query.registration.findMany({
-    where: or(
-      ilike(registration.firstName, `%${q}%`),
-      ilike(registration.lastName, `%${q}%`),
-      ilike(registration.email, `%${q}%`),
-      ilike(registration.phone, `%${q}%`),
-    ),
+    where: tokenMatch(q, [
+      registration.firstName,
+      registration.lastName,
+      registration.email,
+      registration.phone,
+    ]),
     columns: { id: true, firstName: true, lastName: true, status: true, city: true },
     orderBy: (t, { desc }) => desc(t.createdAt),
     limit: RESULT_LIMIT,
