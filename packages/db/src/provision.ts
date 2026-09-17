@@ -214,3 +214,35 @@ export async function migrateExistingSchool(
   await provisionSchool(organizationId)
   return { backfilledLegacyTracking }
 }
+
+/**
+ * `migratePublicSchema()` plus `migrateExistingSchool()` for every existing school, in one call —
+ * meant to run at API boot (`apps/api/src/index.ts`), not from CI: a Railway deploy has no network
+ * path from outside Railway's project to a service's own Postgres (its `DATABASE_URL` resolves a
+ * private `*.railway.internal` hostname), so the migration has to run from inside the container
+ * that's actually starting, before it opens its HTTP port. Safe on every boot, including a normal
+ * restart with nothing pending — `migrate()`'s own tracking table makes that a fast no-op — and
+ * safe to run from more than one instance at once for the same reason `migrateExistingSchool`
+ * already documents (per-schema tracking, not a shared cross-tenant table); a genuine same-instant
+ * race on the exact same schema is still possible in principle (drizzle's migrator takes no
+ * advisory lock), but isn't a concern for this app's single-instance deployment today.
+ */
+export async function migrateAllSchoolSchemas(): Promise<
+  { organizationId: string; backfilledLegacyTracking: boolean }[]
+> {
+  const pool = new Pool({ connectionString: env.DATABASE_URL })
+  let organizationIds: string[]
+  try {
+    const result = await pool.query<{ id: string }>('SELECT id FROM organization')
+    organizationIds = result.rows.map(row => row.id)
+  } finally {
+    await pool.end()
+  }
+
+  const results: { organizationId: string; backfilledLegacyTracking: boolean }[] = []
+  for (const organizationId of organizationIds) {
+    const { backfilledLegacyTracking } = await migrateExistingSchool(organizationId)
+    results.push({ organizationId, backfilledLegacyTracking })
+  }
+  return results
+}

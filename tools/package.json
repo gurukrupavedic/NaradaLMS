@@ -10,7 +10,6 @@
     "schools:create": "tsx src/schools.ts create",
     "schools:migrate": "tsx src/schools.ts migrate",
     "db:migrate:public": "tsx src/migrate-public.ts",
-    "ci:migrate": "tsx src/ci-migrate.ts",
     "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit",
     "parse:excel": "tsx src/parse-excel-to-json.ts",
