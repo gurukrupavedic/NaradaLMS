@@ -2,6 +2,7 @@ import { publicDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound } from '../error'
 import { insert as insertProfile } from '../profiles/repository'
+import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
 import type { CreateRegistrationData, FindRegistrationsData, Registration } from './schema'
 
@@ -28,7 +29,10 @@ export async function submit(
   context: RegistrationServiceContext,
   data: CreateRegistrationData,
 ): Promise<Registration> {
-  const row = await repository.insert(context.db, data)
+  const row = await repository.insert(context.db, {
+    ...data,
+    countryTimeZone: deriveTimeZone({ city: data.city, state: data.state, country: data.country }),
+  })
   if (!row) {
     throw internalError()
   }
@@ -74,6 +78,8 @@ async function provisionApprovedApplicant(
       // name/phone/city — straight field-for-field, since the names already match.
       email: registration.email,
       yearOfBirth: registration.yearOfBirth,
+      state: registration.state,
+      country: registration.country,
       countryTimeZone: registration.countryTimeZone,
       learningGoal: registration.learningGoal,
       currentProficiency: registration.currentProficiency,

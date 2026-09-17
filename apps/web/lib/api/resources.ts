@@ -75,14 +75,16 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
 // only ever succeeds against the caller's own profile. `phone` and `yearOfBirth` are deliberately
 // not part of this input — `phone` is the BetterAuth login credential, `yearOfBirth` is treated as
 // fixed once recorded — both excluded server-side too (`apps/api/src/profiles/schema.ts`'s
-// `UpdateProfileSchema`).
+// `UpdateProfileSchema`). `countryTimeZone` is excluded for a different reason: it's derived
+// server-side from `city`/`state`/`country` whenever any of those change, never set directly.
 export type UpdateProfileInput = Partial<
   Pick<
     ApiProfile,
     | 'name'
     | 'city'
+    | 'state'
+    | 'country'
     | 'email'
-    | 'countryTimeZone'
     | 'learningGoal'
     | 'currentProficiency'
     | 'spokenLanguages'
@@ -113,6 +115,8 @@ export async function searchProfiles(query: string, excludeBatchId: string): Pro
 
 // ── Registrations ────────────────────────────────────────────────────────────
 
+// `countryTimeZone` deliberately isn't part of this input — apps/api derives it server-side from
+// city/state/country (`utils/timezone.ts::deriveTimeZone`) rather than accepting it directly.
 export type SubmitRegistrationInput = {
   firstName: string
   lastName: string
@@ -120,7 +124,8 @@ export type SubmitRegistrationInput = {
   yearOfBirth?: number | null
   email?: string | null
   city?: string | null
-  countryTimeZone?: string | null
+  state?: string | null
+  country?: string | null
   learningGoal?: string | null
   currentProficiency?: ApiProficiencyLevel | null
   spokenLanguages?: string[]

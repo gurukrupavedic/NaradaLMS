@@ -67,6 +67,35 @@ describe('submit', () => {
     expect(row.email).toBeNull()
     expect(row.yearOfBirth).toBeNull()
   })
+
+  it('derives countryTimeZone from city/state/country rather than accepting it directly', async () => {
+    world = await createTestSchool()
+
+    const row = await submit(
+      { db: world.schoolDb },
+      {
+        firstName: 'Anjali',
+        lastName: 'Rao',
+        phone: '+15556660099',
+        city: 'Hyderabad',
+        state: 'TG',
+        country: 'IN',
+      },
+    )
+
+    expect(row.countryTimeZone).toBe('Asia/Kolkata')
+  })
+
+  it('leaves countryTimeZone null when no country was given', async () => {
+    world = await createTestSchool()
+
+    const row = await submit(
+      { db: world.schoolDb },
+      { firstName: 'Anjali', lastName: 'Rao', phone: '+15556660098' },
+    )
+
+    expect(row.countryTimeZone).toBeNull()
+  })
 })
 
 describe('findAll', () => {
@@ -146,6 +175,33 @@ describe('approve', () => {
       where: (t, { and, eq }) => and(eq(t.organizationId, world!.orgId), eq(t.userId, provisionedUser.id)),
     })
     expect(memberRow).toMatchObject({ role: 'member' })
+  })
+
+  it('copies state, country, and the derived countryTimeZone onto the provisioned profile', async () => {
+    world = await createTestSchool()
+    const pending = await submit(
+      { db: world.schoolDb },
+      {
+        firstName: 'Anjali',
+        lastName: 'Rao',
+        phone: '+15556660097',
+        city: 'Hyderabad',
+        state: 'TG',
+        country: 'IN',
+      },
+    )
+
+    const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    await trackProvisionedUser(world, '+15556660097')
+
+    const profileRow = await world.schoolDb.query.profile.findFirst({
+      where: (t, { eq }) => eq(t.id, row.convertedProfileId!),
+    })
+    expect(profileRow).toMatchObject({
+      state: 'TG',
+      country: 'IN',
+      countryTimeZone: 'Asia/Kolkata',
+    })
   })
 
   it('uses a synthetic email when the registration gave none', async () => {

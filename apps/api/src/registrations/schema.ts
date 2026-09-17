@@ -22,6 +22,12 @@ export const RegistrationSchema = z.object({
   phone: e164Phone,
   email: z.email().nullable(),
   city: z.string().trim().min(1).nullable(),
+  // ISO 3166-2 subdivision code and ISO 3166-1 alpha-2 country code — see `profile`'s own doc
+  // comment (`packages/db/src/schema/school.ts`) for why these are codes, not display names.
+  state: z.string().trim().min(1).nullable(),
+  country: z.string().trim().min(1).nullable(),
+  // Never applicant-supplied (see `CreateRegistrationSchema` below) — derived server-side from
+  // city/state/country by `utils/timezone.ts::deriveTimeZone` (`service.ts::submit`).
   countryTimeZone: z.string().trim().min(1).nullable(),
 
   learningGoal: z.string().trim().min(1).nullable(),
@@ -42,6 +48,8 @@ export const RegistrationSchema = z.object({
   createdAt: isoInstant,
 })
 
+// `countryTimeZone` is deliberately absent from this pick list — see `RegistrationSchema`'s own
+// doc comment on that field. `service.ts::submit` derives and inserts it itself.
 export type CreateRegistrationData = z.infer<typeof CreateRegistrationSchema>
 export const CreateRegistrationSchema = RegistrationSchema.pick({
   firstName: true,
@@ -50,7 +58,8 @@ export const CreateRegistrationSchema = RegistrationSchema.pick({
   phone: true,
   email: true,
   city: true,
-  countryTimeZone: true,
+  state: true,
+  country: true,
   learningGoal: true,
   currentProficiency: true,
   spokenLanguages: true,
@@ -65,7 +74,8 @@ export const CreateRegistrationSchema = RegistrationSchema.pick({
   yearOfBirth: true,
   email: true,
   city: true,
-  countryTimeZone: true,
+  state: true,
+  country: true,
   learningGoal: true,
   currentProficiency: true,
   spokenLanguages: true,

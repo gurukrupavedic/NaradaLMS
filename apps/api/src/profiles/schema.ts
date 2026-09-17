@@ -18,6 +18,12 @@ export const ProfileSchema = z.object({
   // are later self-editable via `UpdateProfileSchema` (see its own doc comment).
   email: z.email().nullable(),
   yearOfBirth: z.number().int().nullable(),
+  // ISO 3166-2 subdivision code and ISO 3166-1 alpha-2 country code — see the `profile` table's
+  // own doc comment (`packages/db/src/schema/school.ts`) for why these are codes, not names.
+  state: z.string().nullable(),
+  country: z.string().nullable(),
+  // Never accepted directly in `UpdateProfileSchema` below — derived server-side from
+  // city/state/country by `utils/timezone.ts::deriveTimeZone` (see `service.ts::updateProfile`).
   countryTimeZone: z.string().nullable(),
   learningGoal: z.string().nullable(),
   currentProficiency: proficiencyLevelSchema.nullable(),
@@ -47,15 +53,18 @@ export const CreateProfileSchema = ProfileSchema.pick({
 // self-reported by the registrant themselves, per `registration-form.tsx`, not staff-entered —
 // except `phone` and `yearOfBirth`. `phone` is the BetterAuth login credential (phone-OTP
 // sign-in), so changing it needs its own re-verification flow, not a silent profile-details edit;
-// `yearOfBirth` is treated as fixed once recorded. Zod strips those two unlisted keys rather than
-// rejecting them, same as `UpdateBatchSchema` dropping `trackId` (see PARITY_PLAN.md).
+// `yearOfBirth` is treated as fixed once recorded. `countryTimeZone` is deliberately excluded too:
+// it's server-derived from `city`/`state`/`country` (`service.ts::updateProfile`), not something a
+// client sets directly. Zod strips these unlisted keys rather than rejecting them, same as
+// `UpdateBatchSchema` dropping `trackId` (see PARITY_PLAN.md).
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>
 export const UpdateProfileSchema = requireNonEmpty(
   ProfileSchema.pick({
     name: true,
     city: true,
+    state: true,
+    country: true,
     email: true,
-    countryTimeZone: true,
     learningGoal: true,
     currentProficiency: true,
     spokenLanguages: true,

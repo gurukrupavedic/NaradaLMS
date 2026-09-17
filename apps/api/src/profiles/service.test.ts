@@ -43,6 +43,8 @@ const baseProfile: Profile = {
   city: null,
   email: null,
   yearOfBirth: null,
+  state: null,
+  country: null,
   countryTimeZone: null,
   learningGoal: null,
   currentProficiency: null,

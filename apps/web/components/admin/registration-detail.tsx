@@ -12,6 +12,8 @@ import { Section } from '@/components/section'
 import { registrationQuery } from '@/lib/query/options'
 import { useApproveRegistration, useRejectRegistration } from '@/lib/query/use-registration-mutations'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
+import { formatLocation } from '@/lib/geo'
+import { formatTimeZone } from '@/lib/timezone'
 import type { ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
 
 const STATUS_LABEL: Record<ApiRegistrationStatus, string> = {
@@ -80,8 +82,13 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
               <dt className="label text-ink-muted">City</dt>
               <dd className="mt-2 text-[0.9375rem]">{registration.city ?? '—'}</dd>
 
+              <dt className="label mt-5 text-ink-muted">Location</dt>
+              <dd className="mt-2 text-[0.9375rem]">
+                {formatLocation(registration.state, registration.country) ?? '—'}
+              </dd>
+
               <dt className="label mt-5 text-ink-muted">Time zone</dt>
-              <dd className="mt-2 text-[0.9375rem]">{registration.countryTimeZone ?? '—'}</dd>
+              <dd className="mt-2 text-[0.9375rem]">{formatTimeZone(registration.countryTimeZone) ?? '—'}</dd>
 
               <dt className="label mt-5 text-ink-muted">Year of birth</dt>
               <dd className="mt-2 text-[0.9375rem]">{registration.yearOfBirth ?? '—'}</dd>

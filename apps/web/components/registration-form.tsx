@@ -8,6 +8,7 @@ import { submitRegistration, type SubmitRegistrationInput } from '@/lib/api/reso
 import { ApiError } from '@/lib/api/client'
 import type { ApiProficiencyLevel } from '@/lib/api/api-types'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
+import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 import { Wordmark } from '@/components/app-shell'
 
 /**
@@ -34,7 +35,8 @@ type FormState = {
   yearOfBirth: string
   email: string
   city: string
-  countryTimeZone: string
+  country: string
+  state: string
   learningGoal: string
   currentProficiency: ApiProficiencyLevel | ''
   spokenLanguages: string[]
@@ -54,7 +56,8 @@ const EMPTY_FORM: FormState = {
   yearOfBirth: '',
   email: '',
   city: '',
-  countryTimeZone: '',
+  country: '',
+  state: '',
   learningGoal: '',
   currentProficiency: '',
   spokenLanguages: [],
@@ -96,7 +99,8 @@ function toPayload(form: FormState): SubmitRegistrationInput {
     yearOfBirth: form.yearOfBirth.trim() ? Number(form.yearOfBirth) : undefined,
     email: form.email.trim() || undefined,
     city: form.city.trim() || undefined,
-    countryTimeZone: form.countryTimeZone.trim() || undefined,
+    country: form.country || undefined,
+    state: form.state || undefined,
     learningGoal: form.learningGoal.trim() || undefined,
     currentProficiency: form.currentProficiency || undefined,
     spokenLanguages: form.spokenLanguages,
@@ -120,6 +124,13 @@ export function RegistrationForm() {
   function patch(fields: Partial<FormState>) {
     setForm(prev => ({ ...prev, ...fields }))
   }
+
+  // Switching country invalidates whatever state was picked for the old one.
+  function handleCountryChange(country: string) {
+    patch({ country, state: '' })
+  }
+
+  const stateOptions = getStateOptions(form.country)
 
   function handleBack() {
     setError(null)
@@ -254,14 +265,23 @@ export function RegistrationForm() {
                 onChange={v => patch({ city: v })}
                 placeholder="Hyderabad"
               />
-              <Field
-                label="Time zone"
+              <SelectField
+                label="Country"
                 hint="Optional"
-                value={form.countryTimeZone}
-                onChange={v => patch({ countryTimeZone: v })}
-                placeholder="IST (UTC+5:30)"
+                value={form.country}
+                onChange={handleCountryChange}
+                options={COUNTRY_OPTIONS}
               />
             </div>
+            {stateOptions.length > 0 && (
+              <SelectField
+                label="State / province"
+                hint="Optional"
+                value={form.state}
+                onChange={v => patch({ state: v })}
+                options={stateOptions}
+              />
+            )}
           </div>
         )}
 

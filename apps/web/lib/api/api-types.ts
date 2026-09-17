@@ -19,6 +19,12 @@ export type ApiProfile = {
   city: string | null
   email: string | null
   yearOfBirth: number | null
+  // ISO 3166-2 subdivision code and ISO 3166-1 alpha-2 country code (see `lib/geo.ts` for turning
+  // these into display names or picker options).
+  state: string | null
+  country: string | null
+  // An IANA zone id, server-derived from city/state/country — never directly editable. Format for
+  // display with `lib/timezone.ts::formatTimeZone` rather than rendering the raw id.
   countryTimeZone: string | null
   learningGoal: string | null
   currentProficiency: ApiProficiencyLevel | null
@@ -205,6 +211,8 @@ export type ApiRegistration = {
   phone: string
   email: string | null
   city: string | null
+  state: string | null
+  country: string | null
   countryTimeZone: string | null
   learningGoal: string | null
   currentProficiency: ApiProficiencyLevel | null

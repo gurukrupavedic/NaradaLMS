@@ -21,6 +21,8 @@ const validProfile = {
   city: 'Hyderabad',
   email: 'anjali@example.com',
   yearOfBirth: 2005,
+  state: 'TG',
+  country: 'IN',
   countryTimeZone: 'Asia/Kolkata',
   learningGoal: 'Fluency',
   currentProficiency: 'level1',
@@ -47,6 +49,8 @@ describe('ProfileSchema', () => {
       ...validProfile,
       email: null,
       yearOfBirth: null,
+      state: null,
+      country: null,
       countryTimeZone: null,
       learningGoal: null,
       currentProficiency: null,
@@ -64,12 +68,13 @@ describe('ProfileSchema', () => {
 })
 
 describe('UpdateProfileSchema (student self-edit)', () => {
-  it('accepts every registration-derived field except phone and yearOfBirth', () => {
+  it('accepts every registration-derived field except phone, yearOfBirth, and countryTimeZone', () => {
     const result = UpdateProfileSchema.safeParse({
       name: 'Anjali Rao',
       city: 'Hyderabad',
+      state: 'TG',
+      country: 'IN',
       email: 'anjali@example.com',
-      countryTimeZone: 'IST (UTC+5:30)',
       learningGoal: 'Fluency',
       currentProficiency: 'level2',
       spokenLanguages: ['Telugu'],
@@ -89,11 +94,12 @@ describe('UpdateProfileSchema (student self-edit)', () => {
     expect(result.success).toBe(true)
   })
 
-  it('strips phone and yearOfBirth rather than accepting them', () => {
+  it('strips phone, yearOfBirth, and countryTimeZone rather than accepting them', () => {
     const result = UpdateProfileSchema.safeParse({
       name: 'Anjali Rao',
       phone: '+15551234567',
       yearOfBirth: 2005,
+      countryTimeZone: 'Asia/Kolkata',
     })
     expect(result.success).toBe(true)
     if (result.success) {

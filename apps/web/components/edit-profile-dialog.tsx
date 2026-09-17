@@ -7,6 +7,7 @@ import { ApiError } from '@/lib/api/client'
 import type { ApiProfile, ApiProficiencyLevel } from '@/lib/api/api-types'
 import type { UpdateProfileInput } from '@/lib/api/resources'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
+import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 
 /**
  * The student's own "edit my profile" form, opened from `components/student-profile-screen.tsx`
@@ -68,8 +69,9 @@ function EditProfileForm({
 }) {
   const [name, setName] = useState(profile.name)
   const [city, setCity] = useState(profile.city ?? '')
+  const [country, setCountry] = useState(profile.country ?? '')
+  const [state, setState] = useState(profile.state ?? '')
   const [email, setEmail] = useState(profile.email ?? '')
-  const [countryTimeZone, setCountryTimeZone] = useState(profile.countryTimeZone ?? '')
   const [learningGoal, setLearningGoal] = useState(profile.learningGoal ?? '')
   const [currentProficiency, setCurrentProficiency] = useState<ApiProficiencyLevel | ''>(
     profile.currentProficiency ?? '',
@@ -83,6 +85,15 @@ function EditProfileForm({
   const [noSmokingAgreed, setNoSmokingAgreed] = useState(profile.noSmokingAgreed)
   const [comments, setComments] = useState(profile.comments ?? '')
 
+  const stateOptions = getStateOptions(country)
+
+  // Switching country invalidates whatever state was picked for the old one — reset it rather
+  // than silently submitting a state code that belongs to a different country.
+  function handleCountryChange(next: string) {
+    setCountry(next)
+    setState('')
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmedName = name.trim()
@@ -92,8 +103,9 @@ function EditProfileForm({
       {
         name: trimmedName,
         city: city.trim() || null,
+        country: country || null,
+        state: state || null,
         email: email.trim() || null,
-        countryTimeZone: countryTimeZone.trim() || null,
         learningGoal: learningGoal.trim() || null,
         currentProficiency: currentProficiency || null,
         spokenLanguages,
@@ -121,18 +133,32 @@ function EditProfileForm({
 
       <TextField label="Name" value={name} onChange={setName} required />
       <TextField label="City" value={city} onChange={setCity} placeholder="Hyderabad" />
+      <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+        <SelectField
+          label="Country"
+          placeholder="Prefer not to say"
+          value={country}
+          onChange={handleCountryChange}
+          options={COUNTRY_OPTIONS}
+        />
+        <SelectField
+          label="State / province"
+          placeholder={stateOptions.length > 0 ? 'Prefer not to say' : 'No states on record'}
+          value={state}
+          onChange={setState}
+          options={stateOptions}
+          disabled={stateOptions.length === 0}
+        />
+      </div>
+      <p className="-mt-3 text-[0.75rem] text-ink-muted">
+        Your time zone is figured out automatically from your city and state/country.
+      </p>
       <TextField
         label="Email"
         type="email"
         value={email}
         onChange={setEmail}
         placeholder="you@example.com"
-      />
-      <TextField
-        label="Time zone"
-        value={countryTimeZone}
-        onChange={setCountryTimeZone}
-        placeholder="IST (UTC+5:30)"
       />
       <TextAreaField
         label="Learning goal"
@@ -142,8 +168,9 @@ function EditProfileForm({
       />
       <SelectField
         label="Self-reported starting point"
+        placeholder="Prefer not to say"
         value={currentProficiency}
-        onChange={setCurrentProficiency}
+        onChange={v => setCurrentProficiency(v as ApiProficiencyLevel | '')}
         options={SELF_REPORTED_PROFICIENCY_OPTIONS}
       />
       <TagListField
@@ -257,24 +284,29 @@ function TextField({
 
 function SelectField({
   label,
+  placeholder,
   value,
   onChange,
   options,
+  disabled,
 }: {
   label: string
-  value: ApiProficiencyLevel | ''
-  onChange: (value: ApiProficiencyLevel | '') => void
-  options: { value: ApiProficiencyLevel; label: string }[]
+  placeholder: string
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string }[]
+  disabled?: boolean
 }) {
   return (
     <label className="block">
       <FieldLabel label={label} />
       <select
         value={value}
-        onChange={e => onChange(e.target.value as ApiProficiencyLevel | '')}
-        className="mt-2 w-full border border-rule bg-transparent p-2.5 text-[0.8125rem] text-ink focus:border-vermilion focus:outline-none"
+        onChange={e => onChange(e.target.value)}
+        disabled={disabled}
+        className="mt-2 w-full border border-rule bg-transparent p-2.5 text-[0.8125rem] text-ink focus:border-vermilion focus:outline-none disabled:opacity-50"
       >
-        <option value="">Prefer not to say</option>
+        <option value="">{placeholder}</option>
         {options.map(option => (
           <option key={option.value} value={option.value}>
             {option.label}

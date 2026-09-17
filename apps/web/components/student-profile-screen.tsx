@@ -19,6 +19,8 @@ import { isCertified } from '@/lib/proficiency'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
 import { useHasAdminAccess, useSelectedProfileId } from '@/lib/auth/profile-store'
 import { useUpdateProfile } from '@/lib/query/use-profile-mutations'
+import { formatLocation } from '@/lib/geo'
+import { formatTimeZone } from '@/lib/timezone'
 import type { ApiProfile } from '@/lib/api/api-types'
 
 const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
@@ -109,8 +111,11 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
                 <dt className="label mt-5 text-ink-muted">City</dt>
                 <dd className="mt-2 text-[0.9375rem]">{profile.city ?? '—'}</dd>
 
+                <dt className="label mt-5 text-ink-muted">Location</dt>
+                <dd className="mt-2 text-[0.9375rem]">{formatLocation(profile.state, profile.country) ?? '—'}</dd>
+
                 <dt className="label mt-5 text-ink-muted">Time zone</dt>
-                <dd className="mt-2 text-[0.9375rem]">{profile.countryTimeZone ?? '—'}</dd>
+                <dd className="mt-2 text-[0.9375rem]">{formatTimeZone(profile.countryTimeZone) ?? '—'}</dd>
 
                 <dt className="label mt-5 text-ink-muted">Year of birth</dt>
                 <dd className="mt-2 text-[0.9375rem]">{profile.yearOfBirth ?? '—'}</dd>

@@ -29,7 +29,8 @@ describe('CreateRegistrationSchema', () => {
       yearOfBirth: 2005,
       email: 'anjali@example.com',
       city: 'Hyderabad',
-      countryTimeZone: 'Asia/Kolkata',
+      state: 'TG',
+      country: 'IN',
       learningGoal: 'Learn to chant confidently',
       currentProficiency: 'notStarted',
       spokenLanguages: ['Telugu', 'English'],
@@ -74,6 +75,17 @@ describe('CreateRegistrationSchema', () => {
     if (result.success) {
       expect(result.data).not.toHaveProperty('status')
       expect(result.data).not.toHaveProperty('id')
+    }
+  })
+
+  it('strips countryTimeZone rather than accepting it — it is server-derived, never applicant-supplied', () => {
+    const result = CreateRegistrationSchema.safeParse({
+      ...validBody,
+      countryTimeZone: 'Asia/Kolkata',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).not.toHaveProperty('countryTimeZone')
     }
   })
 })
