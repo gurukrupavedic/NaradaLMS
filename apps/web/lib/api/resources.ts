@@ -2,7 +2,13 @@ import { fetchAllPages, fetchApi, mutateApi, notFound, send } from '@/lib/api/cl
 import type { CatalogChapter, CatalogTrack } from '@/lib/mock-catalog'
 import { readTrack, readTracks, resetCatalogCache, writeTrack } from '@/lib/api/store'
 import type { ChapterContent } from '@/lib/mock-content'
-import type { AdminBatchDetail, AdminBatchRow, CertificationRow, SittingRow, TeachingBatch } from '@/lib/mock-dashboard'
+import type {
+  AdminBatchDetail,
+  AdminBatchRow,
+  CertificationRow,
+  SittingRow,
+  TeachingBatch,
+} from '@/lib/mock-dashboard'
 import { getSelectedProfileId } from '@/lib/auth/profile-store'
 import type { LadderTrack } from '@/components/track-ladder'
 import type {
@@ -20,6 +26,7 @@ import type {
   ApiRegistration,
   ApiRegistrationStatus,
   ApiScriptKey,
+  ApiSearchResult,
   ApiTrack,
 } from '@/lib/api/api-types'
 import {
@@ -98,7 +105,10 @@ export type UpdateProfileInput = Partial<
   >
 >
 
-export async function updateProfile(profileId: string, patch: UpdateProfileInput): Promise<ApiProfile> {
+export async function updateProfile(
+  profileId: string,
+  patch: UpdateProfileInput,
+): Promise<ApiProfile> {
   return mutateApi<ApiProfile>(`/profiles/${profileId}`, 'PATCH', patch)
 }
 
@@ -111,6 +121,13 @@ export async function searchProfiles(query: string, excludeBatchId: string): Pro
   const params = new URLSearchParams({ excludeBatchId })
   if (query.trim()) params.set('query', query.trim())
   return fetchApi<ApiProfile[]>(`/profiles/search?${params.toString()}`)
+}
+
+// GET /v1/search?q=... — admin-only (AccessPolicy.requireCanSearch). Backs the command palette
+// (components/command-palette.tsx): a single query fanned out server-side across students,
+// batches, tracks, chapters, and registrations at once.
+export async function globalSearch(query: string): Promise<ApiSearchResult[]> {
+  return fetchApi<ApiSearchResult[]>(`/search?q=${encodeURIComponent(query)}`)
 }
 
 // ── Registrations ────────────────────────────────────────────────────────────
@@ -147,7 +164,9 @@ export async function submitRegistration(data: SubmitRegistrationInput): Promise
 }
 
 // GET /v1/registrations?status=... — admin-only (AccessPolicy.requireCanReviewRegistrations).
-export async function fetchRegistrations(status: ApiRegistrationStatus): Promise<ApiRegistration[]> {
+export async function fetchRegistrations(
+  status: ApiRegistrationStatus,
+): Promise<ApiRegistration[]> {
   return fetchAllPages<ApiRegistration>(
     cursor => `/registrations?status=${status}&limit=100${cursor ? `&cursor=${cursor}` : ''}`,
   )
@@ -194,7 +213,10 @@ export async function fetchDashboard(): Promise<DashboardPayload> {
   // hasUnfinishedWork: `status: 'completed'` means the cohort's run ended, not that the student
   // finished the material, so a track only archives once both are true.
   const archivedLearningTracks = ladders.filter(
-    track => track.started >= track.total && track.batchStatus !== 'active' && track.batchStatus !== 'upcoming',
+    track =>
+      track.started >= track.total &&
+      track.batchStatus !== 'active' &&
+      track.batchStatus !== 'upcoming',
   )
   // The component always treats `learningTracks[0]` as "what to focus on" (its own `resume`
   // lookup and the header both key off it), so this list is sorted for that rather than left in
@@ -232,7 +254,11 @@ export async function fetchDashboard(): Promise<DashboardPayload> {
     resumeChapterId: learningTracks[0] ? findResumeChapterId(learningTracks[0]) : null,
     nextClass: findNextClass(data.memberships.find(m => m.status === 'active')),
     upcomingExam: upcoming
-      ? { chapterCode: upcoming.chapter.code, chapterTitle: upcoming.chapter.title, when: upcoming.scheduledAt }
+      ? {
+          chapterCode: upcoming.chapter.code,
+          chapterTitle: upcoming.chapter.title,
+          when: upcoming.scheduledAt,
+        }
       : null,
     hasActiveBatch,
   }
@@ -272,12 +298,15 @@ export type ExamsPayload = {
   past: SittingRow[]
 }
 
-function toSittingRow(exam: {
-  id: string
-  scheduledAt: string
-  chapter: { code: string; title: string; trackId: string }
-  evaluation: { level: ApiEvaluation['level']; notes: string | null } | null
-}, trackNameById: Map<string, string>): SittingRow {
+function toSittingRow(
+  exam: {
+    id: string
+    scheduledAt: string
+    chapter: { code: string; title: string; trackId: string }
+    evaluation: { level: ApiEvaluation['level']; notes: string | null } | null
+  },
+  trackNameById: Map<string, string>,
+): SittingRow {
   return {
     id: exam.id,
     chapterCode: exam.chapter.code,
@@ -347,7 +376,10 @@ function toAdminBatchRow(batch: ApiBatchWithRole, trackName: string): AdminBatch
   }
 }
 
-async function fetchAdminBatchesWithTracks(): Promise<{ items: ApiBatchWithRole[]; tracksById: Map<string, ApiTrack> }> {
+async function fetchAdminBatchesWithTracks(): Promise<{
+  items: ApiBatchWithRole[]
+  tracksById: Map<string, ApiTrack>
+}> {
   const profileId = getSelectedProfileId()
   const [batchesPage, tracks] = await Promise.all([
     fetchApi<{ items: ApiBatchWithRole[] }>(
@@ -361,7 +393,9 @@ async function fetchAdminBatchesWithTracks(): Promise<{ items: ApiBatchWithRole[
 
 export async function fetchAdminBatches(): Promise<AdminBatchesPayload> {
   const { items, tracksById } = await fetchAdminBatchesWithTracks()
-  const rows = items.map(batch => toAdminBatchRow(batch, tracksById.get(batch.trackId)?.name ?? batch.trackId))
+  const rows = items.map(batch =>
+    toAdminBatchRow(batch, tracksById.get(batch.trackId)?.name ?? batch.trackId),
+  )
 
   return {
     active: rows.filter(r => r.status === 'active'),
@@ -403,12 +437,16 @@ export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
     startDate: batch.startDate,
     meetingUrl: batch.meetingUrl,
     classSlots: batch.classSlots.map(slot => ({
-      day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][slot.dayOfWeek] ?? String(slot.dayOfWeek),
+      day:
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][slot.dayOfWeek] ?? String(slot.dayOfWeek),
       time: slot.time,
       durationMinutes: slot.durationMinutes,
     })),
     staffRoster: batch.members
-      .filter((m): m is typeof m & { role: 'instructor' | 'ta' } => m.role === 'instructor' || m.role === 'ta')
+      .filter(
+        (m): m is typeof m & { role: 'instructor' | 'ta' } =>
+          m.role === 'instructor' || m.role === 'ta',
+      )
       .map(m => ({ name: m.name, role: m.role })),
     chapterCodes: orderedChapters.map(chapter => chapter.code),
     // Parallel to chapterCodes — lets a caller (the mark book's grade editor) resolve which real
@@ -447,7 +485,10 @@ export async function createEvaluations(
 // `createEvaluations` rather than a separate endpoint. The server rejects with a 409 if that one
 // item lands on an already-certified chapter (see `createEvaluations`'s own doc comment above),
 // which surfaces here as a normal `ApiError` for the dialog to show.
-export async function createEvaluation(batchId: string, data: CreateEvaluationInput): Promise<ApiEvaluation> {
+export async function createEvaluation(
+  batchId: string,
+  data: CreateEvaluationInput,
+): Promise<ApiEvaluation> {
   const [created] = await createEvaluations(batchId, [data])
   return created!
 }
@@ -564,7 +605,12 @@ export async function fetchCatalogTrack(trackId: string): Promise<CatalogTrack> 
 // in `patch` (isCertification, other `content` fields beyond `script`) is silently dropped rather
 // than sent.
 export async function saveChapter(id: string, patch: Partial<CatalogChapter>): Promise<void> {
-  const body: { code?: string; title?: string; status?: 'draft' | 'published'; script?: ApiScriptKey | null } = {}
+  const body: {
+    code?: string
+    title?: string
+    status?: 'draft' | 'published'
+    script?: ApiScriptKey | null
+  } = {}
   if (patch.code !== undefined) body.code = patch.code
   if (patch.title !== undefined) body.title = patch.title
   if (patch.status !== undefined) body.status = patch.status
@@ -653,7 +699,9 @@ export async function setChapterAudioMappings(
   audioId: string,
   mappings: { segmentId: string; audioStart: number; audioEnd: number }[],
 ): Promise<ApiAudioAsset> {
-  return mutateApi<ApiAudioAsset>(`/chapters/${chapterId}/audio/${audioId}/mappings`, 'PUT', { mappings })
+  return mutateApi<ApiAudioAsset>(`/chapters/${chapterId}/audio/${audioId}/mappings`, 'PUT', {
+    mappings,
+  })
 }
 
 // DELETE /v1/chapters/:chapterId/audio/:audioId

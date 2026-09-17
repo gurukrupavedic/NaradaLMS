@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ChevronDown } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { CommandPalette } from '@/components/command-palette'
 import { signOut as signOutRequest } from '@/lib/auth/client'
 import {
   clearSelectedProfile,
@@ -150,6 +151,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-4 md:ml-0">
+            {hasAdminAccess && <CommandPalette />}
+
             <button
               type="button"
               onClick={toggleTheme}
@@ -162,9 +165,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             {profileName ? (
               <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="group flex items-center gap-2 text-ink-muted outline-none transition-colors hover:text-ink data-[popup-open]:text-ink"
-                >
+                <DropdownMenuTrigger className="group flex items-center gap-2 text-ink-muted outline-none transition-colors hover:text-ink data-[popup-open]:text-ink">
                   <span
                     aria-hidden
                     className="grid size-6 place-items-center border border-rule bg-card font-label text-[0.5625rem] text-ink-muted"
@@ -188,9 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   sideOffset={10}
                   className="min-w-40 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
                 >
-                  {profileHref && (
-                    <MenuRow render={<Link href={profileHref} />}>Profile</MenuRow>
-                  )}
+                  {profileHref && <MenuRow render={<Link href={profileHref} />}>Profile</MenuRow>}
                   <MenuRow render={<Link href="/settings" />}>Settings</MenuRow>
                   <MenuRow onClick={handleSignOut}>Sign out</MenuRow>
                 </DropdownMenuContent>

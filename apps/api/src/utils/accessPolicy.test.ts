@@ -485,6 +485,26 @@ describe('AccessPolicy#requireCanSearchProfiles', () => {
   })
 })
 
+describe('AccessPolicy#requireCanSearch', () => {
+  it('allows a school admin, denies a plain member', async () => {
+    mockMembership('admin')
+    const adminAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+    expect(() => adminAccess.requireCanSearch()).not.toThrow()
+
+    mockMembership('member')
+    const memberAccess = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+    expect(() => memberAccess.requireCanSearch()).toThrow()
+  })
+})
+
 describe('AccessPolicy#getProfileBatchListScope (corrected 2026-08-28)', () => {
   it("a self-lookup by a school admin gets 'all'; a self-lookup by an ordinary member gets 'enrolled'", async () => {
     mockMembership('admin')

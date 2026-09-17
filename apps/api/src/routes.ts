@@ -12,6 +12,7 @@ import profileRouter from './profile'
 import profilesRouter from './profiles'
 import registrationsRouter from './registrations'
 import schoolsRouter from './schools'
+import searchRouter from './search'
 import tracksRouter from './tracks'
 
 const apiRateLimit = rateLimit({
@@ -30,6 +31,7 @@ export default function setupRoutes(router: Router) {
     .use('/schools', schoolsRouter)
     .use('/profiles', profilesRouter)
     .use('/registrations', registrationsRouter)
+    .use('/search', searchRouter)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
     .use('/batches', batchesRouter)

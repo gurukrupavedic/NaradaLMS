@@ -47,7 +47,12 @@ export type ApiProfile = {
 // `lib/auth/profile-store.ts`'s `useHasAdminAccess`).
 export type ApiAuthProfile = {
   isSuperAdmin: boolean
-  memberships: { organizationId: string; organizationName: string; organizationSlug: string; role: string }[]
+  memberships: {
+    organizationId: string
+    organizationName: string
+    organizationSlug: string
+    role: string
+  }[]
 }
 
 export type ApiChapter = {
@@ -246,4 +251,18 @@ export type ApiDashboard = {
 export type ApiProfileDetail = {
   profile: ApiProfile
   dashboard: ApiDashboard
+}
+
+// GET /v1/search?q=... — admin-only (AccessPolicy.requireCanSearch). Backs the command palette
+// (components/command-palette.tsx): one flat shape across every kind rather than a discriminated
+// union, since the only field that varies by kind is `code` — populated for `batch`/`chapter`
+// (apps/api's `search/schema.ts`), the two kinds this app links to by code rather than id.
+export type ApiSearchResultKind = 'student' | 'batch' | 'track' | 'chapter' | 'registration'
+
+export type ApiSearchResult = {
+  kind: ApiSearchResultKind
+  id: string
+  code: string | null
+  title: string
+  subtitle: string | null
 }
