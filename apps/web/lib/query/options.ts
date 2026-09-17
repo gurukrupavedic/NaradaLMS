@@ -151,10 +151,9 @@ export const adminBatchQuery = (code: string) =>
     queryFn: () => fetchAdminBatch(code),
   })
 
-// Which batches are open changes on its own schedule (an admin's enrollment window opening or
-// closing), not something this app writes to directly except via the admin edit below — a short
-// staleTime rather than the catalog's 10-minute one keeps a picker that's sat open for a while
-// from missing a window that just opened or closed.
+// Which batches are joinable changes whenever an admin creates a batch or marks one completed —
+// a short staleTime rather than the catalog's 10-minute one keeps a picker that's sat open for a
+// while from missing a batch that just appeared or was marked completed.
 export const openBatchesQuery = () =>
   queryOptions({
     queryKey: keys.batches.open,

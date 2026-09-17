@@ -22,14 +22,11 @@ afterEach(async () => {
   }
 })
 
-const HOUR = 60 * 60 * 1000
-const openWindow = { enrollmentOpensAt: new Date(Date.now() - HOUR), enrollmentClosesAt: new Date(Date.now() + HOUR) }
-
 describe('request', () => {
   it('files a pending request without seating the student', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, openWindow)
+    const batch = await createBatch(world, track)
     const student = await createProfile(world)
 
     const row = await request(world.schoolDb, batch.id, student.id)
@@ -47,22 +44,22 @@ describe('request', () => {
     })
   })
 
-  it('rejects with 409 when the enrollment window has not opened yet', async () => {
+  it('rejects with 409 when the batch has already completed', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, {
-      enrollmentOpensAt: new Date(Date.now() + HOUR),
-      enrollmentClosesAt: new Date(Date.now() + 2 * HOUR),
-    })
+    const batch = await createBatch(world, track, { status: 'completed' })
     const student = await createProfile(world)
 
-    await expect(request(world.schoolDb, batch.id, student.id)).rejects.toMatchObject({ statusCode: 409 })
+    await expect(request(world.schoolDb, batch.id, student.id)).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'batch has already completed',
+    })
   })
 
   it('rejects with 409 when already enrolled in this batch', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, openWindow)
+    const batch = await createBatch(world, track)
     const student = await createProfile(world)
     await enrollFixture(world, student, batch, 'student')
 
@@ -72,7 +69,7 @@ describe('request', () => {
   it('rejects with 409 when a request for this profile and batch is already pending', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, openWindow)
+    const batch = await createBatch(world, track)
     const student = await createProfile(world)
     await request(world.schoolDb, batch.id, student.id)
 
@@ -85,7 +82,7 @@ describe('request', () => {
   it('allows a fresh request once an earlier one for the same profile and batch was rejected', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, openWindow)
+    const batch = await createBatch(world, track)
     const student = await createProfile(world)
     const first = await request(world.schoolDb, batch.id, student.id)
     await reject({ db: world.schoolDb }, first.id, null)
@@ -100,8 +97,8 @@ describe('findAll', () => {
   it('filters by status and scopes to the given batchIds', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batchA = await createBatch(world, track, openWindow)
-    const batchB = await createBatch(world, track, openWindow)
+    const batchA = await createBatch(world, track)
+    const batchB = await createBatch(world, track)
     const studentA = await createProfile(world)
     const studentB = await createProfile(world)
     const pendingInScope = await createEnrollmentRequest(world, studentA, batchA)
@@ -117,8 +114,8 @@ describe('findAll', () => {
   it('returns every batch when batchIds is null (school admin)', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batchA = await createBatch(world, track, openWindow)
-    const batchB = await createBatch(world, track, openWindow)
+    const batchA = await createBatch(world, track)
+    const batchB = await createBatch(world, track)
     const studentA = await createProfile(world)
     const studentB = await createProfile(world)
     const first = await createEnrollmentRequest(world, studentA, batchA)
@@ -134,7 +131,7 @@ describe('approve', () => {
   it('seats the student and transitions the request to approved', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, openWindow)
+    const batch = await createBatch(world, track)
     const reviewer = await createProfile(world)
     const student = await createProfile(world)
     const pending = await createEnrollmentRequest(world, student, batch)
@@ -161,7 +158,7 @@ describe('approve', () => {
   it('rejects with 409 when the request was already reviewed', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, openWindow)
+    const batch = await createBatch(world, track)
     const student = await createProfile(world)
     const alreadyApproved = await createEnrollmentRequest(world, student, batch, { status: 'approved' })
 
@@ -173,7 +170,7 @@ describe('approve', () => {
   it('rejects with 409 rather than double-seating when the student is already actively enrolled', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, openWindow)
+    const batch = await createBatch(world, track)
     const student = await createProfile(world)
     const pending = await createEnrollmentRequest(world, student, batch)
     await enrollFixture(world, student, batch, 'student')
@@ -186,7 +183,7 @@ describe('reject', () => {
   it('transitions the request to rejected without seating the student', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const batch = await createBatch(world, track, openWindow)
+    const batch = await createBatch(world, track)
     const student = await createProfile(world)
     const pending = await createEnrollmentRequest(world, student, batch)
 

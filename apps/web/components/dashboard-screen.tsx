@@ -72,7 +72,7 @@ export function DashboardScreen() {
         <Standing
           eyebrow={`${firstName} · ${returning ? 'welcome back' : 'welcome'}`}
           headline={returning ? 'Pick a batch to rejoin' : 'Pick your first batch'}
-          meta="A teacher opens enrollment for a batch when it's ready to take new students — request to join one below, and a teacher will approve it to get you started."
+          meta="Request to join a batch below, and a teacher will approve it to get you started."
         />
       )}
 

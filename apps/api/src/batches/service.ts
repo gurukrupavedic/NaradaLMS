@@ -93,36 +93,6 @@ export async function findOpenBatches(context: BatchServiceContext): Promise<Ope
   return repository.findOpen(context.db)
 }
 
-/**
- * Opens a batch for self-enrollment right now, with no scheduled close (`enrollmentClosesAt:
- * null` — see the column's own doc comment) — the "just open it" action `PATCH /:batchId` used to
- * require an admin to compute manually by picking both an opens-at and a closes-at timestamp.
- * Overwrites any previous window: re-opening a batch that was closed (or scheduled for later)
- * always makes it open starting now, not whatever it was set to before.
- */
-export async function openEnrollment(context: BatchServiceContext, id: string): Promise<Batch> {
-  const row = await repository.update(context.db, id, {
-    enrollmentOpensAt: new Date(),
-    enrollmentClosesAt: null,
-  })
-
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
-}
-
-/** Closes a batch's self-enrollment window as of now, regardless of what `enrollmentOpensAt`/`enrollmentClosesAt` were previously set to. */
-export async function closeEnrollment(context: BatchServiceContext, id: string): Promise<Batch> {
-  const row = await repository.update(context.db, id, { enrollmentClosesAt: new Date() })
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
-}
-
 export async function setClassSlots(
   context: BatchServiceContext,
   id: string,

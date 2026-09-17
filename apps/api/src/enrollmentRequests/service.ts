@@ -27,15 +27,13 @@ export async function findById(context: EnrollmentRequestServiceContext, id: str
 }
 
 /**
- * A student asking to join an open batch (POST /batches/:batchId/enroll) — the request-based
- * counterpart to the old direct `selfEnroll`: the batch's own open-enrollment window still gates
- * *who may ask*, but seating them now waits on an admin/instructor's `approve` below instead of
- * happening here.
+ * A student asking to join a batch (POST /batches/:batchId/enroll) — any batch not yet marked
+ * `completed` can be requested; seating them waits on an admin/instructor's `approve` below
+ * instead of happening here.
  *
- * Runs inside one transaction with the batch row locked (`findByIdForUpdate`), same reasoning as
- * the `selfEnroll` this replaces: two racing requests for the same profile+batch (a doubled-up
- * click) must not both pass the "not already enrolled / not already pending" checks before either
- * commits.
+ * Runs inside one transaction with the batch row locked (`findByIdForUpdate`) so two racing
+ * requests for the same profile+batch (a doubled-up click) can't both pass the "not already
+ * enrolled / not already pending" checks before either commits.
  */
 export async function request(db: SchoolDbClient, batchId: string, profileId: string): Promise<EnrollmentRequest> {
   return db.transaction(async tx => {
@@ -44,13 +42,8 @@ export async function request(db: SchoolDbClient, batchId: string, profileId: st
       throw notFound()
     }
 
-    const now = new Date()
-    const isOpen =
-      batchRow.enrollmentOpensAt !== null &&
-      batchRow.enrollmentOpensAt <= now &&
-      (batchRow.enrollmentClosesAt === null || now <= batchRow.enrollmentClosesAt)
-    if (!isOpen) {
-      throw conflict('batch is not currently open for enrollment')
+    if (batchRow.status === 'completed') {
+      throw conflict('batch has already completed')
     }
 
     if (await enrollmentRepository.findEnrollment(tx, profileId, batchId)) {

@@ -276,18 +276,6 @@ export const batch = pgTable('batch', {
   status: batchStatus('status').notNull().default('upcoming'),
   startDate: timestamp('startDate'),
   meetingUrl: text('meetingUrl'),
-  // A student can request to join (apps/api/src/enrollmentRequests/service.ts::request) only
-  // while the batch is open: `enrollmentOpensAt` is non-null and in the past, AND
-  // (`enrollmentClosesAt` is null OR still in the future) — the request still needs an
-  // admin/instructor to approve it (`enrollmentRequest`) before `enrollment/service.ts::enroll`
-  // actually seats them. `enrollmentOpensAt: null` (the default) means never open, not "always
-  // open" — an admin opts a batch in explicitly rather than every batch silently becoming joinable
-  // the moment it's 'upcoming'. `enrollmentClosesAt: null` means open-ended (no scheduled close),
-  // not closed — that's what lets an admin "just open it" (`POST /batches/:id/enrollment/open`)
-  // without having to pick an end date. No batch has a seat cap — every open batch takes any number
-  // of students.
-  enrollmentOpensAt: timestamp('enrollmentOpensAt'),
-  enrollmentClosesAt: timestamp('enrollmentClosesAt'),
 })
 
 // A batch typically meets multiple times a week (e.g. Mon/Wed/Fri), each potentially at a

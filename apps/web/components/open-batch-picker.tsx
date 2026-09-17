@@ -42,8 +42,7 @@ export function OpenBatchPicker({
         </div>
       ) : batches.length === 0 ? (
         <p className="sheet px-4 py-7 text-center text-[0.875rem] text-ink-muted">
-          No batches are open for enrollment right now. Check back soon — a teacher will let you
-          know once one opens.
+          There are no batches to join right now. Check back once a new one is scheduled.
         </p>
       ) : (
         <ol className="sheet">

@@ -211,30 +211,24 @@ export async function findById(db: SchoolDb, id: string): Promise<Batch | undefi
   })
 }
 
-/** Row-locking read for `enrollment/service.ts::selfEnroll`'s transaction — the relational query
- * API (`db.query.batch.findFirst`) has no `FOR UPDATE`, so this drops to the plain query builder.
- * Locking the batch row serializes concurrent self-enroll attempts on it, so two racing calls for
- * the same profile can't both pass the "not already enrolled" check before either commits. */
+/** Row-locking read for `enrollmentRequests/service.ts::request`'s transaction — the relational
+ * query API (`db.query.batch.findFirst`) has no `FOR UPDATE`, so this drops to the plain query
+ * builder. Locking the batch row serializes concurrent request attempts on it, so two racing calls
+ * for the same profile can't both pass the "not already enrolled / not already pending" checks
+ * before either commits. */
 export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Batch | undefined> {
   const rows = await db.select().from(batch).where(eq(batch.id, id)).for('update')
   return rows.at(0)
 }
 
 /**
- * Batches currently open for self-enrollment: `enrollmentOpensAt` is set and in the past, and
- * `enrollmentClosesAt` is either unset (open-ended) or still in the future (see the column's own
- * doc comment in packages/db/src/schema/school.ts). No seat cap to check against — every open
- * batch takes any number of students.
+ * Every batch a student can request to join: any batch not yet marked `completed` — no separate
+ * "open" state to opt a batch into. No seat cap to check against — every joinable batch takes any
+ * number of students.
  */
 export async function findOpen(db: SchoolDb): Promise<OpenBatch[]> {
-  const now = new Date()
   const rows = await db.query.batch.findMany({
-    where: (t, { and: andCols, gte, isNotNull: isNotNullCol, isNull: isNullCol, lte, or: orCols }) =>
-      andCols(
-        isNotNullCol(t.enrollmentOpensAt),
-        lte(t.enrollmentOpensAt, now),
-        orCols(isNullCol(t.enrollmentClosesAt), gte(t.enrollmentClosesAt, now))!,
-      ),
+    where: (t, { ne }) => ne(t.status, 'completed'),
     with: { classSlots: true, track: true },
     orderBy: (t, { asc: ascCol }) => ascCol(t.code),
   })

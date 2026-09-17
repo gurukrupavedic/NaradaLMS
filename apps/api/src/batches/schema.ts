@@ -19,10 +19,6 @@ export const BatchSchema = z.object({
   status: batchStatusSchema,
   startDate: isoInstant.nullable(),
   meetingUrl: httpsUrl.nullable(),
-  // A student can request to join (POST /batches/:batchId/enroll) only while `now()` falls between
-  // these two — see the column's own doc comment in packages/db/src/schema/school.ts.
-  enrollmentOpensAt: isoInstant.nullable(),
-  enrollmentClosesAt: isoInstant.nullable(),
 })
 
 // "View a batch" includes "see who's in it" — this is a capability, not just a richer response
@@ -100,13 +96,9 @@ export const CreateBatchSchema = BatchSchema.pick({
   code: true,
   startDate: true,
   meetingUrl: true,
-  enrollmentOpensAt: true,
-  enrollmentClosesAt: true,
 }).partial({
   startDate: true,
   meetingUrl: true,
-  enrollmentOpensAt: true,
-  enrollmentClosesAt: true,
 })
 
 // No `trackId` — a batch's track is set once at creation; the real API never allowed moving it
@@ -118,8 +110,6 @@ export const UpdateBatchSchema = requireNonEmpty(
     status: true,
     startDate: true,
     meetingUrl: true,
-    enrollmentOpensAt: true,
-    enrollmentClosesAt: true,
   }).partial(),
 )
 

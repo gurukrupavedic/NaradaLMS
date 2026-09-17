@@ -133,12 +133,6 @@ export type ApiBatch = {
   status: ApiBatchStatus
   startDate: string | null
   meetingUrl: string | null
-  // A student can self-enroll (POST /batches/:batchId/enroll) only while the batch is open:
-  // `enrollmentOpensAt` set and in the past, and `enrollmentClosesAt` either null (open-ended) or
-  // still in the future. `enrollmentOpensAt: null` means never open. No seat cap — every open
-  // batch takes any number of students.
-  enrollmentOpensAt: string | null
-  enrollmentClosesAt: string | null
 }
 
 export type ApiBatchDetail = ApiBatch & { members: ApiBatchMember[]; classSlots: ApiClassSlot[] }
@@ -150,8 +144,9 @@ export type ApiBatchWithRole = ApiBatchDetail & {
   enrollmentStatus: ApiEnrollmentStatus | null
 }
 
-// GET /v1/batches/open — a student's own "batches I can join" view: schedule, never the roster
-// (unlike ApiBatchDetail).
+// GET /v1/batches/open — a student's own "batches I can request to join" view (any batch not
+// marked completed — POST /batches/:batchId/enroll files a request, apps/api/src/enrollmentRequests
+// — with the schedule, never the roster (unlike ApiBatchDetail).
 export type ApiOpenBatch = ApiBatch & {
   trackName: string
   classSlots: ApiClassSlot[]
