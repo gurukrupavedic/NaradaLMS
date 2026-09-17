@@ -2,6 +2,7 @@ import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 
 import { forbidden, internalError, notFound } from '../error'
 import type { User } from '../session'
+import type { BatchReadScope } from '../utils/accessPolicy'
 import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
 import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
@@ -20,8 +21,9 @@ export async function findByUserId(
 export async function searchProfiles(
   context: ProfileServiceContext,
   query: SearchProfilesQuery,
+  scope: BatchReadScope,
 ): Promise<Profile[]> {
-  return repository.search(context.db, query)
+  return repository.search(context.db, query, scope)
 }
 
 export async function findById(context: ProfileServiceContext, id: string): Promise<Profile> {

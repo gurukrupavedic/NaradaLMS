@@ -402,18 +402,6 @@ export class AccessPolicy {
   }
 
   /**
-   * The command-palette global search (students, batches, tracks, chapters, registrations at
-   * once) — an admin convenience for jumping around the school, not tied to any one write
-   * permission the way `requireCanSearchProfiles` is tied to enrollment:create. Same
-   * `isSchoolAdmin()` gate as the rest of the admin surface this search reaches into.
-   */
-  public requireCanSearch(): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
-  }
-
-  /**
    * The profile page's audience, exactly: the profile's own owner, a school admin, or a teacher
    * who shares a batch with this profile (instructor/ta in a batch this profile is also enrolled
    * in) — the same relationship `getProfileBatchListScope` above already checks for "can this

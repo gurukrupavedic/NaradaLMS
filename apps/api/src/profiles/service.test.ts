@@ -112,9 +112,13 @@ describe('searchProfiles', () => {
     vi.mocked(repository.search).mockResolvedValue(results)
 
     await expect(
-      searchProfiles(context, { query: 'ada', excludeBatchId: undefined }),
+      searchProfiles(context, { query: 'ada', excludeBatchId: undefined }, { kind: 'all' }),
     ).resolves.toEqual(results)
-    expect(repository.search).toHaveBeenCalledWith(db, { query: 'ada', excludeBatchId: undefined })
+    expect(repository.search).toHaveBeenCalledWith(
+      db,
+      { query: 'ada', excludeBatchId: undefined },
+      { kind: 'all' },
+    )
   })
 })
 
@@ -151,7 +155,11 @@ describe('findById', () => {
   })
 
   it('returns the profile, registration-derived fields included', async () => {
-    const withRegistrationFields = { ...baseProfile, email: 'ada@example.com', learningGoal: 'Fluency' }
+    const withRegistrationFields = {
+      ...baseProfile,
+      email: 'ada@example.com',
+      learningGoal: 'Fluency',
+    }
     vi.mocked(repository.findById).mockResolvedValue(withRegistrationFields)
 
     await expect(findById(context, 'profile-1')).resolves.toEqual(withRegistrationFields)

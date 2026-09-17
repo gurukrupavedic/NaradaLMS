@@ -11,13 +11,17 @@ import { globalSearchQuery } from '@/lib/query/options'
 import type { ApiSearchResult, ApiSearchResultKind } from '@/lib/api/api-types'
 
 /**
- * The admin command palette — Cmd/Ctrl+K anywhere in the admin surface, or the "Search" button in
- * `AppShell`'s header. One text field fanned out server-side (`GET /v1/search`,
- * `AccessPolicy#requireCanSearch`) across students, batches, tracks, chapters, and registrations,
- * rather than five separate lookups the reader would otherwise have to know to run.
+ * The command palette — Cmd/Ctrl+K anywhere in the app, or the "Search" button in `AppShell`'s
+ * header. One text field fanned out server-side (`GET /v1/search`) across students, batches,
+ * tracks, chapters, and registrations, rather than five separate lookups the reader would
+ * otherwise have to know to run.
  *
- * Only ever mounted for a caller with admin access (see `AppShell`) — the endpoint itself is
- * admin-gated, so there's nothing for this to do for anyone else.
+ * Mounted for every signed-in caller, not just admins — the endpoint itself scopes each category
+ * to what that caller could already see by browsing (their own batchmates, published chapters,
+ * registrations skipped outright for anyone who isn't a school admin), so there's no separate
+ * "does this caller get search at all" gate here. A caller with no active profile selected yet
+ * (and no admin role either) will 403 on every non-admin-visible category — `isError` below
+ * degrades that to a plain "couldn't search" message rather than a stuck spinner.
  */
 
 const DEBOUNCE_MS = 200
@@ -82,7 +86,7 @@ export function CommandPalette() {
     return () => clearTimeout(timer)
   }, [query])
 
-  const { data: results, isFetching } = useQuery(globalSearchQuery(debouncedQuery))
+  const { data: results, isFetching, isError } = useQuery(globalSearchQuery(debouncedQuery))
   const groups = useMemo(() => groupByKind(results ?? []), [results])
   const flat = useMemo(() => groups.flatMap(g => g.results), [groups])
 
@@ -167,6 +171,10 @@ export function CommandPalette() {
               {debouncedQuery.trim().length === 0 ? (
                 <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
                   Start typing to search across the school.
+                </p>
+              ) : isError ? (
+                <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
+                  Couldn&rsquo;t search right now.
                 </p>
               ) : isFetching && flat.length === 0 ? (
                 <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">Searching…</p>

@@ -151,7 +151,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-4 md:ml-0">
-            {hasAdminAccess && <CommandPalette />}
+            <CommandPalette />
 
             <button
               type="button"
