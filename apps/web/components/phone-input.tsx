@@ -134,7 +134,7 @@ export function PhoneInput({
                 {PHONE_COUNTRIES.map(option => (
                   <CommandItem
                     key={option.isoCode}
-                    value={`${option.name} ${option.dialCode}`}
+                    value={`${option.name} +${option.dialCode}`}
                     onSelect={() => selectCountry(option)}
                     className={cn(
                       'flex items-center gap-2.5 px-3.5 py-2 text-[0.875rem] transition-colors',
