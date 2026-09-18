@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Coming soon',
+  title: 'Arriving Devi Navaratri',
+  description: "Narada's app is still being built — arriving this Devi Navaratri.",
 }
 
 /**
