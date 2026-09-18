@@ -59,7 +59,6 @@ export type AdminBatchRow = {
   staff: string
   hasSchedule: boolean
   hasMeetingUrl: boolean
-  isOpenForEnrollment: boolean
 }
 
 export type ClassSlot = { day: string; time: string; durationMinutes: number }
@@ -82,8 +81,6 @@ export type AdminBatchDetail = AdminBatchRow & {
   // (components/grade-dialog.tsx) shows the full title, not just the code.
   chapterTitles: string[]
   roster: RosterStudent[]
-  enrollmentOpensAt: string | null
-  enrollmentClosesAt: string | null
 }
 
 export function summariseRoster(roster: RosterStudent[]) {

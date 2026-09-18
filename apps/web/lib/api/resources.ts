@@ -18,6 +18,8 @@ import type {
   ApiBatchWithRole,
   ApiChapterDetail,
   ApiDashboard,
+  ApiEnrollmentRequest,
+  ApiEnrollmentRequestStatus,
   ApiEvaluation,
   ApiOpenBatch,
   ApiProficiencyLevel,
@@ -204,6 +206,10 @@ export type DashboardPayload = {
   // whose last batch completed — components/open-batch-picker.tsx is what the dashboard shows
   // instead whenever this is false, in either case.
   hasActiveBatch: boolean
+  // Every batch this profile has already asked to join and is still waiting on an admin/instructor
+  // to approve — components/open-batch-picker.tsx uses this to show "Pending approval" instead of
+  // a "Join" button for those rows.
+  pendingBatchIds: string[]
 }
 
 async function fetchStudentDashboard(): Promise<ApiDashboard> {
@@ -267,6 +273,7 @@ export async function fetchDashboard(): Promise<DashboardPayload> {
         }
       : null,
     hasActiveBatch,
+    pendingBatchIds: data.pendingBatchIds,
   }
 }
 
@@ -349,22 +356,6 @@ export type AdminBatchesPayload = {
   summary: { active: number; total: number; students: number; tracks: number }
 }
 
-// Shared with components/admin/batch-detail.tsx's "Enrollment" section — one definition of "open"
-// (mirrors apps/api's own apps/api/src/enrollment/service.ts::selfEnroll and
-// apps/api/src/batches/repository.ts::findOpen) rather than three copies that could drift.
-// `enrollmentClosesAt: null` means open-ended (no scheduled close), not closed.
-export function isBatchOpenForEnrollment(batch: {
-  enrollmentOpensAt: string | null
-  enrollmentClosesAt: string | null
-}): boolean {
-  if (batch.enrollmentOpensAt === null) return false
-  const now = Date.now()
-  return (
-    new Date(batch.enrollmentOpensAt).getTime() <= now &&
-    (batch.enrollmentClosesAt === null || now <= new Date(batch.enrollmentClosesAt).getTime())
-  )
-}
-
 function toAdminBatchRow(batch: ApiBatchWithRole, trackName: string): AdminBatchRow {
   const staffMember = batch.members.find(m => m.role === 'instructor')
   return {
@@ -378,7 +369,6 @@ function toAdminBatchRow(batch: ApiBatchWithRole, trackName: string): AdminBatch
     staff: staffMember?.name ?? '—',
     hasSchedule: batch.classSlots.length > 0,
     hasMeetingUrl: batch.meetingUrl !== null,
-    isOpenForEnrollment: isBatchOpenForEnrollment(batch),
   }
 }
 
@@ -460,8 +450,6 @@ export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
     chapterIds: orderedChapters.map(chapter => chapter.id),
     chapterTitles: orderedChapters.map(chapter => chapter.title),
     roster,
-    enrollmentOpensAt: batch.enrollmentOpensAt,
-    enrollmentClosesAt: batch.enrollmentClosesAt,
   }
 }
 
@@ -501,23 +489,46 @@ export async function createEvaluation(
 
 // ── Open enrollment (student self-service) ──────────────────────────────────
 
-// GET /v1/batches/open — every batch currently open for self-enrollment, any track. Not scoped by
-// the caller's own existing enrollments (unlike GET /batches's default `enrolled` scope) — this is
-// "what can I join," a different question from "what am I already in."
+// GET /v1/batches/open — every batch a student can request to join: any batch not yet marked
+// completed, any track. Not scoped by the caller's own existing enrollments (unlike GET /batches's
+// default `enrolled` scope) — this is "what can I ask to join," a different question from "what am
+// I already in."
 export async function fetchOpenBatches(): Promise<ApiOpenBatch[]> {
   return fetchApi<ApiOpenBatch[]>('/batches/open')
 }
 
-// POST /v1/batches/:batchId/enroll — self-enrolls the signed-in profile as a student. The server
-// enforces the open-window/duplicate checks; a rejection surfaces as an ApiError the caller
-// renders directly (409 "already enrolled in this batch", etc.).
-export async function selfEnrollInBatch(batchId: string): Promise<void> {
-  await mutateApi(`/batches/${batchId}/enroll`, 'POST')
+// POST /v1/batches/:batchId/enroll — files a pending request to join, for the signed-in profile
+// as a student; an admin/instructor must approve it (apps/api/src/enrollmentRequests) before the
+// student is actually seated. The server enforces the duplicate-request/already-enrolled checks; a
+// rejection surfaces as an ApiError the caller renders directly (409 "already enrolled in this
+// batch", 409 "a request to join this batch is already pending", etc.).
+export async function requestBatchEnrollment(batchId: string): Promise<ApiEnrollmentRequest> {
+  return mutateApi<ApiEnrollmentRequest>(`/batches/${batchId}/enroll`, 'POST')
+}
+
+// GET /v1/enrollment-requests?status=... — admin/instructor review queue for batch-join requests
+// (components/admin/registration-review.tsx's sibling: same "same place as pending registrations"
+// screen, a different underlying resource). Scoped server-side to batches the caller manages
+// (AccessPolicy.getEnrollmentRequestVisibility) unless they're a school admin.
+export async function fetchEnrollmentRequests(
+  status: ApiEnrollmentRequestStatus,
+): Promise<ApiEnrollmentRequest[]> {
+  return fetchAllPages<ApiEnrollmentRequest>(
+    cursor => `/enrollment-requests?status=${status}&limit=100${cursor ? `&cursor=${cursor}` : ''}`,
+  )
+}
+
+export async function approveEnrollmentRequest(id: string): Promise<ApiEnrollmentRequest> {
+  return mutateApi<ApiEnrollmentRequest>(`/enrollment-requests/${id}/approve`, 'POST')
+}
+
+export async function rejectEnrollmentRequest(id: string): Promise<ApiEnrollmentRequest> {
+  return mutateApi<ApiEnrollmentRequest>(`/enrollment-requests/${id}/reject`, 'POST')
 }
 
 // POST /v1/batches/:batchId/members — admin (or an instructor/ta of this batch) adding an
-// arbitrary profile to its roster. Distinct from `selfEnrollInBatch` above: no open-enrollment
-// window gates this, since the caller's own batch permission *is* the authorization
+// arbitrary profile to its roster directly. Distinct from `requestBatchEnrollment` above: no
+// approval step gates this, since the caller's own batch permission *is* the authorization
 // (AccessPolicy.requireCanCreateEnrollment). If the profile already has a non-active (e.g. on a
 // break) enrollment row in this batch, the server reactivates it in place rather than conflicting
 // (apps/api/src/enrollment/service.ts::enroll) — searchProfiles below already surfaces such a
@@ -551,38 +562,17 @@ export async function moveEnrollmentToBatch(
   await mutateApi(`/batches/${fromBatchId}/members/${profileId}/move`, 'POST', { toBatchId })
 }
 
-// POST /v1/batches/:batchId/enrollment/open — admin-only. Opens the batch for self-enrollment
-// right now, with no scheduled close. The one-click replacement for hand-picking an opens-at/
-// closes-at timestamp pair (components/admin/batch-detail.tsx's "Enrollment" section).
-export async function openBatchEnrollment(batchId: string): Promise<void> {
-  await mutateApi(`/batches/${batchId}/enrollment/open`, 'POST')
-}
-
-// POST /v1/batches/:batchId/enrollment/close — admin-only.
-export async function closeBatchEnrollment(batchId: string): Promise<void> {
-  await mutateApi(`/batches/${batchId}/enrollment/close`, 'POST')
-}
-
-// POST /v1/batches — admin-only. `openForEnrollmentNow` is this form's own convenience, not a
-// real column: checked, it sends the current instant as `enrollmentOpensAt` with no
-// `enrollmentClosesAt` (open-ended, same shape `openBatchEnrollment` produces on an existing
-// batch); unchecked, it sends neither, leaving the new batch closed the way every batch was
-// before this form existed.
+// POST /v1/batches — admin-only. Every batch not marked completed is immediately requestable
+// (GET /v1/batches/open), so there's nothing enrollment-related left for this call to configure.
 export type CreateBatchInput = {
   trackId: string
   code: string
   startDate?: string | null
   meetingUrl?: string | null
-  openForEnrollmentNow: boolean
 }
 
 export async function createBatch(input: CreateBatchInput): Promise<ApiBatch> {
-  const { openForEnrollmentNow, ...rest } = input
-  return mutateApi<ApiBatch>('/batches', 'POST', {
-    ...rest,
-    enrollmentOpensAt: openForEnrollmentNow ? new Date().toISOString() : null,
-    enrollmentClosesAt: null,
-  })
+  return mutateApi<ApiBatch>('/batches', 'POST', input)
 }
 
 // GET /v1/tracks — admin view, drafts included. Reads through the store (lib/api/store.ts), which

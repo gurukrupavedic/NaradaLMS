@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 
-import { cn } from '@/lib/utils'
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
@@ -12,11 +11,8 @@ import { Section } from '@/components/section'
 import { MarkBook } from '@/components/mark-book'
 import { AddStudentDrawer } from '@/components/admin/add-student-drawer'
 import { Notice } from '@/components/notice'
-import { ApiError } from '@/lib/api/client'
-import { isBatchOpenForEnrollment } from '@/lib/api/resources'
 import { adminBatchQuery, catalogTrackQuery, keys } from '@/lib/query/options'
 import { usePrefetch } from '@/lib/query/use-prefetch'
-import { useCloseBatchEnrollment, useOpenBatchEnrollment } from '@/lib/query/use-batch-mutations'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
 import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/mock-dashboard'
@@ -168,8 +164,6 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
           </dl>
         </Section>
 
-        <EnrollmentSection batch={batch} />
-
         <RosterSection batch={batch} />
       </div>
     </>
@@ -218,49 +212,6 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
       )}
 
       <AddStudentDrawer batch={batch} open={addOpen} onOpenChange={setAddOpen} />
-    </Section>
-  )
-}
-
-/**
- * The one place an admin opens a batch to self-enrollment (components/open-batch-picker.tsx is
- * the student-facing result). A single "Open"/"Close" toggle rather than a pair of datetime-local
- * inputs — an admin doesn't think in opens-at/closes-at timestamps, only "can students join right
- * now or not," so that's the one thing this control asks (see
- * `use-batch-mutations.ts::useOpenBatchEnrollment`/`useCloseBatchEnrollment`, which resolve it to
- * the actual columns server-side). No capacity control here — batches have no seat cap at all.
- */
-function EnrollmentSection({ batch }: { batch: AdminBatchDetail }) {
-  const isOpenNow = isBatchOpenForEnrollment(batch)
-  const open = useOpenBatchEnrollment(batch.code, batch.id)
-  const close = useCloseBatchEnrollment(batch.code, batch.id)
-  const toggle = isOpenNow ? close : open
-
-  return (
-    <Section title="Enrollment" count={isOpenNow ? 'Open now' : 'Closed'}>
-      <div className="sheet flex flex-wrap items-center gap-4 px-4 py-4">
-        <button
-          type="button"
-          onClick={() => toggle.mutate()}
-          disabled={toggle.isPending}
-          className={cn(
-            'label px-4 py-2 transition-opacity disabled:opacity-50',
-            isOpenNow ? 'border border-ink/25 text-ink' : 'bg-ink text-paper',
-          )}
-        >
-          {toggle.isPending ? 'Saving…' : isOpenNow ? 'Close enrollment' : 'Open enrollment'}
-        </button>
-        <span className="text-[0.875rem] text-ink-muted">
-          {isOpenNow
-            ? 'Students can self-enroll in this batch right now.'
-            : 'Students cannot self-enroll in this batch.'}
-        </span>
-        {toggle.isError && (
-          <p className="w-full text-[0.8125rem] text-vermilion">
-            {toggle.error instanceof ApiError ? toggle.error.message : 'Something went wrong.'}
-          </p>
-        )}
-      </div>
     </Section>
   )
 }

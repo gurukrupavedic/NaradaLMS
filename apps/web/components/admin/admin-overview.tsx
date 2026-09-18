@@ -9,7 +9,13 @@ import { Standing } from '@/components/standing'
 import { Archive, Section } from '@/components/section'
 import { BatchTable, FilterableBatchTable } from '@/components/batch-table'
 import { Notice } from '@/components/notice'
-import { adminBatchesQuery, catalogTrackQuery, catalogTracksQuery, registrationsQuery } from '@/lib/query/options'
+import {
+  adminBatchesQuery,
+  catalogTrackQuery,
+  catalogTracksQuery,
+  enrollmentRequestsQuery,
+  registrationsQuery,
+} from '@/lib/query/options'
 import { summariseTrack, type CatalogTrack } from '@/lib/mock-catalog'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useSelectedProfileName } from '@/lib/auth/profile-store'
@@ -21,10 +27,11 @@ export function AdminOverview() {
   // refetched every time a batch is touched.
   const { data: batches, error: batchesError } = useQuery(adminBatchesQuery())
   const { data: tracks, error: tracksError } = useQuery(catalogTracksQuery())
-  // Pending count only — the review screen itself (components/admin/registration-review.tsx)
-  // owns the full pending/approved/rejected list. A failed fetch here just hides the section's
-  // count rather than blocking the whole overview the way batches/tracks failing does.
+  // Pending counts only — the review screen itself (components/admin/admin-registrations-screen.tsx)
+  // owns the full pending/approved/rejected lists for both. A failed fetch here just hides the
+  // section's count rather than blocking the whole overview the way batches/tracks failing does.
   const { data: pendingRegistrations } = useQuery(registrationsQuery('pending'))
+  const { data: pendingEnrollmentRequests } = useQuery(enrollmentRequestsQuery('pending'))
   const profileName = useSelectedProfileName()
 
   // No hooks below this point, so the early return is safe.
@@ -58,18 +65,40 @@ export function AdminOverview() {
           />
         )}
 
-        <Section title="Registrations" count={`${pendingRegistrations?.length ?? 0} pending`}>
-          <Link
-            href="/admin/registrations"
-            className="sheet flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
-          >
-            <span className="text-[0.9375rem]">Review applications</span>
-            {(pendingRegistrations?.length ?? 0) > 0 ? (
-              <span className="label text-vermilion">{pendingRegistrations!.length} awaiting review →</span>
-            ) : (
-              <span className="label text-ink-muted">Nothing pending →</span>
-            )}
-          </Link>
+        <Section
+          title="Registrations"
+          count={`${(pendingRegistrations?.length ?? 0) + (pendingEnrollmentRequests?.length ?? 0)} pending`}
+        >
+          <ol className="sheet">
+            <li className="border-b border-rule-soft last:border-0">
+              <Link
+                href="/admin/registrations"
+                className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
+              >
+                <span className="text-[0.9375rem]">Review applications</span>
+                {(pendingRegistrations?.length ?? 0) > 0 ? (
+                  <span className="label text-vermilion">{pendingRegistrations!.length} awaiting review →</span>
+                ) : (
+                  <span className="label text-ink-muted">Nothing pending →</span>
+                )}
+              </Link>
+            </li>
+            <li className="border-b border-rule-soft last:border-0">
+              <Link
+                href="/admin/registrations?view=batchRequests"
+                className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
+              >
+                <span className="text-[0.9375rem]">Review batch requests</span>
+                {(pendingEnrollmentRequests?.length ?? 0) > 0 ? (
+                  <span className="label text-vermilion">
+                    {pendingEnrollmentRequests!.length} awaiting review →
+                  </span>
+                ) : (
+                  <span className="label text-ink-muted">Nothing pending →</span>
+                )}
+              </Link>
+            </li>
+          </ol>
         </Section>
 
         <Section

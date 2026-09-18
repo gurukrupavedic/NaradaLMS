@@ -13,63 +13,32 @@ afterEach(async () => {
   }
 })
 
-const HOUR = 60 * 60 * 1000
-
 describe('findOpenBatches', () => {
-  it('includes a batch whose enrollment window currently spans now', async () => {
+  it('includes an upcoming batch', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    const open = await createBatch(world, track, {
-      enrollmentOpensAt: new Date(Date.now() - HOUR),
-      enrollmentClosesAt: new Date(Date.now() + HOUR),
-    })
+    const upcoming = await createBatch(world, track, { status: 'upcoming' })
 
     const items = await findOpenBatches({ db: world.schoolDb })
 
-    expect(items.map(item => item.id)).toEqual([open.id])
+    expect(items.map(item => item.id)).toEqual([upcoming.id])
   })
 
-  it('excludes a batch whose window has not opened yet', async () => {
+  it('includes an active batch', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
-    await createBatch(world, track, {
-      enrollmentOpensAt: new Date(Date.now() + HOUR),
-      enrollmentClosesAt: new Date(Date.now() + 2 * HOUR),
-    })
-
-    await expect(findOpenBatches({ db: world.schoolDb })).resolves.toEqual([])
-  })
-
-  it('excludes a batch whose window has already closed', async () => {
-    world = await createTestSchool()
-    const track = await createTrack(world)
-    await createBatch(world, track, {
-      enrollmentOpensAt: new Date(Date.now() - 2 * HOUR),
-      enrollmentClosesAt: new Date(Date.now() - HOUR),
-    })
-
-    await expect(findOpenBatches({ db: world.schoolDb })).resolves.toEqual([])
-  })
-
-  it('excludes a batch with no enrollment window set at all', async () => {
-    world = await createTestSchool()
-    const track = await createTrack(world)
-    await createBatch(world, track)
-
-    await expect(findOpenBatches({ db: world.schoolDb })).resolves.toEqual([])
-  })
-
-  it('includes a batch that opened in the past with no scheduled close (open-ended)', async () => {
-    world = await createTestSchool()
-    const track = await createTrack(world)
-    const open = await createBatch(world, track, {
-      enrollmentOpensAt: new Date(Date.now() - HOUR),
-      enrollmentClosesAt: null,
-    })
+    const active = await createBatch(world, track, { status: 'active' })
 
     const items = await findOpenBatches({ db: world.schoolDb })
 
-    expect(items.map(item => item.id)).toEqual([open.id])
+    expect(items.map(item => item.id)).toEqual([active.id])
   })
 
+  it('excludes a completed batch', async () => {
+    world = await createTestSchool()
+    const track = await createTrack(world)
+    await createBatch(world, track, { status: 'completed' })
+
+    await expect(findOpenBatches({ db: world.schoolDb })).resolves.toEqual([])
+  })
 })

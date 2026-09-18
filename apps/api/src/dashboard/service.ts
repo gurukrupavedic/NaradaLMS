@@ -1,6 +1,7 @@
 import type { SchoolDbClient } from '@narada/db'
 
 import * as batchesRepository from '../batches/repository'
+import * as enrollmentRequestsRepository from '../enrollmentRequests/repository'
 import * as evaluationsRepository from '../evaluations/repository'
 import * as examsRepository from '../exams/repository'
 import * as tracksRepository from '../tracks/repository'
@@ -23,9 +24,10 @@ export async function getDashboardData(
   profileId: string,
   profileName: string,
 ): Promise<DashboardData> {
-  const [memberships, tracks] = await Promise.all([
+  const [memberships, tracks, pendingBatchIds] = await Promise.all([
     batchesRepository.findAllMembershipsWithDetail(context.db, profileId),
     findAllTracks(context, { kind: 'learnerPreview' }),
+    enrollmentRequestsRepository.findPendingBatchIdsForProfile(context.db, profileId),
   ])
 
   const trackById = new Map(tracks.map(track => [track.id, track]))
@@ -92,5 +94,6 @@ export async function getDashboardData(
     upcomingExams,
     teaching,
     pastBatchesByStudent,
+    pendingBatchIds,
   }
 }

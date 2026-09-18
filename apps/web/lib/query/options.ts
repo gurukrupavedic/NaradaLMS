@@ -10,6 +10,7 @@ import {
   fetchChapter,
   fetchChapterDetail,
   fetchDashboard,
+  fetchEnrollmentRequests,
   fetchExams,
   fetchOpenBatches,
   fetchProfileDetail,
@@ -17,7 +18,7 @@ import {
   fetchRegistrations,
   searchProfiles,
 } from '@/lib/api/resources'
-import type { ApiRegistrationStatus } from '@/lib/api/api-types'
+import type { ApiEnrollmentRequestStatus, ApiRegistrationStatus } from '@/lib/api/api-types'
 
 /**
  * Query keys, in one place.
@@ -69,6 +70,13 @@ export const keys = {
     all: ['registrations'] as const,
     list: (status: ApiRegistrationStatus) => ['registrations', 'list', status] as const,
     detail: (id: string) => ['registrations', 'detail', id] as const,
+  },
+
+  enrollmentRequests: {
+    // Same prefix-key shape as `registrations` above — an approve/reject mutation invalidates
+    // this to catch every status tab at once.
+    all: ['enrollmentRequests'] as const,
+    list: (status: ApiEnrollmentRequestStatus) => ['enrollmentRequests', 'list', status] as const,
   },
 
   profiles: {
@@ -143,10 +151,9 @@ export const adminBatchQuery = (code: string) =>
     queryFn: () => fetchAdminBatch(code),
   })
 
-// Which batches are open changes on its own schedule (an admin's enrollment window opening or
-// closing), not something this app writes to directly except via the admin edit below — a short
-// staleTime rather than the catalog's 10-minute one keeps a picker that's sat open for a while
-// from missing a window that just opened or closed.
+// Which batches are joinable changes whenever an admin creates a batch or marks one completed —
+// a short staleTime rather than the catalog's 10-minute one keeps a picker that's sat open for a
+// while from missing a batch that just appeared or was marked completed.
 export const openBatchesQuery = () =>
   queryOptions({
     queryKey: keys.batches.open,
@@ -178,6 +185,12 @@ export const registrationQuery = (id: string) =>
   queryOptions({
     queryKey: keys.registrations.detail(id),
     queryFn: () => fetchRegistration(id),
+  })
+
+export const enrollmentRequestsQuery = (status: ApiEnrollmentRequestStatus) =>
+  queryOptions({
+    queryKey: keys.enrollmentRequests.list(status),
+    queryFn: () => fetchEnrollmentRequests(status),
   })
 
 export const profileDetailQuery = (profileId: string) =>

@@ -92,6 +92,11 @@ export const enrollmentStatus = pgEnum('enrollmentStatus', [
   'dropped',
   'inactive',
 ])
+export const enrollmentRequestStatus = pgEnum('enrollmentRequestStatus', [
+  'pending',
+  'approved',
+  'rejected',
+])
 export const examStatus = pgEnum('examStatus', [
   'scheduled',
   'inProgress',
@@ -271,16 +276,6 @@ export const batch = pgTable('batch', {
   status: batchStatus('status').notNull().default('upcoming'),
   startDate: timestamp('startDate'),
   meetingUrl: text('meetingUrl'),
-  // A student self-enrolls (apps/api/src/batches/service.ts::selfEnroll) only while the batch is
-  // open: `enrollmentOpensAt` is non-null and in the past, AND (`enrollmentClosesAt` is null OR
-  // still in the future). `enrollmentOpensAt: null` (the default) means never open, not "always
-  // open" — an admin opts a batch in explicitly rather than every batch silently becoming joinable
-  // the moment it's 'upcoming'. `enrollmentClosesAt: null` means open-ended (no scheduled close),
-  // not closed — that's what lets an admin "just open it" (`POST /batches/:id/enrollment/open`)
-  // without having to pick an end date. No batch has a seat cap — every open batch takes any number
-  // of students.
-  enrollmentOpensAt: timestamp('enrollmentOpensAt'),
-  enrollmentClosesAt: timestamp('enrollmentClosesAt'),
 })
 
 // A batch typically meets multiple times a week (e.g. Mon/Wed/Fri), each potentially at a
@@ -319,6 +314,34 @@ export const enrollment = pgTable(
   table => [
     primaryKey({ columns: [table.profileId, table.batchId] }),
     index('enrollment_batchId_idx').on(table.batchId),
+  ],
+)
+
+// A student's request to join a batch (POST /batches/:batchId/enroll) — an admin/instructor must
+// approve it before `enrollment/service.ts::enroll` actually seats them. Kept as its own table
+// rather than an `enrollment` row with a 'pending' status: a still-pending request must never
+// satisfy the "does this profile hold a live (or any) enrollment" queries the rest of the schema
+// already relies on (e.g. `enrollment/repository.ts::findQualifyingBatches`), which don't filter
+// on `enrollment.status`. Unlike `registration` (a prospective student with no account yet), the
+// requester already has a `profile` — approving or rejecting just decides whether they get seated.
+export const enrollmentRequest = pgTable(
+  'enrollmentRequest',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    status: enrollmentRequestStatus('status').notNull().default('pending'),
+    profileId: uuid('profileId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'cascade' }),
+    batchId: uuid('batchId')
+      .notNull()
+      .references(() => batch.id, { onDelete: 'cascade' }),
+    reviewedAt: timestamp('reviewedAt'),
+    reviewedBy: uuid('reviewedBy').references(() => profile.id),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [
+    index('enrollmentRequest_status_createdAt_idx').on(table.status, table.createdAt),
+    index('enrollmentRequest_batchId_idx').on(table.batchId),
   ],
 )
 

@@ -36,6 +36,9 @@ export type ExamReadScope =
 // — owner/admin) additionally sees drafts. No profile involved — this is a school-membership
 // question, not a per-batch one.
 export type ContentReadView = { kind: 'authoring' } | { kind: 'learnerPreview' }
+// `batchIds` is always non-empty for 'manageable' — see `getEnrollmentRequestVisibility`, which
+// throws instead of returning an empty one (matching `ExamReadScope`'s own 'manageable' contract).
+export type EnrollmentRequestReadScope = { kind: 'all' } | { kind: 'manageable'; batchIds: string[] }
 
 type AccessPolicySource = {
   db: SchoolDbClient
@@ -237,6 +240,26 @@ export class AccessPolicy {
     }
 
     throw forbidden()
+  }
+
+  /**
+   * The list-visibility counterpart to `requireCanCreateEnrollment` (approving a request is
+   * exactly creating an enrollment, so review actions already reuse that check once a request's
+   * `batchId` is known) — a school admin sees every pending request, an instructor/TA sees only
+   * the ones for batches where they hold `enrollment:create`, and anyone else (a plain student)
+   * is rejected outright rather than getting an empty-but-technically-200 list.
+   */
+  public getEnrollmentRequestVisibility(): EnrollmentRequestReadScope {
+    if (this.isSchoolAdmin()) {
+      return { kind: 'all' }
+    }
+
+    const batchIds = this.batchIdsWithPermission(ENROLLMENT_CREATE_PERMISSION)
+    if (batchIds.length === 0) {
+      throw forbidden()
+    }
+
+    return { kind: 'manageable', batchIds }
   }
 
   // -- Exams ------------------------------------------------------------------

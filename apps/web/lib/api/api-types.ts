@@ -133,12 +133,6 @@ export type ApiBatch = {
   status: ApiBatchStatus
   startDate: string | null
   meetingUrl: string | null
-  // A student can self-enroll (POST /batches/:batchId/enroll) only while the batch is open:
-  // `enrollmentOpensAt` set and in the past, and `enrollmentClosesAt` either null (open-ended) or
-  // still in the future. `enrollmentOpensAt: null` means never open. No seat cap — every open
-  // batch takes any number of students.
-  enrollmentOpensAt: string | null
-  enrollmentClosesAt: string | null
 }
 
 export type ApiBatchDetail = ApiBatch & { members: ApiBatchMember[]; classSlots: ApiClassSlot[] }
@@ -150,8 +144,9 @@ export type ApiBatchWithRole = ApiBatchDetail & {
   enrollmentStatus: ApiEnrollmentStatus | null
 }
 
-// GET /v1/batches/open — a student's own "batches I can join" view: schedule, never the roster
-// (unlike ApiBatchDetail).
+// GET /v1/batches/open — a student's own "batches I can request to join" view (any batch not
+// marked completed — POST /batches/:batchId/enroll files a request, apps/api/src/enrollmentRequests
+// — with the schedule, never the roster (unlike ApiBatchDetail).
 export type ApiOpenBatch = ApiBatch & {
   trackName: string
   classSlots: ApiClassSlot[]
@@ -243,6 +238,25 @@ export type ApiDashboard = {
   upcomingExams: ApiExam[]
   teaching: { batchId: string; evaluations: ApiEvaluation[] }[]
   pastBatchesByStudent: { studentId: string; batches: ApiBatch[] }[]
+  pendingBatchIds: string[]
+}
+
+// GET/POST /v1/enrollment-requests — a student's request to join an open batch
+// (POST /v1/batches/:batchId/enroll), awaiting an admin/instructor's approval before
+// `enrollment/service.ts::enroll` actually seats them (see apps/api/src/enrollmentRequests/schema.ts).
+export type ApiEnrollmentRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export type ApiEnrollmentRequest = {
+  id: string
+  status: ApiEnrollmentRequestStatus
+  profileId: string
+  studentName: string
+  batchId: string
+  batchCode: string
+  trackName: string
+  reviewedAt: string | null
+  reviewedBy: string | null
+  createdAt: string
 }
 
 // GET /v1/profiles/:profileId/detail — the profile page's data: full contact/background detail

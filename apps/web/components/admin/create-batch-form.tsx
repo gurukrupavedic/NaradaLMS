@@ -14,12 +14,8 @@ import { Standing } from '@/components/standing'
 /**
  * Create a batch.
  *
- * The one field this form defaults to "on" rather than leaving blank is enrollment: a new batch
- * with nobody in it has nothing to lose by being open from the start, and the alternative — create
- * it closed, then remember to come back and open it — is exactly the two-step dance
- * `components/admin/batch-detail.tsx`'s own open/close toggle exists to avoid on an existing
- * batch. Unchecking it is one click for the admin who genuinely wants to stage a batch before
- * anyone can join.
+ * Every batch that isn't marked completed is requestable by a student immediately — there's no
+ * separate "open it up" step, so this form has nothing to ask about enrollment at all.
  */
 export function CreateBatchForm() {
   const { data: tracks, error: tracksError } = useQuery(catalogTracksQuery())
@@ -30,7 +26,6 @@ export function CreateBatchForm() {
   const [code, setCode] = useState('')
   const [startDate, setStartDate] = useState('')
   const [meetingUrl, setMeetingUrl] = useState('')
-  const [openForEnrollmentNow, setOpenForEnrollmentNow] = useState(true)
 
   if (tracksError) return <ScreenError error={tracksError} backHref="/admin" backLabel="← All batches" />
   if (!tracks) return <ScreenSkeleton rows={4} />
@@ -45,7 +40,6 @@ export function CreateBatchForm() {
         code: code.trim(),
         startDate: startDate ? new Date(startDate).toISOString() : null,
         meetingUrl: meetingUrl.trim() ? meetingUrl.trim() : null,
-        openForEnrollmentNow,
       },
       { onSuccess: batch => router.push(`/admin/batches/${encodeURIComponent(batch.code)}`) },
     )
@@ -106,16 +100,6 @@ export function CreateBatchForm() {
               placeholder="https://zoom.us/j/…"
               className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.875rem] placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
             />
-          </label>
-
-          <label className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={openForEnrollmentNow}
-              onChange={e => setOpenForEnrollmentNow(e.target.checked)}
-              className="h-4 w-4 accent-vermilion"
-            />
-            <span className="text-[0.875rem]">Open for enrollment immediately</span>
           </label>
 
           <div className="flex items-center gap-3">

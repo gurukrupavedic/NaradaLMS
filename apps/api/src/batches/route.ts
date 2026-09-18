@@ -1,17 +1,15 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
-import { selfEnroll } from '../enrollment/service'
+import { request as requestEnrollment } from '../enrollmentRequests/service'
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
 import {
-  closeEnrollment,
   createBatch,
   findAllAccessible,
   findByIdWithMembers,
   findOpenBatches,
-  openEnrollment,
   setClassSlots,
   updateBatch,
 } from './service'
@@ -31,8 +29,8 @@ router.get(
 // Mounted before `/:batchId` below so Express never tries to parse "open" as a batch UUID — same
 // reasoning as profiles/route.ts's `/search`. Any signed-in profile, not gated by a batch
 // permission: "which batches can I join" is a different question from "which batches am I
-// already in or administer" (access.getBatchVisibility), and every batch's own open-enrollment
-// window is the real gate here, not a school role.
+// already in or administer" (access.getBatchVisibility) — every batch not yet marked completed
+// is requestable, no school role required to see the list.
 router.get(
   '/open',
   profileRoute(async ({ res, db }) => {
@@ -72,39 +70,18 @@ router.patch(
   }),
 )
 
-// The admin "just open/close it" actions — a one-click alternative to `PATCH /:batchId` that
-// spares an admin from having to compute an opens-at/closes-at timestamp pair by hand (see
-// `batches/service.ts::openEnrollment`/`closeEnrollment`, and the enrollment columns' own doc
-// comment in packages/db/src/schema/school.ts). Same authorization as any other batch edit.
-router.post(
-  '/:batchId/enrollment/open',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    await access.requireCanUpdateBatch(batchId)
-    const batch = await openEnrollment({ db }, batchId)
-    res.status(200).json({ data: batch })
-  }),
-)
-
-router.post(
-  '/:batchId/enrollment/close',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    await access.requireCanUpdateBatch(batchId)
-    const batch = await closeEnrollment({ db }, batchId)
-    res.status(200).json({ data: batch })
-  }),
-)
-
 // The student's own counterpart to admin enrollment (POST /batches/:batchId/members, in
-// ../enrollment/route.ts) — always enrolls the caller's own active profile as a student, gated by
-// the batch's own open-enrollment window rather than a batch permission. `profileRoute`, not
-// `optionalProfileRoute`: there is no meaningful "enroll myself" with no self to enroll.
+// ../enrollment/route.ts) — files a pending request to join as a student rather than seating them
+// directly; an admin/instructor must approve it (../enrollmentRequests/route.ts) first. Any batch
+// not yet marked completed can be requested — no batch permission gates this, only the
+// enrollmentRequests service's own not-completed/not-already-enrolled/not-already-pending checks.
+// `profileRoute`, not `optionalProfileRoute`: there is no meaningful "request to join" with no self
+// to enroll.
 router.post(
   '/:batchId/enroll',
   profileRoute(async ({ req, res, db, profile }) => {
     const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    const row = await selfEnroll(db, batchId, profile.id)
+    const row = await requestEnrollment(db, batchId, profile.id)
     res.status(201).json({ data: row })
   }),
 )

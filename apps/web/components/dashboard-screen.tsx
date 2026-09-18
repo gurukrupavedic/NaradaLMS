@@ -38,6 +38,7 @@ export function DashboardScreen() {
     nextClass,
     upcomingExam,
     hasActiveBatch,
+    pendingBatchIds,
   } = data
 
   const focus = learningTracks[0]
@@ -71,12 +72,12 @@ export function DashboardScreen() {
         <Standing
           eyebrow={`${firstName} · ${returning ? 'welcome back' : 'welcome'}`}
           headline={returning ? 'Pick a batch to rejoin' : 'Pick your first batch'}
-          meta="A teacher opens enrollment for a batch when it's ready to take new students — join one below to get started."
+          meta="Request to join a batch below, and a teacher will approve it to get you started."
         />
       )}
 
       <div className="mx-auto max-w-5xl space-y-12 px-5 py-9">
-        {!hasActiveBatch && <OpenBatchPicker returning={returning} />}
+        {!hasActiveBatch && <OpenBatchPicker returning={returning} pendingBatchIds={pendingBatchIds} />}
 
         {/* `Reveal` always renders its own wrapper element, even around a `Notice` that renders
             nothing — an empty-but-present sibling still collects `space-y-12`'s margin, which

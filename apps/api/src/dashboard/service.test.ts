@@ -4,6 +4,7 @@ import type { SchoolDbClient } from '@narada/db'
 
 import { getDashboardData } from './service'
 import * as batchesRepository from '../batches/repository'
+import * as enrollmentRequestsRepository from '../enrollmentRequests/repository'
 import * as evaluationsRepository from '../evaluations/repository'
 import * as examsRepository from '../exams/repository'
 import * as tracksRepository from '../tracks/repository'
@@ -12,6 +13,9 @@ import * as tracksService from '../tracks/service'
 vi.mock('../batches/repository', () => ({
   findAllMembershipsWithDetail: vi.fn(),
   findAllForProfiles: vi.fn(),
+}))
+vi.mock('../enrollmentRequests/repository', () => ({
+  findPendingBatchIdsForProfile: vi.fn(),
 }))
 vi.mock('../evaluations/repository', () => ({
   findAllForStudent: vi.fn(),
@@ -42,6 +46,7 @@ beforeEach(() => {
   vi.mocked(evaluationsRepository.findForChaptersAndStudents).mockResolvedValue([])
   vi.mocked(batchesRepository.findAllForProfiles).mockResolvedValue(new Map())
   vi.mocked(tracksRepository.findCertificationsForStudent).mockResolvedValue([])
+  vi.mocked(enrollmentRequestsRepository.findPendingBatchIdsForProfile).mockResolvedValue([])
 })
 
 describe('getDashboardData', () => {
@@ -68,8 +73,6 @@ describe('getDashboardData', () => {
         status: 'active',
         startDate: null,
         meetingUrl: null,
-        enrollmentOpensAt: null,
-        enrollmentClosesAt: null,
         enrollmentStatus: null,
         role: 'student',
         members: [member('me', 'student')],
@@ -107,8 +110,6 @@ describe('getDashboardData', () => {
         status: 'active',
         startDate: null,
         meetingUrl: null,
-        enrollmentOpensAt: null,
-        enrollmentClosesAt: null,
         enrollmentStatus: null,
         role: 'instructor',
         members: [member('instructor-me', 'instructor'), member('student-1', 'student')],
@@ -121,8 +122,6 @@ describe('getDashboardData', () => {
         status: 'active',
         startDate: null,
         meetingUrl: null,
-        enrollmentOpensAt: null,
-        enrollmentClosesAt: null,
         enrollmentStatus: null,
         role: 'ta',
         members: [member('instructor-me', 'ta'), member('student-2', 'student')],
@@ -178,8 +177,6 @@ describe('getDashboardData', () => {
         status: 'active',
         startDate: null,
         meetingUrl: null,
-        enrollmentOpensAt: null,
-        enrollmentClosesAt: null,
         enrollmentStatus: null,
         role: 'instructor',
         members: [member('me', 'instructor'), member('student-1', 'student')],
@@ -187,13 +184,13 @@ describe('getDashboardData', () => {
       },
     ])
     vi.mocked(batchesRepository.findAllForProfiles).mockResolvedValue(
-      new Map([['student-1', [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null, enrollmentOpensAt: null, enrollmentClosesAt: null }]]]),
+      new Map([['student-1', [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }]]]),
     )
 
     const data = await getDashboardData(context, 'me', 'Me')
 
     expect(data.pastBatchesByStudent).toEqual([
-      { studentId: 'student-1', batches: [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null, enrollmentOpensAt: null, enrollmentClosesAt: null }] },
+      { studentId: 'student-1', batches: [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }] },
     ])
   })
 
@@ -206,8 +203,6 @@ describe('getDashboardData', () => {
         status: 'active' as const,
         startDate: null,
         meetingUrl: null,
-        enrollmentOpensAt: null,
-        enrollmentClosesAt: null,
         enrollmentStatus: null,
         role: 'student' as const,
         members: [],

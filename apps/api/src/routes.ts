@@ -5,6 +5,7 @@ import batchesRouter from './batches'
 import chaptersRouter from './chapters'
 import dashboardRouter from './dashboard'
 import enrollmentRouter from './enrollment'
+import enrollmentRequestsRouter from './enrollmentRequests'
 import evaluationsRouter from './evaluations'
 import examsRouter from './exams'
 import healthRouter from './health'
@@ -30,6 +31,7 @@ export default function setupRoutes(router: Router) {
     .use('/schools', schoolsRouter)
     .use('/profiles', profilesRouter)
     .use('/registrations', registrationsRouter)
+    .use('/enrollment-requests', enrollmentRequestsRouter)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
     .use('/batches', batchesRouter)
