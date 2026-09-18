@@ -10,6 +10,7 @@ import { getAuthSession, sendOtp, verifyOtp } from '@/lib/auth/client'
 import { setSelectedProfile } from '@/lib/auth/profile-store'
 import { fetchProfiles } from '@/lib/api/resources'
 import type { ApiProfile } from '@/lib/api/api-types'
+import { PhoneInput } from '@/components/phone-input'
 
 /**
  * Sign-in: phone → one-time code → which profile.
@@ -262,14 +263,7 @@ export default function LoginPage() {
                 We&apos;ll send a one-time code to your phone.
               </p>
 
-              <Field
-                label="Phone number"
-                hint="Include the country code"
-                value={phone}
-                onChange={setPhone}
-                placeholder="+91 98859 81818"
-                type="tel"
-              />
+              <PhoneInput label="Phone number" value={phone} onChange={setPhone} large />
               {state.error && <p className="mt-3 text-[0.8125rem] text-vermilion">{state.error}</p>}
 
               <Submit disabled={isPending || phone.trim().length < 6}>
