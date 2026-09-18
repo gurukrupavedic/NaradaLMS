@@ -63,6 +63,29 @@ export async function signInWithGoogle(callbackURL: string): Promise<{ error: st
   return { error: null }
 }
 
+/**
+ * `/link-social` — connecting Google to an *already signed-in* account from Settings, distinct
+ * from `/sign-in/social`: it ties the new Google account to this session's own user id rather than
+ * looking one up by email, so it can't be tricked into merging into a stranger's account the way
+ * implicit linking during sign-in could (see packages/auth/src/index.ts's `accountLinking` comment).
+ * Same hand-rolled `{ url, redirect: true }`-follow as `signInWithGoogle` (see that function's
+ * comment) — this file forgoes the better-auth client SDK entirely, not just for sign-in.
+ */
+export async function linkGoogleAccount(
+  callbackURL: string,
+  errorCallbackURL: string,
+): Promise<{ error: string | null }> {
+  const response = await authFetch('/link-social', {
+    method: 'POST',
+    body: JSON.stringify({ provider: 'google', callbackURL, errorCallbackURL }),
+  })
+  if (!response.ok) return { error: await extractError(response) }
+  const body: unknown = await response.json().catch(() => null)
+  const url = (body as { url?: string } | null)?.url
+  if (url) window.location.href = url
+  return { error: null }
+}
+
 export type AuthSession = {
   user: { id: string; name: string; email: string; isSuperAdmin: boolean }
   session: { id: string; expiresAt: string }
@@ -138,4 +161,10 @@ export function listSessions(): Promise<Result<AuthSessionListItem[]>> {
 
 export function revokeSession(token: string): Promise<Result<{ status: boolean }>> {
   return authFetchJson('/revoke-session', { method: 'POST', body: JSON.stringify({ token }) })
+}
+
+export type LinkedAccount = { id: string; providerId: string }
+
+export function listAccounts(): Promise<Result<LinkedAccount[]>> {
+  return authFetchJson('/list-accounts')
 }

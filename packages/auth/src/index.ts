@@ -38,10 +38,13 @@ export { sweepExpiredDeviceLinkCodes } from './plugins/device-link'
  * Each such origin (every apps/web dev port, each Vercel deployment domain) needs its own
  * `.../v1/auth/callback/google` registered as an authorized redirect URI in Google Cloud
  * Console — Google rejects a `redirect_uri` it doesn't recognize before this code ever runs.
+ *
+ * `/link-social` (an already-signed-in user explicitly connecting Google from Settings) builds its
+ * authorize URL from `baseURL` the same way `/sign-in/social` does, so it needs the same fix.
  */
 function trustProxiedOAuthOrigin() {
   return createAuthMiddleware(async ctx => {
-    if (ctx.path !== '/sign-in/social' && ctx.path !== '/callback/:id') return
+    if (ctx.path !== '/sign-in/social' && ctx.path !== '/link-social' && ctx.path !== '/callback/:id') return
     const origin = ctx.request?.headers.get('x-app-origin')
     if (!origin || !ctx.context.isTrustedOrigin(origin)) return
     ctx.context.baseURL = `${origin}${ctx.context.options.basePath}`
@@ -63,6 +66,19 @@ export const auth = betterAuth({
   trustedOrigins: env.TRUSTED_ORIGINS,
   hooks: {
     before: trustProxiedOAuthOrigin(),
+  },
+  account: {
+    accountLinking: {
+      // Phone/registration accounts here routinely have no real email at all (registration's own
+      // email is optional and self-asserted — see apps/api/src/registrations/repository.ts) or one
+      // that has nothing to do with the Gmail address someone later connects from Settings. Without
+      // this, `/link-social` refuses to link whenever the two don't match, which would be nearly
+      // always. This only relaxes the *explicit*, already-authenticated `/link-social` flow's own
+      // email check — it has no effect on `/sign-in/social`'s separate, still-default-strict check
+      // (`requireLocalEmailVerified`), which is what actually stops an unverified, self-asserted
+      // registration email from letting a stranger's Google sign-in silently take over that account.
+      allowDifferentEmails: true,
+    },
   },
   session: {
     // A shared household phone number re-entering an OTP on every device, every week (the
