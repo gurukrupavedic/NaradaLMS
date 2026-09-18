@@ -10,6 +10,7 @@ import type { ApiProficiencyLevel } from '@/lib/api/api-types'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
 import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 import { Wordmark } from '@/components/app-shell'
+import { PhoneInput } from '@/components/phone-input'
 
 /**
  * A prospective student's application — the same data a paper registration form used to collect
@@ -231,14 +232,7 @@ export function RegistrationForm() {
                 placeholder="Rao"
               />
             </div>
-            <Field
-              label="Phone number"
-              hint="Include the country code"
-              value={form.phone}
-              onChange={v => patch({ phone: v })}
-              placeholder="+91 98859 81818"
-              type="tel"
-            />
+            <PhoneInput label="Phone number" value={form.phone} onChange={v => patch({ phone: v })} />
             <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
               <Field
                 label="Email"
