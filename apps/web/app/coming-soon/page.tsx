@@ -14,16 +14,14 @@ export default function ComingSoonPage() {
     <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-paper px-6 text-center">
       <span
         aria-hidden
-        className="font-deva pointer-events-none absolute -bottom-16 select-none text-ink/[0.04] leading-none"
+        className="font-deva pointer-events-none absolute -bottom-16 left-1/2 -translate-x-1/2 select-none text-ink/[0.04] leading-none"
         style={{ fontSize: '32rem' }}
       >
         ॐ
       </span>
 
       <div className="relative">
-        <p className="label text-vermilion">Narada</p>
-
-        <h1 className="display mt-5 text-[2rem] leading-[1.1] sm:text-[2.75rem]">
+        <h1 className="display text-[2rem] leading-[1.1] sm:text-[2.75rem]">
           Narada<span className="text-vermilion">&apos;s</span> App is
           <br />
           still being built
