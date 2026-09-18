@@ -44,18 +44,21 @@ function hasSession(request: NextRequest): boolean {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-
   if (process.env.COMING_SOON_MODE === 'true') {
-    if (pathname === COMING_SOON_PATH) return NextResponse.next()
+    if (pathname === COMING_SOON_PATH) {
+      return NextResponse.next()
+    }
+
     const url = request.nextUrl.clone()
     url.pathname = COMING_SOON_PATH
     return NextResponse.rewrite(url)
   }
 
   const signedIn = hasSession(request)
-
   if (pathname === '/login') {
-    return signedIn ? NextResponse.redirect(new URL('/dashboard', request.url)) : NextResponse.next()
+    return signedIn
+      ? NextResponse.redirect(new URL('/dashboard', request.url))
+      : NextResponse.next()
   }
 
   if (pathname === '/') {

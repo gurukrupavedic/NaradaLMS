@@ -14,7 +14,7 @@ export default function ComingSoonPage() {
     <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-paper px-6 text-center">
       <span
         aria-hidden
-        className="font-deva pointer-events-none absolute -bottom-16 left-1/2 -translate-x-1/2 select-none text-ink/[0.04] leading-none"
+        className="font-deva pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/4 select-none text-ink/4 leading-none"
         style={{ fontSize: '32rem' }}
       >
         ॐ
@@ -22,7 +22,7 @@ export default function ComingSoonPage() {
 
       <div className="relative">
         <h1 className="display text-[2rem] leading-[1.1] sm:text-[2.75rem]">
-          Narada<span className="text-vermilion">&apos;s</span> App is
+          Narada&apos;s app is
           <br />
           still being built
         </h1>
@@ -40,9 +40,7 @@ export default function ComingSoonPage() {
           </p>
         </div>
 
-        <p className="label mt-12 text-ink-muted/60">
-          Adhyayana, Anuṣṭhāna, Avagāhana · Est. 2017
-        </p>
+        <p className="label mt-12 text-ink-muted/60">Adhyayana, Anuṣṭhāna, Avagāhana · Est. 2017</p>
       </div>
     </main>
   )
