@@ -45,6 +45,24 @@ export async function verifyOtp(
   return response.ok ? { error: null } : { error: await extractError(response) }
 }
 
+/**
+ * `/sign-in/social` doesn't sign in directly — it hands back an authorize URL for the provider
+ * (`{ url, redirect: true }`), which the better-auth client SDK's `redirectPlugin` would normally
+ * follow with `window.location.href = url`. This file forgoes that SDK (see header comment), so
+ * that one bit of client behavior is reproduced here by hand.
+ */
+export async function signInWithGoogle(callbackURL: string): Promise<{ error: string | null }> {
+  const response = await authFetch('/sign-in/social', {
+    method: 'POST',
+    body: JSON.stringify({ provider: 'google', callbackURL }),
+  })
+  if (!response.ok) return { error: await extractError(response) }
+  const body: unknown = await response.json().catch(() => null)
+  const url = (body as { url?: string } | null)?.url
+  if (url) window.location.href = url
+  return { error: null }
+}
+
 export type AuthSession = {
   user: { id: string; name: string; email: string; isSuperAdmin: boolean }
   session: { id: string; expiresAt: string }
