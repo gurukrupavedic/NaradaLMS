@@ -37,6 +37,7 @@ type State =
 
 type Action =
   | { type: 'no_session' }
+  | { type: 'oauth_failed'; error: string }
   | { type: 'existing_session'; profiles: ApiProfile[] }
   | { type: 'sending' }
   | { type: 'sent'; phone: string }
@@ -50,6 +51,10 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'no_session':
       return state.step === 'checking' ? { step: 'phone', error: null } : state
+    // Landed back here off a failed Google redirect (see the mount effect below) — there's no
+    // session to check in that case, so this replaces `no_session` rather than following it.
+    case 'oauth_failed':
+      return state.step === 'checking' ? { step: 'phone', error: action.error } : state
     case 'existing_session':
       return state.step === 'checking'
         ? { step: 'profile', phone: '', profiles: action.profiles, selected: null }
@@ -84,6 +89,18 @@ const OTP_RESEND_COOLDOWN_SECONDS = 60
 
 const STEPS = ['Number', 'Code', 'Profile'] as const
 
+// better-auth's OAuth callback redirects failures to `errorCallbackURL` with its own `error` (and
+// sometimes `error_description`) query param — see `redirectOnError` in better-auth's source, which
+// every failure path in the callback funnels through. `account_not_linked` is the one actually seen
+// in production so far (an existing account's email isn't verified — see packages/auth/src/index.ts's
+// `accountLinking` comment); everything else gets a generic message rather than a raw error code.
+function describeGoogleSignInError(code: string): string {
+  if (code === 'account_not_linked') {
+    return 'An account with this email already exists. Sign in with your phone number, then connect Google from Settings.'
+  }
+  return 'Google sign-in failed. Please try again, or use your phone number.'
+}
+
 export default function LoginPage() {
   const [state, dispatch] = useReducer(reducer, { step: 'checking' })
   const [phone, setPhone] = useState('')
@@ -102,6 +119,17 @@ export default function LoginPage() {
   }, [cooldown])
 
   useEffect(() => {
+    // A failed Google redirect means no session was created — skip straight to `phone` with the
+    // error rather than let the session check below run (and, on success, overwrite it) for no
+    // reason. Read via `window.location` rather than `useSearchParams` so this stays a plain
+    // mount effect instead of needing a Suspense boundary around the whole page for one field.
+    const error = new URLSearchParams(window.location.search).get('error')
+    if (error) {
+      router.replace('/login')
+      dispatch({ type: 'oauth_failed', error: describeGoogleSignInError(error) })
+      return
+    }
+
     let cancelled = false
     void (async () => {
       const session = await getAuthSession()
@@ -123,6 +151,8 @@ export default function LoginPage() {
     return () => {
       cancelled = true
     }
+    // Mount-only by design (see the comment above); `router` is stable across renders anyway.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Doesn't dispatch itself — the phone step (a failed *first* send) and the code step (a failed
@@ -139,7 +169,8 @@ export default function LoginPage() {
 
   async function handleGoogleSignIn() {
     setIsPending(true)
-    const { error } = await signInWithGoogle(window.location.origin + '/login')
+    const loginURL = window.location.origin + '/login'
+    const { error } = await signInWithGoogle(loginURL, loginURL)
     if (error) {
       setIsPending(false)
       dispatch({ type: 'send_failed', error })
@@ -273,11 +304,18 @@ export default function LoginPage() {
                 We&apos;ll send a one-time code to your phone.
               </p>
 
+              {/*
+                Google's own branding guidelines for this button (developers.google.com/identity/
+                branding-guidelines) fix the logo colors, the approved button text, and its casing —
+                this is the one button on the page that doesn't get the app's own `label` treatment
+                (uppercase, wide tracking, typewriter face), since that's exactly the kind of
+                restyling those guidelines rule out.
+              */}
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={isPending}
-                className="label mt-7 flex w-full items-center justify-center gap-2.5 border border-ink/25 px-5 py-3.5 text-ink transition-colors hover:bg-ink/[0.025] disabled:pointer-events-none disabled:opacity-50"
+                className="mt-7 flex h-10 w-full items-center justify-center gap-2.5 border border-[#747775] bg-white pl-3 pr-3 text-[0.875rem] font-medium text-[#1F1F1F] transition-colors hover:bg-black/[0.04] disabled:pointer-events-none disabled:opacity-50 dark:border-[#8E918F] dark:bg-[#131314] dark:text-[#E3E3E3] dark:hover:bg-white/[0.04]"
               >
                 <GoogleIcon />
                 Continue with Google
@@ -475,10 +513,28 @@ function Field({
 
 // Google's mark rendered in a single ink (currentColor) rather than the four brand colours,
 // to match the two-ink system everywhere else on this page.
+// The standard-color "G" mark from Google's Sign in with Google branding guidelines
+// (developers.google.com/identity/branding-guidelines) — that page requires this exact asset,
+// unmodified and un-recolored, wherever a Google sign-in button appears.
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="size-3.5 shrink-0" aria-hidden="true" fill="currentColor">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09zM12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23zM5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84zM12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+    <svg viewBox="0 0 366 372" className="h-[18px] w-auto shrink-0" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M361.7 151.1c5.8 32.7 4.5 66.8-4.7 98.8-8.5 29.3-24.6 56.5-47.1 77.2l-59.1-45.9c19.5-13.1 33.3-34.3 37.2-57.5H186.6c.1-24.2.1-48.4.1-72.6h175z"
+      />
+      <path
+        fill="#34A853"
+        d="M81.4 222.2c7.8 22.9 22.8 43.2 42.6 57.1 12.4 8.7 26.6 14.9 41.4 17.9 14.6 3 29.7 2.6 44.4.1 14.6-2.6 28.7-7.9 41-16.2l59.1 45.9c-21.3 19.7-48 33.1-76.2 39.6-31.2 7.1-64.2 7.3-95.2-1-24.6-6.5-47.7-18.2-67.6-34.1-20.9-16.6-38.3-38-50.4-62 20.3-15.7 40.6-31.5 60.9-47.3z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M20.6 102.4c20.3 15.8 40.6 31.5 61 47.3-8 23.3-8 49.2 0 72.4-20.3 15.8-40.6 31.6-60.9 47.3C1.9 232.7-3.8 189.6 4.4 149.2c3.3-16.2 8.7-32 16.2-46.8z"
+      />
+      <path
+        fill="#EA4335"
+        d="M125.9 10.2c40.2-13.9 85.3-13.6 125.3 1.1 22.2 8.2 42.5 21 59.9 37.1-5.8 6.3-12.1 12.2-18.1 18.3l-34.2 34.2c-11.3-10.8-25.1-19-40.1-23.6-17.6-5.3-36.6-6.1-54.6-2.2-21 4.5-40.5 15.5-55.6 30.9-12.2 12.3-21.4 27.5-27 43.9-20.3-15.8-40.6-31.5-61-47.3 21.5-43 60.1-76.9 105.4-92.4z"
+      />
     </svg>
   )
 }

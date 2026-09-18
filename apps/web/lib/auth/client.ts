@@ -50,11 +50,18 @@ export async function verifyOtp(
  * (`{ url, redirect: true }`), which the better-auth client SDK's `redirectPlugin` would normally
  * follow with `window.location.href = url`. This file forgoes that SDK (see header comment), so
  * that one bit of client behavior is reproduced here by hand.
+ *
+ * `errorCallbackURL` matters here specifically: without it, a failure *after* the Google redirect
+ * (state_mismatch, account_not_linked, ...) lands on better-auth's own bare `/v1/auth/error` page
+ * instead of back on this app's login screen — see that page's `?error=` handling.
  */
-export async function signInWithGoogle(callbackURL: string): Promise<{ error: string | null }> {
+export async function signInWithGoogle(
+  callbackURL: string,
+  errorCallbackURL: string,
+): Promise<{ error: string | null }> {
   const response = await authFetch('/sign-in/social', {
     method: 'POST',
-    body: JSON.stringify({ provider: 'google', callbackURL }),
+    body: JSON.stringify({ provider: 'google', callbackURL, errorCallbackURL }),
   })
   if (!response.ok) return { error: await extractError(response) }
   const body: unknown = await response.json().catch(() => null)
