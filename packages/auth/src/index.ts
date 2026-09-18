@@ -14,22 +14,26 @@ export { sweepExpiredDeviceLinkCodes } from './plugins/device-link'
 /**
  * OAuth's authorization/callback redirect_uri has to exactly match on both legs of the code
  * exchange, and better-auth builds it from `baseURL` (`env.API_BASE_URL` — apps/api's own
- * origin). But the browser never talks to apps/api directly: apps/web's next.config.ts rewrite
- * proxies `/v1/*` through so the session cookie lands same-origin with the frontend, not
- * apps/api's domain (see that file's comment, and lib/auth/client.ts). Google's redirect back
- * after consent is a plain top-level browser navigation, though — it isn't proxied, so it always
- * lands wherever `redirect_uri` pointed, which was apps/api's origin, bypassing apps/web (and the
- * cookie jar the OAuth state cookie was set in) entirely. The state itself still validates fine
- * (it's round-tripped through Google in the `state` param and checked against a DB row), but the
- * paired verification cookie never arrives, so better-auth's secondary check fails with
- * `state_mismatch`.
+ * origin). But the browser never talks to apps/api directly: apps/web's proxy.ts rewrite proxies
+ * `/v1/*` through so the session cookie lands same-origin with the frontend, not apps/api's domain
+ * (see that file's comment, and lib/auth/client.ts). Google's redirect back after consent is a
+ * plain top-level browser navigation, though — it isn't proxied, so it always lands wherever
+ * `redirect_uri` pointed, which was apps/api's origin, bypassing apps/web (and the cookie jar the
+ * OAuth state cookie was set in) entirely. The state itself still validates fine (it's
+ * round-tripped through Google in the `state` param and checked against a DB row), but the paired
+ * verification cookie never arrives, so better-auth's secondary check fails with `state_mismatch`.
  *
- * The fix: build `redirect_uri` from the origin the browser is actually on (recovered from
- * `X-Forwarded-Host`, which apps/web's rewrite does forward, even though it doesn't forward
- * `X-Forwarded-Proto` — hence the scheme guess below) rather than from apps/api's own baseURL, so
- * Google's redirect lands back on apps/web and the state cookie rides along through the proxy
- * like every other request. Only kicks in for an origin already in `trustedOrigins`; anything
- * else (e.g. hitting apps/api directly) keeps the default apps/api-origin behavior.
+ * The fix: build `redirect_uri` from the origin the browser is actually on rather than from
+ * apps/api's own baseURL, so Google's redirect lands back on apps/web and the state cookie rides
+ * along through the proxy like every other request. better-auth has a built-in mechanism for
+ * exactly this (`baseURL`'s dynamic-object form + `advanced.trustedProxyHeaders`, reading
+ * `X-Forwarded-Host`) — tried first, but verified in production that the reverse proxy fronting
+ * apps/api doesn't forward that header unmodified, so better-auth never saw the real origin. This
+ * uses `x-app-origin` instead: a header apps/web's own proxy.ts stamps from the request it actually
+ * received, on every `/v1/*` call, and never reads back from (or lets through from) the incoming
+ * request — so it can't be forged by a caller hitting apps/api directly. Only kicks in for an
+ * origin already in `trustedOrigins`; anything else (e.g. hitting apps/api directly) keeps the
+ * default apps/api-origin behavior.
  *
  * Each such origin (every apps/web dev port, each Vercel deployment domain) needs its own
  * `.../v1/auth/callback/google` registered as an authorized redirect URI in Google Cloud
@@ -38,13 +42,8 @@ export { sweepExpiredDeviceLinkCodes } from './plugins/device-link'
 function trustProxiedOAuthOrigin() {
   return createAuthMiddleware(async ctx => {
     if (ctx.path !== '/sign-in/social' && ctx.path !== '/callback/:id') return
-    const forwardedHost = ctx.request?.headers.get('x-forwarded-host')
-    if (!forwardedHost) return
-    const forwardedProto =
-      ctx.request?.headers.get('x-forwarded-proto') ??
-      (forwardedHost.startsWith('localhost') || forwardedHost.startsWith('127.') ? 'http' : 'https')
-    const origin = `${forwardedProto}://${forwardedHost}`
-    if (!ctx.context.isTrustedOrigin(origin)) return
+    const origin = ctx.request?.headers.get('x-app-origin')
+    if (!origin || !ctx.context.isTrustedOrigin(origin)) return
     ctx.context.baseURL = `${origin}${ctx.context.options.basePath}`
   })
 }
