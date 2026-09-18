@@ -24,7 +24,7 @@ export default function ComingSoonPage() {
         <p className="label text-vermilion">Narada</p>
 
         <h1 className="display mt-5 text-[2rem] leading-[1.1] sm:text-[2.75rem]">
-          Naradas&apos;s App is
+          Narada<span className="text-vermilion">&apos;s</span> App is
           <br />
           still being built
         </h1>
