@@ -27,6 +27,8 @@ export default function ComingSoonPage() {
           still being built
         </h1>
 
+        <p className="label mt-4 text-vermilion">Arriving Devi Navaratri</p>
+
         <div className="mx-auto mt-6 max-w-md">
           <p className="font-deva text-[1.125rem] leading-loose text-ink">
             तपःस्वाध्यायनिरतं तपस्वी वाग्विदां वरम् ।
