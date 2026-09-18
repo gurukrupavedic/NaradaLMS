@@ -30,6 +30,13 @@ const PROFILE_COOKIE = 'narada-profile-id'
 // same reasoning as `/link-device`.
 const PUBLIC_PATHS = new Set(['/login', '/link-device', '/register'])
 
+// Fronts every route with a maintenance page instead of the app's real response — auth included,
+// since a reader with no session shouldn't see a working sign-in form for a site that isn't open.
+// Read directly off process.env rather than through @narada/env: this file runs before any page,
+// so it can't pay for that package's full server validation (DATABASE_URL, R2 credentials, ...)
+// just to check one flag.
+const COMING_SOON_PATH = '/coming-soon'
+
 function hasSession(request: NextRequest): boolean {
   const session = request.cookies.get(SESSION_COOKIE) ?? request.cookies.get(SECURE_SESSION_COOKIE)
   return Boolean(session && request.cookies.get(PROFILE_COOKIE))
@@ -37,10 +44,21 @@ function hasSession(request: NextRequest): boolean {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const signedIn = hasSession(request)
+  if (process.env.COMING_SOON_MODE === 'true') {
+    if (pathname === COMING_SOON_PATH) {
+      return NextResponse.next()
+    }
 
+    const url = request.nextUrl.clone()
+    url.pathname = COMING_SOON_PATH
+    return NextResponse.rewrite(url)
+  }
+
+  const signedIn = hasSession(request)
   if (pathname === '/login') {
-    return signedIn ? NextResponse.redirect(new URL('/dashboard', request.url)) : NextResponse.next()
+    return signedIn
+      ? NextResponse.redirect(new URL('/dashboard', request.url))
+      : NextResponse.next()
   }
 
   if (pathname === '/') {
