@@ -1,13 +1,5 @@
 import type { NextConfig } from "next";
 
-// API_BASE_URL is the real apps/api origin (e.g. http://localhost:3000/v1), read
-// server-side only (Node evaluates this file directly — it never reaches the browser
-// bundle). Every browser-initiated call, auth included, hits this app's own /v1/* path
-// instead of that origin directly: better-auth's session cookie then gets set same-origin
-// with this app rather than cross-origin on the API's own domain, and reads/writes never
-// need CORS. Mirrors the identical rewrite in apps/web-legacy's own next.config.ts.
-const apiUrl = process.env.API_BASE_URL;
-
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Lets an ngrok-tunneled phone actually load the dev server: Next blocks cross-origin requests
@@ -17,10 +9,10 @@ const nextConfig: NextConfig = {
   // — every mount effect (session check, device-link code fetch) gets killed mid-flight before it
   // can ever finish, which looks like the page is silently stuck rather than erroring.
   allowedDevOrigins: ['*.ngrok-free.app', '*.ngrok.app', '*.ngrok.io'],
-  async rewrites() {
-    if (!apiUrl) return [];
-    return [{ source: "/v1/:path*", destination: `${apiUrl}/:path*` }];
-  },
+  // The /v1/* -> api-next rewrite that used to live here now happens in proxy.ts instead — a
+  // proxy/middleware's request-header mutations (needed there for APP_ORIGIN_HEADER) don't
+  // propagate into a rewrite defined here, since the two are separate layers in Next's request
+  // pipeline. See proxy.ts's own comment.
 };
 
 export default nextConfig;
