@@ -4,8 +4,19 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { DEFAULT_PHONE_COUNTRY, PHONE_COUNTRIES, guessPhoneCountry, type PhoneCountry } from '@/lib/geo'
-import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import {
+  DEFAULT_PHONE_COUNTRY,
+  PHONE_COUNTRIES,
+  guessPhoneCountry,
+  type PhoneCountry,
+} from '@/lib/phone-countries'
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 
 /**
  * A phone number field with a country-code picker: a flag+dial-code trigger to the left of the
@@ -38,7 +49,9 @@ export function PhoneInput({
   placeholder?: string
   large?: boolean
 }) {
-  const [country, setCountry] = useState<PhoneCountry>(() => guessPhoneCountry(value) ?? DEFAULT_PHONE_COUNTRY)
+  const [country, setCountry] = useState<PhoneCountry>(
+    () => guessPhoneCountry(value) ?? DEFAULT_PHONE_COUNTRY,
+  )
   const [national, setNational] = useState(() => stripDialCode(value, country))
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')

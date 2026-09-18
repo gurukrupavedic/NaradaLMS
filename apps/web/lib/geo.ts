@@ -30,31 +30,3 @@ export function formatLocation(state: string | null, country: string | null): st
   const stateName = State.getStateByCodeAndCountry(state, country)?.name ?? state
   return `${stateName}, ${countryName}`
 }
-
-export type PhoneCountry = { isoCode: string; name: string; dialCode: string; flag: string }
-
-// Same dataset as COUNTRY_OPTIONS, reshaped for the phone-number country picker: a dial code
-// (no leading `+`, matching how it's assembled into the E.164 string) and the flag emoji the
-// package ships per country, so PhoneInput doesn't need its own flag asset set.
-export const PHONE_COUNTRIES: PhoneCountry[] = Country.getAllCountries()
-  .filter(country => country.phonecode)
-  .map(country => ({
-    isoCode: country.isoCode,
-    name: country.name,
-    dialCode: country.phonecode.replace(/^\+/, ''),
-    flag: country.flag,
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name))
-
-export const DEFAULT_PHONE_COUNTRY: PhoneCountry =
-  PHONE_COUNTRIES.find(country => country.isoCode === 'IN') ?? PHONE_COUNTRIES[0]
-
-// Longest dial code that prefixes `digits` wins — `1` (US/Canada) is a prefix of some
-// three-digit Caribbean codes, so shortest-first would misattribute those numbers.
-export function guessPhoneCountry(value: string): PhoneCountry | undefined {
-  const digits = value.replace(/^\+/, '')
-  if (!digits) return undefined
-  return [...PHONE_COUNTRIES]
-    .sort((a, b) => b.dialCode.length - a.dialCode.length)
-    .find(country => digits.startsWith(country.dialCode))
-}
