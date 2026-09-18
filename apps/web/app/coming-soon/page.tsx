@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Coming soon',
+  title: 'Arriving Devi Navaratri',
+  description: "Narada's app is still being built — arriving this Devi Navaratri.",
 }
 
 /**
@@ -26,6 +27,8 @@ export default function ComingSoonPage() {
           <br />
           still being built
         </h1>
+
+        <p className="label mt-4 text-vermilion">Arriving Devi Navaratri</p>
 
         <div className="mx-auto mt-6 max-w-md">
           <p className="font-deva text-[1.125rem] leading-loose text-ink">
