@@ -21,7 +21,7 @@ router.get(
   optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
     const query = await parse(FindBatchesSchema, req.query)
     const visibility = await access.getBatchVisibility()
-    const batches = await findAllAccessible({ db }, query, visibility, (await getCourse())?.id)
+    const batches = await findAllAccessible({ db }, query, visibility, (await getCourse()).id)
     res.status(200).json({ data: batches })
   }),
 )
@@ -34,7 +34,7 @@ router.get(
 router.get(
   '/open',
   profileRoute(async ({ res, db, getCourse }) => {
-    const batches = await findOpenBatches({ db }, (await getCourse())?.id)
+    const batches = await findOpenBatches({ db }, (await getCourse()).id)
     res.status(200).json({ data: batches })
   }),
 )

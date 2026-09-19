@@ -17,7 +17,7 @@ router.get(
       { db },
       query,
       scope.kind === 'all' ? null : scope.batchIds,
-      (await getCourse())?.id,
+      (await getCourse()).id,
     )
     res.status(200).json({ data: result })
   }),

@@ -139,23 +139,21 @@ export async function insertMany(
 export async function findAllForStudent(
   db: SchoolDb,
   studentId: string,
-  courseId?: string,
+  courseId: string,
 ): Promise<Evaluation[]> {
   return db.query.evaluation.findMany({
     where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
       andCols(
         eqCol(t.studentId, studentId),
         // An evaluation belongs to a course through its chapter's track.
-        courseId
-          ? inArrayCol(
-              t.chapterId,
-              db
-                .select({ id: chapter.id })
-                .from(chapter)
-                .innerJoin(track, eq(track.id, chapter.trackId))
-                .where(eq(track.courseId, courseId)),
-            )
-          : undefined,
+        inArrayCol(
+          t.chapterId,
+          db
+            .select({ id: chapter.id })
+            .from(chapter)
+            .innerJoin(track, eq(track.id, chapter.trackId))
+            .where(eq(track.courseId, courseId)),
+        ),
       ),
     orderBy: (t, { desc: descCol }) => descCol(t.evaluatedAt),
   })

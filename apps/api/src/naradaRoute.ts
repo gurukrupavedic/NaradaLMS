@@ -10,7 +10,7 @@ import {
   type SchoolProfile,
 } from '@narada/db'
 
-import { findRequestCourse } from './courses/service'
+import { resolveCourse } from './courses/service'
 import type { Course } from './courses/schema'
 import { badRequest, forbidden, notFound } from './error'
 import { SessionService, type User } from './session'
@@ -25,7 +25,7 @@ type School = typeof organization.$inferSelect
 const schoolCache = new WeakMap<Request, Promise<{ db: SchoolDbClient; school: School }>>
 
 /** Same idea for the course context: at most one lookup per request, and none at all for a handler that never asks. */
-const courseCache = new WeakMap<Request, Promise<Course | undefined>>()
+const courseCache = new WeakMap<Request, Promise<Course>>()
 
 export type PublicRouteArgs = {
   req: Request
@@ -43,11 +43,11 @@ export type SchoolRouteArgs = {
   db: SchoolDbClient
   school: School
   /**
-   * The course this request is about, from `x-course-slug` — `undefined` when the request names
-   * none (the read is then school-wide), a 404 when it names one that doesn't exist. Lazy: a
+   * The course this request is about, from `x-course-slug` — a 400 when the request names none, a
+   * 404 when it names one that doesn't exist (see `courses/service.ts::resolveCourse`). Lazy: a
    * handler that doesn't care never pays for the lookup.
    */
-  getCourse: () => Promise<Course | undefined>
+  getCourse: () => Promise<Course>
 }
 
 export type UserRouteArgs = SchoolRouteArgs & {
@@ -155,13 +155,13 @@ export function profileRoute(handler: (args: ProfileRouteArgs) => Promise<void>)
   }
 }
 
-function resolveCourseContext(req: Request, db: SchoolDb): Promise<Course | undefined> {
+function resolveCourseContext(req: Request, db: SchoolDb): Promise<Course> {
   const cached = courseCache.get(req)
   if (cached) {
     return cached
   }
 
-  const promise = findRequestCourse(db, req.get('x-course-slug'))
+  const promise = resolveCourse(db, req.get('x-course-slug'))
   courseCache.set(req, promise)
   return promise
 }

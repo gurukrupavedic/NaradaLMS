@@ -119,6 +119,35 @@ function get(s: Seed, path: string, who: Person, course?: string) {
   return course ? req.set('x-course-slug', course) : req
 }
 
+describe('a course-scoped read always names its course', () => {
+  it('400s a request that names none, on every course-scoped route', async () => {
+    const s = await seed()
+    world = s.w
+
+    for (const path of [
+      '/tracks',
+      '/me/dashboard',
+      '/batches',
+      '/batches/open',
+      '/exams',
+      '/enrollment-requests',
+    ]) {
+      const response = await get(s, path, s.admin)
+      expect(response.status, path).toBe(400)
+      expect(response.body.error.message, path).toBe('X-Course-Slug header is required')
+    }
+  })
+
+  it('404s a course that does not exist rather than reading the wrong one', async () => {
+    const s = await seed()
+    world = s.w
+
+    const response = await get(s, '/tracks', s.admin, 'nope')
+
+    expect(response.status).toBe(404)
+  })
+})
+
 describe('GET /tracks — the course the request names', () => {
   it('lists that course’s tracks for someone who is part of it', async () => {
     const s = await seed()

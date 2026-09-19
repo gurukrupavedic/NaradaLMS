@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { destroyTestWorld } from '../testing/cleanup'
-import { createBatch, createTestSchool, createTrack, type TestWorld } from '../testing/fixtures'
+import {
+  createBatch,
+  createTestSchool,
+  createTrack,
+  defaultCourseId,
+  type TestWorld,
+} from '../testing/fixtures'
 import { findOpenBatches } from './service'
 
 let world: TestWorld | undefined
@@ -19,7 +25,7 @@ describe('findOpenBatches', () => {
     const track = await createTrack(world)
     const upcoming = await createBatch(world, track, { status: 'upcoming' })
 
-    const items = await findOpenBatches({ db: world.schoolDb })
+    const items = await findOpenBatches({ db: world.schoolDb }, await defaultCourseId(world))
 
     expect(items.map(item => item.id)).toEqual([upcoming.id])
   })
@@ -29,7 +35,7 @@ describe('findOpenBatches', () => {
     const track = await createTrack(world)
     const active = await createBatch(world, track, { status: 'active' })
 
-    const items = await findOpenBatches({ db: world.schoolDb })
+    const items = await findOpenBatches({ db: world.schoolDb }, await defaultCourseId(world))
 
     expect(items.map(item => item.id)).toEqual([active.id])
   })
@@ -39,6 +45,6 @@ describe('findOpenBatches', () => {
     const track = await createTrack(world)
     await createBatch(world, track, { status: 'completed' })
 
-    await expect(findOpenBatches({ db: world.schoolDb })).resolves.toEqual([])
+    await expect(findOpenBatches({ db: world.schoolDb }, await defaultCourseId(world))).resolves.toEqual([])
   })
 })

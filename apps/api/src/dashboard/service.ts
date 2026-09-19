@@ -22,10 +22,9 @@ export async function getDashboardData(
   context: DashboardServiceContext,
   profileId: string,
   profileName: string,
-  courseId?: string,
+  courseId: string,
 ): Promise<DashboardData> {
-  // With a course, everything below is that course's: its tracks, this profile's batches, marks,
-  // exams and results in it. Without one it is the whole school, as before.
+  // Everything below is that course's: its tracks, this profile's batches, marks, exams and results in it.
   const [memberships, tracks, pendingBatchIds] = await Promise.all([
     batchesRepository.findAllMembershipsWithDetail(context.db, profileId, courseId),
     findAllTracks(context, { kind: 'learnerPreview' }, courseId),

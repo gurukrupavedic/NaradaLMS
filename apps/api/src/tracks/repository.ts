@@ -9,10 +9,10 @@ import type { TrackWithChapters } from './schema'
 export async function findAll(
   db: SchoolDb,
   view: ContentReadView,
-  courseId?: string,
+  courseId: string,
 ): Promise<TrackWithChapters[]> {
   return db.query.track.findMany({
-    where: (t, { eq }) => (courseId ? eq(t.courseId, courseId) : undefined),
+    where: (t, { eq }) => (eq(t.courseId, courseId)),
     orderBy: (t, { asc }) => asc(t.order),
     with: {
       chapters: {

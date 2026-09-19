@@ -55,7 +55,7 @@ router.get(
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     const query = await parse(ProfileBatchesQuerySchema, req.query)
     const scope = await access.getProfileBatchListScope(profileId)
-    const courseId = (await getCourse())?.id
+    const courseId = (await getCourse()).id
     const batches = query.withDetail
       ? await findAllAccessibleWithDetail({ db }, query, scope, profileId, courseId)
       : await findAllAccessible({ db }, query, scope, courseId)
@@ -75,10 +75,8 @@ router.get(
     const course = await getCourse()
     // The dashboard carries the course's track catalogue, so the *caller* (not just the profile
     // being viewed) has to be part of the course the request names.
-    if (course) {
-      await access.requireCanReadCourseContent(course.id)
-    }
-    const dashboard = await getDashboardData({ db }, profile.id, profile.name, course?.id)
+    await access.requireCanReadCourseContent(course.id)
+    const dashboard = await getDashboardData({ db }, profile.id, profile.name, course.id)
     res.status(200).json({ data: { profile, dashboard } })
   }),
 )

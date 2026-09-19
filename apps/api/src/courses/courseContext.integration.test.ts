@@ -98,31 +98,31 @@ async function courseFor(w: TestWorld, courseHeader: string | undefined) {
     {} as Response,
     () => {},
   )
-  return result as { id: string; slug: string } | undefined
+  return result as { id: string; slug: string }
 }
 
 describe('the course a request is about', () => {
-  it('is the school’s only course when the request names none', async () => {
+  it('is a 400 when the request names none — even when the school has only one course, so adding a second never changes the rule', async () => {
     world = await createTestSchool()
-    const only = await createCourse(world, { slug: 'vedam' })
-
-    await expect(courseFor(world, undefined)).resolves.toMatchObject({ id: only.id })
-  })
-
-  it('is a 422, not a guess, when the school has several courses and the request names none', async () => {
-    const s = await seedTwoCourses()
-    world = s.w
+    await createCourse(world, { slug: 'vedam' })
 
     const error = await courseFor(world, undefined).catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(AppError)
-    expect(error).toMatchObject({ statusCode: 422 })
+    expect(error).toMatchObject({ statusCode: 400, message: 'X-Course-Slug header is required' })
   })
 
-  it('is no course, and no error, for a brand-new school that has none yet', async () => {
-    world = await createTestSchool()
+  it('is that same 400 for a school with several courses, or none', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+    await expect(courseFor(world, undefined)).rejects.toMatchObject({ statusCode: 400 })
 
-    await expect(courseFor(world, undefined)).resolves.toBeUndefined()
+    const empty = await createTestSchool()
+    try {
+      await expect(courseFor(empty, undefined)).rejects.toMatchObject({ statusCode: 400 })
+    } finally {
+      await destroyTestWorld(empty)
+    }
   })
 
   it('finds the named course, whatever its casing', async () => {
@@ -160,7 +160,7 @@ describe('the course a request is about', () => {
     )
     expect(first).toBe(second)
 
-    // A course the handler never asks about can't break it — even one that would 404 or 422.
+    // A course the handler never asks about can't break it — even one that would 404 or be missing.
     const untouched = schoolRoute(async () => {})
     for (const header of ['nope', undefined]) {
       await expect(
@@ -181,11 +181,11 @@ describe('reads limited to a course', () => {
     const s = await seedTwoCourses()
     world = s.w
 
-    const both = await findTracks(world.schoolDb, { kind: 'authoring' })
     const vedamOnly = await findTracks(world.schoolDb, { kind: 'authoring' }, s.vedam.id)
+    const smartamOnly = await findTracks(world.schoolDb, { kind: 'authoring' }, s.smartam.id)
 
-    expect(ids(both)).toEqual(ids([s.vedamTrack, s.smartamTrack]))
     expect(ids(vedamOnly)).toEqual([s.vedamTrack.id])
+    expect(ids(smartamOnly)).toEqual([s.smartamTrack.id])
   })
 
   it('batch lists, in every shape', async () => {
@@ -193,9 +193,9 @@ describe('reads limited to a course', () => {
     world = s.w
     const page = { limit: 50, status: undefined, cursor: undefined }
 
-    expect(ids((await findAccessible(world.schoolDb, page, { kind: 'all' })).items)).toEqual(
-      ids([s.vedamBatch, s.smartamBatch]),
-    )
+    expect(
+      ids((await findAccessible(world.schoolDb, page, { kind: 'all' }, s.vedam.id)).items),
+    ).toEqual([s.vedamBatch.id])
     expect(
       ids((await findAccessible(world.schoolDb, page, { kind: 'all' }, s.smartam.id)).items),
     ).toEqual([s.smartamBatch.id])
@@ -212,7 +212,6 @@ describe('reads limited to a course', () => {
         ).items,
       ),
     ).toEqual([s.vedamBatch.id])
-    expect(ids(await findOpen(world.schoolDb))).toEqual(ids([s.vedamBatch, s.smartamBatch]))
     expect(ids(await findOpen(world.schoolDb, s.vedam.id))).toEqual([s.vedamBatch.id])
     expect(
       ids(await findAllMembershipsWithDetail(world.schoolDb, s.student.id, s.smartam.id)),
@@ -223,10 +222,10 @@ describe('reads limited to a course', () => {
     const s = await seedTwoCourses()
     world = s.w
 
-    const all = await findAllForProfiles(world.schoolDb, [s.student.id])
+    const vedamOnly = await findAllForProfiles(world.schoolDb, [s.student.id], s.vedam.id)
     const smartamOnly = await findAllForProfiles(world.schoolDb, [s.student.id], s.smartam.id)
 
-    expect(all.get(s.student.id)).toHaveLength(2)
+    expect(vedamOnly.get(s.student.id)?.map(b => b.id)).toEqual([s.vedamBatch.id])
     expect(smartamOnly.get(s.student.id)?.map(b => b.id)).toEqual([s.smartamBatch.id])
   })
 
@@ -244,9 +243,10 @@ describe('reads limited to a course', () => {
       evaluator: s.evaluator,
     })
 
-    expect(await findAllForStudent(world.schoolDb, s.student.id)).toHaveLength(2)
     const vedamMarks = await findAllForStudent(world.schoolDb, s.student.id, s.vedam.id)
     expect(vedamMarks.map(e => e.chapterId)).toEqual([s.vedamChapter.id])
+    const smartamMarks = await findAllForStudent(world.schoolDb, s.student.id, s.smartam.id)
+    expect(smartamMarks.map(e => e.chapterId)).toEqual([s.smartamChapter.id])
   })
 
   it('exams, through their tracks', async () => {
@@ -260,9 +260,11 @@ describe('reads limited to a course', () => {
     await createExam(world, { student: s.student, track: s.smartamTrack, batch: s.smartamBatch })
     const page = { limit: 50, status: undefined, cursor: undefined }
 
-    expect((await findExams(world.schoolDb, page, { kind: 'all' })).items).toHaveLength(2)
     const scoped = await findExams(world.schoolDb, page, { kind: 'all' }, s.vedam.id)
     expect(ids(scoped.items)).toEqual([vedamExam.id])
+    const other = await findExams(world.schoolDb, page, { kind: 'all' }, s.smartam.id)
+    expect(other.items).toHaveLength(1)
+    expect(ids(other.items)).not.toContain(vedamExam.id)
   })
 
   it('enrollment requests, through the batch they ask to join', async () => {
@@ -273,9 +275,11 @@ describe('reads limited to a course', () => {
     await createEnrollmentRequest(world, asker, s.smartamBatch)
     const page = { limit: 50, status: undefined, cursor: undefined }
 
-    expect((await findEnrollmentRequests(world.schoolDb, page, null)).items).toHaveLength(2)
     const scoped = await findEnrollmentRequests(world.schoolDb, page, null, s.vedam.id)
     expect(ids(scoped.items)).toEqual([toVedam.id])
+    const other = await findEnrollmentRequests(world.schoolDb, page, null, s.smartam.id)
+    expect(other.items).toHaveLength(1)
+    expect(ids(other.items)).not.toContain(toVedam.id)
   })
 
   it('registrations', async () => {
@@ -285,16 +289,16 @@ describe('reads limited to a course', () => {
     await createRegistration(world, { course: s.vedam })
     const page = { limit: 50, status: undefined, cursor: undefined }
 
-    expect((await findRegistrations(world.schoolDb, page)).items).toHaveLength(2)
     const scoped = await findRegistrations(world.schoolDb, page, s.smartam.id)
     expect(ids(scoped.items)).toEqual([forSmartam.id])
+    expect((await findRegistrations(world.schoolDb, page, s.vedam.id)).items).toHaveLength(1)
   })
 })
 
 // -- The dashboard, which assembles all of them --------------------------------------------------
 
 describe('a student’s dashboard on each course’s address', () => {
-  it('shows only that course, while the school-wide view still shows both', async () => {
+  it('shows only that course', async () => {
     const s = await seedTwoCourses()
     world = s.w
     await createEvaluation(world, {
@@ -317,7 +321,6 @@ describe('a student’s dashboard on each course’s address', () => {
     await createExam(world, { student: s.student, track: s.vedamTrack, batch: s.vedamBatch })
     await createEnrollmentRequest(world, s.student, s.vedamBatch)
 
-    const both = await getDashboardData({ db: world.schoolDb }, s.student.id, s.student.name)
     const onVedam = await getDashboardData(
       { db: world.schoolDb },
       s.student.id,
@@ -330,9 +333,6 @@ describe('a student’s dashboard on each course’s address', () => {
       s.student.name,
       s.smartam.id,
     )
-
-    expect(both.memberships).toHaveLength(2)
-    expect(both.tracks).toHaveLength(2)
 
     expect(ids(onVedam.memberships)).toEqual([s.vedamBatch.id])
     expect(ids(onVedam.tracks)).toEqual([s.vedamTrack.id])

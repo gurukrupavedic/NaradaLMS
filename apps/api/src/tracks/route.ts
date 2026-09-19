@@ -14,11 +14,9 @@ router.get(
     const view = access.getContentReadView()
     const course = await getCourse()
     // The request names the course whose tracks it wants, so refusing it outright ("you are not part
-    // of this course") discloses nothing. A school with no courses has nothing to gate or list.
-    if (course) {
-      await access.requireCanReadCourseContent(course.id)
-    }
-    const tracks = await findAll({ db }, view, course?.id)
+    // of this course") discloses nothing.
+    await access.requireCanReadCourseContent(course.id)
+    const tracks = await findAll({ db }, view, course.id)
     res.status(200).json({ data: tracks })
   }),
 )

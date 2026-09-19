@@ -439,13 +439,6 @@ describe('the race: two seatings for one student at the same moment', () => {
 })
 
 describe('resolveCourse', () => {
-  it('uses the school’s only course when no slug is given', async () => {
-    world = await createTestSchool()
-    const only = await createCourse(world, { slug: 'vedam' })
-
-    await expect(resolveCourse(world.schoolDb, undefined)).resolves.toMatchObject({ id: only.id })
-  })
-
   it('finds a course by slug', async () => {
     const s = await seedTwoCourses()
     world = s.w
@@ -462,20 +455,13 @@ describe('resolveCourse', () => {
     await expect(resolveCourse(world.schoolDb, 'nope')).rejects.toMatchObject({ statusCode: 404 })
   })
 
-  it('422s rather than guessing when the school has several courses and none was named', async () => {
+  it('400s rather than guessing when none was named, however many courses the school has', async () => {
     const s = await seedTwoCourses()
     world = s.w
 
     await expect(resolveCourse(world.schoolDb, undefined)).rejects.toMatchObject({
-      statusCode: 422,
+      statusCode: 400,
     })
-  })
-
-  it('422s for a school with no courses at all', async () => {
-    world = await createTestSchool()
-
-    await expect(resolveCourse(world.schoolDb, undefined)).rejects.toMatchObject({
-      statusCode: 422,
-    })
+    await expect(resolveCourse(world.schoolDb, '')).rejects.toMatchObject({ statusCode: 400 })
   })
 })

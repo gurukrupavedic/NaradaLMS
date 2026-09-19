@@ -17,6 +17,7 @@ import {
   enroll,
   type ExamRow,
   type TestWorld,
+  defaultCourseId,
 } from '../testing/fixtures'
 import { findById, findByIdWithDetail, findMany, findResultsForStudent } from './repository'
 import { recordExamResult } from './service'
@@ -450,6 +451,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
       world.schoolDb,
       { limit: 20, status: undefined, cursor: undefined },
       { kind: 'all' },
+      await defaultCourseId(world),
     )
 
     const found = items.find(item => item.id === seed.examRow.id)
@@ -464,6 +466,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
       world.schoolDb,
       { limit: 20, status: undefined, cursor: undefined },
       { kind: 'all' },
+      await defaultCourseId(world),
     )
     const foundAfter = itemsAfter.find(item => item.id === seed.examRow.id)
     expect(foundAfter?.result).toMatchObject({
@@ -488,6 +491,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
       world.schoolDb,
       { limit: 20, status: undefined, cursor: undefined },
       { kind: 'own', profileId: me.id },
+      await defaultCourseId(world),
     )
 
     expect(items.map(i => i.id)).toEqual([myExam.id])
@@ -508,6 +512,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
       world.schoolDb,
       { limit: 20, status: undefined, cursor: undefined },
       { kind: 'manageable', profileId: instructorProfile.id, batchIds: [batchRow.id] },
+      await defaultCourseId(world),
     )
 
     const found = items.find(i => i.id === studentExam.id)
@@ -555,7 +560,7 @@ describe('findResultsForStudent (a track certification is the student\'s latest 
       evaluatedAt: new Date('2026-02-01T00:00:00Z'),
     })
 
-    const results = await findResultsForStudent(world.schoolDb, student.id)
+    const results = await findResultsForStudent(world.schoolDb, student.id, await defaultCourseId(world))
 
     expect(results.map(r => r.trackId)).toEqual([trackB.id, trackA.id])
     expect(results.map(r => r.level)).toEqual(['level1', 'level4'])
@@ -571,14 +576,14 @@ describe('findResultsForStudent (a track certification is the student\'s latest 
     const theirs = await createExam(world, { student: otherStudent, track: trackRow, batch: batchRow, status: 'completed' })
     await createExamResult(world, { exam: theirs, evaluator })
 
-    await expect(findResultsForStudent(world.schoolDb, student.id)).resolves.toEqual([])
+    await expect(findResultsForStudent(world.schoolDb, student.id, await defaultCourseId(world))).resolves.toEqual([])
   })
 
   it('returns an empty array, not an error, when the student has no results at all', async () => {
     world = await createTestSchool()
     const student = await createProfile(world)
 
-    await expect(findResultsForStudent(world.schoolDb, student.id)).resolves.toEqual([])
+    await expect(findResultsForStudent(world.schoolDb, student.id, await defaultCourseId(world))).resolves.toEqual([])
   })
 
   it('a re-sit on the same track keeps both results — history, not a single current row', async () => {
@@ -592,6 +597,6 @@ describe('findResultsForStudent (a track certification is the student\'s latest 
     await createExamResult(world, { exam: first, evaluator })
     await createExamResult(world, { exam: second, evaluator })
 
-    await expect(findResultsForStudent(world.schoolDb, student.id)).resolves.toHaveLength(2)
+    await expect(findResultsForStudent(world.schoolDb, student.id, await defaultCourseId(world))).resolves.toHaveLength(2)
   })
 })

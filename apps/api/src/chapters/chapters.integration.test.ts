@@ -11,6 +11,7 @@ import {
   createTestSchool,
   createTrack,
   type TestWorld,
+  defaultCourseId,
 } from '../testing/fixtures'
 import { findAll as findAllTracks } from '../tracks/repository'
 import { findById } from './repository'
@@ -201,11 +202,11 @@ describe('updateChapter (service)', () => {
 
     expect(archived.order).toBeLessThan(other.order)
 
-    const authoringTracks = await findAllTracks(world.schoolDb, { kind: 'authoring' })
+    const authoringTracks = await findAllTracks(world.schoolDb, { kind: 'authoring' }, await defaultCourseId(world))
     const authoringTrack = authoringTracks.find(t => t.id === trackRow.id)
     expect(authoringTrack?.chapters.map(c => c.id)).toEqual([other.id])
 
-    const learnerTracks = await findAllTracks(world.schoolDb, { kind: 'learnerPreview' })
+    const learnerTracks = await findAllTracks(world.schoolDb, { kind: 'learnerPreview' }, await defaultCourseId(world))
     const learnerTrack = learnerTracks.find(t => t.id === trackRow.id)
     expect(learnerTrack?.chapters.map(c => c.id)).toEqual([other.id])
   })

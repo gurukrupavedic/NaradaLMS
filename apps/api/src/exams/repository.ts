@@ -49,12 +49,10 @@ export async function findMany(
   db: SchoolDb,
   { status, cursor, limit }: FindExamsData,
   scope: ExamReadScope,
-  courseId?: string,
+  courseId: string,
 ): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
   const conditions: SQL[] = []
-  if (courseId) {
-    conditions.push(inArray(exam.trackId, tracksOfCourse(db, courseId)))
-  }
+  conditions.push(inArray(exam.trackId, tracksOfCourse(db, courseId)))
 
   if (scope.kind === 'own') {
     conditions.push(eq(exam.studentId, scope.profileId))
@@ -112,14 +110,14 @@ export async function findByIdWithDetail(db: SchoolDb, id: string): Promise<Exam
 export async function findUpcomingForStudent(
   db: SchoolDb,
   studentId: string,
-  courseId?: string,
+  courseId: string,
 ): Promise<ExamWithDetail[]> {
   const rows = await db.query.exam.findMany({
     where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
       andCols(
         eqCol(t.studentId, studentId),
         eqCol(t.status, 'scheduled'),
-        courseId ? inArrayCol(t.trackId, tracksOfCourse(db, courseId)) : undefined,
+        inArrayCol(t.trackId, tracksOfCourse(db, courseId)),
       ),
     orderBy: (t, { asc: ascCol }) => ascCol(t.scheduledAt),
     with: DETAIL,
@@ -136,7 +134,7 @@ export async function findUpcomingForStudent(
 export async function findResultsForStudent(
   db: SchoolDb,
   studentId: string,
-  courseId?: string,
+  courseId: string,
 ): Promise<StudentExamResult[]> {
   const rows = await db
     .select({ ...getTableColumns(examResult), trackId: exam.trackId })
@@ -145,7 +143,7 @@ export async function findResultsForStudent(
     .where(
       and(
         eq(exam.studentId, studentId),
-        courseId ? inArray(exam.trackId, tracksOfCourse(db, courseId)) : undefined,
+        inArray(exam.trackId, tracksOfCourse(db, courseId)),
       ),
     )
     .orderBy(desc(examResult.evaluatedAt))

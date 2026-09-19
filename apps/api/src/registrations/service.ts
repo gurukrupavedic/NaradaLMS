@@ -12,7 +12,7 @@ type ReviewContext = RegistrationServiceContext & { school: { id: string } }
 export async function findAll(
   context: RegistrationServiceContext,
   params: FindRegistrationsData,
-  courseId?: string,
+  courseId: string,
 ): Promise<{ items: Registration[]; nextCursor: string | null }> {
   return repository.findAll(context.db, params, courseId)
 }

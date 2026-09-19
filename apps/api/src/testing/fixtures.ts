@@ -244,6 +244,11 @@ async function defaultCourse(world: TestWorld): Promise<CourseRow> {
   return row
 }
 
+/** The id of the course every builder falls back to — for tests of course-scoped reads that don't care which course, only that one is named. */
+export async function defaultCourseId(world: TestWorld): Promise<string> {
+  return (await defaultCourse(world)).id
+}
+
 export async function createTrack(
   world: TestWorld,
   overrides?: { name?: string; order?: number; course?: CourseRow },

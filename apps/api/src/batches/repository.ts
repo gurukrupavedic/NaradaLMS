@@ -32,17 +32,15 @@ export async function findAccessible(
   db: SchoolDb,
   { status, limit, cursor }: FindBatchesData,
   scope: BatchReadScope,
-  courseId?: string,
+  courseId: string,
 ): Promise<{ items: Batch[]; nextCursor: string | null }> {
   const baseConditions: SQL[] = []
   if (status) {
     baseConditions.push(eq(batch.status, status))
   }
 
-  // The request's course, when it names one — every list below is then that course's batches only.
-  if (courseId) {
-    baseConditions.push(eq(batch.courseId, courseId))
-  }
+  // Every list below is the request's course's batches only.
+  baseConditions.push(eq(batch.courseId, courseId))
 
   if (scope.kind === 'enrolled') {
     // Restrict to batches the caller's profile is enrolled in, rather than every batch in the
@@ -116,16 +114,14 @@ export async function findAccessibleWithDetail(
   { status, limit, cursor }: FindBatchesData,
   scope: BatchReadScope,
   roleForProfileId: string,
-  courseId?: string,
+  courseId: string,
 ): Promise<{ items: BatchWithRole[]; nextCursor: string | null }> {
   const baseConditions: SQL[] = []
   if (status) {
     baseConditions.push(eq(batch.status, status))
   }
 
-  if (courseId) {
-    baseConditions.push(eq(batch.courseId, courseId))
-  }
+  baseConditions.push(eq(batch.courseId, courseId))
 
   if (scope.kind === 'enrolled') {
     baseConditions.push(
@@ -237,10 +233,10 @@ export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Batch
  * "open" state to opt a batch into. No seat cap to check against — every joinable batch takes any
  * number of students.
  */
-export async function findOpen(db: SchoolDb, courseId?: string): Promise<OpenBatch[]> {
+export async function findOpen(db: SchoolDb, courseId: string): Promise<OpenBatch[]> {
   const rows = await db.query.batch.findMany({
     where: (t, { and: andCols, eq: eqCol, ne }) =>
-      andCols(ne(t.status, 'completed'), courseId ? eqCol(t.courseId, courseId) : undefined),
+      andCols(ne(t.status, 'completed'), eqCol(t.courseId, courseId)),
     with: { classSlots: true, track: true },
     orderBy: (t, { asc: ascCol }) => ascCol(t.code),
   })
@@ -319,7 +315,7 @@ export async function insertClassSlots(
 export async function findAllMembershipsWithDetail(
   db: SchoolDb,
   profileId: string,
-  courseId?: string,
+  courseId: string,
 ): Promise<BatchWithRole[]> {
   const rows = await db.query.batch.findMany({
     where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
@@ -328,7 +324,7 @@ export async function findAllMembershipsWithDetail(
           t.id,
           db.select({ batchId: enrollment.batchId }).from(enrollment).where(eq(enrollment.profileId, profileId)),
         ),
-        courseId ? eqCol(t.courseId, courseId) : undefined,
+        eqCol(t.courseId, courseId),
       ),
     with: { enrollments: { with: { profile: true } }, classSlots: true },
   })
@@ -367,7 +363,7 @@ export async function findAllMembershipsWithDetail(
 export async function findAllForProfiles(
   db: SchoolDb,
   profileIds: string[],
-  courseId?: string,
+  courseId: string,
 ): Promise<Map<string, Batch[]>> {
   const map = new Map<string, Batch[]>()
   if (profileIds.length === 0) {
@@ -381,7 +377,7 @@ export async function findAllForProfiles(
     .where(
       and(
         inArray(enrollment.profileId, profileIds),
-        courseId ? eq(batch.courseId, courseId) : undefined,
+        eq(batch.courseId, courseId),
       ),
     )
 

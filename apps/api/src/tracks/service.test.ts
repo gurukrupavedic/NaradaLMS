@@ -26,26 +26,18 @@ beforeEach(() => {
 })
 
 describe('findAll', () => {
-  it('delegates straight through to the repository', async () => {
+  it('delegates straight through to the repository, limited to the course', async () => {
     const tracks = [{ id: 'track-1', courseId: 'course-1', name: 'Track One', order: 1, chapters: [] }]
     vi.mocked(repository.findAll).mockResolvedValue(tracks)
 
-    await expect(findAll(context, { kind: 'learnerPreview' })).resolves.toEqual(tracks)
-    expect(repository.findAll).toHaveBeenCalledWith(db, { kind: 'learnerPreview' }, undefined)
-  })
-
-  it('passes the course through, so the read can be limited to it', async () => {
-    vi.mocked(repository.findAll).mockResolvedValue([])
-
-    await findAll(context, { kind: 'learnerPreview' }, 'course-1')
-
+    await expect(findAll(context, { kind: 'learnerPreview' }, 'course-1')).resolves.toEqual(tracks)
     expect(repository.findAll).toHaveBeenCalledWith(db, { kind: 'learnerPreview' }, 'course-1')
   })
 
   it('an empty school still returns an empty array, not an error', async () => {
     vi.mocked(repository.findAll).mockResolvedValue([])
 
-    await expect(findAll(context, { kind: 'learnerPreview' })).resolves.toEqual([])
+    await expect(findAll(context, { kind: 'learnerPreview' }, 'course-1')).resolves.toEqual([])
   })
 })
 

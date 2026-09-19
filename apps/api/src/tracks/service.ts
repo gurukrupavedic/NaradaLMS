@@ -14,7 +14,7 @@ type CourseContentGate = Pick<AccessPolicy, 'canReadCourseContent'>
 export async function findAll(
   context: TrackServiceContext,
   view: ContentReadView,
-  courseId?: string,
+  courseId: string,
 ): Promise<TrackWithChapters[]> {
   return repository.findAll(context.db, view, courseId)
 }

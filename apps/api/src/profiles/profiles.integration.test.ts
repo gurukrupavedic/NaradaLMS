@@ -16,6 +16,7 @@ import {
   createUser,
   enroll,
   type TestWorld,
+  defaultCourseId,
 } from '../testing/fixtures'
 import * as repository from './repository'
 import { findById, updateProfile } from './service'
@@ -331,7 +332,7 @@ describe('profile detail access (self, admin, shared teacher, stranger)', () => 
       studentProfile.id,
     )
     await expect(
-      getDashboardData({ db: world.schoolDb }, detail.id, detail.name),
+      getDashboardData({ db: world.schoolDb }, detail.id, detail.name, await defaultCourseId(world)),
     ).resolves.toBeDefined()
   })
 

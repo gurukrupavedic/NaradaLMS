@@ -50,7 +50,7 @@ export async function findAll(
   db: SchoolDb,
   { status, limit, cursor }: FindEnrollmentRequestsData,
   batchIds: string[] | null,
-  courseId?: string,
+  courseId: string,
 ): Promise<{ items: EnrollmentRequest[]; nextCursor: string | null }> {
   const conditions: SQL[] = []
   if (status) {
@@ -58,9 +58,7 @@ export async function findAll(
   }
 
   // A request belongs to a course through the batch it asks to join.
-  if (courseId) {
-    conditions.push(inArray(enrollmentRequest.batchId, batchesOfCourse(db, courseId)))
-  }
+  conditions.push(inArray(enrollmentRequest.batchId, batchesOfCourse(db, courseId)))
 
   if (batchIds) {
     conditions.push(inArray(enrollmentRequest.batchId, batchIds))
@@ -117,14 +115,14 @@ export async function findPending(
 export async function findPendingBatchIdsForProfile(
   db: SchoolDb,
   profileId: string,
-  courseId?: string,
+  courseId: string,
 ): Promise<string[]> {
   const rows = await db.query.enrollmentRequest.findMany({
     where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
       andCols(
         eqCol(t.profileId, profileId),
         eqCol(t.status, 'pending'),
-        courseId ? inArrayCol(t.batchId, batchesOfCourse(db, courseId)) : undefined,
+        inArrayCol(t.batchId, batchesOfCourse(db, courseId)),
       ),
     columns: { batchId: true },
   })

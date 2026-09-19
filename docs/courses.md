@@ -12,14 +12,14 @@ course you are in.
 | Request | Result |
 | --- | --- |
 | names a course | that course (`404` if there is no such course) |
-| names none, school has **one** course | that course |
-| names none, school has **several** | `422` — the caller has to say which |
-| names none, school has **none** | no course; reads are simply empty |
+| names none | `400` — the header is required |
 
-So a single-course school (SLMTS today) works without the app sending anything, and a multi-course school
-can never show a mixed view by accident.
+There is no default — not even for a school with a single course. A rule that changed with the number of
+courses would break every client that never sent the header the day a second course was added, and a
+forgotten header fails loudly instead of quietly showing (or filing under) the wrong course. The web app
+always sends it, because every page that makes these requests is under `/<course>/…`.
 
-With a course, these lists are limited to it: tracks, batches (accessible, open, per-profile), the
+These lists are limited to the course: tracks, batches (accessible, open, per-profile), the
 dashboard and profile detail (batches, marks, exams, results, pending requests), exams, enrollment
 requests, registrations.
 
