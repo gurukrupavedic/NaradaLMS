@@ -6,7 +6,16 @@ import { CreateEvaluationSchema } from './schema'
 // `@narada/db` at import time and trigger real env-var validation — never loads.
 vi.mock('@narada/db', () => ({
   proficiencyLevel: {
-    enumValues: ['absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4'],
+    enumValues: [
+      'absent',
+      'notStarted',
+      'practicing',
+      'level0',
+      'level1',
+      'level2',
+      'level3',
+      'level4',
+    ],
   },
 }))
 
@@ -14,7 +23,7 @@ const studentId = crypto.randomUUID()
 const chapterId = crypto.randomUUID()
 
 describe('CreateEvaluationSchema', () => {
-  it.each(['absent', 'level1', 'level2', 'level3'] as const)(
+  it.each(['absent', 'level0', 'level1', 'level2', 'level3'] as const)(
     'accepts a teacher-gradable level (%s)',
     level => {
       const result = CreateEvaluationSchema.safeParse({ studentId, chapterId, level })

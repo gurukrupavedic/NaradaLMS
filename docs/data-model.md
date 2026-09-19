@@ -345,7 +345,7 @@ An instructor's assessment of a student's proficiency on a chapter. Evaluations 
 | `id`           | uuid        | PK                                                                                         |
 | `studentId`    | text        | logical ref to `public.user.id`                                                            |
 | `chapterId`    | uuid        | FK to `chapter.id`                                                                         |
-| `level`        | enum        | `'notStarted'`, `'practicing'`, `'level1'`, `'level2'`, `'level3'`, `'level4'`, `'absent'` |
+| `level`        | enum        | `'notStarted'`, `'practicing'`, `'level0'`, `'level1'`, `'level2'`, `'level3'`, `'level4'`, `'absent'` |
 | `notes`        | text        |                                                                                            |
 | `evaluatorId`  | text        | logical ref to `public.user.id`                                                            |
 | `evaluatedAt`  | timestamptz |                                                                                            |

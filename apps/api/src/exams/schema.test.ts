@@ -7,7 +7,16 @@ import { CreateExamSchema, RecordExamResultSchema, UpdateExamSchema } from './sc
 vi.mock('@narada/db', () => ({
   examStatus: { enumValues: ['scheduled', 'inProgress', 'completed', 'cancelled'] },
   proficiencyLevel: {
-    enumValues: ['absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4'],
+    enumValues: [
+      'absent',
+      'notStarted',
+      'practicing',
+      'level0',
+      'level1',
+      'level2',
+      'level3',
+      'level4',
+    ],
   },
   chapterStatus: { enumValues: ['draft', 'published'] },
   script: { enumValues: ['te', 'sa', 'en'] },
@@ -54,7 +63,7 @@ describe('RecordExamResultSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it.each(['absent', 'level1', 'level2', 'level3'] as const)(
+  it.each(['absent', 'level0', 'level1', 'level2', 'level3'] as const)(
     'rejects %s — that grade belongs to a teacher evaluation, not an exam result',
     level => {
       const result = RecordExamResultSchema.safeParse({ level })

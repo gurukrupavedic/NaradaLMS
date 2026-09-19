@@ -106,6 +106,13 @@
       "when": 1789688573878,
       "tag": "0014_familiar_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789787438637,
+      "tag": "0015_fearless_glorian",
+      "breakpoints": true
     }
   ]
 }

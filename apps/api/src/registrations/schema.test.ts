@@ -7,7 +7,7 @@ import { CreateRegistrationSchema, FindRegistrationsSchema } from './schema'
 vi.mock('@narada/db', () => ({
   registrationStatus: { enumValues: ['pending', 'approved', 'rejected'] },
   proficiencyLevel: {
-    enumValues: ['absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4'],
+    enumValues: ['absent', 'notStarted', 'practicing', 'level0', 'level1', 'level2', 'level3', 'level4'],
   },
 }))
 

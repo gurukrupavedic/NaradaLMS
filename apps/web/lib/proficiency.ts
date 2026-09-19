@@ -1,23 +1,33 @@
-export type ProficiencyLevel = 'notStarted' | 'absent' | 'level1' | 'level2' | 'level3' | 'level4'
+export type ProficiencyLevel =
+  | 'notStarted'
+  | 'absent'
+  | 'level0'
+  | 'level1'
+  | 'level2'
+  | 'level3'
+  | 'level4'
 
 export const PROFICIENCY_ORDER: ProficiencyLevel[] = [
   'notStarted',
   'absent',
+  'level0',
   'level1',
   'level2',
   'level3',
   'level4',
 ]
 
-// L1 marks "done with classroom instruction" — a real, common resting state
-// (there's a whole population of students sitting there), not a synonym for
-// "started." L1-L3 are all a teacher's own grades; L4 is the exception — it
-// only ever comes from an exam evaluation, never the teacher directly (see
-// apps/api/src/evaluations/schema.ts's teacherGradableLevelSchema) — and it's
-// the only one that also certifies the track (see `isCertified`).
+// L0 marks "the lesson has been taught" — a real, common resting state (there's
+// a whole population of students sitting there), not a synonym for "started."
+// L1 is low proficiency, L2 high proficiency, L3 mastery. L0-L3 are all a
+// teacher's own grades; L4 is the exception — it only ever comes from an exam
+// evaluation, never the teacher directly (see apps/api/src/evaluations/
+// schema.ts's teacherGradableLevelSchema) — and it's the only one that also
+// certifies the track (see `isCertified`).
 export const PROFICIENCY_LABEL: Record<ProficiencyLevel, string> = {
   notStarted: 'Not Started',
   absent: 'Absent',
+  level0: 'L0',
   level1: 'L1',
   level2: 'L2',
   level3: 'L3',
@@ -27,6 +37,7 @@ export const PROFICIENCY_LABEL: Record<ProficiencyLevel, string> = {
 export const PROFICIENCY_SHORT: Record<ProficiencyLevel, string> = {
   notStarted: '—',
   absent: 'A',
+  level0: 'L0',
   level1: 'L1',
   level2: 'L2',
   level3: 'L3',
@@ -35,13 +46,15 @@ export const PROFICIENCY_SHORT: Record<ProficiencyLevel, string> = {
 
 // The register's own colour sense, not a fresh pick — see globals.css's header
 // note on why this replaced the single deepening indigo ramp, and why it's
-// still two disciplined families (green, purple) rather than the five stray
-// hues that came before *that*. Colour doesn't track depth alone: level 2
-// (light green) and level 3 (full green) are looked up independently even
-// though level 1 and level 4 each stand alone in their own hue.
+// still three disciplined families (ochre, green, purple) rather than the five
+// stray hues that came before *that*. Colour doesn't track depth alone: level 1
+// (light green) and level 2 (full green), like level 3 (light purple) and level
+// 4 (full purple), are looked up independently even though level 0 stands alone
+// in its own hue.
 export const LEVEL_INK: Record<ProficiencyLevel, string> = {
   notStarted: 'bg-mark-not-started',
   absent: 'bg-mark-absent',
+  level0: 'bg-mark-level0',
   level1: 'bg-mark-level1',
   level2: 'bg-mark-level2',
   level3: 'bg-mark-level3',
@@ -49,16 +62,17 @@ export const LEVEL_INK: Record<ProficiencyLevel, string> = {
 }
 
 // Which family ink a cell should be read against for text contrast — the
-// "light" cell (level 2) takes dark ink text, level 3/4 (the base inks,
-// undiluted, both clearly dark) take card (light) text. Level 1's ochre is
+// "light" cells (levels 1 and 3) take dark ink text, level 2/4 (the base inks,
+// undiluted, both clearly dark) take card (light) text. Level 0's ochre is
 // the odd one out — see `--mark-ink-fixed` in globals.css for why it gets its
 // own always-dark token instead of the theme-flipping `text-ink`/`text-card`.
 export const LEVEL_TEXT: Record<ProficiencyLevel, string> = {
   notStarted: 'text-ink-muted/35',
   absent: 'text-ink-muted',
-  level1: 'text-mark-ink-fixed',
-  level2: 'text-ink',
-  level3: 'text-card',
+  level0: 'text-mark-ink-fixed',
+  level1: 'text-ink',
+  level2: 'text-card',
+  level3: 'text-ink',
   level4: 'text-card',
 }
 
