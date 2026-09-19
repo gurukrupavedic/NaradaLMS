@@ -11,6 +11,7 @@ import {
   type BatchPermissions,
 } from '@narada/auth/permissions'
 
+import { isProfilePartOfCourse } from '../courses/repository'
 import { forbidden } from '../error'
 import { hasSharedInstructorEnrollment } from '../enrollment/service'
 import type { Exam } from '../exams/schema'
@@ -170,6 +171,35 @@ export class AccessPolicy {
     }
 
     return { kind: 'ofProfile', profileId: this.requireProfileId() }
+  }
+
+  /**
+   * The content gate: whether the actor may read a course's content (its tracks and chapters). A
+   * school admin may read every course's; anyone else only the courses their own profile is part of
+   * — the same rule as `getCourseVisibility`, so what the course dropdown offers is what the content
+   * endpoints allow. A caller with no active profile is part of nothing.
+   *
+   * This is about *reading a course's content*. Batches, enrollments, exams and evaluations are
+   * already limited by the caller's batch roles, and a batch belongs to exactly one course, so they
+   * need no separate course check.
+   */
+  public async canReadCourseContent(courseId: string): Promise<boolean> {
+    if (this.isSchoolAdmin()) {
+      return true
+    }
+
+    if (!this.profileId) {
+      return false
+    }
+
+    return isProfilePartOfCourse(this.db, this.profileId, courseId)
+  }
+
+  /** {@link canReadCourseContent} as a 403 — for a request that *names* a course (a list), where saying "not yours" discloses nothing. By-id reads 404 instead; see the tracks/chapters services. */
+  public async requireCanReadCourseContent(courseId: string): Promise<void> {
+    if (!(await this.canReadCourseContent(courseId))) {
+      throw forbidden('you are not part of this course')
+    }
   }
 
   public getBatchVisibility(): BatchReadScope {

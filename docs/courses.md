@@ -21,9 +21,31 @@ can never show a mixed view by accident.
 
 With a course, these lists are limited to it: tracks, batches (accessible, open, per-profile), the
 dashboard and profile detail (batches, marks, exams, results, pending requests), exams, enrollment
-requests, registrations. **By-id endpoints are not** (`/batches/:id`, `/chapters/:id`, …): the header is
-context, not authorization — batch roles and school roles still decide what anyone may open. Tracks and
-chapters are readable by any school member, as before.
+requests, registrations.
+
+## Courses are a content gate
+
+A course's **content** — its tracks and chapters — can only be read by someone who is part of it:
+
+- **Part of a course** means the caller's profile has an enrollment in it (any status — a finished batch
+  is still your record) or was created from a registration for it. An admin is part of every course. This
+  is the one rule behind both `GET /me/courses` (what the dropdown offers) and the gate; a test holds them
+  together (`courses/contentGate.integration.test.ts`).
+- **By id** (`GET /tracks/:id`, `GET /chapters/:id`): content in a course you're not part of is a **`404`**,
+  the same as if it didn't exist, so guessing an id discloses nothing — the way a draft chapter already
+  behaves. The **content decides, not the header**: sending `x-course-slug: vedam` for a Smartam chapter
+  changes nothing.
+- **By course** (`GET /tracks`, `GET /me/dashboard`, `GET /profiles/:id/detail`, which carry a course's
+  track catalogue): naming a course you're not part of is a **`403`** — the request said which course it
+  wants, so "not yours" reveals nothing new.
+- A caller with no active profile who isn't an admin is part of nothing, so they read no course content.
+- **Batches, enrollments, exams and evaluations need no separate gate:** they are already limited by the
+  caller's batch roles, and a batch belongs to exactly one course. Writes to content are admin-only.
+- **Not covered:** audio files themselves. A chapter response carries signed download URLs; anyone who
+  was handed one can fetch the file until it expires. The gate is on the chapter, not the bucket.
+
+Anything else with an id (`/batches/:id`, `/exams/:id`, …) is unchanged: the header is context, and batch
+and school roles decide who may open it.
 
 ## Where the course lives in the web app
 
@@ -48,8 +70,8 @@ state, so it is never stale.)
   several get a chooser, none is told so. Signed out it is `/login`. It uses `GET /me/courses`.
 - **`/<course>/…`** first checks the course exists (`GET /courses/:slug`; an unknown one gets a "no
   course called …" page). The signed-in pages then check the person is part of it (`GET /me/courses`);
-  if not, they are told so and shown the courses they are part of. This is a courtesy, not a lock — see
-  "Which course a request is about": access to records is still decided by batch and school roles.
+  if not, they are told so and shown the courses they are part of. The API enforces the same rule on
+  content (see "Courses are a content gate"), so this page is the friendly face of a real check.
 - **The header** shows the course beside the wordmark, with a dropdown when you have more than one.
   Switching is a full page load to that course's dashboard, so nothing cached for one course can appear
   under another.
@@ -73,6 +95,6 @@ be filed under some other course. `GET /courses` and `GET /courses/:slug` are pu
 
 ## Not decided yet
 
-Whether a course is a **content boundary**. Today any school member can open any published track or
-chapter by id, whatever course it is in. Making a student's access follow their enrollment is an
-access-policy change, separate from scoping lists.
+How a **staff member with no batch** (an admin is fine — they see every course) gets into a course. A
+non-admin is part of a course only through an enrollment or their own registration, so an instructor
+who hasn't been given a batch yet reads no content and, at `/`, is told they are not in a course.

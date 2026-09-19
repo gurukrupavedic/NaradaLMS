@@ -14,8 +14,9 @@ import { coursePath } from '@/lib/course-path'
  * their own courses, rather than showing an empty dashboard for a course they have no place in.
  *
  * "Part of" is `GET /me/courses`: an admin is part of every course, anyone else of the ones their
- * profile has an enrollment in (any status) or applied to. This is a courtesy, not a lock: the
- * `x-course-slug` header is context, and access to records is still decided by batch and school roles.
+ * profile has an enrollment in (any status) or applied to. The API enforces the same rule on a
+ * course's content (tracks, chapters, the dashboard), so this is the friendly face of a real check,
+ * not the check itself.
  */
 export function CourseAccess({ children }: { children: React.ReactNode }) {
   const slug = useCourseSlug()

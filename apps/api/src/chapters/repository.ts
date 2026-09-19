@@ -35,6 +35,17 @@ export async function findById(db: SchoolDb, id: string, view: ContentReadView) 
   })
 }
 
+/** The course a chapter belongs to (through its track), or `undefined` if there is no such chapter — for the content gate. */
+export async function findCourseId(db: SchoolDb, chapterId: string): Promise<string | undefined> {
+  const row = await db.query.chapter.findFirst({
+    where: (t, { eq }) => eq(t.id, chapterId),
+    columns: {},
+    with: { track: { columns: { courseId: true } } },
+  })
+
+  return row?.track.courseId
+}
+
 // ── Scripts + segments (write side) ─────────────────────────────────────────
 
 export async function findSegmentsForChapter(db: SchoolDb, chapterId: string) {

@@ -72,12 +72,13 @@ router.get(
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     await access.requireCanViewProfile(profileId)
     const profile = await findById({ db, school, user }, profileId)
-    const dashboard = await getDashboardData(
-      { db },
-      profile.id,
-      profile.name,
-      (await getCourse())?.id,
-    )
+    const course = await getCourse()
+    // The dashboard carries the course's track catalogue, so the *caller* (not just the profile
+    // being viewed) has to be part of the course the request names.
+    if (course) {
+      await access.requireCanReadCourseContent(course.id)
+    }
+    const dashboard = await getDashboardData({ db }, profile.id, profile.name, course?.id)
     res.status(200).json({ data: { profile, dashboard } })
   }),
 )

@@ -1,4 +1,4 @@
-import { eq, inArray, or } from 'drizzle-orm'
+import { and, eq, inArray, or } from 'drizzle-orm'
 
 import { course, enrollment, registration, type SchoolDb } from '@narada/db'
 
@@ -37,6 +37,33 @@ export async function findForProfile(db: SchoolDb, profileId: string): Promise<C
       ),
     )
     .orderBy(course.slug)
+}
+
+/**
+ * Whether a profile is part of one course — the same two relationships as {@link findForProfile}
+ * (an enrollment in it, whatever the status; or the registration that created the profile), asked as
+ * a yes/no for a single course. Kept beside `findForProfile` so the dropdown and the content gate can
+ * never disagree about what "part of a course" means; a test holds them to it.
+ */
+export async function isProfilePartOfCourse(
+  db: SchoolDb,
+  profileId: string,
+  courseId: string,
+): Promise<boolean> {
+  const [enrolled, registered] = await Promise.all([
+    db
+      .select({ batchId: enrollment.batchId })
+      .from(enrollment)
+      .where(and(eq(enrollment.profileId, profileId), eq(enrollment.courseId, courseId)))
+      .limit(1),
+    db
+      .select({ id: registration.id })
+      .from(registration)
+      .where(and(eq(registration.convertedProfileId, profileId), eq(registration.courseId, courseId)))
+      .limit(1),
+  ])
+
+  return enrolled.length > 0 || registered.length > 0
 }
 
 export async function findBySlug(db: SchoolDb, slug: string): Promise<Course | undefined> {
