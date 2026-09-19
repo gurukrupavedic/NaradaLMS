@@ -58,9 +58,10 @@ export type OnBreakMutation = {
 const CELL_INK: Record<ProficiencyLevel, string> = {
   notStarted: 'bg-mark-not-started text-ink-muted/35',
   absent: 'bg-mark-absent/25 text-ink-muted',
-  level1: 'bg-mark-level1 text-mark-ink-fixed',
-  level2: 'bg-mark-level2 text-ink',
-  level3: 'bg-mark-level3 text-card',
+  level0: 'bg-mark-level0 text-mark-ink-fixed',
+  level1: 'bg-mark-level1 text-ink',
+  level2: 'bg-mark-level2 text-card',
+  level3: 'bg-mark-level3 text-ink',
   level4: 'bg-mark-level4 text-card',
 }
 

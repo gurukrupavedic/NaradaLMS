@@ -7,7 +7,16 @@ vi.mock('@narada/db', () => ({
   enrollmentRole: { enumValues: ['instructor', 'ta', 'student'] },
   enrollmentStatus: { enumValues: ['active', 'break', 'dropped', 'inactive'] },
   proficiencyLevel: {
-    enumValues: ['absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4'],
+    enumValues: [
+      'absent',
+      'notStarted',
+      'practicing',
+      'level0',
+      'level1',
+      'level2',
+      'level3',
+      'level4',
+    ],
   },
 }))
 

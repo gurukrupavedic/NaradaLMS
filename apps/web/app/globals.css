@@ -23,19 +23,20 @@
    → violet → purple — five unrelated hues for a strictly ordinal quantity —
    and was replaced with a single deepening indigo ramp for exactly that
    reason. That in turn hid a real distinction the roster's own mark book
-   already drew: an "absent" mark is not a low score, and level 3/4 (both
-   real certifications) look nothing like level 1/2 (still in progress) to
-   anyone who graded from the sheet. `practicing` — real work with no exam
-   rung held yet — turned out to be a state the register defines but the
-   data never uses (no row has ever carried it), so the scale below drops it
-   rather than keep a colour for a mark nobody makes.
+   already drew: an "absent" mark is not a low score, and the mastery rungs
+   (level 3/4) look nothing like level 0-2 (still being learned) to anyone
+   who graded from the sheet. `practicing` — real work with no exam rung held
+   yet — turned out to be a state the register defines but the data never
+   uses (no row has ever carried it), so the scale below drops it rather
+   than keep a colour for a mark nobody makes.
 
    So the ramp below is grounded in the register's own colour sense, not
    picked fresh — but built the same disciplined way the indigo ramp was:
-   ochre marks level 1 alone (the entry rung, no sibling to share the hue
-   with); green spans level 2 (light) → level 3 (full), the two "still in
-   progress" rungs; purple marks level 4 alone — the one rung that actually
-   earns the certification stamp. Absent keeps its own grey (a taken-but-
+   ochre marks level 0 alone (lesson taught, the entry rung, no sibling to
+   share the hue with); green spans level 1 (light, low proficiency) →
+   level 2 (full, high proficiency); purple spans level 3 (light, mastery)
+   → level 4 (full — the one rung that actually earns the certification
+   stamp, and only from an exam). Absent keeps its own grey (a taken-but-
    missing reading, never a position on the scale). Every mixed mark is still
    `color-mix`ed from one base ink per family toward the card, so a colour
    can drift in depth but never in hue.
@@ -69,15 +70,17 @@
   --mark-purple: #573a76;
   --mark-grey: #6b6255;
 
-  /* Level 1 and 4 stand alone, so each takes its base ink undiluted — no
-     lighter sibling to leave room for. Level 2/3 share the green family and
-     are spaced 62/100 rather than evenly: the "light" cell needs enough
-     weight to read as coloured at all against the card — a first pass at 42%
-     read as barely-there, especially at bead size — and the "full" cell is
-     the base ink itself, the ceiling of the family, not a third mix step. */
-  --mark-level1: var(--mark-ochre);
-  --mark-level2: color-mix(in srgb, var(--mark-green) 62%, var(--card));
-  --mark-level3: var(--mark-green);
+  /* Level 0 stands alone, so it takes its base ink undiluted — no lighter
+     sibling to leave room for. Levels 1/2 share the green family and levels
+     3/4 the purple one, each pair spaced 62/100 rather than evenly: the
+     "light" cell needs enough weight to read as coloured at all against the
+     card — a first pass at 42% read as barely-there, especially at bead
+     size — and the "full" cell is the base ink itself, the ceiling of the
+     family, not a third mix step. */
+  --mark-level0: var(--mark-ochre);
+  --mark-level1: color-mix(in srgb, var(--mark-green) 62%, var(--card));
+  --mark-level2: var(--mark-green);
+  --mark-level3: color-mix(in srgb, var(--mark-purple) 62%, var(--card));
   --mark-level4: var(--mark-purple);
 
   /* Ochre sits in the middle of the lightness range in *both* themes — a mid
@@ -133,9 +136,10 @@
   --mark-purple: #a98bc9;
   --mark-grey: #9c9182;
 
-  --mark-level1: var(--mark-ochre);
-  --mark-level2: color-mix(in srgb, var(--mark-green) 58%, var(--card));
-  --mark-level3: var(--mark-green);
+  --mark-level0: var(--mark-ochre);
+  --mark-level1: color-mix(in srgb, var(--mark-green) 58%, var(--card));
+  --mark-level2: var(--mark-green);
+  --mark-level3: color-mix(in srgb, var(--mark-purple) 58%, var(--card));
   --mark-level4: var(--mark-purple);
   --mark-absent: color-mix(in srgb, var(--mark-grey) 55%, transparent);
   --mark-not-started: color-mix(in srgb, var(--ink) 10%, var(--card));
@@ -175,6 +179,7 @@
   --color-mark-green: var(--mark-green);
   --color-mark-purple: var(--mark-purple);
   --color-mark-grey: var(--mark-grey);
+  --color-mark-level0: var(--mark-level0);
   --color-mark-level1: var(--mark-level1);
   --color-mark-level2: var(--mark-level2);
   --color-mark-level3: var(--mark-level3);

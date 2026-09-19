@@ -46,7 +46,7 @@ import type {
 // one seam between the wire type and the UI type, rather than letting `practicing` leak into a
 // `ProficiencyLevel` slot the palette/labels no longer have a colour or a name for.
 export function narrowLevel(level: ApiProficiencyLevel): ProficiencyLevel {
-  return level === 'practicing' ? 'level1' : level
+  return level === 'practicing' ? 'level0' : level
 }
 
 /** Latest trackCertification row per track — same "history, not a single mutable mark" shape as evaluations. */

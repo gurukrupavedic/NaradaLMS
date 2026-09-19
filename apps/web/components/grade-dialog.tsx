@@ -92,7 +92,7 @@ function GradeForm({
   // `notStarted` and `level4` both fall outside GRADABLE_LEVELS — neither is a teacher's own
   // pick (the latter is an exam-only certification), so both default to the same starting point.
   const isGradable = target.currentLevel !== 'notStarted' && target.currentLevel !== 'level4'
-  const [level, setLevel] = useState<ProficiencyLevel>(isGradable ? target.currentLevel : 'level1')
+  const [level, setLevel] = useState<ProficiencyLevel>(isGradable ? target.currentLevel : 'level0')
   const [notes, setNotes] = useState('')
 
   function handleSubmit(e: React.FormEvent) {

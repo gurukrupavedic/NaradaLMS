@@ -101,7 +101,7 @@ type EnrollmentRow = {
   joinedAt: string | null
   leftDate: string | null
 }
-type ProficiencyLevel = 'absent' | 'notStarted' | 'practicing' | 'level1' | 'level2' | 'level3' | 'level4'
+type ProficiencyLevel = 'absent' | 'notStarted' | 'practicing' | 'level0' | 'level1' | 'level2' | 'level3' | 'level4'
 type EvaluationRow = {
   id: string
   studentId: string
@@ -121,6 +121,7 @@ const PROFICIENCY_LEVELS = new Set<ProficiencyLevel>([
   'absent',
   'notStarted',
   'practicing',
+  'level0',
   'level1',
   'level2',
   'level3',

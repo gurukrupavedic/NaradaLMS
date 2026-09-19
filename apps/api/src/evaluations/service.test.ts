@@ -82,7 +82,15 @@ describe('createEvaluations', () => {
   function evaluationRow(overrides: {
     studentId: string
     chapterId: string
-    level: 'absent' | 'notStarted' | 'practicing' | 'level1' | 'level2' | 'level3' | 'level4'
+    level:
+      | 'absent'
+      | 'notStarted'
+      | 'practicing'
+      | 'level0'
+      | 'level1'
+      | 'level2'
+      | 'level3'
+      | 'level4'
     evaluatedAt?: Date
   }) {
     return {
