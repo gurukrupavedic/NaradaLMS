@@ -36,6 +36,9 @@ export type ExamReadScope =
 // — owner/admin) additionally sees drafts. No profile involved — this is a school-membership
 // question, not a per-batch one.
 export type ContentReadView = { kind: 'authoring' } | { kind: 'learnerPreview' }
+// Which courses a caller may pick from: a school admin sees every one, anyone else the ones their own
+// profile is part of (see `courses/repository.ts::findForProfile`).
+export type CourseReadScope = { kind: 'all' } | { kind: 'ofProfile'; profileId: string }
 // `batchIds` is always non-empty for 'manageable' — see `getEnrollmentRequestVisibility`, which
 // throws instead of returning an empty one (matching `ExamReadScope`'s own 'manageable' contract).
 export type EnrollmentRequestReadScope = { kind: 'all' } | { kind: 'manageable'; batchIds: string[] }
@@ -159,6 +162,14 @@ export class AccessPolicy {
     if (!this.isSchoolAdmin()) {
       throw forbidden()
     }
+  }
+
+  public getCourseVisibility(): CourseReadScope {
+    if (this.isSchoolAdmin()) {
+      return { kind: 'all' }
+    }
+
+    return { kind: 'ofProfile', profileId: this.requireProfileId() }
   }
 
   public getBatchVisibility(): BatchReadScope {

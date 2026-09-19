@@ -8,7 +8,6 @@ import { publicDb } from '@narada/db'
 import { sendOtpMessage, verifyOtpCode } from '@narada/otp'
 import { ac, owner, admin, member } from './permissions/school'
 import { deviceLink } from './plugins/device-link'
-import { advancedOptions } from './cookies'
 
 export { sweepExpiredDeviceLinkCodes } from './plugins/device-link'
 
@@ -65,7 +64,6 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins: env.TRUSTED_ORIGINS,
-  advanced: advancedOptions(env.COOKIE_DOMAIN),
   hooks: {
     before: trustProxiedOAuthOrigin(),
   },

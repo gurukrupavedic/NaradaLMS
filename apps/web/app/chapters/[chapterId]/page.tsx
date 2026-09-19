@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+import { CourseGate } from '@/components/course-gate'
 import { PracticeRoom } from '@/components/practice-room'
 
 type Params = { chapterId: string }
@@ -14,5 +15,11 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 export default async function ChapterPage({ params }: { params: Promise<Params> }) {
   const { chapterId } = await params
 
-  return <PracticeRoom chapterId={decodeURIComponent(chapterId)} />
+  // Outside the (app) shell, but it reads the same course-scoped data, so it needs the same gate — a
+  // direct link to a chapter must not fire its requests before a course is settled.
+  return (
+    <CourseGate>
+      <PracticeRoom chapterId={decodeURIComponent(chapterId)} />
+    </CourseGate>
+  )
 }

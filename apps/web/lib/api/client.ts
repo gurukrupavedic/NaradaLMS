@@ -18,6 +18,7 @@
  */
 
 import { clearSelectedProfile, getSelectedProfileId } from '@/lib/auth/profile-store'
+import { clearSelectedCourse, getSelectedCourseSlug } from '@/lib/course-cookie'
 
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG
 
@@ -35,11 +36,15 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const profileId = getSelectedProfileId()
+  const courseSlug = getSelectedCourseSlug()
   const response = await fetch(`/v1${path}`, {
     ...init,
     headers: {
       'x-school-slug': SCHOOL_SLUG ?? '',
       ...(profileId ? { 'x-profile-id': profileId } : {}),
+      // Which course this browser is acting in. A call can override it (the public registration
+      // page names its course from the link, not from whoever last used this browser).
+      ...(courseSlug ? { 'x-course-slug': courseSlug } : {}),
       ...init?.headers,
     },
   })
@@ -55,6 +60,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     // sign in — so this is that something, the one place *every* real request funnels through.
     if (response.status === 401) {
       clearSelectedProfile()
+      clearSelectedCourse()
       window.location.href = '/login'
     }
 
@@ -92,10 +98,18 @@ export async function fetchApi<T>(path: string, options?: { schoolWide?: boolean
  * `presignAudioUpload`, etc.) is the one place in this app's admin surface with a real endpoint to
  * call, so it calls it, through the same header injection and 401 handling `fetchApi` already has.
  */
-export async function mutateApi<T>(path: string, method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', body?: unknown): Promise<T> {
+export async function mutateApi<T>(
+  path: string,
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  body?: unknown,
+  extraHeaders?: Record<string, string>,
+): Promise<T> {
   return request<T>(path, {
     method,
-    headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+    headers: {
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...extraHeaders,
+    },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 }

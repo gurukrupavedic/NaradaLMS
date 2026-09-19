@@ -5,43 +5,26 @@ import * as repository from './repository'
 import type { Course } from './schema'
 
 /**
- * The course a request is *about*, for reads — from the `x-course-slug` header the web proxy stamps
- * from the hostname (`vedam.slmts.naradas.app`). Unlike {@link resolveCourse} this never guesses:
- * no header means "no course context" and the read stays school-wide, which is what keeps every
- * caller that doesn't send one (an API client, a hostname outside the scheme) working exactly as
- * before. A header naming a course that doesn't exist is a 404, so a mistyped subdomain fails
- * loudly instead of quietly showing an empty school.
+ * The course a request is *about* — one rule, used by every course-scoped read and by registration:
  *
- * Hostnames are case-insensitive, so the slug is compared lower-cased.
+ * - **`x-course-slug` names a course:** that course. A slug that isn't a course is a 404, so a stale
+ *   or mistyped selection fails loudly rather than quietly showing an empty school.
+ * - **No header, the school has exactly one course:** that course. It is unambiguous, and it is what
+ *   lets a single-course school (SLMTS today) work without the app sending anything.
+ * - **No header, several courses:** a 422. Silently showing everything mixed together, or filing an
+ *   applicant under whichever course sorts first, would be a quiet, hard-to-spot mistake; the caller
+ *   has to say which.
+ * - **No header, no courses at all:** `undefined` — a brand-new school. There is nothing to scope, so
+ *   reads come back empty rather than as an error.
+ *
+ * The slug is compared lower-cased.
  */
 export async function findRequestCourse(
   db: SchoolDb,
   slug: string | undefined,
 ): Promise<Course | undefined> {
-  if (!slug) {
-    return undefined
-  }
-
-  const course = await repository.findBySlug(db, slug.toLowerCase())
-  if (!course) {
-    throw notFound('course not found')
-  }
-
-  return course
-}
-
-/**
- * Works out which course a request that *creates* something course-owned (a registration, today)
- * is for. `slug` is the value of the `x-course-slug` header when the caller sent one.
- *
- * With no slug, a school that has exactly one course is unambiguous, so that course is used — this
- * is what lets today's single-course (Vedam) web app keep working without sending anything. Once
- * a school has several, a missing slug is a 422 rather than a guess: silently filing an applicant
- * under whichever course sorts first would be a quiet, hard-to-spot mistake.
- */
-export async function resolveCourse(db: SchoolDb, slug: string | undefined): Promise<Course> {
   if (slug) {
-    const course = await findRequestCourse(db, slug)
+    const course = await repository.findBySlug(db, slug.toLowerCase())
     if (!course) {
       throw notFound('course not found')
     }
@@ -55,9 +38,29 @@ export async function resolveCourse(db: SchoolDb, slug: string | undefined): Pro
     return only
   }
 
-  if (courses.length === 0) {
+  if (courses.length > 1) {
+    throw unprocessable('this school has several courses — say which with the x-course-slug header')
+  }
+
+  return undefined
+}
+
+/** {@link findRequestCourse} for something that *creates* a course-owned row (a registration): there has to be a course to file it under. */
+export async function resolveCourse(db: SchoolDb, slug: string | undefined): Promise<Course> {
+  const course = await findRequestCourse(db, slug)
+  if (!course) {
     throw unprocessable('this school has no courses yet')
   }
 
-  throw unprocessable('this school has several courses — say which with the x-course-slug header')
+  return course
+}
+
+/** A course by its slug, for a link that names one (`/register/vedam`). A 404 if there isn't one. */
+export async function findCourseBySlug(db: SchoolDb, slug: string): Promise<Course> {
+  const course = await repository.findBySlug(db, slug.toLowerCase())
+  if (!course) {
+    throw notFound('course not found')
+  }
+
+  return course
 }

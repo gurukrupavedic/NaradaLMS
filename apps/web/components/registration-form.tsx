@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { submitRegistration, type SubmitRegistrationInput } from '@/lib/api/resources'
 import { ApiError } from '@/lib/api/client'
-import type { ApiProficiencyLevel } from '@/lib/api/api-types'
+import type { ApiCourse, ApiProficiencyLevel } from '@/lib/api/api-types'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
 import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 import { Wordmark } from '@/components/app-shell'
@@ -113,7 +113,12 @@ function toPayload(form: FormState): SubmitRegistrationInput {
   }
 }
 
-export function RegistrationForm() {
+/**
+ * `course` is the course being applied to, named by the registration link (`/register/vedam`) — a
+ * visitor has no account, so nothing else could say. It's shown, so an applicant knows what they are
+ * signing up for, and sent explicitly with the application.
+ */
+export function RegistrationForm({ course }: { course: ApiCourse }) {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [error, setError] = useState<string | null>(null)
@@ -157,7 +162,7 @@ export function RegistrationForm() {
     setSubmitting(true)
     setError(null)
     try {
-      await submitRegistration(toPayload(form))
+      await submitRegistration(toPayload(form), course.slug)
       setSubmitted(true)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.')
@@ -187,12 +192,12 @@ export function RegistrationForm() {
       <Wordmark />
 
       <p className="label mt-8 flex items-baseline justify-between text-ink-muted">
-        Registration
+        Registration · {course.name}
         <Link href="/login" className="text-ink-muted underline underline-offset-4 hover:text-ink">
           Already registered? Sign in
         </Link>
       </p>
-      <h1 className="display mt-3 text-[2rem]">Join a batch</h1>
+      <h1 className="display mt-3 text-[2rem]">Join a {course.name} batch</h1>
       <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-muted">
         Tell us about yourself. A teacher reviews every application before a batch is assigned.
       </p>

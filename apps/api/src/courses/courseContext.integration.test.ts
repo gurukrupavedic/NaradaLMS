@@ -1,7 +1,9 @@
 import type { Request, Response } from 'express'
 import request from 'supertest'
+import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { registration } from '@narada/db'
 import { env } from '@narada/env'
 
 import { AppError } from '../error'
@@ -36,6 +38,7 @@ import { findAllForStudent } from '../evaluations/repository'
 import { findMany as findExams } from '../exams/repository'
 import { findAll as findRegistrations } from '../registrations/repository'
 import { findAll as findTracks } from '../tracks/repository'
+import { findForProfile as findCoursesForProfile } from './repository'
 
 let world: TestWorld | undefined
 
@@ -98,15 +101,31 @@ async function courseFor(w: TestWorld, courseHeader: string | undefined) {
   return result as { id: string; slug: string } | undefined
 }
 
-describe('the x-course-slug request header', () => {
-  it('is no course at all when the request names none, so the read stays school-wide', async () => {
+describe('the course a request is about', () => {
+  it('is the school’s only course when the request names none', async () => {
+    world = await createTestSchool()
+    const only = await createCourse(world, { slug: 'vedam' })
+
+    await expect(courseFor(world, undefined)).resolves.toMatchObject({ id: only.id })
+  })
+
+  it('is a 422, not a guess, when the school has several courses and the request names none', async () => {
     const s = await seedTwoCourses()
     world = s.w
+
+    const error = await courseFor(world, undefined).catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(AppError)
+    expect(error).toMatchObject({ statusCode: 422 })
+  })
+
+  it('is no course, and no error, for a brand-new school that has none yet', async () => {
+    world = await createTestSchool()
 
     await expect(courseFor(world, undefined)).resolves.toBeUndefined()
   })
 
-  it('finds the named course, whatever the hostname’s casing', async () => {
+  it('finds the named course, whatever its casing', async () => {
     const s = await seedTwoCourses()
     world = s.w
 
@@ -114,7 +133,7 @@ describe('the x-course-slug request header', () => {
     await expect(courseFor(world, 'SMARTAM')).resolves.toMatchObject({ id: s.smartam.id })
   })
 
-  it('is a 404 for a course that does not exist, so a mistyped subdomain fails loudly', async () => {
+  it('is a 404 for a course that does not exist, so a stale or mistyped selection fails loudly', async () => {
     const s = await seedTwoCourses()
     world = s.w
 
@@ -141,15 +160,17 @@ describe('the x-course-slug request header', () => {
     )
     expect(first).toBe(second)
 
-    // A mistyped slug does not break a handler that never reads the course.
+    // A course the handler never asks about can't break it — even one that would 404 or 422.
     const untouched = schoolRoute(async () => {})
-    await expect(
-      untouched(
-        stubRequest({ 'x-school-slug': `test-${world.orgId}`, 'x-course-slug': 'nope' }),
-        {} as Response,
-        () => {},
-      ),
-    ).resolves.toBeUndefined()
+    for (const header of ['nope', undefined]) {
+      await expect(
+        untouched(
+          stubRequest({ 'x-school-slug': `test-${world.orgId}`, 'x-course-slug': header }),
+          {} as Response,
+          () => {},
+        ),
+      ).resolves.toBeUndefined()
+    }
   })
 })
 
@@ -351,5 +372,123 @@ describe('GET /v1/courses', () => {
     const response = await request(createServer()).get(`/v${env.API_VERSION}/courses`)
 
     expect(response.status).toBe(400)
+  })
+})
+
+describe('GET /v1/courses/:slug', () => {
+  it('finds a course by its slug for a link that names one, with no session needed', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+
+    const response = await request(createServer())
+      .get(`/v${env.API_VERSION}/courses/smartam`)
+      .set('x-school-slug', `test-${world.orgId}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body.data).toEqual({ id: s.smartam.id, slug: 'smartam', name: 'Smartam' })
+  })
+
+  it('is case-insensitive, like the rest of the course lookups', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+
+    const response = await request(createServer())
+      .get(`/v${env.API_VERSION}/courses/VEDAM`)
+      .set('x-school-slug', `test-${world.orgId}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body.data.id).toBe(s.vedam.id)
+  })
+
+  it('404s for a slug that is not a course', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+
+    const response = await request(createServer())
+      .get(`/v${env.API_VERSION}/courses/nope`)
+      .set('x-school-slug', `test-${world.orgId}`)
+
+    expect(response.status).toBe(404)
+  })
+})
+
+// -- Which courses a signed-in profile may pick from -------------------------------------------
+
+describe('the courses a profile is part of (what the dropdown lists)', () => {
+  it('a student sees only the courses they have an enrollment in', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+    const onlyVedam = await createProfile(world, { name: 'Vedam student' })
+    await enroll(world, onlyVedam, s.vedamBatch, 'student')
+
+    const visible = await findCoursesForProfile(world.schoolDb, onlyVedam.id)
+
+    expect(visible.map(c => c.slug)).toEqual(['vedam'])
+  })
+
+  it('a student in two courses sees both, in slug order', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+
+    // `s.student` is enrolled in both.
+    const visible = await findCoursesForProfile(world.schoolDb, s.student.id)
+
+    expect(visible.map(c => c.slug)).toEqual(['smartam', 'vedam'])
+  })
+
+  it('an enrollment counts whatever its status — a finished batch is still part of your record', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+    const alumnus = await createProfile(world, { name: 'Alumnus' })
+    await enroll(world, alumnus, s.smartamBatch, 'student', 'inactive')
+
+    expect((await findCoursesForProfile(world.schoolDb, alumnus.id)).map(c => c.slug)).toEqual([
+      'smartam',
+    ])
+  })
+
+  it('an instructor sees the courses they teach in', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+    const teacher = await createProfile(world, { name: 'Teacher' })
+    await enroll(world, teacher, s.smartamBatch, 'instructor')
+
+    expect((await findCoursesForProfile(world.schoolDb, teacher.id)).map(c => c.slug)).toEqual([
+      'smartam',
+    ])
+  })
+
+  it('a newly approved applicant, with no batch yet, sees the course they applied to', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+    const applicant = await createProfile(world, { name: 'Applicant' })
+    const filed = await createRegistration(world, { course: s.smartam })
+    await world.schoolDb
+      .update(registration)
+      .set({ status: 'approved', convertedProfileId: applicant.id })
+      .where(eq(registration.id, filed.id))
+
+    expect((await findCoursesForProfile(world.schoolDb, applicant.id)).map(c => c.slug)).toEqual([
+      'smartam',
+    ])
+  })
+
+  it('a profile with no enrollment and no registration sees no course', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+    const stranger = await createProfile(world, { name: 'Stranger' })
+
+    expect(await findCoursesForProfile(world.schoolDb, stranger.id)).toEqual([])
+  })
+
+  it('never includes a course only someone else is part of', async () => {
+    const s = await seedTwoCourses()
+    world = s.w
+    const other = await createProfile(world, { name: 'Other' })
+    await enroll(world, other, s.smartamBatch, 'student')
+    const me = await createProfile(world, { name: 'Me' })
+    await enroll(world, me, s.vedamBatch, 'student')
+
+    expect((await findCoursesForProfile(world.schoolDb, me.id)).map(c => c.slug)).toEqual(['vedam'])
   })
 })

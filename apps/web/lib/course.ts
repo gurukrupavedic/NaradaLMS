@@ -3,37 +3,26 @@
 import { useSyncExternalStore } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import { courseOrigin, courseSlugFromHost } from '@/lib/course-host'
-import { coursesQuery } from '@/lib/query/options'
+import { useSelectedProfileId } from '@/lib/auth/profile-store'
+import { getSelectedCourseSlug, subscribeSelectedCourse } from '@/lib/course-cookie'
+import { myCoursesQuery } from '@/lib/query/options'
 
-/** Inlined at build time — see `packages/env`'s `NEXT_PUBLIC_APP_BASE_DOMAIN`. Unset, no hostname is a course and none of this shows. */
-export const APP_BASE_DOMAIN = process.env.NEXT_PUBLIC_APP_BASE_DOMAIN
+export {
+  clearSelectedCourse,
+  setSelectedCourse,
+} from '@/lib/course-cookie'
 
-function subscribe(): () => void {
-  return () => {}
-}
-
-function currentCourseSlug(): string | null {
-  return courseSlugFromHost(window.location.hostname, APP_BASE_DOMAIN) ?? null
+/** The course this browser is acting in, or `null` for none yet. Re-renders when this tab changes it. */
+export function useSelectedCourseSlug(): string | null {
+  return useSyncExternalStore(subscribeSelectedCourse, getSelectedCourseSlug, () => null)
 }
 
 /**
- * The course this address is for, or `null` off the course domain. Read from `window.location`,
- * so the server renders `null` and the client the real value on its first render — the same
- * `useSyncExternalStore` shape as `lib/auth/profile-store.ts`, for the same no-flash reason.
+ * The courses the signed-in profile may pick from — every course for an admin, otherwise the ones
+ * they are part of. Keyed by profile: a household that shares one login switches between children's
+ * profiles, and each has its own list.
  */
-export function useCurrentCourseSlug(): string | null {
-  return useSyncExternalStore(subscribe, currentCourseSlug, () => null)
-}
-
-/** Every course in the school, for the switcher. Only fetched on a course address — elsewhere there is no switcher to feed. */
-export function useCourses(enabled: boolean) {
-  return useQuery({ ...coursesQuery(), enabled })
-}
-
-/** Where `slug`'s course lives, or `null` if this address isn't on the course domain. */
-export function courseHref(slug: string): string | null {
-  const { protocol, hostname, port } = window.location
-  const origin = courseOrigin({ protocol, hostname, port }, slug, APP_BASE_DOMAIN)
-  return origin ? `${origin}/dashboard` : null
+export function useMyCourses() {
+  const profileId = useSelectedProfileId()
+  return useQuery({ ...myCoursesQuery(profileId ?? ''), enabled: profileId !== null })
 }

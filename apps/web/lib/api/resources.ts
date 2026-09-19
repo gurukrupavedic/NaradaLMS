@@ -170,8 +170,19 @@ export type SubmitRegistrationInput = {
 // fits: `getSelectedProfileId()` simply has nothing to return for a visitor who has never signed
 // in, so the `X-Profile-Id` header it normally attaches is just omitted, exactly like the
 // `fetchProfiles()` call below does for the same reason.
-export async function submitRegistration(data: SubmitRegistrationInput): Promise<ApiRegistration> {
-  return mutateApi<ApiRegistration>('/registrations', 'POST', data)
+export async function submitRegistration(
+  data: SubmitRegistrationInput,
+  courseSlug?: string,
+): Promise<ApiRegistration> {
+  // The course comes from the registration link (`/register/vedam`), sent explicitly: a visitor has
+  // no selected course, and a signed-in person opening someone else's link must not have the
+  // application filed under whichever course they last used on this browser.
+  return mutateApi<ApiRegistration>(
+    '/registrations',
+    'POST',
+    data,
+    courseSlug ? { 'x-course-slug': courseSlug } : undefined,
+  )
 }
 
 // GET /v1/registrations?status=... — admin-only (AccessPolicy.requireCanReviewRegistrations).
@@ -546,10 +557,25 @@ export async function createEvaluation(
 
 // ── Open enrollment (student self-service) ──────────────────────────────────
 
-// GET /v1/courses — school-scoped, no session needed. Every course in the school, whichever course
-// address the request came from (the course context scopes *reads of course data*, not this list).
+// GET /v1/courses — school-scoped, no session needed. Every course in the school: names and slugs
+// aren't secret (each has its own public registration link), and the registration page needs them
+// before there is an account. Not affected by the selected course.
 export async function fetchCourses(): Promise<ApiCourse[]> {
   const { items } = await fetchApi<{ items: ApiCourse[] }>('/courses')
+  return items
+}
+
+// GET /v1/courses/:slug — one course, for a registration link that names it. 404s for a slug that
+// isn't a course.
+export async function fetchCourse(slug: string): Promise<ApiCourse> {
+  return fetchApi<ApiCourse>(`/courses/${encodeURIComponent(slug)}`)
+}
+
+// GET /v1/me/courses — what the course dropdown lists: every course for an admin, otherwise only
+// the ones the signed-in profile is part of (an enrollment in any status, or the registration that
+// created it).
+export async function fetchMyCourses(): Promise<ApiCourse[]> {
+  const { items } = await fetchApi<{ items: ApiCourse[] }>('/me/courses')
   return items
 }
 

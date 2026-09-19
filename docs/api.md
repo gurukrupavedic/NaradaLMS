@@ -6,7 +6,7 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 
 **Base URL:** All routes are prefixed with `/v1`.
 
-**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. BetterAuth's `activeOrganizationId` is not used for tenant selection. **Course context:** `X-Course-Slug` says which course a request is about — the web app's proxy stamps it from the hostname (`vedam.slmts.naradas.app` → `vedam`; see `docs/course-hostnames.md`). With it, course-owned **lists** are limited to that course (tracks, batches, the dashboard and profile detail, exams, enrollment requests, registrations). Without it they are school-wide, as before, and a slug that isn't a course is `404 course not found`. A request that *creates* something course-owned (a registration) files it under that course; with no header, a school that has exactly one course uses it, and a school with several answers `422` rather than guessing. The header is context, not authorization — by-id endpoints are not filtered by it. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
+**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. BetterAuth's `activeOrganizationId` is not used for tenant selection. **Course context:** `X-Course-Slug` says which course a request is about — the web app sends the course the person picked (a cookie, like the selected profile). One rule everywhere: a named course is that course (`404 course not found` if there isn't one); with no header, a school with exactly one course uses it; a school with several answers `422` rather than guessing; a school with none has nothing to scope. With a course, course-owned **lists** are limited to it (tracks, batches, the dashboard and profile detail, exams, enrollment requests, registrations), and a registration is filed under it. The header is context, not authorization — by-id endpoints are not filtered by it, and `GET /v1/me/courses` only filters what the app *offers*. See `docs/courses.md`. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
 
 **Authentication:** BetterAuth session cookies. Every route except BetterAuth's own auth endpoints requires a valid session. The authenticated user's `shared.user.id` is available on the request context.
 
@@ -908,12 +908,22 @@ Results are ordered by `evaluatedAt` descending.
 
 ### `GET /v1/courses`
 
-Every course in the school. Needs `X-School-Slug`; no session (the public registration page is course-specific too). Not limited by `X-Course-Slug` — it is the list a course switcher needs.
+Every course in the school. Needs `X-School-Slug`; no session — a course's name and slug are not secret (each has its own registration link). Not limited by `X-Course-Slug`.
 
 ```ts
 // Response 200
 { ok: true, data: { items: Array<{ id: string, slug: string, name: string }> } }
 ```
+
+### `GET /v1/courses/:slug`
+
+One course by slug (case-insensitive), for a registration link like `/register/vedam`. No session. `404` if there is no such course.
+
+### `GET /v1/me/courses`
+
+The courses the caller may pick from — what the course dropdown lists. A school admin sees **every** course; anyone else sees the courses their own profile is part of: an enrollment in any status (a finished batch is still part of your record), or the registration that created the profile (so a newly approved applicant, with no batch yet, sees the course they applied to). Same response shape as `GET /v1/courses`.
+
+This filters what the app offers; it is **not** an access check on `X-Course-Slug`, which stays context.
 
 ---
 

@@ -465,6 +465,50 @@ describe('AccessPolicy — evaluations (§10.3–§10.5)', () => {
   })
 })
 
+describe('AccessPolicy#getCourseVisibility', () => {
+  it('lets a school admin pick from every course, with or without an active profile', async () => {
+    mockMembership('admin')
+
+    const withoutProfile = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+    const withProfile = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(withoutProfile.getCourseVisibility()).toEqual({ kind: 'all' })
+    expect(withProfile.getCourseVisibility()).toEqual({ kind: 'all' })
+  })
+
+  it("limits anyone else to their own profile's courses", async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(access.getCourseVisibility()).toEqual({ kind: 'ofProfile', profileId: 'profile-1' })
+  })
+
+  it('has nothing to offer a non-admin with no active profile, rather than guessing', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+
+    expect(() => access.getCourseVisibility()).toThrow()
+  })
+})
+
 describe('AccessPolicy#requireCanSearchProfiles', () => {
   it('allows a school admin, denies a plain member', async () => {
     mockMembership('admin')

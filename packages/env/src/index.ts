@@ -82,22 +82,11 @@ export const env = createEnv({
     TWILIO_ACCOUNT_SID: z.string().optional(),
     TWILIO_AUTH_TOKEN: z.string().optional(),
     TWILIO_VERIFY_SERVICE_SID: z.string().optional(),
-
-    // The parent domain the session cookie is shared across, with a leading dot
-    // (".slmts.naradas.app"), so a person signed in on one course's address
-    // (vedam.slmts.naradas.app) is signed in on the others too. Unset (local dev, Vercel preview
-    // URLs, any single-host deployment), the cookie stays host-only exactly as before.
-    COOKIE_DOMAIN: z.string().optional(),
   },
   clientPrefix: 'NEXT_PUBLIC',
   client: {
     NEXT_PUBLIC_API_URL: z.url(),
     NEXT_PUBLIC_SCHOOL_SLUG: z.string(),
-    // The domain every course address hangs off ("slmts.naradas.app" for vedam.slmts.naradas.app).
-    // Optional: without it no hostname is read as a course, and the app behaves as one course-less
-    // site. Read directly from process.env by apps/web (proxy.ts, lib/course.ts) — declared here so
-    // it is documented alongside the rest.
-    NEXT_PUBLIC_APP_BASE_DOMAIN: z.string().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

@@ -9,8 +9,10 @@ import { ChevronDown } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { CommandPalette } from '@/components/command-palette'
+import { CourseGate } from '@/components/course-gate'
 import { CourseSwitcher } from '@/components/course-switcher'
 import { signOut as signOutRequest } from '@/lib/auth/client'
+import { clearSelectedCourse } from '@/lib/course'
 import {
   clearSelectedProfile,
   useHasAdminAccess,
@@ -111,6 +113,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   function handleSignOut() {
     void signOutRequest().finally(() => {
       clearSelectedProfile()
+      // The course pick belongs to the person, not the device: the next one to sign in here must
+      // choose (or be given) their own.
+      clearSelectedCourse()
       // Every cached query — dashboard, exams, admin batches, authProfile — is scoped to
       // whoever was signed in. `QueryClient` is a browser-lifetime singleton
       // (`lib/query/client.ts`), so without this the *next* account to sign in in this same
@@ -238,7 +243,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <CourseGate>{children}</CourseGate>
+      </main>
 
       <footer className="mt-16 border-t border-rule">
         <div className="mx-auto flex max-w-5xl items-baseline justify-between px-5 py-6">
