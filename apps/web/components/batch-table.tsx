@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import type { AdminBatchRow } from '@/lib/mock-dashboard'
+import { useCoursePath } from '@/lib/course'
 
 const STATUS_LABEL: Record<AdminBatchRow['status'], string> = {
   upcoming: 'Upcoming',
@@ -13,6 +14,7 @@ const STATUS_LABEL: Record<AdminBatchRow['status'], string> = {
 }
 
 export function BatchTable({ rows }: { rows: AdminBatchRow[] }) {
+  const cp = useCoursePath()
   return (
     <div className="sheet overflow-x-auto">
       <table className="w-full border-collapse text-left">
@@ -43,7 +45,7 @@ export function BatchTable({ rows }: { rows: AdminBatchRow[] }) {
               <tr key={row.code} className="border-b border-rule-soft last:border-0">
                 <td className="px-4 py-2.5">
                   <Link
-                    href={`/admin/batches/${encodeURIComponent(row.code)}`}
+                    href={cp(`/admin/batches/${encodeURIComponent(row.code)}`)}
                     className="font-mono text-[0.8125rem] font-medium underline decoration-vermilion/40 decoration-1 underline-offset-4 transition-colors hover:decoration-vermilion"
                   >
                     {row.code}

@@ -18,7 +18,7 @@
  */
 
 import { clearSelectedProfile, getSelectedProfileId } from '@/lib/auth/profile-store'
-import { clearSelectedCourse, getSelectedCourseSlug } from '@/lib/course-cookie'
+import { courseFromPathname } from '@/lib/course-path'
 
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG
 
@@ -36,14 +36,15 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const profileId = getSelectedProfileId()
-  const courseSlug = getSelectedCourseSlug()
+  // The course is the URL's first segment (`/vedam/dashboard`) — read here, at request time, so a
+  // request can only ever name the course the tab is actually on. Top-level pages (`/login`, `/`)
+  // are in no course and send none.
+  const courseSlug = courseFromPathname(window.location.pathname)
   const response = await fetch(`/v1${path}`, {
     ...init,
     headers: {
       'x-school-slug': SCHOOL_SLUG ?? '',
       ...(profileId ? { 'x-profile-id': profileId } : {}),
-      // Which course this browser is acting in. A call can override it (the public registration
-      // page names its course from the link, not from whoever last used this browser).
       ...(courseSlug ? { 'x-course-slug': courseSlug } : {}),
       ...init?.headers,
     },
@@ -60,7 +61,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     // sign in — so this is that something, the one place *every* real request funnels through.
     if (response.status === 401) {
       clearSelectedProfile()
-      clearSelectedCourse()
       window.location.href = '/login'
     }
 
@@ -102,14 +102,10 @@ export async function mutateApi<T>(
   path: string,
   method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   body?: unknown,
-  extraHeaders?: Record<string, string>,
 ): Promise<T> {
   return request<T>(path, {
     method,
-    headers: {
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-      ...extraHeaders,
-    },
+    headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 }

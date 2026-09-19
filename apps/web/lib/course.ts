@@ -1,20 +1,27 @@
 'use client'
 
-import { useSyncExternalStore } from 'react'
+import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 
 import { useSelectedProfileId } from '@/lib/auth/profile-store'
-import { getSelectedCourseSlug, subscribeSelectedCourse } from '@/lib/course-cookie'
+import { coursePath } from '@/lib/course-path'
 import { myCoursesQuery } from '@/lib/query/options'
 
-export {
-  clearSelectedCourse,
-  setSelectedCourse,
-} from '@/lib/course-cookie'
+/**
+ * The course this page is in — the `[course]` segment of the URL. The URL is the only place the course
+ * lives (`lib/course-path.ts`), so this can't disagree with what the page shows. Only meaningful under
+ * `/<course>/…`; anywhere else it is a mistake worth failing loudly on.
+ */
+export function useCourseSlug(): string {
+  const { course } = useParams<{ course?: string }>()
+  if (!course) throw new Error('useCourseSlug was used outside a /<course>/… route')
+  return course
+}
 
-/** The course this browser is acting in, or `null` for none yet. Re-renders when this tab changes it. */
-export function useSelectedCourseSlug(): string | null {
-  return useSyncExternalStore(subscribeSelectedCourse, getSelectedCourseSlug, () => null)
+/** Builds a link that stays in the current course: `cp('/admin')` → `/vedam/admin`. */
+export function useCoursePath(): (path?: string) => string {
+  const course = useCourseSlug()
+  return path => coursePath(course, path)
 }
 
 /**

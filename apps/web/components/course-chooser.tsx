@@ -1,19 +1,12 @@
-'use client'
-
-import type { CourseChoice } from '@/lib/course-selection'
+import { coursePath } from '@/lib/course-path'
+import type { CourseChoice } from '@/lib/course-destination'
 
 /**
- * Asked once, when someone belongs to several courses and hasn't picked one on this browser. It
- * stands in for the page they were about to see — nothing course-scoped has loaded behind it — and
- * the header's course switcher is how they change their mind later.
+ * Asked at the front door when someone belongs to several courses. Each choice is a plain link to that
+ * course's dashboard — a full page load on purpose, so nothing cached for one course can show under
+ * another — and the header's course switcher is how they move later.
  */
-export function CourseChooser({
-  options,
-  onChoose,
-}: {
-  options: CourseChoice[]
-  onChoose: (slug: string) => void
-}) {
+export function CourseChooser({ options }: { options: CourseChoice[] }) {
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-xl flex-col justify-center px-6">
       <p className="label text-vermilion">Choose a course</p>
@@ -24,10 +17,9 @@ export function CourseChooser({
       <ol className="sheet mt-8">
         {options.map(course => (
           <li key={course.slug} className="border-b border-rule-soft last:border-0">
-            <button
-              type="button"
-              onClick={() => onChoose(course.slug)}
-              className="group flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-ink/[0.03]"
+            <a
+              href={coursePath(course.slug, '/dashboard')}
+              className="group flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-ink/[0.03]"
             >
               <span className="text-[0.9375rem]">{course.name}</span>
               <span
@@ -36,7 +28,7 @@ export function CourseChooser({
               >
                 →
               </span>
-            </button>
+            </a>
           </li>
         ))}
       </ol>

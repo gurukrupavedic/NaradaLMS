@@ -22,7 +22,7 @@ import { PhoneInput } from '@/components/phone-input'
  *
  * A session now lasts a year (packages/auth/src/index.ts), so this page is reached far more often
  * by a device that's already signed in — `proxy.ts` sends a valid-session-but-no-chosen-profile
- * request here rather than to `/dashboard` — than by one that genuinely needs phone/OTP. `checking`
+ * request here rather than into the app — than by one that genuinely needs phone/OTP. `checking`
  * is that mount-time fork: skip straight to profile selection if a session already exists, and
  * only fall through to the phone step if it doesn't. A freshly linked device (device-link's
  * `poll` endpoint sets a real session cookie with no profile chosen) lands here exactly the same
@@ -228,7 +228,8 @@ export default function LoginPage() {
     // an explicit sign-out first) never sees a moment of the previous profile's dashboard, exam
     // record, or admin access. See app-shell.tsx's `handleSignOut` for the same reasoning.
     queryClient.clear()
-    router.push('/dashboard')
+    // `/` finds the person's course (one → straight in, several → a choice).
+    router.push('/')
   }
 
   return (

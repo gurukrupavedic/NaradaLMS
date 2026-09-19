@@ -5,6 +5,7 @@ import { isStarted } from '@/lib/proficiency'
 import { Pill } from '@/components/proficiency-pill'
 import { Timestamp } from '@/components/timestamp'
 import type { ChapterRow } from '@/components/track-ladder'
+import { useCoursePath } from '@/lib/course'
 
 /**
  * One chapter row, opening straight into the practice room. Shared between `TrackLadder` (the
@@ -27,6 +28,7 @@ export function ChapterLine({
   showLevel?: boolean
   isResume: boolean
 }) {
+  const cp = useCoursePath()
   const started = isStarted(chapter.level)
 
   return (
@@ -58,7 +60,7 @@ export function ChapterLine({
             into an empty room. */}
         {started ? (
           <Link
-            href={`/chapters/${encodeURIComponent(chapter.code)}`}
+            href={cp(`/chapters/${encodeURIComponent(chapter.code)}`)}
             className={cn(
               'truncate text-[0.875rem] text-ink underline decoration-vermilion/40 decoration-1 underline-offset-4 transition-colors hover:decoration-vermilion',
               chapter.isCertification && 'font-medium',

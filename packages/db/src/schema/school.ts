@@ -16,6 +16,7 @@ import {
   check,
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
+import { COURSE_SLUG_PATTERN, RESERVED_COURSE_SLUGS } from '../courseSlug'
 
 // Declared before `profile` (below) since `profile.currentProficiency` references it — a pgEnum
 // value must exist before a pgTable call closes over it.
@@ -121,13 +122,26 @@ export const registrationStatus = pgEnum('registrationStatus', ['pending', 'appr
 
 // A school runs one or more courses (Vedam, Smartam, ...). A course owns its tracks, and through
 // them its chapters, batches, exams and evaluations — those all reach their course via
-// `track.courseId`. Courses are seeded, not managed from the app. `slug` is what a hostname or the
-// `x-course-slug` header carries (`vedam.slmts.naradas.app` → `vedam`).
-export const course = pgTable('course', {
-  id: uuid('id').primaryKey().$defaultFn(uuidv7),
-  slug: text('slug').notNull().unique(),
-  name: text('name').notNull(),
-})
+// `track.courseId`. Courses are seeded, not managed from the app. `slug` is the course's place in the
+// URL (`slmts.naradas.app/vedam/dashboard`), which the web app sends as the `x-course-slug` header —
+// so it has to be a safe URL segment and can't be a word the web app already uses at the top level
+// (see courseSlug.ts).
+export const course = pgTable(
+  'course',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+  },
+  table => [
+    check(
+      'course_slug_valid',
+      sql`${table.slug} ~ ${sql.raw(`'${COURSE_SLUG_PATTERN}'`)} AND ${table.slug} NOT IN (${sql.raw(
+        RESERVED_COURSE_SLUGS.map(word => `'${word}'`).join(', '),
+      )})`,
+    ),
+  ],
+)
 
 export const track = pgTable(
   'track',

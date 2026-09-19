@@ -19,6 +19,7 @@ import {
   type ChapterContent,
   type ScriptKey,
 } from '@/lib/mock-content'
+import { useCoursePath } from '@/lib/course'
 
 const RATES = [0.5, 0.75, 1] as const
 
@@ -45,12 +46,13 @@ const RATES = [0.5, 0.75, 1] as const
  *    audio position and the segment being drilled.
  */
 export function PracticeRoom({ chapterId }: { chapterId: string }) {
+  const cp = useCoursePath()
   const { data: chapter, error } = useQuery(chapterQuery(chapterId))
 
   // The transport hooks below all key off the chapter's audio, so the loading
   // branch has to come first — split rather than early-returned so the rules of
   // hooks hold and the view never has to handle a missing chapter.
-  if (error) return <ScreenError error={error} backHref="/practice" backLabel="← Learning" />
+  if (error) return <ScreenError error={error} backHref={cp('/practice')} backLabel="← Learning" />
   if (!chapter) return <ScreenSkeleton rows={8} />
 
   // Same reasoning again, one level down: `PracticeRoomView` assumes at least one script and one
@@ -65,12 +67,13 @@ export function PracticeRoom({ chapterId }: { chapterId: string }) {
 }
 
 function EmptyPracticeRoom({ chapter }: { chapter: ChapterContent }) {
+  const cp = useCoursePath()
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="border-b border-rule">
         <div className="mx-auto flex max-w-5xl items-center px-5 py-3.5">
           <Link
-            href="/practice"
+            href={cp('/practice')}
             className="label text-ink-muted transition-colors hover:text-ink"
           >
             ← Learning
@@ -108,6 +111,7 @@ function EmptyPracticeRoom({ chapter }: { chapter: ChapterContent }) {
 }
 
 function PracticeRoomView({ chapter }: { chapter: ChapterContent }) {
+  const cp = useCoursePath()
   const [scriptKey, setScriptKey] = useState<ScriptKey>('sa')
   const [audioId, setAudioId] = useState(chapter.audio[0].id)
 
@@ -205,7 +209,7 @@ function PracticeRoomView({ chapter }: { chapter: ChapterContent }) {
       <header className="border-b border-rule">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3.5">
           <Link
-            href="/practice"
+            href={cp('/practice')}
             className="label text-ink-muted transition-colors hover:text-ink"
           >
             ← Learning

@@ -27,7 +27,7 @@ import {
   CreateEvaluationSchema,
   proficiencyLevelSchema,
 } from '@narada/api/src/evaluations/schema'
-import { requireSchool, upsertOrgMember, upsertSchool } from './school-helpers'
+import { assertCourseSlug, requireSchool, upsertOrgMember, upsertSchool } from './school-helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_DATA_DIR = path.join(__dirname, '../../seed-data')
@@ -294,6 +294,7 @@ const dataCmd = defineCommand({
   },
   async run({ args }) {
     const dataDir = args.dataDir ?? DEFAULT_DATA_DIR
+    assertCourseSlug(args.course)
 
     try {
       const tracks = readJson<TrackRow[]>(dataDir, 'tracks.json')

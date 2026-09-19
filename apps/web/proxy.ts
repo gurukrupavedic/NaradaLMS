@@ -8,10 +8,13 @@ import { NextRequest, NextResponse } from 'next/server'
  * *common* case — no cookie at all — from ever reaching a page that assumes one, not to be the
  * only line of defence.
  *
- * `/` has no page of its own — it's an alias, sent straight to `/dashboard` (signed in) or
- * `/login` (not), same as the real destination would decide for itself one hop later. Resolving it
- * here rather than in a `redirect()` inside a root `page.tsx` means it's gated exactly like every
- * other protected route, not a public page that happens to redirect once rendered.
+ * `/` is where a signed-in person is sent into their course (`components/root-redirect.tsx` — it has
+ * to ask the API which courses they are part of, which a proxy that only looks at cookies can't), so
+ * it is gated like every other protected route: signed out, it's `/login`.
+ *
+ * The course is the first path segment (`/vedam/dashboard` — `lib/course-path.ts`). This proxy doesn't
+ * need to know which courses exist: it gates on the session alone, and the page under `/<course>/`
+ * checks the course itself.
  */
 const SESSION_COOKIE = 'better-auth.session_token'
 // better-auth prefixes its own cookie with `__Secure-` whenever it considers the connection secure
@@ -29,10 +32,11 @@ const PROFILE_COOKIE = 'narada-profile-id'
 // `/register` is a prospective student's application, filed before they have any account at all —
 // same reasoning as `/link-device`.
 const PUBLIC_PATHS = new Set(['/login', '/link-device', '/register'])
-// A registration link names its course (`/register/vedam`), and is public for the same reason
+// A registration link names its course (`/vedam/register`), and is public for the same reason
 // `/register` itself is: the applicant has no account yet.
+const COURSE_REGISTER_PATH = /^\/[^/]+\/register\/?$/
 const isPublicPath = (pathname: string) =>
-  PUBLIC_PATHS.has(pathname) || pathname.startsWith('/register/')
+  PUBLIC_PATHS.has(pathname) || COURSE_REGISTER_PATH.test(pathname)
 
 // Fronts every route with a maintenance page instead of the app's real response — auth included,
 // since a reader with no session shouldn't see a working sign-in form for a site that isn't open.
@@ -96,13 +100,11 @@ export function proxy(request: NextRequest) {
 
   const signedIn = hasSession(request)
   if (pathname === '/login') {
-    return signedIn
-      ? NextResponse.redirect(new URL('/dashboard', request.url))
-      : NextResponse.next()
+    return signedIn ? NextResponse.redirect(new URL('/', request.url)) : NextResponse.next()
   }
 
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL(signedIn ? '/dashboard' : '/login', request.url))
+  if (pathname === '/' && !signedIn) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if (isPublicPath(pathname) || signedIn) {

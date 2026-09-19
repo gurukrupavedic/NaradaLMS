@@ -114,9 +114,10 @@ function toPayload(form: FormState): SubmitRegistrationInput {
 }
 
 /**
- * `course` is the course being applied to, named by the registration link (`/register/vedam`) — a
+ * `course` is the course being applied to, named by the registration link (`/vedam/register`) — a
  * visitor has no account, so nothing else could say. It's shown, so an applicant knows what they are
- * signing up for, and sent explicitly with the application.
+ * signing up for. The application carries it in the `x-course-slug` header like every other request
+ * (the client reads it from the same address).
  */
 export function RegistrationForm({ course }: { course: ApiCourse }) {
   const [step, setStep] = useState(0)
@@ -162,7 +163,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
     setSubmitting(true)
     setError(null)
     try {
-      await submitRegistration(toPayload(form), course.slug)
+      await submitRegistration(toPayload(form))
       setSubmitted(true)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.')

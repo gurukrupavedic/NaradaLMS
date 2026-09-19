@@ -11,6 +11,7 @@ import { Section } from '@/components/section'
 import { registrationsQuery } from '@/lib/query/options'
 import { useApproveRegistration, useRejectRegistration } from '@/lib/query/use-registration-mutations'
 import type { ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
+import { useCoursePath } from '@/lib/course'
 
 const TABS: { status: ApiRegistrationStatus; label: string }[] = [
   { status: 'pending', label: 'Pending' },
@@ -68,6 +69,7 @@ export function RegistrationReview() {
 }
 
 function RegistrationRow({ registration }: { registration: ApiRegistration }) {
+  const cp = useCoursePath()
   const approve = useApproveRegistration()
   const reject = useRejectRegistration()
   const pending = approve.isPending || reject.isPending
@@ -75,7 +77,7 @@ function RegistrationRow({ registration }: { registration: ApiRegistration }) {
   return (
     <li className="flex flex-wrap items-center gap-4 border-b border-rule-soft px-4 py-3 last:border-0">
       <Link
-        href={`/admin/registrations/${registration.id}`}
+        href={cp(`/admin/registrations/${registration.id}`)}
         className="min-w-0 flex-1 underline decoration-vermilion/40 decoration-1 underline-offset-4 transition-colors hover:decoration-vermilion"
       >
         <span className="block text-[0.9375rem]">

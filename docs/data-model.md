@@ -236,7 +236,7 @@ A school runs one or more courses (Vedam, Smartam, ...). A course owns its track
 | Column | Type | Constraints                                                                          |
 | ------ | ---- | ------------------------------------------------------------------------------------ |
 | `id`   | uuid | PK                                                                                   |
-| `slug` | text | NOT NULL, UNIQUE — what a hostname or the `x-course-slug` header carries (`vedam`)   |
+| `slug` | text | NOT NULL, UNIQUE, URL-safe and not a reserved word — the course's path segment and `x-course-slug` (`vedam`) |
 | `name` | text | NOT NULL                                                                             |
 
 ### `track`

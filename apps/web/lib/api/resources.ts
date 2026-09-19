@@ -170,19 +170,10 @@ export type SubmitRegistrationInput = {
 // fits: `getSelectedProfileId()` simply has nothing to return for a visitor who has never signed
 // in, so the `X-Profile-Id` header it normally attaches is just omitted, exactly like the
 // `fetchProfiles()` call below does for the same reason.
-export async function submitRegistration(
-  data: SubmitRegistrationInput,
-  courseSlug?: string,
-): Promise<ApiRegistration> {
-  // The course comes from the registration link (`/register/vedam`), sent explicitly: a visitor has
-  // no selected course, and a signed-in person opening someone else's link must not have the
-  // application filed under whichever course they last used on this browser.
-  return mutateApi<ApiRegistration>(
-    '/registrations',
-    'POST',
-    data,
-    courseSlug ? { 'x-course-slug': courseSlug } : undefined,
-  )
+export async function submitRegistration(data: SubmitRegistrationInput): Promise<ApiRegistration> {
+  // The course is the one in the URL (`/vedam/register`): `request()` derives `x-course-slug` from it,
+  // so an application can only be filed under the course of the page it was submitted from.
+  return mutateApi<ApiRegistration>('/registrations', 'POST', data)
 }
 
 // GET /v1/registrations?status=... — admin-only (AccessPolicy.requireCanReviewRegistrations).
@@ -565,8 +556,8 @@ export async function fetchCourses(): Promise<ApiCourse[]> {
   return items
 }
 
-// GET /v1/courses/:slug — one course, for a registration link that names it. 404s for a slug that
-// isn't a course.
+// GET /v1/courses/:slug — one course, for the course in the URL (`/vedam/register`, and every page
+// under `/vedam/`). 404s for a slug that isn't a course.
 export async function fetchCourse(slug: string): Promise<ApiCourse> {
   return fetchApi<ApiCourse>(`/courses/${encodeURIComponent(slug)}`)
 }

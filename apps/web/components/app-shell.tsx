@@ -2,19 +2,18 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useQueryClient } from '@tanstack/react-query'
+import { useParams, usePathname } from 'next/navigation'
 
 import { ChevronDown } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { CommandPalette } from '@/components/command-palette'
-import { CourseGate } from '@/components/course-gate'
+import { CourseAccess } from '@/components/course-access'
 import { CourseSwitcher } from '@/components/course-switcher'
-import { signOut as signOutRequest } from '@/lib/auth/client'
-import { clearSelectedCourse } from '@/lib/course'
+import { useSignOut } from '@/lib/auth/use-sign-out'
+import { useCoursePath } from '@/lib/course'
+import { coursePath } from '@/lib/course-path'
 import {
-  clearSelectedProfile,
   useHasAdminAccess,
   useSelectedProfileId,
   useSelectedProfileName,
@@ -36,11 +35,12 @@ import {
  * content back the vertical space the gutter was spending.
  */
 
+// Paths within the course — `useCoursePath()` puts the course in front (`/dashboard` → `/vedam/dashboard`).
 const NAV = [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Learning', href: '/practice' },
-  { label: 'Exams', href: '/exams' },
-  { label: 'Admin', href: '/admin' },
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Learning', path: '/practice' },
+  { label: 'Exams', path: '/exams' },
+  { label: 'Admin', path: '/admin' },
 ]
 
 // The theme lives on <html>, put there before paint by the root layout. Mirroring
@@ -83,10 +83,13 @@ function MenuRow({
   )
 }
 
+// Also shown on pages that sit outside any course (`/link-device`), where "home" is `/` — which finds
+// the person's course for them.
 export function Wordmark({ className }: { className?: string }) {
+  const { course } = useParams<{ course?: string }>()
   return (
     <Link
-      href="/dashboard"
+      href={course ? coursePath(course, '/dashboard') : '/'}
       className={cn('display text-[1.35rem] leading-none tracking-tight', className)}
       aria-label="Narada — home"
     >
@@ -97,34 +100,21 @@ export function Wordmark({ className }: { className?: string }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
-  const queryClient = useQueryClient()
+  const cp = useCoursePath()
+  const handleSignOut = useSignOut()
   const [menuOpen, setMenuOpen] = useState(false)
   const profileName = useSelectedProfileName()
   const hasAdminAccess = useHasAdminAccess()
   const selectedProfileId = useSelectedProfileId()
   // Hidden until access resolves, not just when it's false — showing the link and then
   // yanking it away a moment later reads as more broken than a one-tick-later appearance.
-  const nav = NAV.filter(item => item.href !== '/admin' || hasAdminAccess)
+  const nav = NAV.filter(item => item.path !== '/admin' || hasAdminAccess).map(item => ({
+    ...item,
+    href: cp(item.path),
+  }))
   // No cookie yet (a page rendered ahead of the client picking one up) means no destination to
   // link to, so "Profile" is simply absent from the menu rather than pointing at `/students/`.
-  const profileHref = selectedProfileId ? `/students/${selectedProfileId}` : null
-
-  function handleSignOut() {
-    void signOutRequest().finally(() => {
-      clearSelectedProfile()
-      // The course pick belongs to the person, not the device: the next one to sign in here must
-      // choose (or be given) their own.
-      clearSelectedCourse()
-      // Every cached query — dashboard, exams, admin batches, authProfile — is scoped to
-      // whoever was signed in. `QueryClient` is a browser-lifetime singleton
-      // (`lib/query/client.ts`), so without this the *next* account to sign in in this same
-      // tab would see the outgoing account's data (and its admin nav item) until each query
-      // happened to refetch on its own — which, at a 60s+ staleTime, is not "immediately."
-      queryClient.clear()
-      router.push('/login')
-    })
-  }
+  const profileHref = selectedProfileId ? cp(`/students/${selectedProfileId}`) : null
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -197,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className="min-w-40 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
                 >
                   {profileHref && <MenuRow render={<Link href={profileHref} />}>Profile</MenuRow>}
-                  <MenuRow render={<Link href="/settings" />}>Settings</MenuRow>
+                  <MenuRow render={<Link href={cp('/settings')} />}>Settings</MenuRow>
                   <MenuRow onClick={handleSignOut}>Sign out</MenuRow>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -244,7 +234,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="flex-1">
-        <CourseGate>{children}</CourseGate>
+        <CourseAccess>{children}</CourseAccess>
       </main>
 
       <footer className="mt-16 border-t border-rule">

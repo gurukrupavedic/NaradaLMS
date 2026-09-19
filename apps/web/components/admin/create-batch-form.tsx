@@ -10,6 +10,7 @@ import { useCreateBatch } from '@/lib/query/use-batch-mutations'
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
+import { useCoursePath } from '@/lib/course'
 
 /**
  * Create a batch.
@@ -18,6 +19,7 @@ import { Standing } from '@/components/standing'
  * separate "open it up" step, so this form has nothing to ask about enrollment at all.
  */
 export function CreateBatchForm() {
+  const cp = useCoursePath()
   const { data: tracks, error: tracksError } = useQuery(catalogTracksQuery())
   const create = useCreateBatch()
   const router = useRouter()
@@ -27,7 +29,7 @@ export function CreateBatchForm() {
   const [startDate, setStartDate] = useState('')
   const [meetingUrl, setMeetingUrl] = useState('')
 
-  if (tracksError) return <ScreenError error={tracksError} backHref="/admin" backLabel="← All batches" />
+  if (tracksError) return <ScreenError error={tracksError} backHref={cp('/admin')} backLabel="← All batches" />
   if (!tracks) return <ScreenSkeleton rows={4} />
 
   function handleSubmit(e: React.FormEvent) {
@@ -41,7 +43,7 @@ export function CreateBatchForm() {
         startDate: startDate ? new Date(startDate).toISOString() : null,
         meetingUrl: meetingUrl.trim() ? meetingUrl.trim() : null,
       },
-      { onSuccess: batch => router.push(`/admin/batches/${encodeURIComponent(batch.code)}`) },
+      { onSuccess: batch => router.push(cp(`/admin/batches/${encodeURIComponent(batch.code)}`)) },
     )
   }
 

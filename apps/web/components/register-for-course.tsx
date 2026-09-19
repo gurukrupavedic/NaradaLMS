@@ -2,37 +2,49 @@
 
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 import { RegistrationForm } from '@/components/registration-form'
 import { ScreenError } from '@/components/screen-error'
 import { ScreenSkeleton } from '@/components/skeletons'
+import { useCourseSlug } from '@/lib/course'
+import { coursePath } from '@/lib/course-path'
 import { courseQuery, coursesQuery } from '@/lib/query/options'
 
-/** `/register/vedam` — the application form for the course the link names. A slug that isn't a course says so, rather than showing a form that would be refused. */
-export function RegisterForCourse({ slug }: { slug: string }) {
+/**
+ * `/vedam/register` — the application form for the course in the URL. Its layout has already checked
+ * the course exists (`CourseBoundary`), so this just needs its name for the form.
+ */
+export function RegisterForCourse() {
+  const slug = useCourseSlug()
   const { data: course, error } = useQuery(courseQuery(slug))
 
-  if (error) {
-    return <ScreenError error={error} backHref="/register" backLabel="← See the courses" />
-  }
+  if (error) return <ScreenError error={error} />
   if (!course) return <ScreenSkeleton rows={6} />
 
   return <RegistrationForm course={course} />
 }
 
 /**
- * `/register` with no course named. A school with one course has nothing to ask — that is the form.
- * With several, applying without saying which would file the application under a guess, so the
- * visitor chooses first; each choice is its own shareable link.
+ * `/register` with no course in the address. A school with one course has nothing to ask: it goes
+ * straight to that course's form, so every application has a course in its URL. With several, applying
+ * without saying which would file the application under a guess, so the visitor chooses first; each
+ * choice is its own shareable link.
  */
 export function RegisterCourseChooser() {
+  const router = useRouter()
   const { data: courses, error } = useQuery(coursesQuery())
 
-  if (error) return <ScreenError error={error} />
-  if (!courses) return <ScreenSkeleton rows={4} />
+  const [only] = courses ?? []
+  const soleCourse = courses?.length === 1 ? only : undefined
 
-  const [only] = courses
-  if (only && courses.length === 1) return <RegistrationForm course={only} />
+  useEffect(() => {
+    if (soleCourse) router.replace(coursePath(soleCourse.slug, '/register'))
+  }, [soleCourse, router])
+
+  if (error) return <ScreenError error={error} />
+  if (!courses || soleCourse) return <ScreenSkeleton rows={4} />
 
   if (courses.length === 0) {
     return (
@@ -54,7 +66,7 @@ export function RegisterCourseChooser() {
         {courses.map(course => (
           <li key={course.slug} className="border-b border-rule-soft last:border-0">
             <Link
-              href={`/register/${course.slug}`}
+              href={coursePath(course.slug, '/register')}
               className="group flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-ink/[0.03]"
             >
               <span className="text-[0.9375rem]">{course.name}</span>
