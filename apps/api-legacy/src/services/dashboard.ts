@@ -11,7 +11,6 @@ import {
 } from './batch'
 import { findTracks, type TrackWithChapters } from './track'
 import type { Evaluation } from './evaluation'
-import { type ExamWithDetail } from './exam'
 
 export type TeachingSummary = { batchId: string; evaluations: Evaluation[] }
 export type PastBatchesEntry = { studentId: string; batches: Batch[] }
@@ -27,7 +26,10 @@ export type DashboardData = {
   memberships: BatchWithRole[]
   tracks: TrackWithChapters[]
   studentEvaluations: Evaluation[]
-  upcomingExams: ExamWithDetail[]
+  // Always empty: certification exams are now graded per track by apps/api, whose schema this
+  // legacy server no longer matches (no exam routes or service here). The field stays so the
+  // legacy web client's `upcomingExams.map(...)` keeps working.
+  upcomingExams: never[]
   teaching: TeachingSummary[]
   pastBatchesByStudent: PastBatchesEntry[]
 }
@@ -98,40 +100,28 @@ export async function getDashboardData(
     ),
   ]
 
-  const [studentEvaluations, upcomingExams, teachingEvaluationsFlat, pastBatchesByStudentId] =
-    await Promise.all([
-      // The caller's own marks, across every track rather than only currently-enrolled ones.
-      // Achievements outlive enrolment: a student who certified in tracks 1-8 over several years
-      // is enrolled in at most one of those batches today, and scoping to current enrolments
-      // reported them as certified in one track instead of eight. This is the caller's own row
-      // set and stays small (~140 rows for the heaviest student in the real roster).
-      db.query.evaluation.findMany({
-        where: (t, { eq }) => eq(t.studentId, profileId),
-        orderBy: LATEST_FIRST,
-      }),
-      db.query.exam.findMany({
-        where: (t, { and, eq }) => and(eq(t.studentId, profileId), eq(t.status, 'scheduled')),
-        orderBy: (t, { asc }) => asc(t.scheduledAt),
-        with: {
-          chapter: { columns: { id: true, code: true, title: true, trackId: true } },
-          evaluation: { columns: { level: true, notes: true } },
-        },
-      }),
-      teachingChapterIds.length > 0 && teachingStudentIds.length > 0
-        ? db.query.evaluation.findMany({
-            where: (t, { and, inArray }) =>
-              and(
-                inArray(t.chapterId, teachingChapterIds),
-                inArray(t.studentId, teachingStudentIds),
-              ),
-            // Without this, Postgres returned rows in heap (insertion) order, so a re-evaluated
-            // chapter kept showing its OLDEST mark on the dashboard while the history page
-            // (which does order) showed the newest.
-            orderBy: LATEST_FIRST,
-          })
-        : [],
-      findBatchesForProfiles(db, teachingStudentIds),
-    ])
+  const [studentEvaluations, teachingEvaluationsFlat, pastBatchesByStudentId] = await Promise.all([
+    // The caller's own marks, across every track rather than only currently-enrolled ones.
+    // Achievements outlive enrolment: a student who certified in tracks 1-8 over several years
+    // is enrolled in at most one of those batches today, and scoping to current enrolments
+    // reported them as certified in one track instead of eight. This is the caller's own row
+    // set and stays small (~140 rows for the heaviest student in the real roster).
+    db.query.evaluation.findMany({
+      where: (t, { eq }) => eq(t.studentId, profileId),
+      orderBy: LATEST_FIRST,
+    }),
+    teachingChapterIds.length > 0 && teachingStudentIds.length > 0
+      ? db.query.evaluation.findMany({
+          where: (t, { and, inArray }) =>
+            and(inArray(t.chapterId, teachingChapterIds), inArray(t.studentId, teachingStudentIds)),
+          // Without this, Postgres returned rows in heap (insertion) order, so a re-evaluated
+          // chapter kept showing its OLDEST mark on the dashboard while the history page
+          // (which does order) showed the newest.
+          orderBy: LATEST_FIRST,
+        })
+      : [],
+    findBatchesForProfiles(db, teachingStudentIds),
+  ])
 
   // A single query fetched every taught-batch-relevant evaluation at once; bucket it back per
   // batch here (in memory, no extra queries) rather than in SQL, since two taught batches can
@@ -161,7 +151,7 @@ export async function getDashboardData(
     memberships,
     tracks,
     studentEvaluations,
-    upcomingExams,
+    upcomingExams: [],
     teaching,
     pastBatchesByStudent,
   }

@@ -104,6 +104,18 @@ export const examStatus = pgEnum('examStatus', [
   'completed',
   'cancelled',
 ])
+// How a certification exam came out, from its total (apps/api/src/exams/grading.ts owns the
+// thresholds). Ordered worst to best. `dwitiyaSreni`/`prathamaSreni`/`athiUttamam` are the
+// named distinctions for L3/L4/L4-with-honours; `level1`/`level2` are unnamed passes; `reappear`
+// is a fail, which grants no level.
+export const examOutcome = pgEnum('examOutcome', [
+  'reappear',
+  'level1',
+  'level2',
+  'dwitiyaSreni',
+  'prathamaSreni',
+  'athiUttamam',
+])
 export const registrationStatus = pgEnum('registrationStatus', ['pending', 'approved', 'rejected'])
 
 export const track = pgTable(
@@ -370,53 +382,75 @@ export const evaluation = pgTable(
   ],
 )
 
-// A track's certification result, per student — the outcome the whole track builds toward, not a
-// mark on any one taught chapter. Previously modeled (in the imported data) as a fake `chapter`
-// row ("TRACK N CERTIFICATION EXAM STATUS") with an ordinary `evaluation` against it; that made a
-// track's certification indistinguishable from its actual syllabus in every chapter list. This
-// table gives it a real, decoupled home instead — same append-only-history shape as `evaluation`
-// (multiple rows over time; latest wins), but keyed on the track rather than a chapter, since a
-// certification was never really about one specific chapter to begin with.
-export const trackCertification = pgTable(
-  'trackCertification',
-  {
-    id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    trackId: uuid('trackId')
-      .notNull()
-      .references(() => track.id, { onDelete: 'cascade' }),
-    studentId: uuid('studentId')
-      .notNull()
-      .references(() => profile.id, { onDelete: 'cascade' }),
-    level: proficiencyLevel('level').notNull(),
-    notes: text('notes'),
-    evaluatorId: uuid('evaluatorId')
-      .notNull()
-      .references(() => profile.id, { onDelete: 'restrict' }),
-    evaluatedAt: timestamp('evaluatedAt').defaultNow(),
-  },
-  table => [index('trackCertification_studentId_trackId_idx').on(table.studentId, table.trackId)],
-)
-
+// A certification exam sitting: one student, one track, booked into the batch they're enrolled in
+// for it (`batchId` is resolved once at creation and kept as immutable assessment context — see
+// exams/service.ts). The sitting is per track, not per chapter: it certifies the whole syllabus.
+// What it scored lives in `examResult`, written in the same transaction that completes the exam.
 export const exam = pgTable(
   'exam',
   {
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    chapterId: uuid('chapterId')
+    trackId: uuid('trackId')
       .notNull()
-      .references(() => chapter.id),
+      .references(() => track.id),
     studentId: uuid('studentId')
       .notNull()
       .references(() => profile.id, { onDelete: 'cascade' }),
+    batchId: uuid('batchId')
+      .notNull()
+      .references(() => batch.id),
     scheduledAt: timestamp('scheduledAt').notNull(),
     status: examStatus('status').notNull().default('scheduled'),
-    evaluationId: uuid('evaluationId').references(() => evaluation.id),
-    performedAt: timestamp('performedAt'),
-    batchId: uuid('batchId').references(() => batch.id),
   },
   table => [
-    index('exam_chapterId_idx').on(table.chapterId),
+    index('exam_trackId_idx').on(table.trackId),
     index('exam_studentId_idx').on(table.studentId),
     index('exam_batchId_studentId_idx').on(table.batchId, table.studentId),
+  ],
+)
+
+// The marks for one completed exam — exactly one row per `completed` exam, none for any other
+// status, so every column here is mandatory (a scheduled exam simply has no row). This replaces
+// the old `trackCertification` table: a student's certification on a track is now their latest
+// `examResult` there (apps/api/src/exams/repository.ts), backed by real marks rather than a bare
+// level. `total` and `outcome` are snapshots taken at recording time, so revising the grading
+// thresholds later never rewrites a past result. The bounds below mirror the exam's mark
+// sheet; `childrenBonus` is derived from the student's year of birth, never entered.
+export const examResult = pgTable(
+  'examResult',
+  {
+    examId: uuid('examId')
+      .primaryKey()
+      .references(() => exam.id, { onDelete: 'cascade' }),
+    aksharaShuddhi: integer('aksharaShuddhi').notNull(),
+    swaraShuddhi: integer('swaraShuddhi').notNull(),
+    niyantranaAnargalata: integer('niyantranaAnargalata').notNull(),
+    shraavyata: integer('shraavyata').notNull(),
+    pratishakyaGrammar: integer('pratishakyaGrammar').notNull(),
+    childrenBonus: integer('childrenBonus').notNull(),
+    total: integer('total').notNull(),
+    outcome: examOutcome('outcome').notNull(),
+    notes: text('notes'),
+    evaluatorId: uuid('evaluatorId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'restrict' }),
+    evaluatedAt: timestamp('evaluatedAt').notNull().defaultNow(),
+  },
+  table => [
+    check('examResult_aksharaShuddhi_range', sql`${table.aksharaShuddhi} BETWEEN 0 AND 50`),
+    check('examResult_swaraShuddhi_range', sql`${table.swaraShuddhi} BETWEEN 0 AND 30`),
+    check(
+      'examResult_niyantranaAnargalata_range',
+      sql`${table.niyantranaAnargalata} BETWEEN 0 AND 20`,
+    ),
+    check('examResult_shraavyata_range', sql`${table.shraavyata} BETWEEN 0 AND 5`),
+    check('examResult_pratishakyaGrammar_range', sql`${table.pratishakyaGrammar} BETWEEN 0 AND 5`),
+    check('examResult_childrenBonus_values', sql`${table.childrenBonus} IN (0, 5, 10)`),
+    check(
+      'examResult_total_is_sum',
+      sql`${table.total} = ${table.aksharaShuddhi} + ${table.swaraShuddhi} + ${table.niyantranaAnargalata} + ${table.shraavyata} + ${table.pratishakyaGrammar} + ${table.childrenBonus}`,
+    ),
+    index('examResult_evaluatorId_idx').on(table.evaluatorId),
   ],
 )
 
@@ -434,7 +468,10 @@ export const registration = pgTable(
 
     firstName: text('firstName').notNull(),
     lastName: text('lastName').notNull(),
-    yearOfBirth: integer('yearOfBirth'),
+    // Mandatory: a certification exam's children's bonus is worked out from it, so a student
+    // admitted without one could never be graded (`profile.yearOfBirth`, copied from here, stays
+    // nullable — staff profiles never file a registration).
+    yearOfBirth: integer('yearOfBirth').notNull(),
     phone: text('phone').notNull(),
     email: text('email'),
     city: text('city'),

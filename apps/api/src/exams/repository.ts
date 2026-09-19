@@ -1,19 +1,44 @@
-import { and, asc, eq, gt, inArray, isNull, or, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns, gt, inArray, or, type SQL } from 'drizzle-orm'
 
-import { evaluation, exam, type SchoolDb } from '@narada/db'
+import { chapter, evaluation, exam, examResult, type SchoolDb } from '@narada/db'
 
 import type { ExamReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
-import type { CreateExamData, Exam, ExamWithDetail, FindExamsData, UpdateExamData } from './schema'
+import { levelForOutcome } from './grading'
+import type {
+  CreateExamData,
+  Exam,
+  ExamResult,
+  ExamWithDetail,
+  FindExamsData,
+  StudentExamResult,
+  UpdateExamData,
+} from './schema'
 
 export type Evaluation = typeof evaluation.$inferSelect
+type ExamResultRow = typeof examResult.$inferSelect
+
+/** What a `GET /exams`-style read eager-loads: the track's name and the result (if any). */
+const DETAIL = {
+  track: { columns: { id: true, name: true } },
+  result: true,
+} as const
+
+// `level` is derived from `outcome` rather than stored (a `reappear` grants none), so a stored
+// row gains it here — one place, so no reader can forget or disagree about the mapping.
+function withLevel<Row extends ExamResultRow>(row: Row): Row & { level: ExamResult['level'] } {
+  return { ...row, level: levelForOutcome(row.outcome) }
+}
+
+function toDetail<Row extends { result: ExamResultRow | null }>(row: Row) {
+  return { ...row, result: row.result ? withLevel(row.result) : null }
+}
 
 /**
  * Lists exams visible under `scope`, ordered by `(scheduledAt, id)` with a matching compound
- * cursor. Eager-loads chapter/evaluation detail (§0.4 of the resync addendum) — a bare `Exam` row
- * has only `chapterId`/`evaluationId`, not enough to render on its own, and `apps/api/src`'s
- * reference `findManyExams` does the same eager-load in this exact query rather than a follow-up
- * fan-out.
+ * cursor. Eager-loads track/result detail (§0.4 of the resync addendum) — a bare `Exam` row has
+ * only a `trackId`, not enough to render on its own, and `apps/api/src`'s reference
+ * `findManyExams` does the same eager-load in this exact query rather than a follow-up fan-out.
  */
 export async function findMany(
   db: SchoolDb,
@@ -50,16 +75,14 @@ export async function findMany(
     where: and(...conditions),
     orderBy: [asc(exam.scheduledAt), asc(exam.id)],
     limit: limit + 1,
-    with: {
-      chapter: { columns: { id: true, code: true, title: true, trackId: true } },
-      evaluation: { columns: { level: true, notes: true } },
-    },
+    with: DETAIL,
   })
 
-  return paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
+  const page = paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
+  return { items: page.items.map(toDetail), nextCursor: page.nextCursor }
 }
 
-/** Bare exam row — for internal service logic (authorization checks, transition guards) that only ever reads `Exam`'s own columns, never chapter/evaluation detail. */
+/** Bare exam row — for internal service logic (authorization checks, transition guards) that only ever reads `Exam`'s own columns, never track/result detail. */
 export async function findById(db: SchoolDb, id: string): Promise<Exam | undefined> {
   return db.query.exam.findFirst({
     where: (t, { eq }) => eq(t.id, id),
@@ -68,45 +91,81 @@ export async function findById(db: SchoolDb, id: string): Promise<Exam | undefin
 
 /** The `GET /:examId` read path — list-detail equivalence (§11.3/DD-004): same eager-load as {@link findMany}, not a separate, thinner shape. */
 export async function findByIdWithDetail(db: SchoolDb, id: string): Promise<ExamWithDetail | undefined> {
-  return db.query.exam.findFirst({
+  const row = await db.query.exam.findFirst({
     where: (t, { eq }) => eq(t.id, id),
-    with: {
-      chapter: { columns: { id: true, code: true, title: true, trackId: true } },
-      evaluation: { columns: { level: true, notes: true } },
-    },
+    with: DETAIL,
   })
+  return row && toDetail(row)
 }
 
-/** Backs the dashboard's "upcoming exams" panel — one relational query, chapter/evaluation eager-loaded, not a fan-out. */
+/** Backs the dashboard's "upcoming exams" panel — one relational query, track/result eager-loaded, not a fan-out. */
 export async function findUpcomingForStudent(
   db: SchoolDb,
   studentId: string,
 ): Promise<ExamWithDetail[]> {
-  return db.query.exam.findMany({
+  const rows = await db.query.exam.findMany({
     where: (t, { and: andCols, eq: eqCol }) =>
       andCols(eqCol(t.studentId, studentId), eqCol(t.status, 'scheduled')),
     orderBy: (t, { asc: ascCol }) => ascCol(t.scheduledAt),
-    with: {
-      chapter: { columns: { id: true, code: true, title: true, trackId: true } },
-      evaluation: { columns: { level: true, notes: true } },
-    },
+    with: DETAIL,
+  })
+  return rows.map(toDetail)
+}
+
+/**
+ * Every result ever recorded for this student, across every track — full history, newest first,
+ * not deduped to "current" (mirrors `evaluations/repository.ts::findAllForStudent`: achievements
+ * outlive enrollment, and "the" current result per track is for the caller to reduce). This is
+ * what stands in for the old `trackCertification` list on the dashboard.
+ */
+export async function findResultsForStudent(
+  db: SchoolDb,
+  studentId: string,
+): Promise<StudentExamResult[]> {
+  const rows = await db
+    .select({ ...getTableColumns(examResult), trackId: exam.trackId })
+    .from(examResult)
+    .innerJoin(exam, eq(exam.id, examResult.examId))
+    .where(eq(exam.studentId, studentId))
+    .orderBy(desc(examResult.evaluatedAt))
+
+  return rows.map(withLevel)
+}
+
+export async function findTrackById(
+  db: SchoolDb,
+  trackId: string,
+): Promise<{ id: string } | undefined> {
+  return db.query.track.findFirst({
+    where: (t, { eq }) => eq(t.id, trackId),
+    columns: { id: true },
   })
 }
 
-export async function findChapterTrackId(
+/** `undefined` for a missing profile *and* for one with no year of birth on file — the service treats both as "cannot compute the children's bonus." */
+export async function findStudentYearOfBirth(
   db: SchoolDb,
-  chapterId: string,
-): Promise<{ trackId: string } | undefined> {
-  return db.query.chapter.findFirst({
-    where: (t, { eq }) => eq(t.id, chapterId),
-    columns: { trackId: true },
+  studentId: string,
+): Promise<number | undefined> {
+  const row = await db.query.profile.findFirst({
+    where: (t, { eq }) => eq(t.id, studentId),
+    columns: { yearOfBirth: true },
   })
+  return row?.yearOfBirth ?? undefined
 }
 
-export async function insert(
-  db: SchoolDb,
-  data: CreateExamData & { batchId: string },
-): Promise<Exam | undefined> {
+/** Chapters a student actually sees in the track — published and not archived. These are the ones a result is applied to. */
+export async function findGradableChapterIds(db: SchoolDb, trackId: string): Promise<string[]> {
+  const rows = await db
+    .select({ id: chapter.id })
+    .from(chapter)
+    .where(
+      and(eq(chapter.trackId, trackId), eq(chapter.status, 'published'), eq(chapter.archived, false)),
+    )
+  return rows.map(row => row.id)
+}
+
+export async function insert(db: SchoolDb, data: CreateExamData & { batchId: string }): Promise<Exam | undefined> {
   const rows = await db.insert(exam).values(data).returning()
   return rows.at(0)
 }
@@ -131,40 +190,43 @@ export async function updateGuarded(
   return rows.at(0)
 }
 
-export async function insertEvaluation(
-  db: SchoolDb,
-  values: {
-    studentId: string
-    chapterId: string
-    batchId: string | null
-    level: Evaluation['level']
-    notes: string | undefined
-    evaluatorId: string
-  },
-): Promise<Evaluation | undefined> {
-  const rows = await db.insert(evaluation).values(values).returning()
-  return rows.at(0)
-}
-
 /**
- * Guarded by both `evaluationId IS NULL` and a compare-and-set on `expectedStatus` (the status
- * the service read before opening the transaction). The first half makes a concurrent second
- * result lose; the second half makes a concurrent status change (e.g. a committed cancellation)
- * lose here instead of being silently overwritten. Returns `undefined` for a missing exam and
- * for either lost race — the service distinguishes them with a follow-up read.
+ * Moves the exam to `completed`, guarded by a compare-and-set on `expectedStatus` (the status the
+ * service read before opening the transaction). A concurrent second result — which finds the exam
+ * already `completed` — and a concurrent status change (e.g. a committed cancellation) both lose
+ * here instead of being silently overwritten. Returns `undefined` for a missing exam and for a
+ * lost race; the service distinguishes them with a follow-up read.
  */
 export async function complete(
   db: SchoolDb,
   id: string,
-  evaluationId: string,
-  performedAt: Date,
   expectedStatus: Exam['status'],
 ): Promise<Exam | undefined> {
   const rows = await db
     .update(exam)
-    .set({ evaluationId, performedAt, status: 'completed' })
-    .where(and(eq(exam.id, id), isNull(exam.evaluationId), eq(exam.status, expectedStatus)))
+    .set({ status: 'completed' })
+    .where(and(eq(exam.id, id), eq(exam.status, expectedStatus)))
     .returning()
 
   return rows.at(0)
+}
+
+export async function insertResult(
+  db: SchoolDb,
+  values: typeof examResult.$inferInsert,
+): Promise<ExamResultRow | undefined> {
+  const rows = await db.insert(examResult).values(values).returning()
+  return rows.at(0)
+}
+
+/** One statement for the whole track — a track has dozens of chapters, so this must never loop. */
+export async function insertEvaluations(
+  db: SchoolDb,
+  rows: (typeof evaluation.$inferInsert)[],
+): Promise<void> {
+  if (rows.length === 0) {
+    return
+  }
+
+  await db.insert(evaluation).values(rows)
 }

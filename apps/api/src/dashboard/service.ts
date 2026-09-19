@@ -4,7 +4,6 @@ import * as batchesRepository from '../batches/repository'
 import * as enrollmentRequestsRepository from '../enrollmentRequests/repository'
 import * as evaluationsRepository from '../evaluations/repository'
 import * as examsRepository from '../exams/repository'
-import * as tracksRepository from '../tracks/repository'
 import { findAll as findAllTracks } from '../tracks/service'
 import type { DashboardData, PastBatchesEntry, TeachingSummary } from './schema'
 
@@ -51,10 +50,10 @@ export async function getDashboardData(
     ),
   ]
 
-  const [studentEvaluations, certifications, upcomingExams, teachingEvaluationsFlat, pastBatchesByStudentId] =
+  const [studentEvaluations, examResults, upcomingExams, teachingEvaluationsFlat, pastBatchesByStudentId] =
     await Promise.all([
       evaluationsRepository.findAllForStudent(context.db, profileId),
-      tracksRepository.findCertificationsForStudent(context.db, profileId),
+      examsRepository.findResultsForStudent(context.db, profileId),
       examsRepository.findUpcomingForStudent(context.db, profileId),
       evaluationsRepository.findForChaptersAndStudents(
         context.db,
@@ -90,7 +89,7 @@ export async function getDashboardData(
     memberships,
     tracks,
     studentEvaluations,
-    certifications,
+    examResults,
     upcomingExams,
     teaching,
     pastBatchesByStudent,

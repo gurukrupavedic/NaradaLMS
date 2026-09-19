@@ -1,13 +1,16 @@
 import { cn } from '@/lib/utils'
 import { Pill } from '@/components/proficiency-pill'
 import { Timestamp } from '@/components/timestamp'
-import { isCertified, isStarted } from '@/lib/proficiency'
+import { isCertified } from '@/lib/proficiency'
+import { EXAM_MAX_TOTAL, EXAM_OUTCOME_LABEL } from '@/lib/exam-grading'
 import type { CertificationRow } from '@/lib/mock-dashboard'
 
 /**
  * The certification record reads as a document rather than a dashboard widget:
- * one ruled line per track, the award date set in figures on the right, and a
- * struck stamp where a certification actually landed. It is the page a student
+ * one ruled line per track — its latest exam result and total — the award date
+ * set in figures on the right, and a struck stamp where a certification actually
+ * landed (an L3 or L4 result; an L1 or L2 pass is graded but not certified, and a
+ * reappear is shown as exactly that). It is the page a student
  * screenshots and sends to their family, so it is worth letting it look like
  * something issued.
  */
@@ -16,7 +19,9 @@ export function CertificationRecord({ rows }: { rows: CertificationRow[] }) {
     <ol className="sheet">
       {rows.map(row => {
         const certified = isCertified(row.level)
-        const begun = isStarted(row.level)
+        // `level` is `notStarted` both for a track never sat and for a reappear; `outcome` is what
+        // tells them apart.
+        const sat = row.outcome !== null
 
         return (
           <li
@@ -31,12 +36,18 @@ export function CertificationRecord({ rows }: { rows: CertificationRow[] }) {
               <span
                 className={cn(
                   'block truncate text-[0.9375rem]',
-                  begun ? 'text-ink' : 'text-ink-muted/60',
+                  sat ? 'text-ink' : 'text-ink-muted/60',
                 )}
               >
-                {row.chapter}
+                {row.outcome ? EXAM_OUTCOME_LABEL[row.outcome] : 'Track certification'}
               </span>
-              {!begun && <span className="label mt-0.5 block text-ink-muted/70">not begun</span>}
+              {row.outcome ? (
+                <span className="label mt-0.5 block text-ink-muted">
+                  {row.total} / {EXAM_MAX_TOTAL}
+                </span>
+              ) : (
+                <span className="label mt-0.5 block text-ink-muted/70">not sat</span>
+              )}
             </span>
 
             {certified && <span className="stamp shrink-0">certified</span>}

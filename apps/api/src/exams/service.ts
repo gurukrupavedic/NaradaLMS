@@ -4,6 +4,7 @@ import { conflict, internalError, notFound, unprocessable } from '../error'
 import { resolveQualifyingBatch } from '../enrollment/service'
 import type { AccessPolicy, ExamReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
+import { gradeExam, levelForOutcome } from './grading'
 import * as repository from './repository'
 import type {
   CreateExamData,
@@ -50,7 +51,7 @@ export async function findByIdWithDetail(
 }
 
 /**
- * Validates the student/chapter assignment invariant before inserting; see
+ * Validates the student/track assignment invariant before inserting; see
  * {@link assertValidExamAssignment}. Authorization runs *after* that resolution, not before it,
  * so `access.requireCanCreateExam` checks the actor's permission in the exact batch the new exam
  * will be stored against — a route-level check (before the qualifying batch is known) would risk
@@ -60,14 +61,14 @@ export async function createExam(
   context: ExamServiceContext & { access: AccessPolicy },
   data: CreateExamData,
 ): Promise<Exam> {
-  const batchId = await assertValidExamAssignment(context.db, data.studentId, data.chapterId)
+  const batchId = await assertValidExamAssignment(context.db, data.studentId, data.trackId)
   context.access.requireCanCreateExam(batchId)
 
   const row = await withConstraintMapping(
     () => repository.insert(context.db, { ...data, batchId }),
     {
-      [DbConstraint.examStudentIdFk]: () => unprocessable('student or chapter no longer exists'),
-      [DbConstraint.examChapterIdFk]: () => unprocessable('student or chapter no longer exists'),
+      [DbConstraint.examStudentIdFk]: () => unprocessable('student or track no longer exists'),
+      [DbConstraint.examTrackIdFk]: () => unprocessable('student or track no longer exists'),
     },
   )
 
@@ -78,23 +79,22 @@ export async function createExam(
   return row
 }
 
-// A student can only be examined on a chapter belonging to a track they're enrolled in as a
-// student, and that enrollment must be unambiguous — the resolved batch is stored on the exam as
-// immutable assessment context (DD-012). The enrollment-ambiguity check itself lives in the
-// enrollment domain (`resolveQualifyingBatch`) so it can't drift from the same check on direct
-// evaluation creation (PARITY_PLAN.md §10.5); this function only adds the chapter lookup, which
-// is exam/evaluation-specific, not an enrollment concern.
+// A student can only sit a track they're enrolled in as a student, and that enrollment must be
+// unambiguous — the resolved batch is stored on the exam as immutable assessment context
+// (DD-012). The enrollment-ambiguity check itself lives in the enrollment domain
+// (`resolveQualifyingBatch`) so it can't drift from the same check on direct evaluation creation
+// (PARITY_PLAN.md §10.5); this function only adds the track lookup, which is exam-specific, not
+// an enrollment concern.
 async function assertValidExamAssignment(
   db: SchoolDb,
   studentId: string,
-  chapterId: string,
+  trackId: string,
 ): Promise<string> {
-  const chapterRow = await repository.findChapterTrackId(db, chapterId)
-  if (!chapterRow) {
-    throw unprocessable('chapter not found')
+  if (!(await repository.findTrackById(db, trackId))) {
+    throw unprocessable('track not found')
   }
 
-  return resolveQualifyingBatch(db, studentId, chapterRow.trackId)
+  return resolveQualifyingBatch(db, studentId, trackId)
 }
 
 /**
@@ -124,60 +124,101 @@ export async function updateExam(
 }
 
 /**
- * Records a result and completes the exam atomically: the evaluation insert and the completion
- * (repository.complete) run in one transaction. The completion is guarded by both
- * `evaluationId IS NULL` and a compare-and-set on the status read before the transaction, so a
- * losing concurrent call — whether a second result or a concurrent status change (e.g. a
- * cancellation) — rolls back its evaluation insert instead of leaving an orphan row or silently
- * overwriting a committed status change. A lost race is distinguished by a follow-up read inside
- * the transaction: 404 if the exam is gone, 409 "already recorded" if `evaluationId` is set, 409
- * "status changed concurrently" otherwise.
+ * Grades a sitting and completes it atomically: the exam's completion, its `examResult`, and the
+ * evaluation of every chapter in the track all commit together or not at all.
+ *
+ * The evaluator supplies only the five marks; the children's bonus (from the student's year of
+ * birth, so a student with none on file can't be graded), the total and the outcome are derived
+ * here (grading.ts) and stored as a snapshot. A passing outcome (L1–L4) is then written as a fresh
+ * evaluation on every published chapter of the track — deliberately allowed to lower a chapter's
+ * grade, since a result is the latest word on the whole syllabus. `reappear` grants no level, so
+ * it leaves the chapters exactly as they were.
+ *
+ * The completion is a compare-and-set on the status read before the transaction, so a losing
+ * concurrent call — a second result (the exam is by then `completed`) or a concurrent status
+ * change such as a cancellation — rolls back rather than leaving a stray result or overwriting a
+ * committed change. It is told apart by a follow-up read inside the transaction: 404 if the exam
+ * is gone, 409 "already recorded" if it is now completed, 409 "status changed concurrently"
+ * otherwise. Failing the whole request (not just skipping the chapter writes) on any error keeps
+ * a result from ever existing without the evaluations it implies.
  */
 export async function recordExamResult(
   context: ExamServiceContext,
   id: string,
   evaluatorId: string,
   data: RecordExamResultData,
-): Promise<Exam> {
+): Promise<ExamWithDetail> {
   const existing = await findById(context, id)
   if (!RECORDABLE_STATUSES.includes(existing.status)) {
     throw conflict(`cannot record a result for an exam in '${existing.status}' status`)
   }
 
-  return context.db.transaction(async tx => {
-    const evalRow = await withConstraintMapping(
-      () =>
-        repository.insertEvaluation(tx, {
-          studentId: existing.studentId,
-          chapterId: existing.chapterId,
-          batchId: existing.batchId,
-          level: data.level,
-          notes: data.notes,
-          evaluatorId,
-        }),
-      {
-        [DbConstraint.evaluationStudentIdFk]: () =>
-          unprocessable('student, chapter, or evaluator no longer exists'),
-        [DbConstraint.evaluationChapterIdFk]: () =>
-          unprocessable('student, chapter, or evaluator no longer exists'),
-        [DbConstraint.evaluationEvaluatorIdFk]: () =>
-          unprocessable('student, chapter, or evaluator no longer exists'),
-      },
+  const yearOfBirth = await repository.findStudentYearOfBirth(context.db, existing.studentId)
+  if (yearOfBirth === undefined) {
+    throw unprocessable(
+      "the student's year of birth isn't on file, so the children's bonus can't be worked out",
     )
+  }
 
-    if (!evalRow) {
-      throw internalError()
-    }
+  const { notes, ...marks } = data
+  // The sitting's own year, not the year it's recorded — a result entered in January for a
+  // December sitting must not age the student a year.
+  const graded = gradeExam(marks, yearOfBirth, existing.scheduledAt.getUTCFullYear())
+  const level = levelForOutcome(graded.outcome)
 
-    // Throwing here rolls back the evaluation insert above — see the transaction doc comment.
-    const row = await repository.complete(tx, id, evalRow.id, new Date(), existing.status)
-    if (!row) {
+  await context.db.transaction(async tx => {
+    const completed = await repository.complete(tx, id, existing.status)
+    if (!completed) {
       const current = await repository.findById(tx, id)
       if (!current) throw notFound()
-      if (current.evaluationId) throw conflict('a result was already recorded for this exam')
+      if (current.status === 'completed')
+        throw conflict('a result was already recorded for this exam')
       throw conflict('exam status changed concurrently')
     }
 
-    return row
+    const result = await withConstraintMapping(
+      () =>
+        repository.insertResult(tx, {
+          examId: id,
+          ...marks,
+          ...graded,
+          notes,
+          evaluatorId,
+        }),
+      {
+        [DbConstraint.examResultEvaluatorIdFk]: () => unprocessable('evaluator no longer exists'),
+      },
+    )
+    if (!result) {
+      throw internalError()
+    }
+
+    if (level) {
+      const chapterIds = await repository.findGradableChapterIds(tx, existing.trackId)
+      await withConstraintMapping(
+        () =>
+          repository.insertEvaluations(
+            tx,
+            chapterIds.map(chapterId => ({
+              studentId: existing.studentId,
+              chapterId,
+              batchId: existing.batchId,
+              level,
+              notes,
+              evaluatorId,
+            })),
+          ),
+        {
+          [DbConstraint.evaluationStudentIdFk]: () =>
+            unprocessable('student, chapter, or evaluator no longer exists'),
+          [DbConstraint.evaluationChapterIdFk]: () =>
+            unprocessable('student, chapter, or evaluator no longer exists'),
+          [DbConstraint.evaluationEvaluatorIdFk]: () =>
+            unprocessable('student, chapter, or evaluator no longer exists'),
+        },
+      )
+    }
   })
+
+  return findByIdWithDetail(context, id)
 }

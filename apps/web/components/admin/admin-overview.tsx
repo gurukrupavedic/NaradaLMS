@@ -11,6 +11,7 @@ import { BatchTable, FilterableBatchTable } from '@/components/batch-table'
 import { Notice } from '@/components/notice'
 import {
   adminBatchesQuery,
+  adminSittingsQuery,
   catalogTrackQuery,
   catalogTracksQuery,
   enrollmentRequestsQuery,
@@ -32,6 +33,8 @@ export function AdminOverview() {
   // section's count rather than blocking the whole overview the way batches/tracks failing does.
   const { data: pendingRegistrations } = useQuery(registrationsQuery('pending'))
   const { data: pendingEnrollmentRequests } = useQuery(enrollmentRequestsQuery('pending'))
+  // Same count-only treatment: the grading screen (components/admin/admin-exams-screen.tsx) owns the list.
+  const { data: sittings } = useQuery(adminSittingsQuery())
   const profileName = useSelectedProfileName()
 
   // No hooks below this point, so the early return is safe.
@@ -95,6 +98,24 @@ export function AdminOverview() {
                   </span>
                 ) : (
                   <span className="label text-ink-muted">Nothing pending →</span>
+                )}
+              </Link>
+            </li>
+          </ol>
+        </Section>
+
+        <Section title="Exams" count={`${sittings?.awaiting.length ?? 0} awaiting`}>
+          <ol className="sheet">
+            <li>
+              <Link
+                href="/admin/exams"
+                className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
+              >
+                <span className="text-[0.9375rem]">Grade certification exams</span>
+                {(sittings?.awaiting.length ?? 0) > 0 ? (
+                  <span className="label text-vermilion">{sittings!.awaiting.length} awaiting a result →</span>
+                ) : (
+                  <span className="label text-ink-muted">Nothing awaiting →</span>
                 )}
               </Link>
             </li>

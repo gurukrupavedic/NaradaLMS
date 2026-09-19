@@ -91,7 +91,7 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
               <dd className="mt-2 text-[0.9375rem]">{formatTimeZone(registration.countryTimeZone) ?? '—'}</dd>
 
               <dt className="label mt-5 text-ink-muted">Year of birth</dt>
-              <dd className="mt-2 text-[0.9375rem]">{registration.yearOfBirth ?? '—'}</dd>
+              <dd className="mt-2 text-[0.9375rem]">{registration.yearOfBirth}</dd>
             </div>
           </dl>
         </Section>

@@ -8,8 +8,8 @@ import {
   createExam,
   createProfile,
   createTestSchool,
+  createExamResult,
   createTrack,
-  createTrackCertification,
   enroll,
   type TestWorld,
 } from '../testing/fixtures'
@@ -48,11 +48,17 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     // My own evaluation + upcoming exam, as a student.
     const myEvaluator = await createProfile(world, { name: 'Evaluator' })
     await createEvaluation(world, { student: me, chapter: chapterLearning, evaluator: myEvaluator })
-    await createExam(world, { student: me, chapter: chapterLearning, status: 'scheduled' })
+    await createExam(world, { student: me, track: trackLearning, batch: studentBatch, status: 'scheduled' })
 
-    // My own certification for the learning track — decoupled from any chapter (the real gap:
-    // this used to be a fake chapter row with an evaluation against it).
-    await createTrackCertification(world, { track: trackLearning, student: me, evaluator: myEvaluator })
+    // My own graded exam on the learning track — the track's certification is the latest of these,
+    // decoupled from any chapter (a track exam, not a mark on one chapter).
+    const sat = await createExam(world, {
+      student: me,
+      track: trackLearning,
+      batch: studentBatch,
+      status: 'completed',
+    })
+    await createExamResult(world, { exam: sat, evaluator: myEvaluator })
 
     // An evaluation I gave my taught student — should show up under `teaching`.
     await createEvaluation(world, {
@@ -78,11 +84,13 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     expect(data.studentEvaluations).toHaveLength(1)
     expect(data.studentEvaluations[0]?.chapterId).toBe(chapterLearning.id)
 
-    expect(data.certifications).toHaveLength(1)
-    expect(data.certifications[0]?.trackId).toBe(trackLearning.id)
+    expect(data.examResults).toHaveLength(1)
+    expect(data.examResults[0]?.trackId).toBe(trackLearning.id)
+    expect(data.examResults[0]?.level).toBe('level4')
 
     expect(data.upcomingExams).toHaveLength(1)
-    expect(data.upcomingExams[0]?.chapter.id).toBe(chapterLearning.id)
+    expect(data.upcomingExams[0]?.track.id).toBe(trackLearning.id)
+    expect(data.upcomingExams[0]?.result).toBeNull()
 
     expect(data.teaching).toHaveLength(1)
     expect(data.teaching[0]?.batchId).toBe(teachingBatch.id)
@@ -107,7 +115,7 @@ describe('getDashboardData (real Postgres, end to end)', () => {
       memberships: [],
       tracks: [],
       studentEvaluations: [],
-      certifications: [],
+      examResults: [],
       upcomingExams: [],
       teaching: [],
       pastBatchesByStudent: [],

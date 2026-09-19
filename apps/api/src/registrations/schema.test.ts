@@ -14,6 +14,7 @@ vi.mock('@narada/db', () => ({
 const validBody = {
   firstName: 'Anjali',
   lastName: 'Rao',
+  yearOfBirth: 2005,
   phone: '+15551234567',
 }
 
@@ -26,7 +27,6 @@ describe('CreateRegistrationSchema', () => {
   it('accepts a fully populated body', () => {
     const result = CreateRegistrationSchema.safeParse({
       ...validBody,
-      yearOfBirth: 2005,
       email: 'anjali@example.com',
       city: 'Hyderabad',
       state: 'TG',
@@ -56,6 +56,12 @@ describe('CreateRegistrationSchema', () => {
 
   it('rejects an invalid email', () => {
     expect(CreateRegistrationSchema.safeParse({ ...validBody, email: 'not-an-email' }).success).toBe(false)
+  })
+
+  it('requires a yearOfBirth — a student admitted without one could never be graded', () => {
+    const { yearOfBirth: _omitted, ...withoutYear } = validBody
+    expect(CreateRegistrationSchema.safeParse(withoutYear).success).toBe(false)
+    expect(CreateRegistrationSchema.safeParse({ ...validBody, yearOfBirth: null }).success).toBe(false)
   })
 
   it('rejects a yearOfBirth outside a plausible range', () => {

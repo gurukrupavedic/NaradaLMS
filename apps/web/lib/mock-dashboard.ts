@@ -1,3 +1,4 @@
+import type { ApiExamOutcome, ApiExamResult } from '@/lib/api/api-types'
 import { getMasteredProgress, getProficiencyProgress, type ProficiencyLevel } from '@/lib/proficiency'
 
 /**
@@ -33,21 +34,23 @@ export type TeachingBatch = {
   masteredProgress: number
 }
 
+// A track's standing, read off its latest graded exam. `level` is `notStarted` both for a track
+// never sat and for a `reappear` (which grants no level) — `outcome` is what tells the two apart:
+// null means never sat.
 export type CertificationRow = {
   track: string
-  chapter: string
   level: ProficiencyLevel
+  outcome: ApiExamOutcome | null
+  total: number | null
   awardedAt: string | null
 }
 
+// One track exam sitting. `result` is null while it's still booked.
 export type SittingRow = {
   id: string
-  chapterCode: string
-  chapterTitle: string
   track: string
   when: string
-  level: ProficiencyLevel | null
-  notes: string | null
+  result: ApiExamResult | null
 }
 
 export type AdminBatchRow = {

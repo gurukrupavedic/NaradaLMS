@@ -9,6 +9,7 @@ import type {
   SittingRow,
   TeachingBatch,
 } from '@/lib/mock-dashboard'
+import type { ExamMarkKey } from '@/lib/exam-grading'
 import { getSelectedProfileId } from '@/lib/auth/profile-store'
 import type { LadderTrack } from '@/components/track-ladder'
 import type {
@@ -21,6 +22,8 @@ import type {
   ApiEnrollmentRequest,
   ApiEnrollmentRequestStatus,
   ApiEvaluation,
+  ApiExam,
+  ApiExamResult,
   ApiOpenBatch,
   ApiProficiencyLevel,
   ApiProfile,
@@ -38,7 +41,6 @@ import {
   buildTeachingBatch,
   findNextClass,
   findResumeChapterId,
-  narrowLevel,
 } from '@/lib/api/reshape'
 
 /**
@@ -146,7 +148,7 @@ export type SubmitRegistrationInput = {
   firstName: string
   lastName: string
   phone: string
-  yearOfBirth?: number | null
+  yearOfBirth: number
   email?: string | null
   city?: string | null
   state?: string | null
@@ -200,7 +202,7 @@ export type DashboardPayload = {
   teachingBatches: TeachingBatch[]
   resumeChapterId: string | null
   nextClass: ReturnType<typeof findNextClass>
-  upcomingExam: { chapterCode: string; chapterTitle: string; when: string } | null
+  upcomingExam: { trackName: string; when: string } | null
   // Whether this profile currently holds a *live* student seat: an 'active' enrollment in a batch
   // that hasn't ended. False both for someone never enrolled anywhere and for someone on a break /
   // whose last batch completed — components/open-batch-picker.tsx is what the dashboard shows
@@ -267,8 +269,7 @@ export async function fetchDashboard(): Promise<DashboardPayload> {
     nextClass: findNextClass(data.memberships.find(m => m.status === 'active')),
     upcomingExam: upcoming
       ? {
-          chapterCode: upcoming.chapter.code,
-          chapterTitle: upcoming.chapter.title,
+          trackName: upcoming.track.name,
           when: upcoming.scheduledAt,
         }
       : null,
@@ -302,49 +303,104 @@ export async function fetchChapterDetail(chapterId: string): Promise<ApiChapterD
   return fetchApi<ApiChapterDetail>(`/chapters/${chapterId}`)
 }
 
-// GET /v1/exams (scheduled/past sittings) + the certification record, from the dashboard's own
-// `certifications` (packages/db's dedicated `trackCertification` table — decoupled from `chapter`
-// as of the real-data fix; there is no separate certifications endpoint).
+// GET /v1/exams (booked/graded sittings) + the certification record, from the dashboard's own
+// `examResults` — a track's certification is its latest graded sitting (packages/db's `examResult`),
+// so there is no separate certifications endpoint.
 export type ExamsPayload = {
   certifications: CertificationRow[]
   scheduled: SittingRow[]
   past: SittingRow[]
 }
 
-function toSittingRow(
-  exam: {
-    id: string
-    scheduledAt: string
-    chapter: { code: string; title: string; trackId: string }
-    evaluation: { level: ApiEvaluation['level']; notes: string | null } | null
-  },
-  trackNameById: Map<string, string>,
-): SittingRow {
-  return {
-    id: exam.id,
-    chapterCode: exam.chapter.code,
-    chapterTitle: exam.chapter.title,
-    track: trackNameById.get(exam.chapter.trackId) ?? exam.chapter.trackId,
-    when: exam.scheduledAt,
-    level: exam.evaluation ? narrowLevel(exam.evaluation.level) : null,
-    notes: exam.evaluation?.notes ?? null,
-  }
+function toSittingRow(exam: ApiExam): SittingRow {
+  return { id: exam.id, track: exam.track.name, when: exam.scheduledAt, result: exam.result }
 }
 
 export async function fetchExams(): Promise<ExamsPayload> {
   const [dashboard, examList] = await Promise.all([
     fetchStudentDashboard(),
-    fetchApi<{ items: Parameters<typeof toSittingRow>[0][] }>('/exams'),
+    fetchApi<{ items: ApiExam[] }>('/exams'),
   ])
 
-  const trackNameById = new Map(dashboard.tracks.map(track => [track.id, track.name]))
   const certifications = buildCertificationRows(dashboard)
-  const sittings = examList.items.map(exam => toSittingRow(exam, trackNameById))
   return {
     certifications,
-    scheduled: sittings.filter(s => !s.level),
-    past: sittings.filter(s => s.level),
+    // A cancelled sitting is neither booked nor graded, so it belongs to neither list.
+    scheduled: examList.items
+      .filter(exam => exam.status === 'scheduled' || exam.status === 'inProgress')
+      .map(toSittingRow),
+    past: examList.items.filter(exam => exam.result !== null).map(toSittingRow),
   }
+}
+
+// ── Grading track exams (admin) ──────────────────────────────────────────────
+
+export type AdminSittingRow = {
+  id: string
+  studentId: string
+  studentName: string
+  batchCode: string
+  track: string
+  when: string
+  status: ApiExam['status']
+  result: ApiExamResult | null
+}
+
+export type AdminSittingsPayload = {
+  // Booked or under way, oldest first — the ones still owed a result.
+  awaiting: AdminSittingRow[]
+  // Graded, newest first.
+  graded: AdminSittingRow[]
+}
+
+// GET /v1/exams, school-wide — `AccessPolicy#getExamVisibility` only returns every student's
+// sitting to a school admin who supplies no profile (see `fetchApi`'s `schoolWide`), and student
+// names and batch codes come from the batch roster the admin already has (exams carry only ids).
+export async function fetchAdminSittings(): Promise<AdminSittingsPayload> {
+  const [exams, { items: batches }] = await Promise.all([
+    fetchAllPages<ApiExam>(cursor => `/exams?limit=100${cursor ? `&cursor=${cursor}` : ''}`, {
+      schoolWide: true,
+    }),
+    fetchAdminBatchesWithTracks(),
+  ])
+
+  const batchCodeById = new Map(batches.map(batch => [batch.id, batch.code]))
+  const studentNameById = new Map(
+    batches.flatMap(batch => batch.members.map(member => [member.profileId, member.name] as const)),
+  )
+
+  const rows = exams
+    .filter(exam => exam.status !== 'cancelled')
+    .map<AdminSittingRow>(exam => ({
+      id: exam.id,
+      studentId: exam.studentId,
+      studentName: studentNameById.get(exam.studentId) ?? 'Unknown student',
+      batchCode: batchCodeById.get(exam.batchId) ?? '—',
+      track: exam.track.name,
+      when: exam.scheduledAt,
+      status: exam.status,
+      result: exam.result,
+    }))
+
+  return {
+    awaiting: rows.filter(row => row.result === null),
+    graded: rows
+      .filter(row => row.result !== null)
+      .sort((a, b) => b.result!.evaluatedAt.localeCompare(a.result!.evaluatedAt)),
+  }
+}
+
+// What an evaluator enters — the five marks and an optional note. The children's bonus, total and
+// outcome are derived by the API (and anything sent for them is ignored), so they aren't here.
+export type RecordExamResultInput = Record<ExamMarkKey, number> & { notes?: string }
+
+// POST /v1/exams/:examId/results — school admin only. Completes the sitting and, when the outcome
+// grants a level, writes it to every chapter of the track.
+export async function recordExamResult(
+  examId: string,
+  input: RecordExamResultInput,
+): Promise<ApiExam> {
+  return mutateApi<ApiExam>(`/exams/${examId}/results`, 'POST', input)
 }
 
 // GET /v1/profiles/:profileId/batches?withDetail=true (the signed-in profile — the real gap closed

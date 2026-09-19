@@ -28,7 +28,7 @@ afterEach(async () => {
 })
 
 describe('exam foreign-key integrity (matrix item 8)', () => {
-  it('raises a 23503 for an exam referencing a nonexistent chapterId', async () => {
+  it('raises a 23503 for an exam referencing a nonexistent trackId', async () => {
     world = await createTestSchool()
     const studentProfile = await createProfile(world)
     const trackRow = await createTrack(world)
@@ -36,7 +36,7 @@ describe('exam foreign-key integrity (matrix item 8)', () => {
 
     await expect(
       examRepository.insert(world.schoolDb, {
-        chapterId: crypto.randomUUID(),
+        trackId: crypto.randomUUID(),
         studentId: studentProfile.id,
         scheduledAt: new Date(),
         batchId: batchRow.id,
@@ -47,12 +47,11 @@ describe('exam foreign-key integrity (matrix item 8)', () => {
   it('raises a 23503 for an exam referencing a nonexistent studentId', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
-    const chapterRow = await createChapter(world, trackRow)
     const batchRow = await createBatch(world, trackRow)
 
     await expect(
       examRepository.insert(world.schoolDb, {
-        chapterId: chapterRow.id,
+        trackId: trackRow.id,
         studentId: crypto.randomUUID(),
         scheduledAt: new Date(),
         batchId: batchRow.id,

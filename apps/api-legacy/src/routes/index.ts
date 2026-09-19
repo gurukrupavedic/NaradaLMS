@@ -10,7 +10,6 @@ import profilesRouter from './profiles'
 import batchesRouter from './batches'
 import enrollmentRouter from './enrollment'
 import evaluationsRouter from './evaluations'
-import examsRouter from './exams'
 import schoolsRouter from './schools'
 import { resolveDb } from '../middlewares/school'
 
@@ -35,6 +34,5 @@ export default function setupRoutes(router: Router) {
     .use('/batches', batchesRouter)
     .use('/batches/:batchId/members', enrollmentRouter)
     .use('/batches/:batchId/evaluations', evaluationsRouter)
-    .use('/exams', examsRouter)
     .use('/profiles', profilesRouter)
 }

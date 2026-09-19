@@ -18,7 +18,7 @@ export const RegistrationSchema = z.object({
 
   firstName: z.string().trim().min(1),
   lastName: z.string().trim().min(1),
-  yearOfBirth: z.number().int().min(1900).max(CURRENT_YEAR).nullable(),
+  yearOfBirth: z.number().int().min(1900).max(CURRENT_YEAR),
   phone: e164Phone,
   email: z.email().nullable(),
   city: z.string().trim().min(1).nullable(),
@@ -71,7 +71,6 @@ export const CreateRegistrationSchema = RegistrationSchema.pick({
   noSmokingAgreed: true,
   comments: true,
 }).partial({
-  yearOfBirth: true,
   email: true,
   city: true,
   state: true,

@@ -172,29 +172,50 @@ export type ApiEvaluation = {
   evaluatedAt: string | null
 }
 
-export type ApiExam = {
-  id: string
-  chapterId: string
-  studentId: string
-  scheduledAt: string
-  status: 'scheduled' | 'inProgress' | 'completed' | 'cancelled'
-  evaluationId: string | null
-  performedAt: string | null
-  chapter: { id: string; code: string; title: string; trackId: string }
-  evaluation: { level: ApiProficiencyLevel; notes: string | null } | null
+// How a certification exam came out — apps/api/src/exams/grading.ts owns the thresholds.
+export type ApiExamOutcome =
+  | 'reappear'
+  | 'level1'
+  | 'level2'
+  | 'dwitiyaSreni'
+  | 'prathamaSreni'
+  | 'athiUttamam'
+
+// The marks for one completed track exam (packages/db's `examResult`). `level` is what `outcome`
+// grants, derived server-side — null for a `reappear`. `childrenBonus`, `total` and `outcome` are
+// all derived server-side too; the evaluator only ever enters the five marks.
+export type ApiExamResult = {
+  examId: string
+  aksharaShuddhi: number
+  swaraShuddhi: number
+  niyantranaAnargalata: number
+  shraavyata: number
+  pratishakyaGrammar: number
+  childrenBonus: number
+  total: number
+  outcome: ApiExamOutcome
+  level: ApiProficiencyLevel | null
+  notes: string | null
+  evaluatorId: string
+  evaluatedAt: string
 }
 
-// A track's certification result — decoupled from `chapter` (packages/db/src/schema/school.ts's
-// `trackCertification` table). Full history like ApiEvaluation, not deduped to "current".
-export type ApiTrackCertification = {
+// A sitting is per track, not per chapter. `result` is null until it's graded.
+export type ApiExam = {
   id: string
   trackId: string
   studentId: string
-  level: ApiProficiencyLevel
-  notes: string | null
-  evaluatorId: string
-  evaluatedAt: string | null
+  batchId: string
+  scheduledAt: string
+  status: 'scheduled' | 'inProgress' | 'completed' | 'cancelled'
+  track: { id: string; name: string }
+  result: ApiExamResult | null
 }
+
+// One entry of the dashboard's `examResults` — a graded sitting, with the track it was on (the
+// dashboard's list is flat across tracks). Full history like ApiEvaluation, newest first; a
+// track's certification is the latest of these for it.
+export type ApiStudentExamResult = ApiExamResult & { trackId: string }
 
 // GET/POST /v1/registrations — a prospective student's application, filed before they have any
 // account (see apps/api/src/registrations/schema.ts). `currentProficiency` reuses
@@ -208,7 +229,7 @@ export type ApiRegistration = {
   status: ApiRegistrationStatus
   firstName: string
   lastName: string
-  yearOfBirth: number | null
+  yearOfBirth: number
   phone: string
   email: string | null
   city: string | null
@@ -235,7 +256,7 @@ export type ApiDashboard = {
   memberships: ApiBatchWithRole[]
   tracks: ApiTrack[]
   studentEvaluations: ApiEvaluation[]
-  certifications: ApiTrackCertification[]
+  examResults: ApiStudentExamResult[]
   upcomingExams: ApiExam[]
   teaching: { batchId: string; evaluations: ApiEvaluation[] }[]
   pastBatchesByStudent: { studentId: string; batches: ApiBatch[] }[]
