@@ -50,6 +50,15 @@ export async function request(db: SchoolDbClient, batchId: string, profileId: st
       throw conflict('already enrolled in this batch')
     }
 
+    // One live batch per course: asking for a second one while holding an active seat can only
+    // fail at approval, so say so now. (The unique index still settles the race at approval; this
+    // is the early, friendly version.)
+    if (await enrollmentRepository.findActiveStudentSeatInCourse(tx, profileId, batchRow.courseId)) {
+      throw conflict(
+        'you already have an active batch in this course — ask an admin to move you instead',
+      )
+    }
+
     if (await repository.findPending(tx, profileId, batchId)) {
       throw conflict('a request to join this batch is already pending')
     }

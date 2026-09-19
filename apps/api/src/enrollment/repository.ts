@@ -54,15 +54,56 @@ export async function profileExists(db: SchoolDb, profileId: string): Promise<bo
   return row !== undefined
 }
 
+/** The course a batch belongs to — what an `enrollment` row must carry as its own `courseId`. `undefined` if there is no such batch. */
+export async function findBatchCourseId(
+  db: SchoolDb,
+  batchId: string,
+): Promise<string | undefined> {
+  const row = await db.query.batch.findFirst({
+    where: (t, { eq: eqCol }) => eqCol(t.id, batchId),
+    columns: { courseId: true },
+  })
+
+  return row?.courseId
+}
+
+/**
+ * `courseId` must be the batch's own — the composite foreign key `enrollment_batchId_courseId_fk`
+ * rejects anything else — so callers get it from {@link findBatchCourseId} rather than accepting it
+ * from a request.
+ */
 export async function insertEnrollment(
   db: SchoolDb,
   batchId: string,
+  courseId: string,
   data: CreateEnrollmentData,
 ): Promise<Enrollment | undefined> {
   const rows = await db
     .insert(enrollment)
-    .values({ batchId, profileId: data.profileId, role: data.role })
+    .values({ batchId, courseId, profileId: data.profileId, role: data.role })
     .returning()
+
+  return rows.at(0)
+}
+
+/** The batch (if any) where this profile currently holds an `active` student seat in `courseId` — the seat the one-per-course rule is about. */
+export async function findActiveStudentSeatInCourse(
+  db: SchoolDb,
+  profileId: string,
+  courseId: string,
+): Promise<{ batchId: string } | undefined> {
+  const rows = await db
+    .select({ batchId: enrollment.batchId })
+    .from(enrollment)
+    .where(
+      and(
+        eq(enrollment.profileId, profileId),
+        eq(enrollment.courseId, courseId),
+        eq(enrollment.role, 'student'),
+        eq(enrollment.status, 'active'),
+      ),
+    )
+    .limit(1)
 
   return rows.at(0)
 }

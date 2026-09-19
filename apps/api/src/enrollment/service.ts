@@ -1,6 +1,7 @@
 import type { SchoolDb, SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound, unprocessable } from '../error'
+import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
 import type { CreateEnrollmentData } from './schema'
 import type { Enrollment } from './repository'
@@ -50,14 +51,28 @@ export async function assertStudentEnrolledInBatch(
   }
 }
 
+// A student holds at most one `active` batch seat per course. The partial unique index
+// `enrollment_one_active_student_seat_per_course` is the guarantee (it also settles two racing
+// requests); this is just its 409, shared by every path that can seat a student.
+const seatConflict = () =>
+  conflict('this student already has an active batch in this course — move or remove them first')
+
+const seatConflictMapping = {
+  [DbConstraint.enrollmentOneActiveSeatPerCourse]: seatConflict,
+}
+
 /**
- * Adds a profile to a batch's roster. 404 if the target profile doesn't exist; 409 if they already
- * hold a live (`'active'`) seat here. A profile with an existing but non-active row (on a break —
- * see `putOnBreak` below — or dropped/inactive) isn't a conflict: this reactivates that same row
- * in place (status back to `'active'`, role set to whatever was just requested) rather than
- * erroring, since `profiles/repository.ts::search`'s `excludeBatchId` filter now only excludes
- * `'active'` members, so a break student shows back up as an addable candidate here in the first
- * place.
+ * Adds a profile to a batch's roster. 404 if the target profile or batch doesn't exist; 409 if they
+ * already hold a live (`'active'`) seat here or, for a student, already hold an active seat in
+ * another batch of the same course.
+ *
+ * A profile with an existing but non-active row (on a break — see `putOnBreak` below — or
+ * dropped/inactive) isn't a conflict: this reactivates that same row in place (status back to
+ * `'active'`, role set to whatever was just requested) rather than erroring, since
+ * `profiles/repository.ts::search`'s `excludeBatchId` filter now only excludes `'active'` members,
+ * so a break student shows back up as an addable candidate here in the first place. Reactivating is
+ * seating like any other: it takes the same 409 if the student has since joined another batch in
+ * this course, because a break means "not in any batch right now", not "still holding a seat".
  */
 export async function enroll(
   db: SchoolDb,
@@ -68,13 +83,21 @@ export async function enroll(
     throw notFound()
   }
 
+  const courseId = await repository.findBatchCourseId(db, batchId)
+  if (!courseId) {
+    throw notFound()
+  }
+
   const existing = await repository.findEnrollment(db, data.profileId, batchId)
   if (existing) {
     if (existing.status === 'active') {
       throw conflict('profile is already enrolled in this batch')
     }
 
-    const reactivated = await repository.reactivateEnrollment(db, batchId, data.profileId, data.role)
+    const reactivated = await withConstraintMapping(
+      () => repository.reactivateEnrollment(db, batchId, data.profileId, data.role),
+      seatConflictMapping,
+    )
     if (!reactivated) {
       throw internalError()
     }
@@ -82,7 +105,10 @@ export async function enroll(
     return reactivated
   }
 
-  const row = await repository.insertEnrollment(db, batchId, data)
+  const row = await withConstraintMapping(
+    () => repository.insertEnrollment(db, batchId, courseId, data),
+    seatConflictMapping,
+  )
   if (!row) {
     throw internalError()
   }
@@ -137,12 +163,22 @@ export async function moveEnrollment(
       throw conflict('profile is already enrolled in the destination batch')
     }
 
+    const toCourseId = await repository.findBatchCourseId(tx, toBatchId)
+    if (!toCourseId) {
+      throw notFound()
+    }
+
+    // The old seat is released before the new one is taken, inside the one transaction — moving
+    // within a course must never trip the one-active-seat index against the seat being left.
     const removed = await repository.deleteEnrollment(tx, fromBatchId, profileId)
     if (!removed) {
       throw internalError()
     }
 
-    const row = await repository.insertEnrollment(tx, toBatchId, { profileId, role: current.role })
+    const row = await withConstraintMapping(
+      () => repository.insertEnrollment(tx, toBatchId, toCourseId, { profileId, role: current.role }),
+      seatConflictMapping,
+    )
     if (!row) {
       throw internalError()
     }

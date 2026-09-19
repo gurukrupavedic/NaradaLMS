@@ -4,6 +4,7 @@ import {
   batch,
   type batchStatus,
   chapter,
+  course,
   dropSchoolSchema,
   enrollment,
   type enrollmentStatus,
@@ -71,15 +72,30 @@ export async function upsertOrgMember(organizationId: string, userId: string, ro
   return row!
 }
 
-export async function upsertTrack(db: SchoolDatabase, name: string) {
-  const existing = await db.query.track.findFirst({
-    where: (t, { eq }) => eq(t.name, name),
+export async function upsertCourse(db: SchoolDatabase, slug: string, name: string) {
+  const existing = await db.query.course.findFirst({
+    where: (t, { eq }) => eq(t.slug, slug),
   })
 
   if (existing) return existing
-  const currentTracks = await db.query.track.findMany({ columns: { order: true } })
+  const [row] = await db.insert(course).values({ slug, name }).returning()
+  if (!row) throw new Error(`Failed to create course: ${slug}`)
+  return row
+}
+
+// Tracks are numbered within their course, so the next order is the course's own max + 1.
+export async function upsertTrack(db: SchoolDatabase, courseId: string, name: string) {
+  const existing = await db.query.track.findFirst({
+    where: (t, { and, eq }) => and(eq(t.courseId, courseId), eq(t.name, name)),
+  })
+
+  if (existing) return existing
+  const currentTracks = await db.query.track.findMany({
+    where: (t, { eq }) => eq(t.courseId, courseId),
+    columns: { order: true },
+  })
   const order = currentTracks.length > 0 ? Math.max(...currentTracks.map(r => r.order)) + 1 : 1
-  const [row] = await db.insert(track).values({ name, order }).returning()
+  const [row] = await db.insert(track).values({ courseId, name, order }).returning()
   if (!row) throw new Error(`Failed to create track: ${name}`)
   return row
 }
@@ -95,10 +111,17 @@ export async function upsertBatch(
   })
 
   if (existing) return existing
+  // A batch carries its track's course.
+  const trackRow = await db.query.track.findFirst({
+    where: (t, { eq }) => eq(t.id, trackId),
+    columns: { courseId: true },
+  })
+  if (!trackRow) throw new Error(`Track not found: ${trackId}`)
   const [row] = await db
     .insert(batch)
     .values({
       trackId,
+      courseId: trackRow.courseId,
       code,
       status: values.status ?? 'active',
       startDate: values.startDate,
@@ -158,9 +181,15 @@ export async function upsertEnrollment(
   })
 
   if (existing) return existing
+  // An enrollment carries its batch's course.
+  const batchRow = await db.query.batch.findFirst({
+    where: (t, { eq }) => eq(t.id, batchId),
+    columns: { courseId: true },
+  })
+  if (!batchRow) throw new Error(`Batch not found: ${batchId}`)
   const [row] = await db
     .insert(enrollment)
-    .values({ batchId, profileId, role, ...values })
+    .values({ batchId, courseId: batchRow.courseId, profileId, role, ...values })
     .returning()
   if (!row) throw new Error('Failed to create enrollment')
   return row

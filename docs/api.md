@@ -6,7 +6,7 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 
 **Base URL:** All routes are prefixed with `/v1`.
 
-**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. BetterAuth's `activeOrganizationId` is not used for tenant selection. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
+**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. BetterAuth's `activeOrganizationId` is not used for tenant selection. Requests that create something owned by a course (a registration, today) may also send `X-Course-Slug` to say which; with no header, a school that has exactly one course uses it, and a school with several answers `422` rather than guessing. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
 
 **Authentication:** BetterAuth session cookies. Every route except BetterAuth's own auth endpoints requires a valid session. The authenticated user's `shared.user.id` is available on the request context.
 
@@ -734,7 +734,7 @@ New batches start as `upcoming`.
 
 ### `PATCH /v1/batches/:batchId`
 
-Update batch metadata.
+Update batch metadata. Setting `status` to `"completed"` also ends the batch's students' active seats (their enrollments become `inactive`), so they can join their next batch in the course; staff enrollments are unaffected.
 
 **Access:** Admin.
 
@@ -755,6 +755,7 @@ Update batch metadata.
     id: string,
     code: string,
     trackId: string,
+    courseId: string,       // the track's course; never set by the client
     startDate: string | null,
     status: "active" | "completed" | "upcoming",
     scheduledAt: string | null,
@@ -794,7 +795,7 @@ Add a member to a batch.
 }
 ```
 
-Returns `409 CONFLICT` if the user is already enrolled in this batch.
+Returns `409 CONFLICT` if the user is already enrolled in this batch — or, for a student, if they already hold an `active` seat in another batch of the same course (a student has at most one live batch per course). Putting a student back from a break fails the same way if they have since joined another batch in the course.
 
 ### `DELETE /v1/batches/:batchId/members/:userId`
 

@@ -27,6 +27,9 @@ export function translateDbError(error: unknown): AppError | null {
 export const DbConstraint = {
   batchTrackIdFk: 'batch_trackId_track_id_fk',
   batchCodeUnique: 'batch_code_unique',
+  // A student may hold only one `active` batch seat per course — a partial unique index, not a
+  // table constraint, but Postgres reports its name the same way.
+  enrollmentOneActiveSeatPerCourse: 'enrollment_one_active_student_seat_per_course',
   examStudentIdFk: 'exam_studentId_profile_id_fk',
   examTrackIdFk: 'exam_trackId_track_id_fk',
   examResultEvaluatorIdFk: 'examResult_evaluatorId_profile_id_fk',

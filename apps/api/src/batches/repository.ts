@@ -375,9 +375,42 @@ export async function findAllForProfiles(
   return map
 }
 
-export async function insert(db: SchoolDb, data: CreateBatchData): Promise<Batch | undefined> {
+/** The course a track belongs to — what a new batch must carry as its own `courseId`. `undefined` if there is no such track. */
+export async function findTrackCourseId(db: SchoolDb, trackId: string): Promise<string | undefined> {
+  const row = await db.query.track.findFirst({
+    where: (t, { eq: eqCol }) => eqCol(t.id, trackId),
+    columns: { courseId: true },
+  })
+
+  return row?.courseId
+}
+
+/** `courseId` must be the track's own (composite foreign key `batch_trackId_courseId_fk`), so the service fills it from {@link findTrackCourseId}. */
+export async function insert(
+  db: SchoolDb,
+  data: CreateBatchData & { courseId: string },
+): Promise<Batch | undefined> {
   const rows = await db.insert(batch).values(data).returning()
   return rows.at(0)
+}
+
+/**
+ * Ends every `active` student seat in a batch — what marking the batch `completed` does to its
+ * roster. Without this a finished batch would keep its students' one-seat-per-course slot, and they
+ * could never join their next batch. Only students: instructors and TAs aren't limited to one batch
+ * per course, and the teaching history views still list a completed batch under its staff.
+ */
+export async function endActiveStudentSeats(db: SchoolDb, batchId: string): Promise<void> {
+  await db
+    .update(enrollment)
+    .set({ status: 'inactive', leftDate: sql`coalesce(${enrollment.leftDate}, now())` })
+    .where(
+      and(
+        eq(enrollment.batchId, batchId),
+        eq(enrollment.role, 'student'),
+        eq(enrollment.status, 'active'),
+      ),
+    )
 }
 
 export async function update(

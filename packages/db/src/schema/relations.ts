@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm'
 
 import { user, session, account, organization, member, invitation, deviceLinkCode } from './auth'
 import {
+  course,
   track,
   chapter,
   chapterScript,
@@ -63,7 +64,12 @@ export const profileRelations = relations(profile, ({ many }) => ({
   enrollments: many(enrollment),
 }))
 
-export const trackRelations = relations(track, ({ many }) => ({
+export const courseRelations = relations(course, ({ many }) => ({
+  tracks: many(track),
+}))
+
+export const trackRelations = relations(track, ({ one, many }) => ({
+  course: one(course, { fields: [track.courseId], references: [course.id] }),
   chapters: many(chapter),
   batches: many(batch),
 }))

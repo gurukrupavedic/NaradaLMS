@@ -7,6 +7,7 @@ import { defineCommand, runMain } from 'citty'
 import {
   batch,
   chapter,
+  course,
   enrollment,
   evaluation,
   getScopedDatabase,
@@ -22,7 +23,10 @@ import {
 // rewritten app (post PR #128) — api-legacy is the pre-rewrite app, kept only as a buildable
 // fallback (docker-compose.yaml's "legacy" profile), not what's actually deployed.
 import { CreateEnrollmentSchema as enrollSchema } from '@narada/api/src/enrollment/schema'
-import { CreateEvaluationSchema as createEvaluationSchema } from '@narada/api/src/evaluations/schema'
+import {
+  CreateEvaluationSchema,
+  proficiencyLevelSchema,
+} from '@narada/api/src/evaluations/schema'
 import { requireSchool, upsertOrgMember, upsertSchool } from './school-helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -209,6 +213,13 @@ function readJsonOptional<T>(dataDir: string, fileName: string, fallback: T): T 
 
 // Matches the phoneNumber plugin's validator in packages/auth/src/index.ts — kept in sync
 // manually rather than imported, since that's server auth config and this is an offline CLI import.
+// The live API refuses a teacher's own evaluation at `level4` (only a graded track exam grants it),
+// but a bulk import loads history, not a teacher grading today — the source spreadsheet has chapters
+// already marked L4 (13 in the current data). So the imported level is checked against the full
+// list of levels rather than the teacher-gradable subset; everything else about the row is still
+// checked against the API's own schema.
+const createEvaluationSchema = CreateEvaluationSchema.extend({ level: proficiencyLevelSchema })
+
 const E164_PATTERN = /^\+[1-9]\d{7,14}$/
 
 function validate(
@@ -228,6 +239,23 @@ function validate(
     const result = enrollSchema.safeParse({ profileId: e.profileId, role: e.role })
     if (!result.success) {
       errors.push(`enrollment ${e.profileId}/${e.batchId}: ${result.error.issues.map(i => i.message).join('; ')}`)
+    }
+  }
+
+  // A student holds at most one active seat per course, and everything in the source belongs to the
+  // one course being imported into. The database refuses a violation with a single opaque error
+  // midway through the transaction, so name every offender up front instead.
+  const activeSeats = new Map<string, string[]>()
+  for (const e of enrollments) {
+    if (e.role === 'student' && e.status === 'active') {
+      activeSeats.set(e.profileId, [...(activeSeats.get(e.profileId) ?? []), e.batchId])
+    }
+  }
+  for (const [profileId, batchIds] of activeSeats) {
+    if (batchIds.length > 1) {
+      errors.push(
+        `profile ${profileId}: active student in ${batchIds.length} batches of one course (${batchIds.join(', ')}) — only one is allowed`,
+      )
     }
   }
 
@@ -251,6 +279,13 @@ const dataCmd = defineCommand({
     slug: { type: 'string', default: 'slmts', description: 'School org slug to import into.' },
     name: { type: 'string', description: 'School display name (defaults to uppercased slug).' },
     dataDir: { type: 'string', description: 'Directory containing the parsed seed-data JSON files.' },
+    course: {
+      type: 'string',
+      default: 'vedam',
+      description:
+        'Slug of the course every imported track belongs to (created if missing). The source ' +
+        'spreadsheet covers a single course.',
+    },
     commit: {
       type: 'boolean',
       default: false,
@@ -359,14 +394,35 @@ const dataCmd = defineCommand({
 
       // Scoped school DB, in FK dependency order, inside one transaction per school.
       await schoolDb.transaction(async tx => {
+        // Every row below belongs to this one course: tracks are stamped with it, and batches and
+        // enrollments carry their track's/batch's course (the schema's composite foreign keys
+        // refuse anything else).
+        await tx
+          .insert(course)
+          .values({ slug: args.course, name: args.course.charAt(0).toUpperCase() + args.course.slice(1) })
+          .onConflictDoNothing({ target: course.slug })
+        const courseRow = await tx.query.course.findFirst({
+          where: (t, { eq }) => eq(t.slug, args.course),
+        })
+        if (!courseRow) throw new Error(`Course "${args.course}" missing after insert`)
+        const courseId = courseRow.id
+        console.log(`Importing into course "${courseRow.slug}" (${courseId})`)
+
         for (const rows of chunk(tracks, CHUNK_SIZE)) {
-          await tx.insert(track).values(rows).onConflictDoNothing({ target: track.order })
+          await tx
+            .insert(track)
+            .values(rows.map(r => ({ ...r, courseId })))
+            .onConflictDoNothing({ target: [track.courseId, track.order] })
         }
         for (const rows of chunk(chapters, CHUNK_SIZE)) {
           await tx.insert(chapter).values(rows).onConflictDoNothing({ target: [chapter.trackId, chapter.code] })
         }
         for (const rows of chunk(batches, CHUNK_SIZE)) {
-          const values = rows.map(r => ({ ...r, startDate: r.startDate ? new Date(r.startDate) : null }))
+          const values = rows.map(r => ({
+            ...r,
+            courseId,
+            startDate: r.startDate ? new Date(r.startDate) : null,
+          }))
           await tx.insert(batch).values(values).onConflictDoNothing({ target: batch.code })
         }
         for (const rows of chunk(remappedProfiles, CHUNK_SIZE)) {
@@ -375,6 +431,7 @@ const dataCmd = defineCommand({
         for (const rows of chunk(enrollments, CHUNK_SIZE)) {
           const values = rows.map(r => ({
             ...r,
+            courseId,
             joinedAt: r.joinedAt ? new Date(r.joinedAt) : null,
             leftDate: r.leftDate ? new Date(r.leftDate) : null,
           }))

@@ -5,6 +5,7 @@ import {
   createBatch,
   createProfile,
   createTestSchool,
+  createCourse,
   createTrack,
   enroll as enrollFixture,
   type TestWorld,
@@ -58,8 +59,9 @@ describe('putOnBreak', () => {
   it("only updates the targeted (batchId, profileId) pair, not the profile's other enrollments", async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
+    const otherTrack = await createTrack(world, { course: await createCourse(world) })
     const batchA = await createBatch(world, track)
-    const batchB = await createBatch(world, track)
+    const batchB = await createBatch(world, otherTrack)
     const student = await createProfile(world)
     await enrollFixture(world, student, batchA, 'student')
     await enrollFixture(world, student, batchB, 'student')

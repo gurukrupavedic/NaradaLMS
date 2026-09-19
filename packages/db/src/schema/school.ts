@@ -12,6 +12,7 @@ import {
   index,
   primaryKey,
   uniqueIndex,
+  foreignKey,
   check,
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
@@ -118,14 +119,33 @@ export const examOutcome = pgEnum('examOutcome', [
 ])
 export const registrationStatus = pgEnum('registrationStatus', ['pending', 'approved', 'rejected'])
 
+// A school runs one or more courses (Vedam, Smartam, ...). A course owns its tracks, and through
+// them its chapters, batches, exams and evaluations — those all reach their course via
+// `track.courseId`. Courses are seeded, not managed from the app. `slug` is what a hostname or the
+// `x-course-slug` header carries (`vedam.slmts.naradas.app` → `vedam`).
+export const course = pgTable('course', {
+  id: uuid('id').primaryKey().$defaultFn(uuidv7),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+})
+
 export const track = pgTable(
   'track',
   {
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    courseId: uuid('courseId')
+      .notNull()
+      .references(() => course.id),
     name: text('name').notNull(),
     order: integer('order').notNull(),
   },
-  table => [uniqueIndex('track_order_uidx').on(table.order)],
+  table => [
+    // Tracks are ordered within their course, so two courses can each have a "track 1".
+    uniqueIndex('track_courseId_order_uidx').on(table.courseId, table.order),
+    // Not a second uniqueness rule (`id` is already unique) — the target `batch`'s composite
+    // foreign key needs, so a batch's course can never disagree with its track's.
+    uniqueIndex('track_id_courseId_uidx').on(table.id, table.courseId),
+  ],
 )
 
 export const chapter = pgTable(
@@ -280,16 +300,33 @@ export const stagedUpload = pgTable(
   ],
 )
 
-export const batch = pgTable('batch', {
-  id: uuid('id').primaryKey().$defaultFn(uuidv7),
-  trackId: uuid('trackId')
-    .notNull()
-    .references(() => track.id),
-  code: text('code').notNull().unique(),
-  status: batchStatus('status').notNull().default('upcoming'),
-  startDate: timestamp('startDate'),
-  meetingUrl: text('meetingUrl'),
-})
+// `courseId` duplicates what `trackId` already implies, on purpose: `enrollment` needs the course
+// on its own row for the one-active-seat-per-course index below, and a copy is only safe if the
+// database refuses to let it drift. The composite foreign key does that — a batch can only carry
+// the course its track belongs to — and `enrollment` does the same against this table.
+export const batch = pgTable(
+  'batch',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    trackId: uuid('trackId')
+      .notNull()
+      .references(() => track.id),
+    courseId: uuid('courseId').notNull(),
+    code: text('code').notNull().unique(),
+    status: batchStatus('status').notNull().default('upcoming'),
+    startDate: timestamp('startDate'),
+    meetingUrl: text('meetingUrl'),
+  },
+  table => [
+    foreignKey({
+      name: 'batch_trackId_courseId_fk',
+      columns: [table.trackId, table.courseId],
+      foreignColumns: [track.id, track.courseId],
+    }),
+    uniqueIndex('batch_id_courseId_uidx').on(table.id, table.courseId),
+    index('batch_courseId_idx').on(table.courseId),
+  ],
+)
 
 // A batch typically meets multiple times a week (e.g. Mon/Wed/Fri), each potentially at a
 // different time — a one-to-many child table rather than array columns on `batch`.
@@ -319,6 +356,9 @@ export const enrollment = pgTable(
     batchId: uuid('batchId')
       .notNull()
       .references(() => batch.id, { onDelete: 'cascade' }),
+    // Always the course of `batchId`'s batch — enforced by the composite foreign key below, so
+    // callers copy it from the batch and can never get it wrong.
+    courseId: uuid('courseId').notNull(),
     role: enrollmentRole('role').notNull(),
     status: enrollmentStatus('status').notNull().default('active'),
     joinedAt: timestamp('joinedAt').defaultNow(),
@@ -327,6 +367,18 @@ export const enrollment = pgTable(
   table => [
     primaryKey({ columns: [table.profileId, table.batchId] }),
     index('enrollment_batchId_idx').on(table.batchId),
+    foreignKey({
+      name: 'enrollment_batchId_courseId_fk',
+      columns: [table.batchId, table.courseId],
+      foreignColumns: [batch.id, batch.courseId],
+    }).onDelete('cascade'),
+    // A student holds at most one live batch per course. Only an `active` student seat counts:
+    // `break`, `dropped` and `inactive` mean "not currently in any batch", and a batch being marked
+    // completed moves its active students to `inactive` (batches/service.ts), so a finished batch
+    // frees the seat. Instructors and TAs are exempt — they can teach several batches at once.
+    uniqueIndex('enrollment_one_active_student_seat_per_course')
+      .on(table.profileId, table.courseId)
+      .where(sql`${table.role} = 'student' AND ${table.status} = 'active'`),
   ],
 )
 
@@ -465,6 +517,10 @@ export const registration = pgTable(
   {
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
     status: registrationStatus('status').notNull().default('pending'),
+    // The course the applicant is applying to.
+    courseId: uuid('courseId')
+      .notNull()
+      .references(() => course.id),
 
     firstName: text('firstName').notNull(),
     lastName: text('lastName').notNull(),

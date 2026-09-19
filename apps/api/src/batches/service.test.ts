@@ -9,6 +9,8 @@ import * as repository from './repository'
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
 vi.mock('./repository', () => ({
+  findTrackCourseId: vi.fn(),
+  endActiveStudentSeats: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
   findById: vi.fn(),
@@ -23,6 +25,38 @@ const context = { db }
 describe('createBatch', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.mocked(repository.findTrackCourseId).mockResolvedValue('course-1')
+  })
+
+  it("stores the track's course on the new batch rather than taking one from the request", async () => {
+    vi.mocked(repository.insert).mockResolvedValue({
+      id: 'batch-1',
+      trackId: 'track-1',
+      courseId: 'course-1',
+      code: 'B1',
+      status: 'upcoming',
+      startDate: null,
+      meetingUrl: null,
+    })
+
+    await createBatch(context, { trackId: 'track-1', code: 'B1' })
+
+    expect(repository.findTrackCourseId).toHaveBeenCalledWith(db, 'track-1')
+    expect(repository.insert).toHaveBeenCalledWith(db, {
+      trackId: 'track-1',
+      code: 'B1',
+      courseId: 'course-1',
+    })
+  })
+
+  it('422s for a track that does not exist, without inserting', async () => {
+    vi.mocked(repository.findTrackCourseId).mockResolvedValue(undefined)
+
+    await expect(createBatch(context, { trackId: 'nope', code: 'B1' })).rejects.toMatchObject({
+      statusCode: 422,
+      message: 'unknown or invalid track',
+    })
+    expect(repository.insert).not.toHaveBeenCalled()
   })
 
   it('maps batch_trackId_track_id_fk to a 422 with a track-specific message', async () => {
@@ -76,6 +110,55 @@ describe('updateBatch', () => {
       message: 'a batch with this code already exists',
     })
   })
+
+  describe('marking a batch completed', () => {
+    const tx = {}
+    const transactionMock = vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback(tx))
+    const txContext = { db: { transaction: transactionMock } as unknown as SchoolDbClient }
+    const completed = {
+      id: 'batch-1',
+      trackId: 'track-1',
+      courseId: 'course-1',
+      code: 'B1',
+      status: 'completed' as const,
+      startDate: null,
+      meetingUrl: null,
+    }
+
+    beforeEach(() => {
+      transactionMock.mockImplementation(async callback => callback(tx))
+    })
+
+    it("ends the students' active seats in the same transaction, after the batch itself is updated", async () => {
+      vi.mocked(repository.update).mockResolvedValue(completed)
+
+      await updateBatch(txContext, 'batch-1', { status: 'completed' })
+
+      expect(transactionMock).toHaveBeenCalledTimes(1)
+      expect(repository.update).toHaveBeenCalledWith(tx, 'batch-1', { status: 'completed' })
+      expect(repository.endActiveStudentSeats).toHaveBeenCalledWith(tx, 'batch-1')
+      expect(vi.mocked(repository.update).mock.invocationCallOrder[0]).toBeLessThan(
+        vi.mocked(repository.endActiveStudentSeats).mock.invocationCallOrder[0]!,
+      )
+    })
+
+    it('404s for a batch that does not exist, without touching any seats', async () => {
+      vi.mocked(repository.update).mockResolvedValue(undefined)
+
+      await expect(updateBatch(txContext, 'batch-1', { status: 'completed' })).rejects.toMatchObject({
+        statusCode: 404,
+      })
+      expect(repository.endActiveStudentSeats).not.toHaveBeenCalled()
+    })
+
+    it.each(['upcoming', 'active'] as const)('leaves seats alone when the status becomes %s', async status => {
+      vi.mocked(repository.update).mockResolvedValue({ ...completed, status })
+
+      await updateBatch(context, 'batch-1', { status })
+
+      expect(repository.endActiveStudentSeats).not.toHaveBeenCalled()
+    })
+  })
 })
 
 describe('findByIdWithMembers', () => {
@@ -87,6 +170,7 @@ describe('findByIdWithMembers', () => {
     const detail = {
       id: 'batch-1',
       trackId: 'track-1',
+      courseId: 'course-1',
       code: 'B1',
       status: 'active' as const,
       startDate: null,
@@ -146,6 +230,7 @@ describe('setClassSlots', () => {
     vi.mocked(repository.findById).mockResolvedValue({
       id: 'batch-1',
       trackId: 'track-1',
+      courseId: 'course-1',
       code: 'B1',
       status: 'active',
       startDate: null,
@@ -170,6 +255,7 @@ describe('setClassSlots', () => {
     vi.mocked(repository.findById).mockResolvedValue({
       id: 'batch-1',
       trackId: 'track-1',
+      courseId: 'course-1',
       code: 'B1',
       status: 'active',
       startDate: null,

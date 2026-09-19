@@ -249,6 +249,10 @@ cd tools
 pnpm exec tsx src/import-school.ts data --slug slmts --name "SLMTS"
 ```
 
+Every imported track goes into one course, `vedam` by default (`--course <slug>` to change it; it is
+created if missing). The dry run also rejects any student who would hold more than one **active**
+seat in that course, naming each offender, since the database allows only one.
+
 (No `--commit` — this only validates and reports. **Nothing is written in this step.**)
 
 **Expect:**

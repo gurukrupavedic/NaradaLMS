@@ -6,7 +6,7 @@ import { track } from '@narada/db'
 import * as examRepository from '../exams/repository'
 import { destroyTestWorld } from '../testing/cleanup'
 import { pgErrorCode } from '../testing/concurrency'
-import { createBatch, createChapter, createProfile, createTestSchool, createTrack, enroll, type TestWorld } from '../testing/fixtures'
+import { createBatch, createChapter, createProfile, createTestSchool, createCourse, createTrack, enroll, type TestWorld } from '../testing/fixtures'
 import { parse } from '../utils/validate'
 import {
   deleteClassSlots,
@@ -404,9 +404,11 @@ describe(
     it("the 'all' scope returns every batch with roster/classSlots, nulling role for a batch the target profile doesn't teach", async () => {
       world = await createTestSchool()
       const trackRow = await createTrack(world)
+      const otherTrack = await createTrack(world, { course: await createCourse(world) })
       const admin = await createProfile(world, { name: 'Admin' })
       const taughtBatch = await createBatch(world, trackRow)
-      const untaughtBatch = await createBatch(world, trackRow)
+      // Another course: the student is active in both batches, which one course would forbid.
+      const untaughtBatch = await createBatch(world, otherTrack)
       const student = await createProfile(world, { name: 'A Student' })
       await enroll(world, admin, taughtBatch, 'instructor')
       await enroll(world, student, taughtBatch, 'student')

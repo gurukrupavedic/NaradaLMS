@@ -28,9 +28,11 @@ export async function findById(context: RegistrationServiceContext, id: string):
 export async function submit(
   context: RegistrationServiceContext,
   data: CreateRegistrationData,
+  courseId: string,
 ): Promise<Registration> {
   const row = await repository.insert(context.db, {
     ...data,
+    courseId,
     countryTimeZone: deriveTimeZone({ city: data.city, state: data.state, country: data.country }),
   })
   if (!row) {

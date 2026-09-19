@@ -47,7 +47,7 @@ export async function findById(db: SchoolDb, id: string): Promise<Registration |
  */
 export async function insert(
   db: SchoolDb,
-  data: CreateRegistrationData & { countryTimeZone: string | null },
+  data: CreateRegistrationData & { courseId: string; countryTimeZone: string | null },
 ): Promise<Registration | undefined> {
   const rows = await db.insert(registration).values(data).returning()
   return rows.at(0)

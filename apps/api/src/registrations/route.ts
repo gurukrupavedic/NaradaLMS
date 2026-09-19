@@ -2,6 +2,7 @@ import { Router } from 'express'
 import * as z from 'zod'
 
 import { optionalProfileRoute, schoolRoute } from '../naradaRoute'
+import { resolveCourse } from '../courses/service'
 import { parse } from '../utils/validate'
 import { CreateRegistrationSchema, FindRegistrationsSchema } from './schema'
 import { approve, findAll, findById, reject, submit } from './service'
@@ -14,7 +15,10 @@ router.post(
   '/',
   schoolRoute(async ({ req, res, db }) => {
     const data = await parse(CreateRegistrationSchema, req.body)
-    const created = await submit({ db }, data)
+    // The course being applied to comes from the request's course context, not the body. With one
+    // course it is that course; see `resolveCourse`.
+    const course = await resolveCourse(db, req.get('x-course-slug'))
+    const created = await submit({ db }, data, course.id)
     res.status(201).json({ data: created })
   }),
 )

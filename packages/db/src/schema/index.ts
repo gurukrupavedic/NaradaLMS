@@ -5,6 +5,7 @@ export * from './relations'
 import { user, session, account, verification, organization, member, invitation, deviceLinkCode } from './auth'
 import {
   profile,
+  course,
   track,
   chapter,
   chapterScript,
@@ -31,6 +32,7 @@ import {
   invitationRelations,
   deviceLinkCodeRelations,
   profileRelations,
+  courseRelations,
   trackRelations,
   chapterRelations,
   chapterScriptRelations,
@@ -69,6 +71,7 @@ export const publicSchema = {
 /** Profile/content/batch/enrollment/exam/evaluation tables and their relations. Backs SchoolDbClient's `.query` surface. */
 export const schoolSchema = {
   profile,
+  course,
   track,
   chapter,
   chapterScript,
@@ -86,6 +89,7 @@ export const schoolSchema = {
   examResult,
   registration,
   profileRelations,
+  courseRelations,
   trackRelations,
   chapterRelations,
   chapterScriptRelations,

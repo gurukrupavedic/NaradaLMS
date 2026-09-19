@@ -3,7 +3,14 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { publicDb } from '@narada/db'
 
 import { destroyTestWorld } from '../testing/cleanup'
-import { createProfile, createRegistration, createTestSchool, createUser, type TestWorld } from '../testing/fixtures'
+import {
+  createCourse,
+  createProfile,
+  createRegistration,
+  createTestSchool,
+  createUser,
+  type TestWorld,
+} from '../testing/fixtures'
 import { approve, findAll, findById, reject, submit } from './service'
 
 let world: TestWorld | undefined
@@ -45,6 +52,7 @@ describe('submit', () => {
         readLanguages: [],
         parentNames: ['Parent One'],
       },
+      (await createCourse(world)).id,
     )
 
     expect(row.status).toBe('pending')
@@ -60,6 +68,7 @@ describe('submit', () => {
     const row = await submit(
       { db: world.schoolDb },
       { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15551234567' },
+      (await createCourse(world)).id,
     )
 
     expect(row.spokenLanguages).toEqual([])
@@ -83,6 +92,7 @@ describe('submit', () => {
         state: 'TG',
         country: 'IN',
       },
+      (await createCourse(world)).id,
     )
 
     expect(row.countryTimeZone).toBe('Asia/Kolkata')
@@ -94,6 +104,7 @@ describe('submit', () => {
     const row = await submit(
       { db: world.schoolDb },
       { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15556660098' },
+      (await createCourse(world)).id,
     )
 
     expect(row.countryTimeZone).toBeNull()
@@ -192,6 +203,7 @@ describe('approve', () => {
         state: 'TG',
         country: 'IN',
       },
+      (await createCourse(world)).id,
     )
 
     const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
