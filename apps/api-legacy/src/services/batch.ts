@@ -320,7 +320,14 @@ export async function setClassSlots(
 }
 
 export async function createBatch(db: SchoolDbExecutor, data: CreateBatchData): Promise<Batch> {
-  const rows = await db.insert(batch).values(data).returning()
+  // A batch carries its track's course (the schema's composite foreign key enforces it).
+  const trackRow = await db.query.track.findFirst({
+    where: (t, { eq }) => eq(t.id, data.trackId),
+    columns: { courseId: true },
+  })
+  if (!trackRow) throw notFound()
+
+  const rows = await db.insert(batch).values({ ...data, courseId: trackRow.courseId }).returning()
   const row = rows.at(0)
   if (!row) throw internalError()
   return row

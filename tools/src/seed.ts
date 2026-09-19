@@ -16,6 +16,7 @@ import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
 import {
   requireSchool,
   upsertBatch,
+  upsertCourse,
   upsertChapter,
   upsertEnrollment,
   upsertOrgMember,
@@ -247,10 +248,12 @@ async function seedSchool(input: SchoolSeedInput) {
     const totalBatches = input.numTracks * input.numBatches
     const studentsPerBatch =
       totalBatches === 0 ? 0 : Math.max(1, Math.ceil(input.numStudents / totalBatches))
+    // Seed data all lives in one course, like the real school's single course today.
+    const courseRow = await upsertCourse(schoolDb, 'vedam', 'Vedam')
     const trackResults = []
     let batchIndex = 0
     for (let t = 1; t <= input.numTracks; t++) {
-      const trackRow = await upsertTrack(schoolDb, `Seed Track ${t}`)
+      const trackRow = await upsertTrack(schoolDb, courseRow.id, `Seed Track ${t}`)
       const chapters = await Promise.all(
         range(input.numChapters).map(index =>
           upsertChapter(schoolDb, trackRow.id, {

@@ -15,6 +15,8 @@ export type Batch = z.infer<typeof BatchSchema>
 export const BatchSchema = z.object({
   id: z.uuid(),
   trackId: z.uuid(),
+  // The course of `trackId`'s track — derived, never client-supplied (see `CreateBatchSchema`).
+  courseId: z.uuid(),
   code: z.string().min(1),
   status: batchStatusSchema,
   startDate: isoInstant.nullable(),

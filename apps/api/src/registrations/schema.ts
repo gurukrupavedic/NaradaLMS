@@ -15,6 +15,8 @@ export type Registration = z.infer<typeof RegistrationSchema>
 export const RegistrationSchema = z.object({
   id: z.uuid(),
   status: registrationStatusSchema,
+  // The course applied to — set from the request's course context, never by the applicant's body.
+  courseId: z.uuid(),
 
   firstName: z.string().trim().min(1),
   lastName: z.string().trim().min(1),

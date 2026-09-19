@@ -5,6 +5,7 @@ import {
   createBatch,
   createProfile,
   createTestSchool,
+  createCourse,
   createTrack,
   enroll as enrollFixture,
   type TestWorld,
@@ -55,8 +56,10 @@ describe('moveEnrollment', () => {
   it('rejects with 409, leaving the original enrollment intact, when already enrolled in the destination batch', async () => {
     world = await createTestSchool()
     const track = await createTrack(world)
+    const otherTrack = await createTrack(world, { course: await createCourse(world) })
     const fromBatch = await createBatch(world, track)
-    const toBatch = await createBatch(world, track)
+    // Another course, so the student can hold an active seat in both.
+    const toBatch = await createBatch(world, otherTrack)
     const student = await createProfile(world)
     await enrollFixture(world, student, fromBatch, 'student')
     await enrollFixture(world, student, toBatch, 'student')

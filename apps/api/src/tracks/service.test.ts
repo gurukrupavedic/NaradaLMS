@@ -27,7 +27,7 @@ beforeEach(() => {
 
 describe('findAll', () => {
   it('delegates straight through to the repository', async () => {
-    const tracks = [{ id: 'track-1', name: 'Track One', order: 1, chapters: [] }]
+    const tracks = [{ id: 'track-1', courseId: 'course-1', name: 'Track One', order: 1, chapters: [] }]
     vi.mocked(repository.findAll).mockResolvedValue(tracks)
 
     await expect(findAll(context, { kind: 'learnerPreview' })).resolves.toEqual(tracks)
@@ -43,7 +43,7 @@ describe('findAll', () => {
 
 describe('findById', () => {
   it('returns the track when found', async () => {
-    const track = { id: 'track-1', name: 'Track One', order: 1, chapters: [] }
+    const track = { id: 'track-1', courseId: 'course-1', name: 'Track One', order: 1, chapters: [] }
     vi.mocked(repository.findById).mockResolvedValue(track)
 
     await expect(findById(context, 'track-1', { kind: 'authoring' })).resolves.toEqual(track)
@@ -59,7 +59,7 @@ describe('findById', () => {
 })
 
 describe('reorderChapters', () => {
-  const track = { id: 'track-1', name: 'Track One', order: 1, chapters: [] }
+  const track = { id: 'track-1', courseId: 'course-1', name: 'Track One', order: 1, chapters: [] }
 
   it('reorders when the submitted ids exactly match the active set', async () => {
     vi.mocked(repository.findById).mockResolvedValue(track)

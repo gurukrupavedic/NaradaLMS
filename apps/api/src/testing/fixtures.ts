@@ -6,6 +6,7 @@ import {
   chapter,
   chapterScript,
   chapterScriptSegment,
+  course,
   enrollment,
   enrollmentRequest,
   evaluation,
@@ -34,6 +35,7 @@ export type UserRow = typeof user.$inferSelect
 export type MemberRow = typeof member.$inferSelect
 export type SessionRow = typeof session.$inferSelect
 export type ProfileRow = typeof profile.$inferSelect
+export type CourseRow = typeof course.$inferSelect
 export type TrackRow = typeof track.$inferSelect
 export type ChapterRow = typeof chapter.$inferSelect
 export type ChapterScriptRow = typeof chapterScript.$inferSelect
@@ -210,13 +212,47 @@ export async function createProfile(
   return row
 }
 
+export async function createCourse(
+  world: TestWorld,
+  overrides?: { slug?: string; name?: string },
+): Promise<CourseRow> {
+  const slug = overrides?.slug ?? `course-${nextUnique()}`
+  const rows = await world.schoolDb
+    .insert(course)
+    .values({ slug, name: overrides?.name ?? `Course ${slug}` })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createCourse: insert returned no row')
+  return row
+}
+
+/**
+ * The course every builder falls back to, so the many tests that have nothing to say about courses
+ * still get a valid one — a school's data always belongs to a course. Get-or-create rather than
+ * create, because builders run concurrently inside a single test (`Promise.all`).
+ */
+async function defaultCourse(world: TestWorld): Promise<CourseRow> {
+  await world.schoolDb
+    .insert(course)
+    .values({ slug: 'test-course', name: 'Test Course' })
+    .onConflictDoNothing({ target: course.slug })
+  const row = await world.schoolDb.query.course.findFirst({
+    where: (t, { eq: eqCol }) => eqCol(t.slug, 'test-course'),
+  })
+  if (!row) throw new Error('defaultCourse: course row missing after insert')
+  return row
+}
+
 export async function createTrack(
   world: TestWorld,
-  overrides?: { name?: string; order?: number },
+  overrides?: { name?: string; order?: number; course?: CourseRow },
 ): Promise<TrackRow> {
+  const courseId = overrides?.course?.id ?? (await defaultCourse(world)).id
   const rows = await world.schoolDb
     .insert(track)
     .values({
+      courseId,
       name: overrides?.name ?? `Track ${nextUnique()}`,
       order: overrides?.order ?? nextTrackOrder(),
     })
@@ -448,6 +484,7 @@ export async function createBatch(
     .insert(batch)
     .values({
       trackId: track_.id,
+      courseId: track_.courseId,
       code: overrides?.code ?? `batch-${nextUnique()}`,
       status: overrides?.status ?? 'upcoming',
       startDate: overrides?.startDate ?? null,
@@ -485,13 +522,16 @@ export async function enroll(
   profileRow: ProfileRow,
   batchRow: BatchRow,
   role: 'instructor' | 'ta' | 'student',
+  status?: EnrollmentRow['status'],
 ): Promise<EnrollmentRow> {
   const rows = await world.schoolDb
     .insert(enrollment)
     .values({
       profileId: profileRow.id,
       batchId: batchRow.id,
+      courseId: batchRow.courseId,
       role,
+      ...(status && { status }),
     })
     .returning()
 
@@ -633,6 +673,7 @@ export async function createRegistration(
     firstName?: string
     lastName?: string
     yearOfBirth?: number
+    course?: CourseRow
     phone?: string
     email?: string | null
     learningGoal?: string | null
@@ -640,9 +681,11 @@ export async function createRegistration(
     reviewedBy?: string | null
   },
 ): Promise<RegistrationRow> {
+  const courseId = overrides?.course?.id ?? (await defaultCourse(world)).id
   const rows = await world.schoolDb
     .insert(registration)
     .values({
+      courseId,
       status: overrides?.status ?? 'pending',
       firstName: overrides?.firstName ?? 'Test',
       lastName: overrides?.lastName ?? `Student ${nextUnique()}`,

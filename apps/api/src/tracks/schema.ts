@@ -5,6 +5,7 @@ import { ChapterSchema } from '../chapters/schema'
 export type Track = z.infer<typeof TrackSchema>
 export const TrackSchema = z.object({
   id: z.uuid(),
+  courseId: z.uuid(),
   name: z.string(),
   order: z.number().int(),
 })

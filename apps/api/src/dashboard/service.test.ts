@@ -66,6 +66,7 @@ describe('getDashboardData', () => {
       {
         id: 'batch-student',
         trackId: 'track-1',
+        courseId: 'course-1',
         code: 'B1',
         status: 'active',
         startDate: null,
@@ -87,12 +88,14 @@ describe('getDashboardData', () => {
     vi.mocked(tracksService.findAll).mockResolvedValue([
       {
         id: 'track-1',
+        courseId: 'course-1',
         name: 'Track 1',
         order: 1,
         chapters: [{ id: 'chapter-1', trackId: 'track-1', code: 'C1', title: 'C1', status: 'published', order: 1, script: null }],
       },
       {
         id: 'track-2',
+        courseId: 'course-1',
         name: 'Track 2',
         order: 2,
         chapters: [{ id: 'chapter-2', trackId: 'track-2', code: 'C2', title: 'C2', status: 'published', order: 1, script: null }],
@@ -103,6 +106,7 @@ describe('getDashboardData', () => {
       {
         id: 'batch-A',
         trackId: 'track-1',
+        courseId: 'course-1',
         code: 'A',
         status: 'active',
         startDate: null,
@@ -115,6 +119,7 @@ describe('getDashboardData', () => {
       {
         id: 'batch-B',
         trackId: 'track-2',
+        courseId: 'course-1',
         code: 'B',
         status: 'active',
         startDate: null,
@@ -170,6 +175,7 @@ describe('getDashboardData', () => {
       {
         id: 'batch-A',
         trackId: 'track-1',
+        courseId: 'course-1',
         code: 'A',
         status: 'active',
         startDate: null,
@@ -181,13 +187,13 @@ describe('getDashboardData', () => {
       },
     ])
     vi.mocked(batchesRepository.findAllForProfiles).mockResolvedValue(
-      new Map([['student-1', [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }]]]),
+      new Map([['student-1', [{ id: 'past-batch', trackId: 'track-1', courseId: 'course-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }]]]),
     )
 
     const data = await getDashboardData(context, 'me', 'Me')
 
     expect(data.pastBatchesByStudent).toEqual([
-      { studentId: 'student-1', batches: [{ id: 'past-batch', trackId: 'track-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }] },
+      { studentId: 'student-1', batches: [{ id: 'past-batch', trackId: 'track-1', courseId: 'course-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }] },
     ])
   })
 
@@ -196,6 +202,7 @@ describe('getDashboardData', () => {
       {
         id: 'batch-A',
         trackId: 'track-1',
+        courseId: 'course-1',
         code: 'A',
         status: 'active' as const,
         startDate: null,
@@ -206,7 +213,7 @@ describe('getDashboardData', () => {
         classSlots: [],
       },
     ]
-    const tracks = [{ id: 'track-1', name: 'Track 1', order: 1, chapters: [] }]
+    const tracks = [{ id: 'track-1', courseId: 'course-1', name: 'Track 1', order: 1, chapters: [] }]
     const studentEvaluations = [
       {
         id: 'eval-1',
@@ -227,7 +234,7 @@ describe('getDashboardData', () => {
         batchId: 'batch-A',
         scheduledAt: new Date(),
         status: 'scheduled' as const,
-        track: { id: 'track-1', name: 'Track 1' },
+        track: { id: 'track-1', courseId: 'course-1', name: 'Track 1' },
         result: null,
       },
     ]

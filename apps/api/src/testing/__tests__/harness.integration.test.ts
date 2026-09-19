@@ -6,7 +6,7 @@ import { publicDb, track } from '@narada/db'
 
 import { destroyTestWorld } from '../cleanup'
 import { issuePending, withTwoConnections } from '../concurrency'
-import { createProfile, createTestSchool, type TestWorld } from '../fixtures'
+import { createCourse, createProfile, createTestSchool, type TestWorld } from '../fixtures'
 
 let world: TestWorld | undefined
 
@@ -65,7 +65,7 @@ describe('barrier proof: two real Postgres connections, a genuine blocking UPDAT
     world = await createTestSchool()
     const trackRows = await world.schoolDb
       .insert(track)
-      .values({ name: 'Concurrency Track', order: 1 })
+      .values({ courseId: (await createCourse(world)).id, name: 'Concurrency Track', order: 1 })
       .returning()
     const trackRow = trackRows.at(0)
     if (!trackRow) throw new Error('setup failed')

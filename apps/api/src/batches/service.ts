@@ -1,4 +1,4 @@
-import { type SchoolDbClient } from '@narada/db'
+import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound, unprocessable } from '../error'
 import type { BatchReadScope } from '../utils/accessPolicy'
@@ -61,10 +61,20 @@ export async function createBatch(
   context: BatchServiceContext,
   data: CreateBatchData,
 ): Promise<Batch> {
-  const row = await withConstraintMapping(() => repository.insert(context.db, data), {
-    [DbConstraint.batchTrackIdFk]: () => unprocessable('unknown or invalid track'),
-    [DbConstraint.batchCodeUnique]: () => conflict('a batch with this code already exists'),
-  })
+  // A batch's course is its track's course — copied down rather than accepted from the request, and
+  // the composite foreign key refuses any other value.
+  const courseId = await repository.findTrackCourseId(context.db, data.trackId)
+  if (!courseId) {
+    throw unprocessable('unknown or invalid track')
+  }
+
+  const row = await withConstraintMapping(
+    () => repository.insert(context.db, { ...data, courseId }),
+    {
+      [DbConstraint.batchTrackIdFk]: () => unprocessable('unknown or invalid track'),
+      [DbConstraint.batchCodeUnique]: () => conflict('a batch with this code already exists'),
+    },
+  )
 
   if (!row) {
     throw internalError()
@@ -73,20 +83,40 @@ export async function createBatch(
   return row
 }
 
+/**
+ * Marking a batch `completed` also ends its students' active seats, in the same transaction — see
+ * `repository.endActiveStudentSeats` for why. Re-opening a completed batch does not bring them back:
+ * who was still enrolled at the end isn't recoverable from the roster, so that's a deliberate
+ * re-enrolment rather than something to guess at.
+ */
 export async function updateBatch(
   context: BatchServiceContext,
   id: string,
   data: UpdateBatchData,
 ): Promise<Batch> {
-  const row = await withConstraintMapping(() => repository.update(context.db, id, data), {
-    [DbConstraint.batchCodeUnique]: () => conflict('a batch with this code already exists'),
-  })
+  const write = (db: SchoolDb) =>
+    withConstraintMapping(() => repository.update(db, id, data), {
+      [DbConstraint.batchCodeUnique]: () => conflict('a batch with this code already exists'),
+    })
 
-  if (!row) {
-    throw notFound()
+  if (data.status !== 'completed') {
+    const row = await write(context.db)
+    if (!row) {
+      throw notFound()
+    }
+
+    return row
   }
 
-  return row
+  return context.db.transaction(async tx => {
+    const row = await write(tx)
+    if (!row) {
+      throw notFound()
+    }
+
+    await repository.endActiveStudentSeats(tx, id)
+    return row
+  })
 }
 
 export async function findOpenBatches(context: BatchServiceContext): Promise<OpenBatch[]> {

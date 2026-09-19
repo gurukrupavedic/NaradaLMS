@@ -41,10 +41,23 @@ export async function enrollProfile(
     throw conflict()
   }
 
+  // An enrollment carries its batch's course (the schema's composite foreign key enforces it).
+  const batchRow = await db.query.batch.findFirst({
+    where: (t, { eq }) => eq(t.id, batchId),
+    columns: { courseId: true },
+  })
+  if (!batchRow) throw notFound()
+
   const rows = await db
     .insert(enrollment)
-    .values({ batchId, profileId: data.profileId, role: data.role })
+    .values({ batchId, courseId: batchRow.courseId, profileId: data.profileId, role: data.role })
     .returning()
+    .catch((error: unknown) => {
+      // One active seat per course for a student: report it as the conflict it is, not a 500.
+      const cause = (error as { cause?: { constraint?: string } }).cause
+      if (cause?.constraint === 'enrollment_one_active_student_seat_per_course') throw conflict()
+      throw error
+    })
 
   const row = rows.at(0)
   if (!row) throw internalError()

@@ -68,10 +68,11 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     })
 
     // A past batch for the taught student, on an unrelated track — should show up under
-    // `pastBatchesByStudent`, independent of the teaching batch itself.
+    // `pastBatchesByStudent`, independent of the teaching batch itself. Past means `inactive`: the
+    // student can only hold one *active* seat per course, and this one is already over.
     const pastTrack = await createTrack(world)
     const pastBatch = await createBatch(world, pastTrack)
-    await enroll(world, taughtStudent, pastBatch, 'student')
+    await enroll(world, taughtStudent, pastBatch, 'student', 'inactive')
 
     const data = await getDashboardData({ db: world.schoolDb }, me.id, me.name)
 

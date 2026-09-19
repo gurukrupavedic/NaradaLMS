@@ -229,15 +229,26 @@ Pending invitations to join a school. BetterAuth manages the full lifecycle.
 
 These tables are created in each `school_<id>` schema. All tables are identical across schools. References to `public.user.id` are stored as plain text IDs (logical references, not cross-schema foreign keys) and validated at the application layer.
 
+### `course`
+
+A school runs one or more courses (Vedam, Smartam, ...). A course owns its tracks, and through them its chapters, batches, exams and evaluations. Courses are seeded, not managed from the app. SLMTS has a single course today, `vedam`.
+
+| Column | Type | Constraints                                                                          |
+| ------ | ---- | ------------------------------------------------------------------------------------ |
+| `id`   | uuid | PK                                                                                   |
+| `slug` | text | NOT NULL, UNIQUE — what a hostname or the `x-course-slug` header carries (`vedam`)   |
+| `name` | text | NOT NULL                                                                             |
+
 ### `track`
 
-An ordered curriculum. Tracks are authored by admins and assigned to batches.
+An ordered curriculum belonging to one course. Tracks are authored by admins and assigned to batches.
 
-| Column  | Type | Constraints |
-| ------- | ---- | ----------- |
-| `id`    | uuid | PK          |
-| `name`  | text | NOT NULL    |
-| `order` | int  | NOT NULL    |
+| Column     | Type | Constraints                                       |
+| ---------- | ---- | ------------------------------------------------- |
+| `id`       | uuid | PK                                                |
+| `courseId` | uuid | NOT NULL, FK to `course.id`                       |
+| `name`     | text | NOT NULL                                          |
+| `order`    | int  | NOT NULL, UNIQUE per course (`courseId`, `order`) |
 
 ### `chapter`
 
@@ -316,6 +327,7 @@ Domain-specific data for a batch (cohort). Batch membership and batch-level role
 | `id`           | uuid        | PK                                      |
 | `code`         | text        | UNIQUE                                  |
 | `trackId`      | uuid        | FK to `track.id`                        |
+| `courseId`     | uuid        | NOT NULL — always the track's course    |
 | `startDate`    | date        |                                         |
 | `status`       | enum        | `'active'`, `'completed'`, `'upcoming'` |
 | `scheduledAt`  | timestamptz |                                         |
@@ -323,18 +335,26 @@ Domain-specific data for a batch (cohort). Batch membership and batch-level role
 
 ### `enrollment`
 
-Batch-level role assignment and profile data. This table records that a user belongs to a batch, plus role (instructor, ta, student), status, and profile fields. One enrollment per user per batch.
+A profile's place in a batch, with a role (instructor, ta, student) and a status. One row per profile per batch.
 
-| Column      | Type        | Constraints                             |
-| ----------- | ----------- | --------------------------------------- |
-| `userId`    | text        | logical ref to `public.user.id`         |
-| `batchId`   | uuid        | FK to `batch.id`                        |
-| `phone`     | text        |                                         |
-| `city`      | text        |                                         |
-| `role`      | enum        | `'instructor'`, `'ta'`, `'student'`     |
-| `status`    | enum        | `'active'`, `'inactive'`, `'completed'` |
-| `joinedAt`  | timestamptz |                                         |
-|             |             | PK(`userId`, `batchId`)                 |
+| Column      | Type      | Constraints                                                         |
+| ----------- | --------- | ------------------------------------------------------------------- |
+| `profileId` | uuid      | FK to `profile.id`                                                  |
+| `batchId`   | uuid      | FK to `batch.id`                                                    |
+| `courseId`  | uuid      | NOT NULL — always the batch's course                                |
+| `role`      | enum      | `'instructor'`, `'ta'`, `'student'`                                 |
+| `status`    | enum      | `'active'`, `'break'`, `'dropped'`, `'inactive'`                    |
+| `joinedAt`  | timestamp |                                                                     |
+| `leftDate`  | timestamp |                                                                     |
+|             |           | PK(`profileId`, `batchId`)                                          |
+
+**A student holds at most one live batch per course.** A partial unique index on (`profileId`, `courseId`) where `role = 'student'` and `status = 'active'` enforces it in the database, so two racing requests can't both win. Only an `active` student seat counts: `break`, `dropped` and `inactive` mean "not currently in any batch". Instructors and TAs are exempt and can teach several batches at once.
+
+- Marking a batch `completed` moves its active student enrollments to `inactive`, which frees the seat; re-opening the batch does not bring them back.
+- Putting a student back from a break is the same act as seating them, and takes the same 409 if they have since joined another batch in that course.
+- A move between batches releases the old seat before taking the new one, in one transaction.
+
+`batch.courseId` and `enrollment.courseId` are copies of what `track` and `batch` already imply, kept so the index can see the course on the row itself. Composite foreign keys (`batch(trackId, courseId)` → `track`, `enrollment(batchId, courseId)` → `batch`) make it impossible for a copy to disagree with its parent.
 
 ### `evaluation`
 

@@ -8,6 +8,7 @@ import {
   createBatch,
   createProfile,
   createTestSchool,
+  createCourse,
   createTrack,
   enroll as enrollFixture,
   type TestWorld,
@@ -73,6 +74,7 @@ describe('enroll', () => {
     await expect(
       world.schoolDb.insert(enrollment).values({
         batchId: crypto.randomUUID(),
+        courseId: crypto.randomUUID(),
         profileId: studentProfile.id,
         role: 'student',
       }),
@@ -109,8 +111,11 @@ describe('unenroll', () => {
   it('only removes the targeted (batchId, profileId) pair, not the profile\'s other enrollments', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
+    // A student can only be active in one batch per course, so the "other" enrollment is in another
+    // course's batch.
+    const otherTrack = await createTrack(world, { course: await createCourse(world) })
     const batchA = await createBatch(world, trackRow)
-    const batchB = await createBatch(world, trackRow)
+    const batchB = await createBatch(world, otherTrack)
     const studentProfile = await createProfile(world)
     await enrollFixture(world, studentProfile, batchA, 'student')
     await enrollFixture(world, studentProfile, batchB, 'student')
