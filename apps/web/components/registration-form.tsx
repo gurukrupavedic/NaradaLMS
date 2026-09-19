@@ -82,11 +82,9 @@ function validateStep(step: number, form: FormState): string | null {
     if (form.email.trim() && !/^\S+@\S+\.\S+$/.test(form.email.trim())) {
       return 'Enter a valid email address, or leave it blank.'
     }
-    if (form.yearOfBirth.trim()) {
-      const year = Number(form.yearOfBirth)
-      if (!Number.isInteger(year) || year < 1900 || year > CURRENT_YEAR) {
-        return `Year of birth should be between 1900 and ${CURRENT_YEAR}.`
-      }
+    const year = Number(form.yearOfBirth)
+    if (!form.yearOfBirth.trim() || !Number.isInteger(year) || year < 1900 || year > CURRENT_YEAR) {
+      return `Enter your year of birth, between 1900 and ${CURRENT_YEAR}.`
     }
   }
   return null
@@ -97,7 +95,7 @@ function toPayload(form: FormState): SubmitRegistrationInput {
     firstName: form.firstName.trim(),
     lastName: form.lastName.trim(),
     phone: form.phone.trim(),
-    yearOfBirth: form.yearOfBirth.trim() ? Number(form.yearOfBirth) : undefined,
+    yearOfBirth: Number(form.yearOfBirth),
     email: form.email.trim() || undefined,
     city: form.city.trim() || undefined,
     country: form.country || undefined,
@@ -244,7 +242,6 @@ export function RegistrationForm() {
               />
               <Field
                 label="Year of birth"
-                hint="Optional"
                 value={form.yearOfBirth}
                 onChange={v => patch({ yearOfBirth: v.replace(/\D/g, '').slice(0, 4) })}
                 placeholder="2005"

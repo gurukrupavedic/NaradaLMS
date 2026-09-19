@@ -1,7 +1,7 @@
 import type { Batch, BatchWithRole } from '../batches/schema'
 import type { Evaluation } from '../evaluations/schema'
-import type { ExamWithDetail } from '../exams/schema'
-import type { TrackCertification, TrackWithChapters } from '../tracks/schema'
+import type { ExamWithDetail, StudentExamResult } from '../exams/schema'
+import type { TrackWithChapters } from '../tracks/schema'
 
 export type TeachingSummary = { batchId: string; evaluations: Evaluation[] }
 export type PastBatchesEntry = { studentId: string; batches: Batch[] }
@@ -14,7 +14,9 @@ export type DashboardData = {
   memberships: BatchWithRole[]
   tracks: TrackWithChapters[]
   studentEvaluations: Evaluation[]
-  certifications: TrackCertification[]
+  // Every graded track exam this profile has sat, newest first. A student's certification on a
+  // track is the latest of these for it (level L3/L4 certifies — see apps/web's `isCertified`).
+  examResults: StudentExamResult[]
   upcomingExams: ExamWithDetail[]
   teaching: TeachingSummary[]
   pastBatchesByStudent: PastBatchesEntry[]

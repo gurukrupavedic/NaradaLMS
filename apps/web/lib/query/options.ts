@@ -3,6 +3,7 @@ import { queryOptions } from '@tanstack/react-query'
 import {
   fetchAdminBatch,
   fetchAdminBatches,
+  fetchAdminSittings,
   fetchAuthProfile,
   fetchBatchesWithRoster,
   fetchCatalogTrack,
@@ -47,6 +48,9 @@ export const keys = {
   },
 
   exams: ['exams'] as const,
+  // Under the `exams` prefix so one invalidation of `exams` refreshes the student's own exams page and
+  // the admin grading screen together (a result recorded changes both).
+  adminExams: ['exams', 'admin'] as const,
 
   batches: {
     all: ['batches'] as const,
@@ -80,6 +84,9 @@ export const keys = {
   },
 
   profiles: {
+    // Prefix key — every cached profile page, for a mutation (recording an exam result) that
+    // changes what any student's profile page shows.
+    detailAll: ['profiles', 'detail'] as const,
     detail: (profileId: string) => ['profiles', 'detail', profileId] as const,
     // Prefix key — invalidating this catches every in-flight search regardless of query text or
     // excludeBatchId, for a mutation (enroll/move) that can change who's addable to any batch.
@@ -137,6 +144,12 @@ export const examsQuery = () =>
   queryOptions({
     queryKey: keys.exams,
     queryFn: fetchExams,
+  })
+
+export const adminSittingsQuery = () =>
+  queryOptions({
+    queryKey: keys.adminExams,
+    queryFn: fetchAdminSittings,
   })
 
 export const adminBatchesQuery = () =>

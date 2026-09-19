@@ -54,7 +54,6 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const learningTracks = buildLearningTracks(dashboard).sort((a, b) => a.order - b.order)
   const certifications = buildCertificationRows(dashboard)
   const certifiedCount = certifications.filter(c => isCertified(c.level)).length
-  const trackNameById = new Map(dashboard.tracks.map(track => [track.id, track.name]))
 
   // Assumes a profile holds at most one live batch at a time (true of every real profile today —
   // see move-batch-drawer.tsx's own doc comment); `.find` rather than every candidate, since
@@ -207,16 +206,11 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
                     key={exam.id}
                     className="flex items-center gap-4 border-b border-rule-soft px-4 py-3.5 last:border-0"
                   >
-                    <span className="w-12 shrink-0 font-mono text-[0.6875rem] text-ink-muted">
-                      {exam.chapter.code}
-                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[0.9375rem] font-medium">
-                        {exam.chapter.title}
+                        {exam.track.name}
                       </span>
-                      <span className="label mt-0.5 block text-ink-muted">
-                        {trackNameById.get(exam.chapter.trackId) ?? exam.chapter.trackId}
-                      </span>
+                      <span className="label mt-0.5 block text-ink-muted">certification exam</span>
                     </span>
                     <span className="shrink-0 font-mono text-[0.75rem] text-ink-muted">
                       <Timestamp variant="dateTime" value={exam.scheduledAt} />

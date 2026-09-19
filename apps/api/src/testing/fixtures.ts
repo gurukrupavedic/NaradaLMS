@@ -10,6 +10,7 @@ import {
   enrollmentRequest,
   evaluation,
   exam,
+  examResult,
   getSchoolDb,
   member,
   organization,
@@ -22,11 +23,11 @@ import {
   session,
   stagedUpload,
   track,
-  trackCertification,
   user,
   type SchoolDbClient,
 } from '@narada/db'
 
+import { gradeExam, type ExamMarks } from '../exams/grading'
 import { newMemberId, newOrgId, newSessionId, newUserId } from './ids'
 
 export type UserRow = typeof user.$inferSelect
@@ -47,7 +48,7 @@ export type EnrollmentRow = typeof enrollment.$inferSelect
 export type EnrollmentRequestRow = typeof enrollmentRequest.$inferSelect
 export type EvaluationRow = typeof evaluation.$inferSelect
 export type ExamRow = typeof exam.$inferSelect
-export type TrackCertificationRow = typeof trackCertification.$inferSelect
+export type ExamResultRow = typeof examResult.$inferSelect
 export type RegistrationRow = typeof registration.$inferSelect
 
 export type TestWorld = {
@@ -185,7 +186,13 @@ export async function createSession(
 
 export async function createProfile(
   world: TestWorld,
-  overrides?: { userId?: string; name?: string; phone?: string | null; city?: string | null },
+  overrides?: {
+    userId?: string
+    name?: string
+    phone?: string | null
+    city?: string | null
+    yearOfBirth?: number | null
+  },
 ): Promise<ProfileRow> {
   const rows = await world.schoolDb
     .insert(profile)
@@ -194,6 +201,7 @@ export async function createProfile(
       name: overrides?.name ?? `Profile ${nextUnique()}`,
       phone: overrides?.phone ?? null,
       city: overrides?.city ?? null,
+      yearOfBirth: overrides?.yearOfBirth ?? null,
     })
     .returning()
 
@@ -544,37 +552,12 @@ export async function createEvaluation(
   return row
 }
 
-export async function createTrackCertification(
-  world: TestWorld,
-  o: {
-    track: TrackRow
-    student: ProfileRow
-    evaluator: ProfileRow
-    level?: TrackCertificationRow['level']
-    notes?: string | null
-  },
-): Promise<TrackCertificationRow> {
-  const rows = await world.schoolDb
-    .insert(trackCertification)
-    .values({
-      trackId: o.track.id,
-      studentId: o.student.id,
-      evaluatorId: o.evaluator.id,
-      level: o.level ?? 'level4',
-      notes: o.notes ?? null,
-    })
-    .returning()
-
-  const row = rows.at(0)
-  if (!row) throw new Error('createTrackCertification: insert returned no row')
-  return row
-}
-
 export async function createExam(
   world: TestWorld,
   o: {
     student: ProfileRow
-    chapter: ChapterRow
+    track: TrackRow
+    batch: BatchRow
     scheduledAt?: Date
     status?: ExamRow['status']
   },
@@ -583,7 +566,8 @@ export async function createExam(
     .insert(exam)
     .values({
       studentId: o.student.id,
-      chapterId: o.chapter.id,
+      trackId: o.track.id,
+      batchId: o.batch.id,
       scheduledAt: o.scheduledAt ?? new Date(),
       status: o.status ?? 'scheduled',
     })
@@ -591,6 +575,48 @@ export async function createExam(
 
   const row = rows.at(0)
   if (!row) throw new Error('createExam: insert returned no row')
+  return row
+}
+
+// A default sheet of 98 — Prathama Sreni (L4) for an adult with no children's bonus — so a test
+// that only needs "a certified result" doesn't have to spell out marks. Pass `marks` (and a
+// `yearOfBirth` matching the student's profile) to build a specific outcome; the total, bonus and
+// outcome are derived through the same grading function the service uses.
+const DEFAULT_MARKS: ExamMarks = {
+  aksharaShuddhi: 45,
+  swaraShuddhi: 27,
+  niyantranaAnargalata: 18,
+  shraavyata: 4,
+  pratishakyaGrammar: 4,
+}
+
+export async function createExamResult(
+  world: TestWorld,
+  o: {
+    exam: ExamRow
+    evaluator: ProfileRow
+    marks?: Partial<ExamMarks>
+    yearOfBirth?: number
+    notes?: string | null
+    evaluatedAt?: Date
+  },
+): Promise<ExamResultRow> {
+  const marks = { ...DEFAULT_MARKS, ...o.marks }
+  const graded = gradeExam(marks, o.yearOfBirth ?? 1990, o.exam.scheduledAt.getUTCFullYear())
+  const rows = await world.schoolDb
+    .insert(examResult)
+    .values({
+      examId: o.exam.id,
+      ...marks,
+      ...graded,
+      notes: o.notes ?? null,
+      evaluatorId: o.evaluator.id,
+      ...(o.evaluatedAt && { evaluatedAt: o.evaluatedAt }),
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createExamResult: insert returned no row')
   return row
 }
 
@@ -606,6 +632,7 @@ export async function createRegistration(
     status?: RegistrationRow['status']
     firstName?: string
     lastName?: string
+    yearOfBirth?: number
     phone?: string
     email?: string | null
     learningGoal?: string | null
@@ -619,6 +646,7 @@ export async function createRegistration(
       status: overrides?.status ?? 'pending',
       firstName: overrides?.firstName ?? 'Test',
       lastName: overrides?.lastName ?? `Student ${nextUnique()}`,
+      yearOfBirth: overrides?.yearOfBirth ?? 2005,
       phone: overrides?.phone ?? nextRegistrationPhone(),
       email: overrides?.email ?? null,
       learningGoal: overrides?.learningGoal ?? null,

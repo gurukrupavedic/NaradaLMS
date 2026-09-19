@@ -39,6 +39,7 @@ describe('submit', () => {
       {
         firstName: 'Anjali',
         lastName: 'Rao',
+        yearOfBirth: 2005,
         phone: '+15551234567',
         spokenLanguages: ['Telugu'],
         readLanguages: [],
@@ -58,14 +59,14 @@ describe('submit', () => {
 
     const row = await submit(
       { db: world.schoolDb },
-      { firstName: 'Anjali', lastName: 'Rao', phone: '+15551234567' },
+      { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15551234567' },
     )
 
     expect(row.spokenLanguages).toEqual([])
     expect(row.readLanguages).toEqual([])
     expect(row.parentNames).toEqual([])
     expect(row.email).toBeNull()
-    expect(row.yearOfBirth).toBeNull()
+    expect(row.yearOfBirth).toBe(2005)
   })
 
   it('derives countryTimeZone from city/state/country rather than accepting it directly', async () => {
@@ -76,6 +77,7 @@ describe('submit', () => {
       {
         firstName: 'Anjali',
         lastName: 'Rao',
+        yearOfBirth: 2005,
         phone: '+15556660099',
         city: 'Hyderabad',
         state: 'TG',
@@ -91,7 +93,7 @@ describe('submit', () => {
 
     const row = await submit(
       { db: world.schoolDb },
-      { firstName: 'Anjali', lastName: 'Rao', phone: '+15556660098' },
+      { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15556660098' },
     )
 
     expect(row.countryTimeZone).toBeNull()
@@ -184,6 +186,7 @@ describe('approve', () => {
       {
         firstName: 'Anjali',
         lastName: 'Rao',
+        yearOfBirth: 2005,
         phone: '+15556660097',
         city: 'Hyderabad',
         state: 'TG',

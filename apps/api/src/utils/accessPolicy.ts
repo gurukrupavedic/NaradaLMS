@@ -324,9 +324,10 @@ export class AccessPolicy {
   }
 
   // Deliberately narrower than requireCanUpdateExam (a batch instructor/TA can reschedule or
-  // cancel their own exam, but not certify one) — recording a result is what grants `level4`, so
-  // it's gated on school-admin status alone, independent of any batch role. See
-  // evaluations/schema.ts's teacherGradableLevelSchema for the other half of that split.
+  // cancel their own exam, but not grade one) — recording a result is what grants `level4` (and
+  // L1–L3 across the whole track), so it's gated on school-admin status alone, independent of any
+  // batch role. See evaluations/schema.ts's teacherGradableLevelSchema for the other half of
+  // that split.
   public requireCanRecordEvaluation(_exam: Exam): void {
     if (!this.isSchoolAdmin()) {
       throw forbidden()

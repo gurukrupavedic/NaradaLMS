@@ -71,9 +71,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body === null ? (undefined as T) : (body as { data: T }).data
 }
 
-/** Hits the real apps/api via the /v1 rewrite and unwraps `{ data }`. */
-export async function fetchApi<T>(path: string): Promise<T> {
-  return request<T>(path, { cache: 'no-store' })
+/**
+ * Hits the real apps/api via the /v1 rewrite and unwraps `{ data }`.
+ *
+ * `schoolWide` sends the request *without* the active profile: a few list endpoints (`GET /exams`)
+ * scope even a school admin to their own and their taught batches' rows the moment a profile is
+ * supplied, and only return the whole school when none is — so an admin screen that has to see
+ * every student's sitting has to ask that way. The API still requires the caller to be an admin.
+ */
+export async function fetchApi<T>(path: string, options?: { schoolWide?: boolean }): Promise<T> {
+  return request<T>(path, {
+    cache: 'no-store',
+    ...(options?.schoolWide && { headers: { 'x-profile-id': '' } }),
+  })
 }
 
 /**
@@ -91,12 +101,15 @@ export async function mutateApi<T>(path: string, method: 'POST' | 'PUT' | 'PATCH
 }
 
 /** Walks every page of a `{items, nextCursor}` endpoint, following `nextCursor` until it's null. */
-export async function fetchAllPages<T>(path: (cursor: string | null) => string): Promise<T[]> {
+export async function fetchAllPages<T>(
+  path: (cursor: string | null) => string,
+  options?: { schoolWide?: boolean },
+): Promise<T[]> {
   const items: T[] = []
   let cursor: string | null = null
 
   do {
-    const page: { items: T[]; nextCursor: string | null } = await fetchApi(path(cursor))
+    const page: { items: T[]; nextCursor: string | null } = await fetchApi(path(cursor), options)
     items.push(...page.items)
     cursor = page.nextCursor
   } while (cursor)

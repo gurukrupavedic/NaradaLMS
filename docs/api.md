@@ -907,43 +907,64 @@ Results are ordered by `evaluatedAt` descending.
 
 ### `GET /v1/exams`
 
-List exams. Students see their own exams. Instructors/TAs also see exams for students in
-batches they teach, across chapters in those batches' tracks. Super-admins see all exams.
+List exam sittings. Students see their own. Instructors/TAs also see sittings for students in
+batches they teach. Super-admins see all.
 
 **Access:** Authenticated school member.
 
 **Query params:** `?status=scheduled`, `?cursor=`, `?limit=`
 
 ```ts
+type ExamResult = {
+  examId: string,
+  aksharaShuddhi: number,        // 0–50
+  swaraShuddhi: number,          // 0–30
+  niyantranaAnargalata: number,  // 0–20
+  shraavyata: number,            // 0–5
+  pratishakyaGrammar: number,    // 0–5
+  childrenBonus: 0 | 5 | 10,     // derived from year of birth
+  total: number,                 // up to 120
+  outcome: "athiUttamam" | "prathamaSreni" | "dwitiyaSreni" | "level2" | "level1" | "reappear",
+  level: ProficiencyLevel | null, // what the outcome grants; null for "reappear"
+  notes: string | null,
+  evaluatorId: string,
+  evaluatedAt: string
+}
+
 // Response 200
 {
   ok: true,
   data: {
     items: Array<{
       id: string,
-      chapterId: string,
+      trackId: string,
       studentId: string,
+      batchId: string,
       scheduledAt: string,
       status: "scheduled" | "inProgress" | "completed" | "cancelled",
-      evaluationId: string | null,
-      performedAt: string | null
+      track: { id: string, name: string },
+      result: ExamResult | null      // null until the sitting is completed
     }>,
     nextCursor: string | null
   }
 }
 ```
 
+### `GET /v1/exams/:examId`
+
+One sitting, same shape as a list item.
+
 ### `POST /v1/exams`
 
-Schedule an exam for a student.
+Schedule a track exam for a student.
 
-**Access:** Super Admin, or Instructor/TA in a batch where the student is enrolled and the chapter belongs to the batch track.
+**Access:** Super Admin, or Instructor/TA in the batch the student is enrolled in for that track.
 
 ```ts
 // Request
 {
   studentId: string,
-  chapterId: string,
+  trackId: string,
   scheduledAt: string
 }
 
@@ -952,21 +973,20 @@ Schedule an exam for a student.
   ok: true,
   data: {
     id: string,
-    chapterId: string,
+    trackId: string,
     studentId: string,
+    batchId: string,
     scheduledAt: string,
-    status: "scheduled",
-    evaluationId: null,
-    performedAt: null
+    status: "scheduled"
   }
 }
 ```
 
 ### `PATCH /v1/exams/:examId`
 
-Update an exam (reschedule, change status).
+Update a sitting (reschedule, change status). A sitting is completed only by recording a result.
 
-**Access:** Super Admin, or Instructor/TA in a batch where the exam's student is enrolled and the exam's chapter belongs to the batch track.
+**Access:** Super Admin, or Instructor/TA in the sitting's batch.
 
 ```ts
 // Request (all fields optional)
@@ -975,50 +995,38 @@ Update an exam (reschedule, change status).
   status?: "scheduled" | "inProgress" | "cancelled"
 }
 
-// Response 200
-{
-  ok: true,
-  data: {
-    id: string,
-    chapterId: string,
-    studentId: string,
-    scheduledAt: string,
-    status: "scheduled" | "inProgress" | "completed" | "cancelled",
-    evaluationId: string | null,
-    performedAt: string | null
-  }
-}
+// Response 200 — the bare sitting, as for POST
 ```
 
 ### `POST /v1/exams/:examId/results`
 
-Record or replace the result for an exam. Creates a new evaluation and points the exam at it.
+Grade a sitting. Completes it, stores the marks, and — when the outcome grants a level — writes that
+level as a new evaluation on every published chapter of the track.
 
-**Access:** Super Admin, or Instructor/TA in a batch where the exam's student is enrolled and the exam's chapter belongs to the batch track.
+**Access:** School admin only.
 
 ```ts
-// Request
+// Request — whole marks only; the children's bonus, total, outcome and level are derived by the
+// server and any value sent for them is ignored
 {
-  level: ProficiencyLevel,
+  aksharaShuddhi: number,        // 0–50
+  swaraShuddhi: number,          // 0–30
+  niyantranaAnargalata: number,  // 0–20
+  shraavyata: number,            // 0–5
+  pratishakyaGrammar: number,    // 0–5
   notes?: string
 }
 
-// Response 200
-{
-  ok: true,
-  data: {
-    id: string,
-    chapterId: string,
-    studentId: string,
-    scheduledAt: string,
-    status: "scheduled" | "inProgress" | "completed" | "cancelled",
-    evaluationId: string,
-    performedAt: string
-  }
-}
+// Response 200 — the completed sitting, with its result
 ```
 
-Recording a result sets the exam status to `"completed"`. Re-recording creates a new `evaluation` row and updates the exam's `evaluationId` and `performedAt`.
+Errors: `409` if the sitting is already completed or cancelled (or another result won a race);
+`422` if the student has no year of birth on file, since the children's bonus can't be worked out.
+
+The outcome is set by the total (marks plus the bonus): 105+ Athi Uttamam (L4 with the
+distinction), 95–104 Prathama Sreni (L4), 85–94 Dwitiya Sreni (L3), 75–84 L2, 65–74 L1, below 65
+Reappear (no level, and no chapter is touched). Unlike a teacher's evaluation, a result may lower a
+chapter's grade.
 
 ---
 

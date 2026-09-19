@@ -11,11 +11,14 @@ import * as enrollmentService from '../enrollment/service'
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
 vi.mock('./repository', () => ({
-  findChapterTrackId: vi.fn(),
+  findTrackById: vi.fn(),
+  findStudentYearOfBirth: vi.fn(),
+  findGradableChapterIds: vi.fn(),
   insert: vi.fn(),
   findById: vi.fn(),
   findByIdWithDetail: vi.fn(),
-  insertEvaluation: vi.fn(),
+  insertResult: vi.fn(),
+  insertEvaluations: vi.fn(),
   complete: vi.fn(),
 }))
 
@@ -32,76 +35,48 @@ describe('createExam', () => {
   const access = { requireCanCreateExam } as unknown as AccessPolicy
   const context = { db, access }
 
+  const data = { studentId: 'student-1', trackId: 'track-1', scheduledAt: new Date() }
+  const created = {
+    id: 'exam-1',
+    trackId: 'track-1',
+    studentId: 'student-1',
+    batchId: 'batch-1',
+    scheduledAt: new Date(),
+    status: 'scheduled' as const,
+  }
+
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(repository.findChapterTrackId).mockResolvedValue({ trackId: 'track-1' })
+    vi.mocked(repository.findTrackById).mockResolvedValue({ id: 'track-1' })
     vi.mocked(enrollmentService.resolveQualifyingBatch).mockResolvedValue('batch-1')
   })
 
-  it.each([DbConstraint.examStudentIdFk, DbConstraint.examChapterIdFk])(
-    'maps %s to a 422 with the student/chapter message',
+  it.each([DbConstraint.examStudentIdFk, DbConstraint.examTrackIdFk])(
+    'maps %s to a 422 with the student/track message',
     async constraint => {
       vi.mocked(repository.insert).mockRejectedValue({
         cause: { code: '23503', constraint },
       })
 
-      await expect(
-        createExam(context, {
-          studentId: 'student-1',
-          chapterId: 'chapter-1',
-          scheduledAt: new Date(),
-        }),
-      ).rejects.toMatchObject({
+      await expect(createExam(context, data)).rejects.toMatchObject({
         statusCode: 422,
-        message: 'student or chapter no longer exists',
+        message: 'student or track no longer exists',
       })
     },
   )
 
   it('succeeds and stores the resolved batchId on the new exam', async () => {
-    const scheduledAt = new Date()
-    vi.mocked(repository.insert).mockResolvedValue({
-      id: 'exam-1',
-      chapterId: 'chapter-1',
-      studentId: 'student-1',
-      batchId: 'batch-1',
-      scheduledAt,
-      status: 'scheduled',
-      evaluationId: null,
-      performedAt: null,
-    })
+    vi.mocked(repository.insert).mockResolvedValue(created)
 
-    await createExam(context, {
-      studentId: 'student-1',
-      chapterId: 'chapter-1',
-      scheduledAt,
-    })
+    await createExam(context, data)
 
-    expect(repository.insert).toHaveBeenCalledWith(db, {
-      studentId: 'student-1',
-      chapterId: 'chapter-1',
-      scheduledAt,
-      batchId: 'batch-1',
-    })
+    expect(repository.insert).toHaveBeenCalledWith(db, { ...data, batchId: 'batch-1' })
   })
 
   it('authorizes against the resolved batchId, after resolution and before inserting', async () => {
-    vi.mocked(repository.insert).mockResolvedValue({
-      id: 'exam-1',
-      chapterId: 'chapter-1',
-      studentId: 'student-1',
-      batchId: 'batch-1',
-      scheduledAt: new Date(),
-      status: 'scheduled',
-      evaluationId: null,
-      performedAt: null,
-    })
+    vi.mocked(repository.insert).mockResolvedValue(created)
 
-    await createExam(context, {
-      studentId: 'student-1',
-      chapterId: 'chapter-1',
-      scheduledAt: new Date(),
-    })
+    await createExam(context, data)
 
     expect(requireCanCreateExam).toHaveBeenCalledWith('batch-1')
     expect(requireCanCreateExam.mock.invocationCallOrder[0]).toBeLessThan(
@@ -114,34 +89,27 @@ describe('createExam', () => {
       throw new Error('forbidden')
     })
 
-    await expect(
-      createExam(context, {
-        studentId: 'student-1',
-        chapterId: 'chapter-1',
-        scheduledAt: new Date(),
-      }),
-    ).rejects.toThrow('forbidden')
+    await expect(createExam(context, data)).rejects.toThrow('forbidden')
 
     expect(repository.insert).not.toHaveBeenCalled()
   })
 
-  it('calls resolveQualifyingBatch with the chapter-resolved trackId and propagates its result', async () => {
-    vi.mocked(repository.insert).mockResolvedValue({
-      id: 'exam-1',
-      chapterId: 'chapter-1',
-      studentId: 'student-1',
-      batchId: 'batch-1',
-      scheduledAt: new Date(),
-      status: 'scheduled',
-      evaluationId: null,
-      performedAt: null,
+  it('rejects a track that does not exist with a 422, before resolving any batch', async () => {
+    vi.mocked(repository.findTrackById).mockResolvedValue(undefined)
+
+    await expect(createExam(context, data)).rejects.toMatchObject({
+      statusCode: 422,
+      message: 'track not found',
     })
 
-    await createExam(context, {
-      studentId: 'student-1',
-      chapterId: 'chapter-1',
-      scheduledAt: new Date(),
-    })
+    expect(enrollmentService.resolveQualifyingBatch).not.toHaveBeenCalled()
+    expect(repository.insert).not.toHaveBeenCalled()
+  })
+
+  it("calls resolveQualifyingBatch with the exam's own trackId and propagates its result", async () => {
+    vi.mocked(repository.insert).mockResolvedValue(created)
+
+    await createExam(context, data)
 
     expect(enrollmentService.resolveQualifyingBatch).toHaveBeenCalledWith(
       db,
@@ -152,16 +120,12 @@ describe('createExam', () => {
 
   it('propagates a rejection from resolveQualifyingBatch (e.g. ambiguous or no qualifying batch) without inserting', async () => {
     vi.mocked(enrollmentService.resolveQualifyingBatch).mockRejectedValue(
-      new Error("student is enrolled in multiple batches for this chapter's track"),
+      new Error('student is enrolled in multiple batches for this track'),
     )
 
-    await expect(
-      createExam(context, {
-        studentId: 'student-1',
-        chapterId: 'chapter-1',
-        scheduledAt: new Date(),
-      }),
-    ).rejects.toThrow("student is enrolled in multiple batches for this chapter's track")
+    await expect(createExam(context, data)).rejects.toThrow(
+      'student is enrolled in multiple batches for this track',
+    )
 
     expect(repository.insert).not.toHaveBeenCalled()
   })
@@ -177,124 +141,213 @@ describe('recordExamResult', () => {
 
   const existingExam = {
     id: 'exam-1',
-    chapterId: 'chapter-1',
+    trackId: 'track-1',
     studentId: 'student-1',
     batchId: 'batch-1',
-    scheduledAt: new Date(),
+    // June 2026 — the year the children's bonus is measured against.
+    scheduledAt: new Date('2026-06-15T10:00:00Z'),
     status: 'scheduled' as const,
-    evaluationId: null,
-    performedAt: null,
+  }
+  const completedExam = { ...existingExam, status: 'completed' as const }
+
+  // 98 on the sheet — Prathama Sreni (L4) for an adult with no bonus.
+  const marks = {
+    aksharaShuddhi: 45,
+    swaraShuddhi: 27,
+    niyantranaAnargalata: 18,
+    shraavyata: 4,
+    pratishakyaGrammar: 4,
   }
 
-  const evaluationRow = {
-    id: 'evaluation-1',
-    studentId: 'student-1',
-    chapterId: 'chapter-1',
-    batchId: 'batch-1',
-    level: 'level4' as const,
-    notes: null,
-    evaluatorId: 'evaluator-1',
-    evaluatedAt: new Date(),
+  const detail = {
+    ...existingExam,
+    status: 'completed' as const,
+    track: { id: 'track-1', name: 'Track 1' },
+    result: null,
   }
 
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(repository.findById).mockResolvedValue(existingExam)
-    vi.mocked(repository.insertEvaluation).mockResolvedValue(evaluationRow)
+    vi.mocked(repository.findStudentYearOfBirth).mockResolvedValue(1990)
+    vi.mocked(repository.complete).mockResolvedValue(completedExam)
+    vi.mocked(repository.insertResult).mockResolvedValue({} as never)
+    vi.mocked(repository.findGradableChapterIds).mockResolvedValue(['chapter-1', 'chapter-2'])
+    vi.mocked(repository.findByIdWithDetail).mockResolvedValue(detail)
     transactionMock.mockImplementation(async callback => callback({}))
   })
+
+  it('derives the bonus, total and outcome and stores them with the marks', async () => {
+    await recordExamResult(context, 'exam-1', 'evaluator-1', { ...marks, notes: 'well done' })
+
+    expect(repository.insertResult).toHaveBeenCalledWith(
+      {},
+      {
+        examId: 'exam-1',
+        ...marks,
+        childrenBonus: 0,
+        total: 98,
+        outcome: 'prathamaSreni',
+        notes: 'well done',
+        evaluatorId: 'evaluator-1',
+      },
+    )
+  })
+
+  it("measures age against the sitting's own year, not the year it is recorded", async () => {
+    // Born 2014, sat in 2026 → 12 → +5 (the boundary a wrong year would push to 0 or +10).
+    vi.mocked(repository.findStudentYearOfBirth).mockResolvedValue(2014)
+
+    await recordExamResult(context, 'exam-1', 'evaluator-1', marks)
+
+    expect(repository.insertResult).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ childrenBonus: 5, total: 103, outcome: 'prathamaSreni' }),
+    )
+  })
+
+  it("writes the granted level to every gradable chapter of the exam's track, in the exam's batch", async () => {
+    await recordExamResult(context, 'exam-1', 'evaluator-1', { ...marks, notes: 'n' })
+
+    expect(repository.findGradableChapterIds).toHaveBeenCalledWith({}, 'track-1')
+    expect(repository.insertEvaluations).toHaveBeenCalledTimes(1)
+    expect(repository.insertEvaluations).toHaveBeenCalledWith({}, [
+      {
+        studentId: 'student-1',
+        chapterId: 'chapter-1',
+        batchId: 'batch-1',
+        level: 'level4',
+        notes: 'n',
+        evaluatorId: 'evaluator-1',
+      },
+      {
+        studentId: 'student-1',
+        chapterId: 'chapter-2',
+        batchId: 'batch-1',
+        level: 'level4',
+        notes: 'n',
+        evaluatorId: 'evaluator-1',
+      },
+    ])
+  })
+
+  it('a reappear stores the result but touches no chapter', async () => {
+    await recordExamResult(context, 'exam-1', 'evaluator-1', {
+      aksharaShuddhi: 20,
+      swaraShuddhi: 15,
+      niyantranaAnargalata: 10,
+      shraavyata: 2,
+      pratishakyaGrammar: 2,
+    })
+
+    expect(repository.insertResult).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ total: 49, outcome: 'reappear' }),
+    )
+    expect(repository.findGradableChapterIds).not.toHaveBeenCalled()
+    expect(repository.insertEvaluations).not.toHaveBeenCalled()
+  })
+
+  it("422s when the student's year of birth isn't on file, before opening a transaction", async () => {
+    vi.mocked(repository.findStudentYearOfBirth).mockResolvedValue(undefined)
+
+    await expect(recordExamResult(context, 'exam-1', 'evaluator-1', marks)).rejects.toMatchObject({
+      statusCode: 422,
+    })
+
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it.each(['completed', 'cancelled'] as const)(
+    '409s for an exam already %s, before doing anything else',
+    async status => {
+      vi.mocked(repository.findById).mockResolvedValue({ ...existingExam, status })
+
+      await expect(recordExamResult(context, 'exam-1', 'evaluator-1', marks)).rejects.toMatchObject(
+        { statusCode: 409 },
+      )
+
+      expect(repository.findStudentYearOfBirth).not.toHaveBeenCalled()
+      expect(transactionMock).not.toHaveBeenCalled()
+    },
+  )
 
   it.each([
     DbConstraint.evaluationStudentIdFk,
     DbConstraint.evaluationChapterIdFk,
     DbConstraint.evaluationEvaluatorIdFk,
-  ])('maps %s to a 422 with the student/chapter/evaluator message', async constraint => {
-    vi.mocked(repository.insertEvaluation).mockRejectedValue({
-      cause: { code: '23503', constraint },
+  ])(
+    'maps %s on the chapter evaluations to a 422 with the student/chapter/evaluator message',
+    async constraint => {
+      vi.mocked(repository.insertEvaluations).mockRejectedValue({
+        cause: { code: '23503', constraint },
+      })
+
+      await expect(recordExamResult(context, 'exam-1', 'evaluator-1', marks)).rejects.toMatchObject(
+        {
+          statusCode: 422,
+          message: 'student, chapter, or evaluator no longer exists',
+        },
+      )
+
+      expect(transactionMock).toHaveBeenCalled()
+    },
+  )
+
+  it('maps a vanished evaluator on the result itself to a 422', async () => {
+    vi.mocked(repository.insertResult).mockRejectedValue({
+      cause: { code: '23503', constraint: DbConstraint.examResultEvaluatorIdFk },
     })
 
-    await expect(
-      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' }),
-    ).rejects.toMatchObject({
+    await expect(recordExamResult(context, 'exam-1', 'evaluator-1', marks)).rejects.toMatchObject({
       statusCode: 422,
-      message: 'student, chapter, or evaluator no longer exists',
+      message: 'evaluator no longer exists',
     })
 
-    expect(transactionMock).toHaveBeenCalled()
-  })
-
-  it("copies the exam's batchId onto the inserted evaluation", async () => {
-    vi.mocked(repository.complete).mockResolvedValue({
-      ...existingExam,
-      status: 'completed',
-      evaluationId: 'evaluation-1',
-      performedAt: new Date(),
-    })
-
-    await recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' })
-
-    expect(repository.insertEvaluation).toHaveBeenCalledWith(
-      {},
-      expect.objectContaining({ batchId: 'batch-1' }),
-    )
+    expect(repository.insertEvaluations).not.toHaveBeenCalled()
   })
 
   it('calls repository.complete with existing.status as the expectedStatus argument', async () => {
-    vi.mocked(repository.complete).mockResolvedValue({
-      ...existingExam,
-      status: 'completed',
-      evaluationId: 'evaluation-1',
-      performedAt: new Date(),
-    })
+    await recordExamResult(context, 'exam-1', 'evaluator-1', marks)
 
-    await recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' })
+    expect(repository.complete).toHaveBeenCalledWith({}, 'exam-1', 'scheduled')
+  })
 
-    expect(repository.complete).toHaveBeenCalledWith(
-      {},
-      'exam-1',
-      'evaluation-1',
-      expect.any(Date),
-      'scheduled',
+  it('completes the exam before storing anything, so a lost race never leaves a result behind', async () => {
+    await recordExamResult(context, 'exam-1', 'evaluator-1', marks)
+
+    expect(vi.mocked(repository.complete).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(repository.insertResult).mock.invocationCallOrder[0]!,
     )
   })
 
-  it('throws a 409 "already recorded" conflict when the follow-up read shows evaluationId set', async () => {
+  it('throws a 409 "already recorded" conflict when the follow-up read shows the exam completed', async () => {
     vi.mocked(repository.complete).mockResolvedValue(undefined)
     vi.mocked(repository.findById)
       .mockResolvedValueOnce(existingExam)
-      .mockResolvedValueOnce({
-        ...existingExam,
-        status: 'completed',
-        evaluationId: 'evaluation-other',
-        performedAt: new Date(),
-      })
+      .mockResolvedValueOnce(completedExam)
 
-    await expect(
-      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' }),
-    ).rejects.toMatchObject({
+    await expect(recordExamResult(context, 'exam-1', 'evaluator-1', marks)).rejects.toMatchObject({
       statusCode: 409,
       message: 'a result was already recorded for this exam',
     })
 
-    expect(transactionMock).toHaveBeenCalled()
+    expect(repository.insertResult).not.toHaveBeenCalled()
     expect(repository.findById).toHaveBeenNthCalledWith(2, {}, 'exam-1')
   })
 
-  it('throws a 409 "status changed concurrently" conflict when the follow-up read shows evaluationId still null', async () => {
+  it('throws a 409 "status changed concurrently" conflict when the follow-up read shows another status', async () => {
     vi.mocked(repository.complete).mockResolvedValue(undefined)
     vi.mocked(repository.findById)
       .mockResolvedValueOnce(existingExam)
-      .mockResolvedValueOnce({ ...existingExam, status: 'cancelled' as const, evaluationId: null })
+      .mockResolvedValueOnce({ ...existingExam, status: 'cancelled' as const })
 
-    await expect(
-      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' }),
-    ).rejects.toMatchObject({
+    await expect(recordExamResult(context, 'exam-1', 'evaluator-1', marks)).rejects.toMatchObject({
       statusCode: 409,
       message: 'exam status changed concurrently',
     })
 
-    expect(transactionMock).toHaveBeenCalled()
-    expect(repository.findById).toHaveBeenNthCalledWith(2, {}, 'exam-1')
+    expect(repository.insertResult).not.toHaveBeenCalled()
   })
 
   it('throws 404 when the follow-up read finds no row', async () => {
@@ -303,14 +356,13 @@ describe('recordExamResult', () => {
       .mockResolvedValueOnce(existingExam)
       .mockResolvedValueOnce(undefined)
 
-    await expect(
-      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level4' }),
-    ).rejects.toMatchObject({
+    await expect(recordExamResult(context, 'exam-1', 'evaluator-1', marks)).rejects.toMatchObject({
       statusCode: 404,
     })
+  })
 
-    expect(transactionMock).toHaveBeenCalled()
-    expect(repository.findById).toHaveBeenNthCalledWith(2, {}, 'exam-1')
+  it('returns the completed exam with its detail', async () => {
+    await expect(recordExamResult(context, 'exam-1', 'evaluator-1', marks)).resolves.toEqual(detail)
   })
 })
 
@@ -322,18 +374,16 @@ describe('findByIdWithDetail', () => {
     vi.resetAllMocks()
   })
 
-  it('returns the exam with its chapter/evaluation projection', async () => {
+  it('returns the exam with its track/result projection', async () => {
     const detail = {
       id: 'exam-1',
-      chapterId: 'chapter-1',
+      trackId: 'track-1',
       studentId: 'student-1',
       batchId: 'batch-1',
       scheduledAt: new Date(),
       status: 'scheduled' as const,
-      evaluationId: null,
-      performedAt: null,
-      chapter: { id: 'chapter-1', code: 'C1', title: 'Chapter 1', trackId: 'track-1' },
-      evaluation: null,
+      track: { id: 'track-1', name: 'Track 1' },
+      result: null,
     }
     vi.mocked(repository.findByIdWithDetail).mockResolvedValue(detail)
 

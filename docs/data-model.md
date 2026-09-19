@@ -352,26 +352,48 @@ An instructor's assessment of a student's proficiency on a chapter. Evaluations 
 
 ### `exam`
 
-A scheduled exam for a specific student in a batch.
+A certification exam sitting: one student sitting one **track**, in the batch they are enrolled in for it. The sitting certifies the whole syllabus, not a single chapter.
 
-| Column         | Type        | Constraints                                                 |
-| -------------- | ----------- | ----------------------------------------------------------- |
-| `id`           | uuid        | PK                                                          |
-| `batchId`      | uuid        | FK to `batch.id`                                            |
-| `studentId`    | text        | logical ref to `public.user.id`                             |
-| `scheduledAt`  | timestamptz | NOT NULL                                                    |
-| `status`       | enum        | `'scheduled'`, `'inProgress'`, `'completed'`, `'cancelled'` |
+| Column        | Type      | Constraints                                                 |
+| ------------- | --------- | ----------------------------------------------------------- |
+| `id`          | uuid      | PK                                                          |
+| `trackId`     | uuid      | NOT NULL, FK to `track.id`                                  |
+| `studentId`   | uuid      | NOT NULL, FK to `profile.id`                                |
+| `batchId`     | uuid      | NOT NULL, FK to `batch.id` — resolved once at creation      |
+| `scheduledAt` | timestamp | NOT NULL                                                    |
+| `status`      | enum      | `'scheduled'`, `'inProgress'`, `'completed'`, `'cancelled'` |
 
 ### `examResult`
 
-Links an exam to the evaluation produced for a specific chapter.
+The marks for one completed exam — exactly one row per `completed` exam and none otherwise, so every column is mandatory (a scheduled exam simply has no row). A student's certification on a track is their latest `examResult` there; this table replaced the old `trackCertification`.
 
-| Column          | Type | Constraints                 |
-| --------------- | ---- | --------------------------- |
-| `examId`        | uuid | FK to `exam.id`             |
-| `chapterId`     | uuid | FK to `chapter.id`          |
-| `evaluationId`  | uuid | FK to `evaluation.id`       |
-|                 |      | PK(`examId`, `chapterId`)   |
+| Column                 | Type      | Constraints                                                |
+| ---------------------- | --------- | ---------------------------------------------------------- |
+| `examId`               | uuid      | PK, FK to `exam.id` (cascade)                              |
+| `aksharaShuddhi`       | integer   | NOT NULL, 0–50                                             |
+| `swaraShuddhi`         | integer   | NOT NULL, 0–30                                             |
+| `niyantranaAnargalata` | integer   | NOT NULL, 0–20                                             |
+| `shraavyata`           | integer   | NOT NULL, 0–5                                              |
+| `pratishakyaGrammar`   | integer   | NOT NULL, 0–5                                              |
+| `childrenBonus`        | integer   | NOT NULL, one of 0, 5, 10 — derived, never entered         |
+| `total`                | integer   | NOT NULL, must equal the sum of the six marks above        |
+| `outcome`              | enum      | NOT NULL — see below                                       |
+| `notes`                | text      | nullable free text                                         |
+| `evaluatorId`          | uuid      | NOT NULL, FK to `profile.id`                               |
+| `evaluatedAt`          | timestamp | NOT NULL, default now                                      |
+
+The children's bonus comes from the student's `yearOfBirth` and the year of the sitting: **+10** at age 11 or under, **+5** at 12–15, none from 16. The maximum total is 120. `total` and `outcome` are snapshots taken when the result is recorded, so changing the thresholds later never rewrites a past result.
+
+| Total     | `outcome`       | Grants                    |
+| --------- | --------------- | ------------------------- |
+| ≥ 105     | `athiUttamam`   | L4 (with the distinction) |
+| 95 – 104  | `prathamaSreni` | L4                        |
+| 85 – 94   | `dwitiyaSreni`  | L3                        |
+| 75 – 84   | `level2`        | L2                        |
+| 65 – 74   | `level1`        | L1                        |
+| < 65      | `reappear`      | nothing                   |
+
+Recording a result that grants a level also writes that level as a new `evaluation` on every published, non-archived chapter of the track, replacing whatever grade was there (it can lower one). A `reappear` writes none. L3 and L4 count as certified.
 
 ---
 

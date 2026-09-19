@@ -28,7 +28,7 @@ export const FindEvaluationsSchema = z.object({
 })
 
 // A teacher's own evaluation can mark absence or a classroom-graded level, but never `level4` —
-// that grade is reserved for an exam result (see exams/schema.ts's RecordExamResultSchema).
+// that grade is only ever granted by a track exam result (see exams/service.ts's recordExamResult).
 export const teacherGradableLevelSchema = proficiencyLevelSchema.exclude(['level4'])
 
 export type CreateEvaluationData = z.infer<typeof CreateEvaluationSchema>

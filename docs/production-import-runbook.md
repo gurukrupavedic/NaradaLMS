@@ -11,9 +11,10 @@ the whole point of doing staging first is to catch anything environment-specific
 
 **Covers:** applying any pending `packages/db/drizzle/public` migrations, bringing existing school
 schemas up to date, and importing the real SLMTS registration/tracker data (currently: 1054 users /
-1212 profiles / 8 tracks / 74 chapters / 91 batches / 957 enrollments / 10,396 evaluations / 420
-track certifications — see `seed-data/_report.json` for the exact numbers behind this run) into a
-new `slmts` school.
+1212 profiles / 8 tracks / 74 chapters / 91 batches / 957 enrollments / 10,396 evaluations — see
+`seed-data/_report.json` for the exact numbers behind this run) into a new `slmts` school. Exams
+and their results are **not** part of this import: a track's certification is its latest
+`examResult`, which needs the real mark sheet, so seed those from data that carries the marks.
 
 **Does not cover:** anything about the Twilio Verify OTP integration itself (that's already live —
 see the login note in Step 2) beyond confirming its environment variables are set; anything about
@@ -252,7 +253,7 @@ pnpm exec tsx src/import-school.ts data --slug slmts --name "SLMTS"
 
 **Expect:**
 ```
-Loaded 1054 users, 1212 profiles, 8 tracks, 74 chapters, 91 batches, 957 enrollments, 10396 evaluations, 420 track certifications, 1053 registration-metadata rows from ...
+Loaded 1054 users, 1212 profiles, 8 tracks, 74 chapters, 91 batches, 957 enrollments, 10396 evaluations, 1053 registration-metadata rows from ...
 ✅ All rows pass validation against the live API schemas.
 Dry run only — pass --commit to write to the database. No rows were inserted.
 ```
@@ -287,7 +288,7 @@ pnpm exec tsx src/import-school.ts data --slug slmts --name "SLMTS" --commit
 ✅ All rows pass validation against the live API schemas.
 Importing into organization "slmts" (<uuid>)
 ✅ Imported 1054 new users (0 reused existing accounts) + 1054 org memberships.
-✅ Import committed: 8 tracks, 74 chapters, 91 batches, 1212 profiles, 957 enrollments, 10396 evaluations, 420 track certifications.
+✅ Import committed: 8 tracks, 74 chapters, 91 batches, 1212 profiles, 957 enrollments, 10396 evaluations.
 ```
 The "reused existing accounts" count will be higher than 0 if this environment already has `user`
 rows matching one of the roster's emails/phone numbers (e.g. this environment was used for earlier
@@ -312,11 +313,9 @@ UNION ALL SELECT 'chapter', count(*) FROM \"$SCHEMA\".chapter
 UNION ALL SELECT 'batch', count(*) FROM \"$SCHEMA\".batch
 UNION ALL SELECT 'profile', count(*) FROM \"$SCHEMA\".profile
 UNION ALL SELECT 'enrollment', count(*) FROM \"$SCHEMA\".enrollment
-UNION ALL SELECT 'evaluation', count(*) FROM \"$SCHEMA\".evaluation
-UNION ALL SELECT 'trackCertification', count(*) FROM \"$SCHEMA\".\"trackCertification\";
+UNION ALL SELECT 'evaluation', count(*) FROM \"$SCHEMA\".evaluation;
 "
-# Expect: track 8, chapter 74, batch 91, profile 1212, enrollment 957, evaluation 10396,
-# trackCertification 420
+# Expect: track 8, chapter 74, batch 91, profile 1212, enrollment 957, evaluation 10396
 
 # Schema conformance
 psql "$DATABASE_URL" -c "\d \"$SCHEMA\".enrollment"
@@ -377,7 +376,7 @@ able to use the app.
   profiles risks duplicating data rather than cleanly resuming. If Step 6 fails partway:
   - User/membership inserts (before the school-scoped transaction) use `ON CONFLICT DO NOTHING` on
     `id` — safe to leave as-is.
-  - The `track`/`chapter`/`batch`/`profile`/`enrollment`/`evaluation`/`trackCertification` writes are
+  - The `track`/`chapter`/`batch`/`profile`/`enrollment`/`evaluation` writes are
     one transaction — a failure there rolls back cleanly, so nothing partial persists at the
     school-schema level.
   - If it failed and rolled back: check `SELECT id FROM organization WHERE slug='slmts'` — if the org

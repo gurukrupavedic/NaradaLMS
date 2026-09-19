@@ -84,15 +84,16 @@ export function isMastered(level: ProficiencyLevel): boolean {
   return level === 'level4'
 }
 
-// A track's certification result — L4 is the only score that certifies.
-// Kept as its own named function rather than an alias for `isMastered`
-// (even though they check the same thing today): one is a per-chapter
-// "fully learned this one chapter" signal, the other a track-level
+// A track's certification result — the level its latest graded exam granted. L3
+// (Dwitiya Sreni) and L4 (Prathama Sreni, or Athi Uttamam, which is L4 with a
+// distinction) certify; an L1 or L2 pass is graded but not certified.
+// Kept as its own named function rather than an alias for `isMastered`: one is
+// a per-chapter "fully learned this one chapter" signal, the other a track-level
 // "did they pass the certification exam" signal, and they've already drifted
 // apart once — a call site asking "is this certified" shouldn't have to know
-// it currently happens to mean the same thing as chapter mastery.
+// what chapter mastery currently happens to mean.
 export function isCertified(level: ProficiencyLevel): boolean {
-  return level === 'level4'
+  return level === 'level3' || level === 'level4'
 }
 
 // Fraction of chapters that have been started (any graded level), as a

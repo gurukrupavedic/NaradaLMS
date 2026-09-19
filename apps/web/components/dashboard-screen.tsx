@@ -105,7 +105,7 @@ export function DashboardScreen() {
                       label: 'Exam',
                       body: (
                         <>
-                          {upcomingExam.chapterTitle} ·{' '}
+                          {upcomingExam.trackName} certification ·{' '}
                           <Timestamp variant="dateTime" value={upcomingExam.when} />
                         </>
                       ),

@@ -36,7 +36,7 @@ import type {
   ApiEvaluation,
   ApiProficiencyLevel,
   ApiTrack,
-  ApiTrackCertification,
+  ApiStudentExamResult,
 } from '@/lib/api/api-types'
 
 // The backend enum (packages/db/src/schema/school.ts) still carries `practicing` — the importer's
@@ -49,15 +49,15 @@ export function narrowLevel(level: ApiProficiencyLevel): ProficiencyLevel {
   return level === 'practicing' ? 'level0' : level
 }
 
-/** Latest trackCertification row per track — same "history, not a single mutable mark" shape as evaluations. */
-export function latestCertificationByTrackId(
-  certifications: ApiTrackCertification[],
-): Map<string, ApiTrackCertification> {
-  const byTrack = new Map<string, ApiTrackCertification>()
-  for (const cert of certifications) {
-    const existing = byTrack.get(cert.trackId)
-    if (!existing || (cert.evaluatedAt ?? '') > (existing.evaluatedAt ?? '')) {
-      byTrack.set(cert.trackId, cert)
+/** Latest graded exam per track — same "history, not a single mutable mark" shape as evaluations. A track's certification is this. */
+export function latestExamResultByTrackId(
+  results: ApiStudentExamResult[],
+): Map<string, ApiStudentExamResult> {
+  const byTrack = new Map<string, ApiStudentExamResult>()
+  for (const result of results) {
+    const existing = byTrack.get(result.trackId)
+    if (!existing || result.evaluatedAt > existing.evaluatedAt) {
+      byTrack.set(result.trackId, result)
     }
   }
   return byTrack
@@ -146,16 +146,17 @@ export function buildLearningTracks(dashboard: ApiDashboard): LadderTrack[] {
 
 /** Every one of a dashboard's tracks as a certification-record row — see `buildLearningTracks`'s doc comment on why this is shared rather than re-derived per caller. */
 export function buildCertificationRows(dashboard: ApiDashboard): CertificationRow[] {
-  const certificationByTrackId = latestCertificationByTrackId(dashboard.certifications)
+  const resultByTrackId = latestExamResultByTrackId(dashboard.examResults)
   return dashboard.tracks
     .filter(track => track.chapters.length > 0)
     .map(track => {
-      const cert = certificationByTrackId.get(track.id)
+      const result = resultByTrackId.get(track.id)
       return {
         track: track.name,
-        chapter: 'Track certification',
-        level: cert ? narrowLevel(cert.level) : 'notStarted',
-        awardedAt: cert?.evaluatedAt ?? null,
+        level: result?.level ? narrowLevel(result.level) : 'notStarted',
+        outcome: result?.outcome ?? null,
+        total: result?.total ?? null,
+        awardedAt: result?.evaluatedAt ?? null,
       }
     })
 }
