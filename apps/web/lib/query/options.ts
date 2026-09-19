@@ -10,9 +10,12 @@ import {
   fetchCatalogTracks,
   fetchChapter,
   fetchChapterDetail,
+  fetchCourse,
+  fetchCourses,
   fetchDashboard,
   fetchEnrollmentRequests,
   fetchExams,
+  fetchMyCourses,
   fetchOpenBatches,
   fetchProfileDetail,
   fetchRegistration,
@@ -35,6 +38,13 @@ export const keys = {
   dashboard: ['dashboard'] as const,
 
   authProfile: ['authProfile'] as const,
+
+  // A school's courses change about as often as its syllabus does: a long staleTime, see `coursesQuery`.
+  courses: ['courses'] as const,
+  course: (slug: string) => ['courses', 'bySlug', slug] as const,
+  // What one profile may pick from — per profile, because a shared household login switches between
+  // children's profiles and each has its own courses.
+  myCourses: (profileId: string) => ['courses', 'mine', profileId] as const,
 
   chapters: {
     all: ['chapters'] as const,
@@ -138,6 +148,29 @@ export const chapterAuthoringDetailQuery = (chapterId: string) =>
   queryOptions({
     queryKey: keys.chapters.authoringDetail(chapterId),
     queryFn: () => fetchChapterDetail(chapterId),
+  })
+
+export const coursesQuery = () =>
+  queryOptions({
+    queryKey: keys.courses,
+    queryFn: fetchCourses,
+    staleTime: CATALOG_STALE_TIME,
+  })
+
+export const courseQuery = (slug: string) =>
+  queryOptions({
+    queryKey: keys.course(slug),
+    queryFn: () => fetchCourse(slug),
+    staleTime: CATALOG_STALE_TIME,
+    // A slug that isn't a course is a 404, and retrying a 404 just delays saying so.
+    retry: false,
+  })
+
+export const myCoursesQuery = (profileId: string) =>
+  queryOptions({
+    queryKey: keys.myCourses(profileId),
+    queryFn: fetchMyCourses,
+    staleTime: CATALOG_STALE_TIME,
   })
 
 export const examsQuery = () =>

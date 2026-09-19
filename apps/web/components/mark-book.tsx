@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useCoursePath } from '@/lib/course'
 
 /**
  * The mark book.
@@ -257,6 +258,7 @@ function StudentMenu({
   promoteItems: SetLevelInput[]
   onBreak?: OnBreakMutation
 }) {
+  const cp = useCoursePath()
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle')
   // Its own status, distinct from `status` above — the two row actions are independent writes and
   // a teacher could plausibly retry one without the other having failed.
@@ -328,7 +330,7 @@ function StudentMenu({
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
-          render={<Link href={`/students/${student.id}`} />}
+          render={<Link href={cp(`/students/${student.id}`)} />}
           className="group/row flex items-center justify-between gap-4 rounded-none px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink"
         >
           Show profile

@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, inArray, lt, or, type SQL } from 'drizzle-orm'
 
-import { enrollmentRequest, type SchoolDb, type SchoolDbExecutor } from '@narada/db'
+import { batch, enrollmentRequest, type SchoolDb, type SchoolDbExecutor } from '@narada/db'
 
 import { paginateResponse } from '../utils/cursor'
 import type { EnrollmentRequest, FindEnrollmentRequestsData } from './schema'
@@ -41,15 +41,24 @@ function toEnrollmentRequest(row: JoinedRow): EnrollmentRequest {
  * "an empty scope for 'all' is a different thing from an empty `inArray`" reasoning: an actual
  * empty array would produce an impossible `IN ()` filter, so the caller (`service.ts::findAll`)
  * never passes one — `AccessPolicy.getEnrollmentRequestVisibility` throws instead. */
+// A request belongs to a course through the batch it asks to join.
+function batchesOfCourse(db: SchoolDb, courseId: string) {
+  return db.select({ id: batch.id }).from(batch).where(eq(batch.courseId, courseId))
+}
+
 export async function findAll(
   db: SchoolDb,
   { status, limit, cursor }: FindEnrollmentRequestsData,
   batchIds: string[] | null,
+  courseId: string,
 ): Promise<{ items: EnrollmentRequest[]; nextCursor: string | null }> {
   const conditions: SQL[] = []
   if (status) {
     conditions.push(eq(enrollmentRequest.status, status))
   }
+
+  // A request belongs to a course through the batch it asks to join.
+  conditions.push(inArray(enrollmentRequest.batchId, batchesOfCourse(db, courseId)))
 
   if (batchIds) {
     conditions.push(inArray(enrollmentRequest.batchId, batchIds))
@@ -103,9 +112,18 @@ export async function findPending(
 /** Every batch this profile has a live request pending on — `dashboard/service.ts` folds this into
  * its own fixed-query-count fetch ([[project_batch_n1_incident]]) rather than the dashboard screen
  * making a second round-trip per open batch. */
-export async function findPendingBatchIdsForProfile(db: SchoolDb, profileId: string): Promise<string[]> {
+export async function findPendingBatchIdsForProfile(
+  db: SchoolDb,
+  profileId: string,
+  courseId: string,
+): Promise<string[]> {
   const rows = await db.query.enrollmentRequest.findMany({
-    where: (t, { and: andCols, eq: eqCol }) => andCols(eqCol(t.profileId, profileId), eqCol(t.status, 'pending')),
+    where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
+      andCols(
+        eqCol(t.profileId, profileId),
+        eqCol(t.status, 'pending'),
+        inArrayCol(t.batchId, batchesOfCourse(db, courseId)),
+      ),
     columns: { batchId: true },
   })
 

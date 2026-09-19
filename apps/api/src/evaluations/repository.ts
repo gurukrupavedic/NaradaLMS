@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql, type SQL } from 'drizzle-orm'
 
-import { chapter, enrollment, evaluation, type SchoolDb } from '@narada/db'
+import { chapter, enrollment, evaluation, track, type SchoolDb } from '@narada/db'
 
 import { paginateResponse } from '../utils/cursor'
 import type { CreateEvaluationData, Evaluation, FindEvaluationsData } from './schema'
@@ -136,9 +136,25 @@ export async function insertMany(
  * enrollment would hide the other seven (dashboard.ts's own reasoning, ported as-is — this is a
  * real product requirement, not an implementation detail).
  */
-export async function findAllForStudent(db: SchoolDb, studentId: string): Promise<Evaluation[]> {
+export async function findAllForStudent(
+  db: SchoolDb,
+  studentId: string,
+  courseId: string,
+): Promise<Evaluation[]> {
   return db.query.evaluation.findMany({
-    where: (t, { eq }) => eq(t.studentId, studentId),
+    where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
+      andCols(
+        eqCol(t.studentId, studentId),
+        // An evaluation belongs to a course through its chapter's track.
+        inArrayCol(
+          t.chapterId,
+          db
+            .select({ id: chapter.id })
+            .from(chapter)
+            .innerJoin(track, eq(track.id, chapter.trackId))
+            .where(eq(track.courseId, courseId)),
+        ),
+      ),
     orderBy: (t, { desc: descCol }) => descCol(t.evaluatedAt),
   })
 }

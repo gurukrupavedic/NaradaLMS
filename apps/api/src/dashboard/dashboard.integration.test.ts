@@ -12,6 +12,7 @@ import {
   createTrack,
   enroll,
   type TestWorld,
+  defaultCourseId,
 } from '../testing/fixtures'
 import { getDashboardData } from './service'
 
@@ -74,7 +75,7 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     const pastBatch = await createBatch(world, pastTrack)
     await enroll(world, taughtStudent, pastBatch, 'student', 'inactive')
 
-    const data = await getDashboardData({ db: world.schoolDb }, me.id, me.name)
+    const data = await getDashboardData({ db: world.schoolDb }, me.id, me.name, await defaultCourseId(world))
 
     expect(data.firstName).toBe('Ada')
     expect(data.memberships.map(m => m.id).sort()).toEqual(
@@ -109,7 +110,7 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     world = await createTestSchool()
     const lonely = await createProfile(world, { name: 'Lonely Person' })
 
-    const data = await getDashboardData({ db: world.schoolDb }, lonely.id, lonely.name)
+    const data = await getDashboardData({ db: world.schoolDb }, lonely.id, lonely.name, await defaultCourseId(world))
 
     expect(data).toEqual({
       firstName: 'Lonely',
@@ -145,7 +146,7 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     await createEvaluation(world, { student: studentA, chapter: chapterA, evaluator: me })
     await createEvaluation(world, { student: studentB, chapter: chapterB, evaluator: me })
 
-    const data = await getDashboardData({ db: world.schoolDb }, me.id, me.name)
+    const data = await getDashboardData({ db: world.schoolDb }, me.id, me.name, await defaultCourseId(world))
 
     const teachingA = data.teaching.find(t => t.batchId === batchA.id)
     const teachingB = data.teaching.find(t => t.batchId === batchB.id)

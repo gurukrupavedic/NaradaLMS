@@ -20,8 +20,10 @@ import {
 import { summariseTrack, type CatalogTrack } from '@/lib/mock-catalog'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useSelectedProfileName } from '@/lib/auth/profile-store'
+import { useCoursePath } from '@/lib/course'
 
 export function AdminOverview() {
+  const cp = useCoursePath()
   // Two independent queries rather than one combined endpoint: batches and the
   // content catalog change on completely different cadences, and separating
   // them lets the catalog keep its 10-minute staleTime instead of being
@@ -75,7 +77,7 @@ export function AdminOverview() {
           <ol className="sheet">
             <li className="border-b border-rule-soft last:border-0">
               <Link
-                href="/admin/registrations"
+                href={cp('/admin/registrations')}
                 className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
               >
                 <span className="text-[0.9375rem]">Review applications</span>
@@ -88,7 +90,7 @@ export function AdminOverview() {
             </li>
             <li className="border-b border-rule-soft last:border-0">
               <Link
-                href="/admin/registrations?view=batchRequests"
+                href={cp('/admin/registrations?view=batchRequests')}
                 className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
               >
                 <span className="text-[0.9375rem]">Review batch requests</span>
@@ -108,7 +110,7 @@ export function AdminOverview() {
           <ol className="sheet">
             <li>
               <Link
-                href="/admin/exams"
+                href={cp('/admin/exams')}
                 className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
               >
                 <span className="text-[0.9375rem]">Grade certification exams</span>
@@ -127,7 +129,7 @@ export function AdminOverview() {
           count={`${batches.active.length} batches`}
           action={
             <Link
-              href="/admin/batches/new"
+              href={cp('/admin/batches/new')}
               className="label ml-auto shrink-0 rounded-full bg-vermilion px-3.5 py-1.5 text-paper transition-colors hover:bg-vermilion/90"
             >
               + New batch
@@ -163,6 +165,7 @@ export function AdminOverview() {
 }
 
 function CatalogRow({ track }: { track: CatalogTrack }) {
+  const cp = useCoursePath()
   const summary = summariseTrack(track)
   // Warm the catalog on hover — the gap before the click is almost exactly the
   // latency of the request it triggers.
@@ -171,7 +174,7 @@ function CatalogRow({ track }: { track: CatalogTrack }) {
   return (
     <li className="border-b border-rule-soft last:border-0">
       <Link
-        href={`/admin/tracks/${track.id}`}
+        href={cp(`/admin/tracks/${track.id}`)}
         {...prefetch}
         className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-ink/[0.03]"
       >

@@ -9,6 +9,7 @@ import {
   enrollment,
   type enrollmentStatus,
   getScopedDatabase,
+  isValidCourseSlug,
   member,
   organization,
   profile,
@@ -73,6 +74,7 @@ export async function upsertOrgMember(organizationId: string, userId: string, ro
 }
 
 export async function upsertCourse(db: SchoolDatabase, slug: string, name: string) {
+  assertCourseSlug(slug)
   const existing = await db.query.course.findFirst({
     where: (t, { eq }) => eq(t.slug, slug),
   })
@@ -81,6 +83,18 @@ export async function upsertCourse(db: SchoolDatabase, slug: string, name: strin
   const [row] = await db.insert(course).values({ slug, name }).returning()
   if (!row) throw new Error(`Failed to create course: ${slug}`)
   return row
+}
+
+// A course lives in the URL (`/vedam/dashboard`), so its slug must be a lower-case URL segment that
+// isn't a word the web app already uses at the top level. The database refuses one anyway; this says
+// why before anything is written.
+export function assertCourseSlug(slug: string): void {
+  if (!isValidCourseSlug(slug)) {
+    throw new Error(
+      `Course slug "${slug}" isn't usable: it must be lower-case letters, digits and single hyphens ` +
+        `(like "vedam" or "smartam-2"), and not a reserved word such as "login" or "admin".`,
+    )
+  }
 }
 
 // Tracks are numbered within their course, so the next order is the course's own max + 1.

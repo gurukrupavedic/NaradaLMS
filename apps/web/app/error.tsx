@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 
 import { ApiError } from '@/lib/api/client'
+import { coursePath } from '@/lib/course-path'
 
 /**
  * The one error surface for the app.
@@ -18,6 +20,9 @@ export default function ErrorBoundary({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  // Errors can happen anywhere; inside a course, "back" is that course's dashboard, elsewhere `/`
+  // (which finds the person's course).
+  const { course } = useParams<{ course?: string }>()
   const isApiError = error instanceof ApiError
   const notFound = isApiError && error.status === 404
 
@@ -42,7 +47,7 @@ export default function ErrorBoundary({
           </button>
         )}
         <Link
-          href="/dashboard"
+          href={course ? coursePath(course, '/dashboard') : '/'}
           className="label border border-rule px-4 py-2.5 text-ink-muted transition-colors hover:border-vermilion hover:text-vermilion"
         >
           Back to practice

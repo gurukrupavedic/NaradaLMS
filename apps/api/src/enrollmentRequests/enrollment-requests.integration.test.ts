@@ -9,6 +9,7 @@ import {
   createTrack,
   enroll as enrollFixture,
   type TestWorld,
+  defaultCourseId,
 } from '../testing/fixtures'
 import { findEnrollment } from '../enrollment/repository'
 import { approve, findAll, reject, request } from './service'
@@ -105,7 +106,7 @@ describe('findAll', () => {
     await createEnrollmentRequest(world, studentB, batchB) // different batch, out of scope
     await createEnrollmentRequest(world, studentA, batchA, { status: 'approved' }) // wrong status
 
-    const result = await findAll({ db: world.schoolDb }, { status: 'pending', limit: 20 }, [batchA.id])
+    const result = await findAll({ db: world.schoolDb }, { status: 'pending', limit: 20 }, [batchA.id], await defaultCourseId(world))
 
     expect(result.items.map(item => item.id)).toEqual([pendingInScope.id])
     expect(result.items[0]).toMatchObject({ studentName: studentA.name, batchCode: batchA.code, trackName: track.name })
@@ -121,7 +122,7 @@ describe('findAll', () => {
     const first = await createEnrollmentRequest(world, studentA, batchA)
     const second = await createEnrollmentRequest(world, studentB, batchB)
 
-    const result = await findAll({ db: world.schoolDb }, { status: 'pending', limit: 20 }, null)
+    const result = await findAll({ db: world.schoolDb }, { status: 'pending', limit: 20 }, null, await defaultCourseId(world))
 
     expect(result.items.map(item => item.id).sort()).toEqual([first.id, second.id].sort())
   })

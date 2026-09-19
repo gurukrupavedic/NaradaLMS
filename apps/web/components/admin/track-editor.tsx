@@ -21,6 +21,7 @@ import {
   useUpdateTrack,
 } from '@/lib/query/use-catalog-mutations'
 import { isReady, type CatalogChapter, type CatalogTrack } from '@/lib/mock-catalog'
+import { useCoursePath } from '@/lib/course'
 
 /**
  * Admin catalog and editor for one track.
@@ -45,15 +46,18 @@ import { isReady, type CatalogChapter, type CatalogTrack } from '@/lib/mock-cata
 const CHAPTER_CREATE_ATTEMPTS = 20
 
 export function TrackEditor({ trackId }: { trackId: string }) {
+  const cp = useCoursePath()
   const { data: track, error } = useQuery(catalogTrackQuery(trackId))
 
-  if (error) return <ScreenError error={error} backHref="/admin" backLabel="← Administration" />
+  if (error)
+    return <ScreenError error={error} backHref={cp('/admin')} backLabel="← Administration" />
   if (!track) return <ScreenSkeleton rows={11} />
 
   return <TrackEditorView track={track} trackId={trackId} />
 }
 
 function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: string }) {
+  const cp = useCoursePath()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [addChapterError, setAddChapterError] = useState<string | null>(null)
@@ -142,14 +146,17 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
 
       <div className="mx-auto max-w-5xl space-y-11 px-5 py-9">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <Link href="/admin" className="label text-ink-muted transition-colors hover:text-ink">
+          <Link
+            href={cp('/admin')}
+            className="label text-ink-muted transition-colors hover:text-ink"
+          >
             ← Administration
           </Link>
           {/* Not a deep link to this specific track — `/practice` shows every track a reader has,
               not one. Still worth the link: it's the nearest honest answer to "what does this
               look like once it's published" now that there's no more single-track reader page. */}
           <Link
-            href="/practice"
+            href={cp('/practice')}
             className="label text-ink-muted transition-colors hover:text-vermilion"
           >
             See the practice view →
@@ -206,7 +213,7 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
               {track.batchCodes.map(code => (
                 <Link
                   key={code}
-                  href={`/admin/batches/${encodeURIComponent(code)}`}
+                  href={cp(`/admin/batches/${encodeURIComponent(code)}`)}
                   className="font-mono text-[0.75rem] underline decoration-vermilion/40 decoration-1 underline-offset-4 transition-colors hover:decoration-vermilion"
                 >
                   {code}

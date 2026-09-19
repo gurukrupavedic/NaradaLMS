@@ -19,6 +19,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import { useCoursePath } from '@/lib/course'
 
 /**
  * The command palette — Cmd/Ctrl+K anywhere in the app, or the "Search" button in `AppShell`'s
@@ -72,18 +73,19 @@ const KIND_ICON: Record<ResultKind, React.ComponentType<{ className?: string }>>
   registration: UserPlus,
 }
 
-function hrefFor(result: SearchResult): string {
+// `cp` puts the current course in front of a path (`useCoursePath()`).
+function hrefFor(result: SearchResult, cp: (path: string) => string): string {
   switch (result.kind) {
     case 'student':
-      return `/students/${result.id}`
+      return cp(`/students/${result.id}`)
     case 'batch':
-      return `/admin/batches/${result.code}`
+      return cp(`/admin/batches/${result.code}`)
     case 'track':
-      return `/admin/tracks/${result.id}`
+      return cp(`/admin/tracks/${result.id}`)
     case 'chapter':
-      return `/chapters/${result.code}`
+      return cp(`/chapters/${result.code}`)
     case 'registration':
-      return `/admin/registrations/${result.id}`
+      return cp(`/admin/registrations/${result.id}`)
   }
 }
 
@@ -174,6 +176,7 @@ function buildGroups(
 }
 
 export function CommandPalette() {
+  const cp = useCoursePath()
   const router = useRouter()
   const hasAdminAccess = Boolean(useHasAdminAccess())
   const [open, setOpen] = useState(false)
@@ -253,7 +256,7 @@ export function CommandPalette() {
   }
 
   function navigateTo(result: SearchResult) {
-    router.push(hrefFor(result))
+    router.push(hrefFor(result, cp))
     handleOpenChange(false)
   }
 

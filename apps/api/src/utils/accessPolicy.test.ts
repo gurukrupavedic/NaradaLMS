@@ -15,7 +15,15 @@ vi.mock('../enrollment/service', () => ({
   hasSharedInstructorEnrollment: vi.fn(),
 }))
 
+// The one course-membership query the content gate makes; its own behaviour is covered against a
+// real database in courses/contentGate.integration.test.ts.
+vi.mock('../courses/repository', () => ({
+  isProfilePartOfCourse: vi.fn(),
+}))
+
 import { publicDb, type SchoolDbClient, type SchoolProfile } from '@narada/db'
+
+import * as courseRepository from '../courses/repository'
 
 import { AccessPolicy } from './accessPolicy'
 import * as enrollmentService from '../enrollment/service'
@@ -465,6 +473,50 @@ describe('AccessPolicy — evaluations (§10.3–§10.5)', () => {
   })
 })
 
+describe('AccessPolicy#getCourseVisibility', () => {
+  it('lets a school admin pick from every course, with or without an active profile', async () => {
+    mockMembership('admin')
+
+    const withoutProfile = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+    const withProfile = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(withoutProfile.getCourseVisibility()).toEqual({ kind: 'all' })
+    expect(withProfile.getCourseVisibility()).toEqual({ kind: 'all' })
+  })
+
+  it("limits anyone else to their own profile's courses", async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    expect(access.getCourseVisibility()).toEqual({ kind: 'ofProfile', profileId: 'profile-1' })
+  })
+
+  it('has nothing to offer a non-admin with no active profile, rather than guessing', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+
+    expect(() => access.getCourseVisibility()).toThrow()
+  })
+})
+
 describe('AccessPolicy#requireCanSearchProfiles', () => {
   it('allows a school admin, denies a plain member', async () => {
     mockMembership('admin')
@@ -734,5 +786,71 @@ describe('AccessPolicy#requireCanUpdateContent', () => {
     })
 
     expect(() => access.requireCanUpdateContent()).not.toThrow()
+  })
+})
+
+describe('AccessPolicy#canReadCourseContent / requireCanReadCourseContent', () => {
+  it('a school admin may read any course’s content without a membership lookup', async () => {
+    mockMembership('admin')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.canReadCourseContent('course-1')).resolves.toBe(true)
+    expect(courseRepository.isProfilePartOfCourse).not.toHaveBeenCalled()
+  })
+
+  it('an admin with no active profile may still read', async () => {
+    mockMembership('owner')
+    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+
+    await expect(access.canReadCourseContent('course-1')).resolves.toBe(true)
+  })
+
+  it('a member reads exactly the courses their profile is part of', async () => {
+    mockMembership('member')
+    vi.mocked(courseRepository.isProfilePartOfCourse).mockImplementation(
+      async (_db, _profileId, courseId) => courseId === 'mine',
+    )
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.canReadCourseContent('mine')).resolves.toBe(true)
+    await expect(access.canReadCourseContent('theirs')).resolves.toBe(false)
+    expect(courseRepository.isProfilePartOfCourse).toHaveBeenCalledWith(
+      expect.anything(),
+      'profile-1',
+      'theirs',
+    )
+  })
+
+  it('a member with no active profile is part of nothing', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({ db: schoolDbWithEnrollments([]), school, user: user() })
+
+    await expect(access.canReadCourseContent('course-1')).resolves.toBe(false)
+    expect(courseRepository.isProfilePartOfCourse).not.toHaveBeenCalled()
+  })
+
+  it('requireCanReadCourseContent is a 403 for a course the caller is not part of', async () => {
+    mockMembership('member')
+    vi.mocked(courseRepository.isProfilePartOfCourse).mockResolvedValue(false)
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.requireCanReadCourseContent('course-1')).rejects.toMatchObject({
+      statusCode: 403,
+    })
   })
 })

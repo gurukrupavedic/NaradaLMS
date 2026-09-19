@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { batch, enrollment, track } from '@narada/db'
+import { batch, course, enrollment, track } from '@narada/db'
 
 import { destroyTestWorld } from '../testing/cleanup'
 import {
@@ -64,6 +64,44 @@ async function activeSeats(w: TestWorld, profileId: string) {
     where: (t, { and, eq: eqCol }) => and(eqCol(t.profileId, profileId), eqCol(t.status, 'active')),
   })
 }
+
+describe('what a course slug may be, in the database', () => {
+  const insertCourse = (slug: string) =>
+    world!.schoolDb
+      .insert(course)
+      .values({ slug, name: 'X' })
+      .catch((e: unknown) => e)
+
+  it.each(['vedam', 'smartam-2', '2026'])('accepts %s', async slug => {
+    world = await createTestSchool()
+
+    expect(await insertCourse(slug)).not.toBeInstanceOf(Error)
+  })
+
+  it.each(['Vedam', 've dam', 've/dam', '-vedam', 'vedam-', 've--dam'])(
+    'refuses %j — not a lower-case URL segment',
+    async slug => {
+      world = await createTestSchool()
+
+      expect(violation(await insertCourse(slug))).toEqual({
+        code: '23514',
+        constraint: 'course_slug_valid',
+      })
+    },
+  )
+
+  it.each(['login', 'register', 'admin', 'dashboard', 'link-device'])(
+    'refuses the reserved word %s, which a top-level route already owns',
+    async slug => {
+      world = await createTestSchool()
+
+      expect(violation(await insertCourse(slug))).toEqual({
+        code: '23514',
+        constraint: 'course_slug_valid',
+      })
+    },
+  )
+})
 
 describe('the one-active-seat-per-course rule, in the database', () => {
   it('lets a student hold an active seat in only one batch of a course', async () => {
@@ -401,13 +439,6 @@ describe('the race: two seatings for one student at the same moment', () => {
 })
 
 describe('resolveCourse', () => {
-  it('uses the school’s only course when no slug is given', async () => {
-    world = await createTestSchool()
-    const only = await createCourse(world, { slug: 'vedam' })
-
-    await expect(resolveCourse(world.schoolDb, undefined)).resolves.toMatchObject({ id: only.id })
-  })
-
   it('finds a course by slug', async () => {
     const s = await seedTwoCourses()
     world = s.w
@@ -424,20 +455,13 @@ describe('resolveCourse', () => {
     await expect(resolveCourse(world.schoolDb, 'nope')).rejects.toMatchObject({ statusCode: 404 })
   })
 
-  it('422s rather than guessing when the school has several courses and none was named', async () => {
+  it('400s rather than guessing when none was named, however many courses the school has', async () => {
     const s = await seedTwoCourses()
     world = s.w
 
     await expect(resolveCourse(world.schoolDb, undefined)).rejects.toMatchObject({
-      statusCode: 422,
+      statusCode: 400,
     })
-  })
-
-  it('422s for a school with no courses at all', async () => {
-    world = await createTestSchool()
-
-    await expect(resolveCourse(world.schoolDb, undefined)).rejects.toMatchObject({
-      statusCode: 422,
-    })
+    await expect(resolveCourse(world.schoolDb, '')).rejects.toMatchObject({ statusCode: 400 })
   })
 })

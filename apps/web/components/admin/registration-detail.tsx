@@ -15,6 +15,7 @@ import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
 import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
 import type { ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
+import { useCoursePath } from '@/lib/course'
 
 const STATUS_LABEL: Record<ApiRegistrationStatus, string> = {
   pending: 'Pending review',
@@ -30,15 +31,17 @@ const AGREEMENT_LABELS: { key: keyof ApiRegistration; label: string }[] = [
 ]
 
 export function RegistrationDetail({ registrationId }: { registrationId: string }) {
+  const cp = useCoursePath()
   const { data: registration, error } = useQuery(registrationQuery(registrationId))
 
-  if (error) return <ScreenError error={error} backHref="/admin/registrations" backLabel="← Registrations" />
+  if (error) return <ScreenError error={error} backHref={cp('/admin/registrations')} backLabel="← Registrations" />
   if (!registration) return <ScreenSkeleton rows={8} />
 
   return <RegistrationDetailView registration={registration} />
 }
 
 function RegistrationDetailView({ registration }: { registration: ApiRegistration }) {
+  const cp = useCoursePath()
   const router = useRouter()
   const approve = useApproveRegistration()
   const reject = useRejectRegistration()
@@ -47,12 +50,12 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
 
   async function handleApprove() {
     await approve.mutateAsync(registration.id)
-    router.push('/admin/registrations')
+    router.push(cp('/admin/registrations'))
   }
 
   async function handleReject() {
     await reject.mutateAsync(registration.id)
-    router.push('/admin/registrations')
+    router.push(cp('/admin/registrations'))
   }
 
   return (
@@ -64,7 +67,7 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
       />
 
       <div className="mx-auto max-w-5xl space-y-11 px-5 py-9">
-        <Link href="/admin/registrations" className="label text-ink-muted transition-colors hover:text-ink">
+        <Link href={cp('/admin/registrations')} className="label text-ink-muted transition-colors hover:text-ink">
           ← Registrations
         </Link>
 

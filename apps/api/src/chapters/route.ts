@@ -8,7 +8,7 @@ import {
   createAudioUpload,
   createChapter,
   deleteAudioAsset,
-  findById,
+  findByIdForReader,
   resegmentChapter,
   setAudioMappings,
   updateChapter,
@@ -35,7 +35,7 @@ router.get(
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { chapterId } = await parse(chapterIdParams, req.params)
     const view = access.getContentReadView()
-    const chapter = await findById({ db }, chapterId, view)
+    const chapter = await findByIdForReader({ db }, chapterId, view, access)
     res.status(200).json({ data: chapter })
   }),
 )

@@ -6,7 +6,7 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 
 **Base URL:** All routes are prefixed with `/v1`.
 
-**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. BetterAuth's `activeOrganizationId` is not used for tenant selection. Requests that create something owned by a course (a registration, today) may also send `X-Course-Slug` to say which; with no header, a school that has exactly one course uses it, and a school with several answers `422` rather than guessing. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
+**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. BetterAuth's `activeOrganizationId` is not used for tenant selection. **Course context:** `X-Course-Slug` says which course a request is about — the web app sends the course in the page address (`/<course>/…`). One rule everywhere, with no default: a named course is that course (`404 course not found` if there isn't one), and a request that names none is a `400`. Course-owned **lists** are limited to it (tracks, batches, the dashboard and profile detail, exams, enrollment requests, registrations), and a registration is filed under it. A course's **content** (tracks, chapters, and the dashboard/profile detail that carry the track catalogue) is a gate: a non-admin can only read the courses their profile is part of — `403` when a list names a course they aren't in, `404` (as if it didn't exist) for a track or chapter by id, whatever the header says. Everything else with an id is unchanged: the header is context, and batch and school roles decide access. See `docs/courses.md`. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
 
 **Authentication:** BetterAuth session cookies. Every route except BetterAuth's own auth endpoints requires a valid session. The authenticated user's `shared.user.id` is available on the request context.
 
@@ -160,7 +160,7 @@ Update school metadata.
 
 List all tracks with their chapters. Students only see tracks that contain published chapters.
 
-**Access:** All school members.
+**Access:** School members who are part of the course the request names (`X-Course-Slug`, required); admins may name any. `403` for a course the caller isn't part of. See `docs/courses.md`.
 
 ```ts
 // Response 200
@@ -190,7 +190,7 @@ Students receive chapters filtered to `status: "published"` only.
 
 Single track with full chapter list.
 
-**Access:** All school members.
+**Access:** School members who are part of the track's course; admins any. A track in another course is `404`, indistinguishable from a missing one.
 
 ```ts
 // Response 200
@@ -295,7 +295,7 @@ Update track metadata.
 
 Full chapter with text metadata, segments, audio assets, and mappings.
 
-**Access:** School members with `content:read`. Draft chapters require `draft:read`; otherwise the API returns `403 FORBIDDEN`.
+**Access:** School members with `content:read` who are part of the chapter's course (admins: any). A chapter in another course is `404`, indistinguishable from a missing one. Draft chapters require `draft:read`; otherwise the API returns `403 FORBIDDEN`.
 
 ```ts
 // Response 200
@@ -901,6 +901,29 @@ List evaluation history for one student in a batch.
 ```
 
 Results are ordered by `evaluatedAt` descending.
+
+---
+
+## Courses
+
+### `GET /v1/courses`
+
+Every course in the school. Needs `X-School-Slug`; no session — a course's name and slug are not secret (each has its own registration link). Not limited by `X-Course-Slug`.
+
+```ts
+// Response 200
+{ ok: true, data: { items: Array<{ id: string, slug: string, name: string }> } }
+```
+
+### `GET /v1/courses/:slug`
+
+One course by slug (case-insensitive), for a registration link like `/vedam/register`. No session. `404` if there is no such course.
+
+### `GET /v1/me/courses`
+
+The courses the caller may pick from — what the course dropdown lists. A school admin sees **every** course; anyone else sees the courses their own profile is part of: an enrollment in any status (a finished batch is still part of your record), or the registration that created the profile (so a newly approved applicant, with no batch yet, sees the course they applied to). Same response shape as `GET /v1/courses`.
+
+It is the same rule that gates a course's content (see `docs/courses.md`), so what is offered here is what may be read.
 
 ---
 

@@ -13,8 +13,9 @@ export async function findAll(
   context: EnrollmentRequestServiceContext,
   params: FindEnrollmentRequestsData,
   batchIds: string[] | null,
+  courseId: string,
 ): Promise<{ items: EnrollmentRequest[]; nextCursor: string | null }> {
-  return repository.findAll(context.db, params, batchIds)
+  return repository.findAll(context.db, params, batchIds, courseId)
 }
 
 export async function findById(context: EnrollmentRequestServiceContext, id: string): Promise<EnrollmentRequest> {

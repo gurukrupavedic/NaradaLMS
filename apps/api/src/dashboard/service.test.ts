@@ -50,14 +50,14 @@ describe('getDashboardData', () => {
   it("derives firstName from the profile's first name only", async () => {
     vi.mocked(batchesRepository.findAllMembershipsWithDetail).mockResolvedValue([])
 
-    const data = await getDashboardData(context, 'me', 'Ada Lovelace')
+    const data = await getDashboardData(context, 'me', 'Ada Lovelace', 'course-1')
     expect(data.firstName).toBe('Ada')
   })
 
   it("falls back to 'there' for a blank name", async () => {
     vi.mocked(batchesRepository.findAllMembershipsWithDetail).mockResolvedValue([])
 
-    const data = await getDashboardData(context, 'me', '')
+    const data = await getDashboardData(context, 'me', '', 'course-1')
     expect(data.firstName).toBe('there')
   })
 
@@ -78,7 +78,7 @@ describe('getDashboardData', () => {
       },
     ])
 
-    const data = await getDashboardData(context, 'me', 'Me')
+    const data = await getDashboardData(context, 'me', 'Me', 'course-1')
 
     expect(data.teaching).toEqual([])
     expect(evaluationsRepository.findForChaptersAndStudents).toHaveBeenCalledWith(db, [], [])
@@ -156,7 +156,7 @@ describe('getDashboardData', () => {
       evalForStudent2,
     ])
 
-    const data = await getDashboardData(context, 'instructor-me', 'Instructor Me')
+    const data = await getDashboardData(context, 'instructor-me', 'Instructor Me', 'course-1')
 
     expect(evaluationsRepository.findForChaptersAndStudents).toHaveBeenCalledWith(
       db,
@@ -190,7 +190,7 @@ describe('getDashboardData', () => {
       new Map([['student-1', [{ id: 'past-batch', trackId: 'track-1', courseId: 'course-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }]]]),
     )
 
-    const data = await getDashboardData(context, 'me', 'Me')
+    const data = await getDashboardData(context, 'me', 'Me', 'course-1')
 
     expect(data.pastBatchesByStudent).toEqual([
       { studentId: 'student-1', batches: [{ id: 'past-batch', trackId: 'track-1', courseId: 'course-1', code: 'P', status: 'completed', startDate: null, meetingUrl: null }] },
@@ -264,13 +264,30 @@ describe('getDashboardData', () => {
     vi.mocked(examsRepository.findResultsForStudent).mockResolvedValue(examResults)
     vi.mocked(examsRepository.findUpcomingForStudent).mockResolvedValue(upcomingExams)
 
-    const data = await getDashboardData(context, 'me', 'Me')
+    const data = await getDashboardData(context, 'me', 'Me', 'course-1')
 
     expect(data.memberships).toEqual(memberships)
     expect(data.tracks).toEqual(tracks)
     expect(data.studentEvaluations).toEqual(studentEvaluations)
     expect(data.examResults).toEqual(examResults)
     expect(data.upcomingExams).toEqual(upcomingExams)
-    expect(examsRepository.findResultsForStudent).toHaveBeenCalledWith(db, 'me')
+    expect(examsRepository.findResultsForStudent).toHaveBeenCalledWith(db, 'me', 'course-1')
+  })
+
+  it('limits every course-aware read to the course', async () => {
+    vi.mocked(batchesRepository.findAllMembershipsWithDetail).mockResolvedValue([])
+
+    await getDashboardData(context, 'me', 'Me', 'course-1')
+
+    expect(batchesRepository.findAllMembershipsWithDetail).toHaveBeenCalledWith(db, 'me', 'course-1')
+    expect(tracksService.findAll).toHaveBeenCalledWith(context, { kind: 'learnerPreview' }, 'course-1')
+    expect(enrollmentRequestsRepository.findPendingBatchIdsForProfile).toHaveBeenCalledWith(
+      db,
+      'me',
+      'course-1',
+    )
+    expect(evaluationsRepository.findAllForStudent).toHaveBeenCalledWith(db, 'me', 'course-1')
+    expect(examsRepository.findResultsForStudent).toHaveBeenCalledWith(db, 'me', 'course-1')
+    expect(examsRepository.findUpcomingForStudent).toHaveBeenCalledWith(db, 'me', 'course-1')
   })
 })

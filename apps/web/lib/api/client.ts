@@ -18,6 +18,7 @@
  */
 
 import { clearSelectedProfile, getSelectedProfileId } from '@/lib/auth/profile-store'
+import { courseFromPathname } from '@/lib/course-path'
 
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG
 
@@ -35,11 +36,16 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const profileId = getSelectedProfileId()
+  // The course is the URL's first segment (`/vedam/dashboard`) — read here, at request time, so a
+  // request can only ever name the course the tab is actually on. Top-level pages (`/login`, `/`)
+  // are in no course and send none.
+  const courseSlug = courseFromPathname(window.location.pathname)
   const response = await fetch(`/v1${path}`, {
     ...init,
     headers: {
       'x-school-slug': SCHOOL_SLUG ?? '',
       ...(profileId ? { 'x-profile-id': profileId } : {}),
+      ...(courseSlug ? { 'x-course-slug': courseSlug } : {}),
       ...init?.headers,
     },
   })
@@ -92,7 +98,11 @@ export async function fetchApi<T>(path: string, options?: { schoolWide?: boolean
  * `presignAudioUpload`, etc.) is the one place in this app's admin surface with a real endpoint to
  * call, so it calls it, through the same header injection and 401 handling `fetchApi` already has.
  */
-export async function mutateApi<T>(path: string, method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', body?: unknown): Promise<T> {
+export async function mutateApi<T>(
+  path: string,
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  body?: unknown,
+): Promise<T> {
   return request<T>(path, {
     method,
     headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,

@@ -10,10 +10,15 @@ const router = Router()
 
 router.get(
   '/',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
     const scope = access.getEnrollmentRequestVisibility()
     const query = await parse(FindEnrollmentRequestsSchema, req.query)
-    const result = await findAll({ db }, query, scope.kind === 'all' ? null : scope.batchIds)
+    const result = await findAll(
+      { db },
+      query,
+      scope.kind === 'all' ? null : scope.batchIds,
+      (await getCourse()).id,
+    )
     res.status(200).json({ data: result })
   }),
 )

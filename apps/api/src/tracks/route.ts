@@ -3,16 +3,20 @@ import * as z from 'zod'
 
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { findAll, findById, reorderChapters } from './service'
+import { findAll, findByIdForReader, reorderChapters } from './service'
 import { ReorderChaptersSchema } from './schema'
 
 const router = Router()
 
 router.get(
   '/',
-  optionalProfileRoute(async ({ res, db, access }) => {
+  optionalProfileRoute(async ({ res, db, access, getCourse }) => {
     const view = access.getContentReadView()
-    const tracks = await findAll({ db }, view)
+    const course = await getCourse()
+    // The request names the course whose tracks it wants, so refusing it outright ("you are not part
+    // of this course") discloses nothing.
+    await access.requireCanReadCourseContent(course.id)
+    const tracks = await findAll({ db }, view, course.id)
     res.status(200).json({ data: tracks })
   }),
 )
@@ -22,7 +26,7 @@ router.get(
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { trackId } = await parse(z.object({ trackId: z.uuid() }), req.params)
     const view = access.getContentReadView()
-    const track = await findById({ db }, trackId, view)
+    const track = await findByIdForReader({ db }, trackId, view, access)
     res.status(200).json({ data: track })
   }),
 )

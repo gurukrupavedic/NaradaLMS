@@ -6,7 +6,16 @@ import { track } from '@narada/db'
 import * as examRepository from '../exams/repository'
 import { destroyTestWorld } from '../testing/cleanup'
 import { pgErrorCode } from '../testing/concurrency'
-import { createBatch, createChapter, createProfile, createTestSchool, createCourse, createTrack, enroll, type TestWorld } from '../testing/fixtures'
+import {
+  createBatch,
+  createChapter,
+  createProfile,
+  createTestSchool,
+  createTrack,
+  defaultCourseId,
+  enroll,
+  type TestWorld,
+} from '../testing/fixtures'
 import { parse } from '../utils/validate'
 import {
   deleteClassSlots,
@@ -135,6 +144,7 @@ describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
       world.schoolDb,
       { limit: 2, status: undefined, cursor: undefined },
       { kind: 'all' },
+      await defaultCourseId(world),
     )
     expect(page1.items.map(b => b.id)).toEqual([b3.id, b2.id])
     expect(page1.nextCursor).not.toBeNull()
@@ -143,6 +153,7 @@ describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
       world.schoolDb,
       { limit: 2, status: undefined, cursor: { startDate: d2, id: b2.id } },
       { kind: 'all' },
+      await defaultCourseId(world),
     )
     expect(page2.items.map(b => b.id)).toEqual([b1.id, nulls[0]!.id])
     expect(page2.nextCursor).not.toBeNull()
@@ -151,6 +162,7 @@ describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
       world.schoolDb,
       { limit: 2, status: undefined, cursor: { startDate: null, id: nulls[0]!.id } },
       { kind: 'all' },
+      await defaultCourseId(world),
     )
     expect(page3.items.map(b => b.id)).toEqual([nulls[1]!.id])
     expect(page3.nextCursor).toBeNull()
@@ -172,6 +184,7 @@ describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
       world.schoolDb,
       { limit: 100, status: undefined, cursor: undefined },
       { kind: 'all' },
+      await defaultCourseId(world),
     )
 
     expect(page.items.map(b => b.id)).toEqual(sorted.map(b => b.id))
@@ -189,6 +202,7 @@ describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
       world.schoolDb,
       { limit: 100, status: undefined, cursor: undefined },
       { kind: 'enrolled', profileId: studentProfile.id },
+      await defaultCourseId(world),
     )
 
     expect(page.items.map(b => b.id)).toEqual([enrolledBatch.id])
@@ -404,15 +418,15 @@ describe(
     it("the 'all' scope returns every batch with roster/classSlots, nulling role for a batch the target profile doesn't teach", async () => {
       world = await createTestSchool()
       const trackRow = await createTrack(world)
-      const otherTrack = await createTrack(world, { course: await createCourse(world) })
       const admin = await createProfile(world, { name: 'Admin' })
       const taughtBatch = await createBatch(world, trackRow)
-      // Another course: the student is active in both batches, which one course would forbid.
-      const untaughtBatch = await createBatch(world, otherTrack)
+      const untaughtBatch = await createBatch(world, trackRow)
       const student = await createProfile(world, { name: 'A Student' })
+      // A different student in the other batch: one student can't hold an active seat in two batches of a course.
+      const otherStudent = await createProfile(world, { name: 'Another Student' })
       await enroll(world, admin, taughtBatch, 'instructor')
       await enroll(world, student, taughtBatch, 'student')
-      await enroll(world, student, untaughtBatch, 'student')
+      await enroll(world, otherStudent, untaughtBatch, 'student')
       await insertClassSlots(world.schoolDb, untaughtBatch.id, [
         { dayOfWeek: 1, time: '09:00', durationMinutes: 60 },
       ])
@@ -422,6 +436,7 @@ describe(
         { limit: 20, status: undefined, cursor: undefined },
         { kind: 'all' },
         admin.id,
+        await defaultCourseId(world),
       )
 
       const taught = items.find(i => i.id === taughtBatch.id)
@@ -446,6 +461,7 @@ describe(
         { limit: 20, status: undefined, cursor: undefined },
         { kind: 'enrolled', profileId: student.id },
         student.id,
+        await defaultCourseId(world),
       )
 
       expect(items.map(i => i.id)).toEqual([enrolledBatch.id])
@@ -466,12 +482,14 @@ describe(
         world.schoolDb,
         { limit: 100, status: undefined, cursor: undefined },
         { kind: 'all' },
+        await defaultCourseId(world),
       )
       const detailOrder = await findAccessibleWithDetail(
         world.schoolDb,
         { limit: 100, status: undefined, cursor: undefined },
         { kind: 'all' },
         admin.id,
+        await defaultCourseId(world),
       )
 
       expect(detailOrder.items.map(i => i.id)).toEqual(bareOrder.items.map(i => i.id))
@@ -493,6 +511,7 @@ describe(
         { limit: 2, status: undefined, cursor: undefined },
         { kind: 'all' },
         admin.id,
+        await defaultCourseId(world),
       )
       expect(page1.items).toHaveLength(2)
       expect(page1.nextCursor).not.toBeNull()
@@ -505,6 +524,7 @@ describe(
         { limit: 2, status: undefined, cursor: { startDate: d2, id: b2.id } },
         { kind: 'all' },
         admin.id,
+        await defaultCourseId(world),
       )
       expect(page2.items).toHaveLength(1)
       expect(page2.nextCursor).toBeNull()

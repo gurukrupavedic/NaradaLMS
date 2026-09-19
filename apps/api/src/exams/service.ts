@@ -24,8 +24,9 @@ export async function findExams(
   context: ExamServiceContext,
   params: FindExamsData,
   scope: ExamReadScope,
+  courseId: string,
 ): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
-  return repository.findMany(context.db, params, scope)
+  return repository.findMany(context.db, params, scope, courseId)
 }
 
 /** Bare exam row — internal use only (authorization checks, transition guards); see `findByIdWithDetail` for the read path. */

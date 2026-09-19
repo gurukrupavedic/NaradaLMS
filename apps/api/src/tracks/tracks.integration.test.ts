@@ -6,6 +6,7 @@ import {
   createTestSchool,
   createTrack,
   type TestWorld,
+  defaultCourseId,
 } from '../testing/fixtures'
 import { updateChapter } from '../chapters/service'
 import { findAll, findById } from './repository'
@@ -28,7 +29,7 @@ describe('findAll', () => {
     await createChapter(world, trackA, { order: 2, status: 'published' })
     await createChapter(world, trackA, { order: 1, status: 'published' })
 
-    const tracks = await findAll(world.schoolDb, { kind: 'authoring' })
+    const tracks = await findAll(world.schoolDb, { kind: 'authoring' }, await defaultCourseId(world))
 
     expect(tracks.map(t => t.id)).toEqual([trackA.id, trackB.id])
     expect(tracks[0]?.chapters.map(c => c.order)).toEqual([1, 2])
@@ -40,10 +41,10 @@ describe('findAll', () => {
     const published = await createChapter(world, trackRow, { status: 'published' })
     const draft = await createChapter(world, trackRow, { status: 'draft' })
 
-    const learnerView = await findAll(world.schoolDb, { kind: 'learnerPreview' })
+    const learnerView = await findAll(world.schoolDb, { kind: 'learnerPreview' }, await defaultCourseId(world))
     expect(learnerView[0]?.chapters.map(c => c.id)).toEqual([published.id])
 
-    const authoringView = await findAll(world.schoolDb, { kind: 'authoring' })
+    const authoringView = await findAll(world.schoolDb, { kind: 'authoring' }, await defaultCourseId(world))
     expect(authoringView[0]?.chapters.map(c => c.id).sort()).toEqual(
       [published.id, draft.id].sort(),
     )
@@ -54,7 +55,7 @@ describe('findAll', () => {
     const trackRow = await createTrack(world)
     await createChapter(world, trackRow, { status: 'draft' })
 
-    const learnerView = await findAll(world.schoolDb, { kind: 'learnerPreview' })
+    const learnerView = await findAll(world.schoolDb, { kind: 'learnerPreview' }, await defaultCourseId(world))
 
     expect(learnerView.map(t => t.id)).toContain(trackRow.id)
     expect(learnerView.find(t => t.id === trackRow.id)?.chapters).toEqual([])

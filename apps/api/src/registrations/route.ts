@@ -25,10 +25,10 @@ router.post(
 
 router.get(
   '/',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
     access.requireCanReviewRegistrations()
     const query = await parse(FindRegistrationsSchema, req.query)
-    const result = await findAll({ db }, query)
+    const result = await findAll({ db }, query, (await getCourse()).id)
     res.status(200).json({ data: result })
   }),
 )

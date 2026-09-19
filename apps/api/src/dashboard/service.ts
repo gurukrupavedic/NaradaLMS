@@ -22,11 +22,13 @@ export async function getDashboardData(
   context: DashboardServiceContext,
   profileId: string,
   profileName: string,
+  courseId: string,
 ): Promise<DashboardData> {
+  // Everything below is that course's: its tracks, this profile's batches, marks, exams and results in it.
   const [memberships, tracks, pendingBatchIds] = await Promise.all([
-    batchesRepository.findAllMembershipsWithDetail(context.db, profileId),
-    findAllTracks(context, { kind: 'learnerPreview' }),
-    enrollmentRequestsRepository.findPendingBatchIdsForProfile(context.db, profileId),
+    batchesRepository.findAllMembershipsWithDetail(context.db, profileId, courseId),
+    findAllTracks(context, { kind: 'learnerPreview' }, courseId),
+    enrollmentRequestsRepository.findPendingBatchIdsForProfile(context.db, profileId, courseId),
   ])
 
   const trackById = new Map(tracks.map(track => [track.id, track]))
@@ -52,15 +54,15 @@ export async function getDashboardData(
 
   const [studentEvaluations, examResults, upcomingExams, teachingEvaluationsFlat, pastBatchesByStudentId] =
     await Promise.all([
-      evaluationsRepository.findAllForStudent(context.db, profileId),
-      examsRepository.findResultsForStudent(context.db, profileId),
-      examsRepository.findUpcomingForStudent(context.db, profileId),
+      evaluationsRepository.findAllForStudent(context.db, profileId, courseId),
+      examsRepository.findResultsForStudent(context.db, profileId, courseId),
+      examsRepository.findUpcomingForStudent(context.db, profileId, courseId),
       evaluationsRepository.findForChaptersAndStudents(
         context.db,
         teachingChapterIds,
         teachingStudentIds,
       ),
-      batchesRepository.findAllForProfiles(context.db, teachingStudentIds),
+      batchesRepository.findAllForProfiles(context.db, teachingStudentIds, courseId),
     ])
 
   // One query fetched every taught-batch-relevant evaluation at once; bucket it back per batch

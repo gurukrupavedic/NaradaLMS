@@ -16,6 +16,7 @@ import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
 import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/mock-dashboard'
+import { useCoursePath } from '@/lib/course'
 
 const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Completed' } as const
 
@@ -27,18 +28,20 @@ const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Compl
  * can a student get in, and who is falling behind.
  */
 export function BatchDetail({ code }: { code: string }) {
+  const cp = useCoursePath()
   const { data: batch, error } = useQuery(adminBatchQuery(code))
 
   // The view's hover-prefetch hook needs `batch.trackId`, so the loading branch
   // has to sit above it — hence the container/view split rather than an early
   // return that would break the rules of hooks.
-  if (error) return <ScreenError error={error} backHref="/admin" backLabel="← All batches" />
+  if (error) return <ScreenError error={error} backHref={cp('/admin')} backLabel="← All batches" />
   if (!batch) return <ScreenSkeleton rows={10} />
 
   return <BatchDetailView batch={batch} />
 }
 
 function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
+  const cp = useCoursePath()
   const summary = summariseRoster(batch.roster)
   const catalogPrefetch = usePrefetch(catalogTrackQuery(batch.trackId))
 
@@ -62,7 +65,10 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
 
       <div className="mx-auto max-w-5xl space-y-11 px-5 py-9">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <Link href="/admin" className="label text-ink-muted transition-colors hover:text-ink">
+          <Link
+            href={cp('/admin')}
+            className="label text-ink-muted transition-colors hover:text-ink"
+          >
             ← All batches
           </Link>
           {/* Points at the admin catalog, not `/tracks/[id]`. That route is the
@@ -71,7 +77,7 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
               personal progress in a track they may not even study, instead of
               the syllabus they came to inspect. */}
           <Link
-            href={`/admin/tracks/${batch.trackId}`}
+            href={cp(`/admin/tracks/${batch.trackId}`)}
             {...catalogPrefetch}
             className="label text-ink-muted transition-colors hover:text-vermilion"
           >

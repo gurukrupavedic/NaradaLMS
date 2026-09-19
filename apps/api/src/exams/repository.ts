@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, getTableColumns, gt, inArray, or, type SQL } from 'drizzle-orm'
 
-import { chapter, evaluation, exam, examResult, type SchoolDb } from '@narada/db'
+import { chapter, evaluation, exam, examResult, track, type SchoolDb } from '@narada/db'
 
 import type { ExamReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
@@ -40,12 +40,20 @@ function toDetail<Row extends { result: ExamResultRow | null }>(row: Row) {
  * only a `trackId`, not enough to render on its own, and `apps/api/src`'s reference
  * `findManyExams` does the same eager-load in this exact query rather than a follow-up fan-out.
  */
+// An exam belongs to a course through its track.
+function tracksOfCourse(db: SchoolDb, courseId: string) {
+  return db.select({ id: track.id }).from(track).where(eq(track.courseId, courseId))
+}
+
 export async function findMany(
   db: SchoolDb,
   { status, cursor, limit }: FindExamsData,
   scope: ExamReadScope,
+  courseId: string,
 ): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
   const conditions: SQL[] = []
+  conditions.push(inArray(exam.trackId, tracksOfCourse(db, courseId)))
+
   if (scope.kind === 'own') {
     conditions.push(eq(exam.studentId, scope.profileId))
   } else if (scope.kind === 'manageable') {
@@ -102,10 +110,15 @@ export async function findByIdWithDetail(db: SchoolDb, id: string): Promise<Exam
 export async function findUpcomingForStudent(
   db: SchoolDb,
   studentId: string,
+  courseId: string,
 ): Promise<ExamWithDetail[]> {
   const rows = await db.query.exam.findMany({
-    where: (t, { and: andCols, eq: eqCol }) =>
-      andCols(eqCol(t.studentId, studentId), eqCol(t.status, 'scheduled')),
+    where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
+      andCols(
+        eqCol(t.studentId, studentId),
+        eqCol(t.status, 'scheduled'),
+        inArrayCol(t.trackId, tracksOfCourse(db, courseId)),
+      ),
     orderBy: (t, { asc: ascCol }) => ascCol(t.scheduledAt),
     with: DETAIL,
   })
@@ -121,12 +134,18 @@ export async function findUpcomingForStudent(
 export async function findResultsForStudent(
   db: SchoolDb,
   studentId: string,
+  courseId: string,
 ): Promise<StudentExamResult[]> {
   const rows = await db
     .select({ ...getTableColumns(examResult), trackId: exam.trackId })
     .from(examResult)
     .innerJoin(exam, eq(exam.id, examResult.examId))
-    .where(eq(exam.studentId, studentId))
+    .where(
+      and(
+        eq(exam.studentId, studentId),
+        inArray(exam.trackId, tracksOfCourse(db, courseId)),
+      ),
+    )
     .orderBy(desc(examResult.evaluatedAt))
 
   return rows.map(withLevel)

@@ -10,6 +10,7 @@ import {
   createTestSchool,
   createUser,
   type TestWorld,
+  defaultCourseId,
 } from '../testing/fixtures'
 import { approve, findAll, findById, reject, submit } from './service'
 
@@ -117,7 +118,7 @@ describe('findAll', () => {
     await createRegistration(world, { status: 'pending' })
     const approved = await createRegistration(world, { status: 'approved' })
 
-    const result = await findAll({ db: world.schoolDb }, { status: 'approved', limit: 20 })
+    const result = await findAll({ db: world.schoolDb }, { status: 'approved', limit: 20 }, await defaultCourseId(world))
 
     expect(result.items.map(item => item.id)).toEqual([approved.id])
   })
@@ -127,7 +128,7 @@ describe('findAll', () => {
     const first = await createRegistration(world)
     const second = await createRegistration(world)
 
-    const page1 = await findAll({ db: world.schoolDb }, { limit: 1 })
+    const page1 = await findAll({ db: world.schoolDb }, { limit: 1 }, await defaultCourseId(world))
     expect(page1.items.map(item => item.id)).toEqual([second.id])
     expect(page1.nextCursor).not.toBeNull()
 
@@ -137,6 +138,7 @@ describe('findAll', () => {
     const page2 = await findAll(
       { db: world.schoolDb },
       { limit: 1, cursor: { createdAt: second.createdAt, id: second.id } },
+      await defaultCourseId(world),
     )
     expect(page2.items.map(item => item.id)).toEqual([first.id])
   })

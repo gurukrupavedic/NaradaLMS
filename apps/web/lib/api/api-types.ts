@@ -101,6 +101,14 @@ export type ApiChapterDetail = ApiChapter & {
   audio: ApiAudioAsset[]
 }
 
+// GET /v1/courses — a school runs one or more courses (Vedam, Smartam, ...), each under its
+// own path: `slug` is the first path segment (`<school>.naradas.app/vedam/…`).
+export type ApiCourse = {
+  id: string
+  slug: string
+  name: string
+}
+
 export type ApiTrack = {
   id: string
   name: string

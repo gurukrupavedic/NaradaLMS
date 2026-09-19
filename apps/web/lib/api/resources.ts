@@ -18,6 +18,7 @@ import type {
   ApiBatch,
   ApiBatchWithRole,
   ApiChapterDetail,
+  ApiCourse,
   ApiDashboard,
   ApiEnrollmentRequest,
   ApiEnrollmentRequestStatus,
@@ -170,6 +171,8 @@ export type SubmitRegistrationInput = {
 // in, so the `X-Profile-Id` header it normally attaches is just omitted, exactly like the
 // `fetchProfiles()` call below does for the same reason.
 export async function submitRegistration(data: SubmitRegistrationInput): Promise<ApiRegistration> {
+  // The course is the one in the URL (`/vedam/register`): `request()` derives `x-course-slug` from it,
+  // so an application can only be filed under the course of the page it was submitted from.
   return mutateApi<ApiRegistration>('/registrations', 'POST', data)
 }
 
@@ -544,6 +547,28 @@ export async function createEvaluation(
 }
 
 // ── Open enrollment (student self-service) ──────────────────────────────────
+
+// GET /v1/courses — school-scoped, no session needed. Every course in the school: names and slugs
+// aren't secret (each has its own public registration link), and the registration page needs them
+// before there is an account. Not affected by the selected course.
+export async function fetchCourses(): Promise<ApiCourse[]> {
+  const { items } = await fetchApi<{ items: ApiCourse[] }>('/courses')
+  return items
+}
+
+// GET /v1/courses/:slug — one course, for the course in the URL (`/vedam/register`, and every page
+// under `/vedam/`). 404s for a slug that isn't a course.
+export async function fetchCourse(slug: string): Promise<ApiCourse> {
+  return fetchApi<ApiCourse>(`/courses/${encodeURIComponent(slug)}`)
+}
+
+// GET /v1/me/courses — what the course dropdown lists: every course for an admin, otherwise only
+// the ones the signed-in profile is part of (an enrollment in any status, or the registration that
+// created it).
+export async function fetchMyCourses(): Promise<ApiCourse[]> {
+  const { items } = await fetchApi<{ items: ApiCourse[] }>('/me/courses')
+  return items
+}
 
 // GET /v1/batches/open — every batch a student can request to join: any batch not yet marked
 // completed, any track. Not scoped by the caller's own existing enrollments (unlike GET /batches's

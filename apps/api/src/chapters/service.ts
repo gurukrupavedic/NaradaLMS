@@ -14,7 +14,7 @@ import {
   storedObjectExists,
 } from '../utils/contentStorage'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
-import type { ContentReadView } from '../utils/accessPolicy'
+import type { AccessPolicy, ContentReadView } from '../utils/accessPolicy'
 import * as repository from './repository'
 import type {
   AudioAsset,
@@ -30,6 +30,28 @@ import type {
 } from './schema'
 
 type ChapterServiceContext = { db: SchoolDbClient }
+
+/** The one question the read path asks of `AccessPolicy` — narrow so a unit test can hand in a stub. */
+type CourseContentGate = Pick<AccessPolicy, 'canReadCourseContent'>
+
+/**
+ * `findById` for a *reader*. A chapter in a course the caller isn't part of 404s exactly like one
+ * that doesn't exist — never 403 — so guessing an id can't disclose what another course teaches.
+ * The write paths call plain `findById` (they are admin-only, and read back what they just wrote).
+ */
+export async function findByIdForReader(
+  context: ChapterServiceContext,
+  id: string,
+  view: ContentReadView,
+  gate: CourseContentGate,
+): Promise<ChapterDetail> {
+  const courseId = await repository.findCourseId(context.db, id)
+  if (courseId === undefined || !(await gate.canReadCourseContent(courseId))) {
+    throw notFound()
+  }
+
+  return findById(context, id, view)
+}
 
 /** A draft chapter under `learnerPreview` view 404s exactly like a nonexistent one — never 403 — so guessing an ID can't disclose hidden content. */
 export async function findById(

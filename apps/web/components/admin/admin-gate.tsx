@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { useHasAdminAccess } from '@/lib/auth/profile-store'
+import { useCoursePath } from '@/lib/course'
 
 /**
  * The one choke point every `/admin/*` screen renders behind. Hiding the "Admin" nav item in
@@ -14,6 +15,7 @@ import { useHasAdminAccess } from '@/lib/auth/profile-store'
  * see my own batch" report this was added for).
  */
 export function AdminGate({ children }: { children: React.ReactNode }) {
+  const cp = useCoursePath()
   const hasAccess = useHasAdminAccess()
 
   if (hasAccess === undefined) return <ScreenSkeleton rows={6} />
@@ -27,7 +29,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
           Your account doesn&apos;t have admin access in this school.
         </p>
         <Link
-          href="/dashboard"
+          href={cp('/dashboard')}
           className="label mt-8 w-fit border border-rule px-4 py-2.5 text-ink-muted transition-colors hover:border-vermilion hover:text-vermilion"
         >
           Back to practice

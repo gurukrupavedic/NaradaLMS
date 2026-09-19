@@ -15,10 +15,10 @@ const router = Router()
 
 router.get(
   '/',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
     const query = await parse(FindExamsSchema, req.query)
     const visibility = await access.getExamVisibility()
-    const exams = await findExams({ db }, query, visibility)
+    const exams = await findExams({ db }, query, visibility, (await getCourse()).id)
     res.status(200).json({ data: exams })
   }),
 )
