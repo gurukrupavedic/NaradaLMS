@@ -51,13 +51,14 @@ router.get(
 // fan-out shape [[project_batch_n1_incident]] already broke once.
 router.get(
   '/:profileId/batches',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     const query = await parse(ProfileBatchesQuerySchema, req.query)
     const scope = await access.getProfileBatchListScope(profileId)
+    const courseId = (await getCourse())?.id
     const batches = query.withDetail
-      ? await findAllAccessibleWithDetail({ db }, query, scope, profileId)
-      : await findAllAccessible({ db }, query, scope)
+      ? await findAllAccessibleWithDetail({ db }, query, scope, profileId, courseId)
+      : await findAllAccessible({ db }, query, scope, courseId)
     res.status(200).json({ data: batches })
   }),
 )
@@ -67,11 +68,16 @@ router.get(
 // by profileId, so this is the same aggregation for any profile the caller is allowed to view.
 router.get(
   '/:profileId/detail',
-  optionalProfileRoute(async ({ req, res, db, school, user, access }) => {
+  optionalProfileRoute(async ({ req, res, db, school, user, access, getCourse }) => {
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     await access.requireCanViewProfile(profileId)
     const profile = await findById({ db, school, user }, profileId)
-    const dashboard = await getDashboardData({ db }, profile.id, profile.name)
+    const dashboard = await getDashboardData(
+      { db },
+      profile.id,
+      profile.name,
+      (await getCourse())?.id,
+    )
     res.status(200).json({ data: { profile, dashboard } })
   }),
 )

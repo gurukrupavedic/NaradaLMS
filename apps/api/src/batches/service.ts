@@ -23,8 +23,9 @@ export async function findAllAccessible(
   context: BatchServiceContext,
   params: FindBatchesData,
   scope: BatchReadScope,
+  courseId?: string,
 ): Promise<{ items: Batch[]; nextCursor: string | null }> {
-  return repository.findAccessible(context.db, params, scope)
+  return repository.findAccessible(context.db, params, scope, courseId)
 }
 
 export async function findAllAccessibleWithDetail(
@@ -32,8 +33,9 @@ export async function findAllAccessibleWithDetail(
   params: FindBatchesData,
   scope: BatchReadScope,
   roleForProfileId: string,
+  courseId?: string,
 ): Promise<{ items: BatchWithRole[]; nextCursor: string | null }> {
-  return repository.findAccessibleWithDetail(context.db, params, scope, roleForProfileId)
+  return repository.findAccessibleWithDetail(context.db, params, scope, roleForProfileId, courseId)
 }
 
 export async function findById(context: BatchServiceContext, id: string): Promise<Batch> {
@@ -119,8 +121,11 @@ export async function updateBatch(
   })
 }
 
-export async function findOpenBatches(context: BatchServiceContext): Promise<OpenBatch[]> {
-  return repository.findOpen(context.db)
+export async function findOpenBatches(
+  context: BatchServiceContext,
+  courseId?: string,
+): Promise<OpenBatch[]> {
+  return repository.findOpen(context.db, courseId)
 }
 
 export async function setClassSlots(

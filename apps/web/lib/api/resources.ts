@@ -18,6 +18,7 @@ import type {
   ApiBatch,
   ApiBatchWithRole,
   ApiChapterDetail,
+  ApiCourse,
   ApiDashboard,
   ApiEnrollmentRequest,
   ApiEnrollmentRequestStatus,
@@ -544,6 +545,13 @@ export async function createEvaluation(
 }
 
 // ── Open enrollment (student self-service) ──────────────────────────────────
+
+// GET /v1/courses — school-scoped, no session needed. Every course in the school, whichever course
+// address the request came from (the course context scopes *reads of course data*, not this list).
+export async function fetchCourses(): Promise<ApiCourse[]> {
+  const { items } = await fetchApi<{ items: ApiCourse[] }>('/courses')
+  return items
+}
 
 // GET /v1/batches/open — every batch a student can request to join: any batch not yet marked
 // completed, any track. Not scoped by the caller's own existing enrollments (unlike GET /batches's

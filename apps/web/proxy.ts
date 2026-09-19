@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { courseSlugFromHost } from '@/lib/course-host'
+
 /**
  * Gate on cookie presence only — not a real session check. Validating the session would mean this
  * proxy making its own round trip to api-next on every navigation, and a stale-but-present
@@ -59,6 +61,14 @@ const API_BASE_URL = process.env.API_BASE_URL
 // pipeline, and headers set here would otherwise never reach api-next at all.
 const APP_ORIGIN_HEADER = 'x-app-origin'
 
+// The course a page is for, carried the same way. It comes from the hostname the browser actually
+// used (`vedam.slmts.naradas.app`), so it is per tab — unlike a cookie, two courses open in two tabs
+// can't overwrite each other — and it is stamped here from the request received, never read back
+// from the caller: a header a client sent itself is deleted first, so an address outside the course
+// domain can't claim a course by sending one. apps/api treats it as "which course is this about",
+// not as authorization (batch roles decide what anyone may do).
+const COURSE_HEADER = 'x-course-slug'
+
 function hasSession(request: NextRequest): boolean {
   const session = request.cookies.get(SESSION_COOKIE) ?? request.cookies.get(SECURE_SESSION_COOKIE)
   return Boolean(session && request.cookies.get(PROFILE_COOKIE))
@@ -76,6 +86,14 @@ export function proxy(request: NextRequest) {
 
     const headers = new Headers(request.headers)
     headers.set(APP_ORIGIN_HEADER, request.nextUrl.origin)
+    headers.delete(COURSE_HEADER)
+    // The `Host` header, not `request.nextUrl.hostname`: Next normalises the latter to the server's own
+    // host in dev, which would read every address as course-less. `Host` is what the browser asked for.
+    const course = courseSlugFromHost(
+      request.headers.get('host') ?? '',
+      process.env.NEXT_PUBLIC_APP_BASE_DOMAIN,
+    )
+    if (course) headers.set(COURSE_HEADER, course)
     const destination = new URL(`${API_BASE_URL}${pathname.replace(/^\/v1/, '')}${request.nextUrl.search}`)
     return NextResponse.rewrite(destination, { request: { headers } })
   }

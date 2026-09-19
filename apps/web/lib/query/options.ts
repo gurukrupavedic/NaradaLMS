@@ -10,6 +10,7 @@ import {
   fetchCatalogTracks,
   fetchChapter,
   fetchChapterDetail,
+  fetchCourses,
   fetchDashboard,
   fetchEnrollmentRequests,
   fetchExams,
@@ -35,6 +36,9 @@ export const keys = {
   dashboard: ['dashboard'] as const,
 
   authProfile: ['authProfile'] as const,
+
+  // A school's courses change about as often as its syllabus does: a long staleTime, see `coursesQuery`.
+  courses: ['courses'] as const,
 
   chapters: {
     all: ['chapters'] as const,
@@ -138,6 +142,13 @@ export const chapterAuthoringDetailQuery = (chapterId: string) =>
   queryOptions({
     queryKey: keys.chapters.authoringDetail(chapterId),
     queryFn: () => fetchChapterDetail(chapterId),
+  })
+
+export const coursesQuery = () =>
+  queryOptions({
+    queryKey: keys.courses,
+    queryFn: fetchCourses,
+    staleTime: CATALOG_STALE_TIME,
   })
 
 export const examsQuery = () =>

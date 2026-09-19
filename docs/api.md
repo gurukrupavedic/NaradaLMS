@@ -6,7 +6,7 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 
 **Base URL:** All routes are prefixed with `/v1`.
 
-**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. BetterAuth's `activeOrganizationId` is not used for tenant selection. Requests that create something owned by a course (a registration, today) may also send `X-Course-Slug` to say which; with no header, a school that has exactly one course uses it, and a school with several answers `422` rather than guessing. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
+**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. BetterAuth's `activeOrganizationId` is not used for tenant selection. **Course context:** `X-Course-Slug` says which course a request is about — the web app's proxy stamps it from the hostname (`vedam.slmts.naradas.app` → `vedam`; see `docs/course-hostnames.md`). With it, course-owned **lists** are limited to that course (tracks, batches, the dashboard and profile detail, exams, enrollment requests, registrations). Without it they are school-wide, as before, and a slug that isn't a course is `404 course not found`. A request that *creates* something course-owned (a registration) files it under that course; with no header, a school that has exactly one course uses it, and a school with several answers `422` rather than guessing. The header is context, not authorization — by-id endpoints are not filtered by it. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
 
 **Authentication:** BetterAuth session cookies. Every route except BetterAuth's own auth endpoints requires a valid session. The authenticated user's `shared.user.id` is available on the request context.
 
@@ -901,6 +901,19 @@ List evaluation history for one student in a batch.
 ```
 
 Results are ordered by `evaluatedAt` descending.
+
+---
+
+## Courses
+
+### `GET /v1/courses`
+
+Every course in the school. Needs `X-School-Slug`; no session (the public registration page is course-specific too). Not limited by `X-Course-Slug` — it is the list a course switcher needs.
+
+```ts
+// Response 200
+{ ok: true, data: { items: Array<{ id: string, slug: string, name: string }> } }
+```
 
 ---
 

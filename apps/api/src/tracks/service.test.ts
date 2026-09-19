@@ -31,7 +31,15 @@ describe('findAll', () => {
     vi.mocked(repository.findAll).mockResolvedValue(tracks)
 
     await expect(findAll(context, { kind: 'learnerPreview' })).resolves.toEqual(tracks)
-    expect(repository.findAll).toHaveBeenCalledWith(db, { kind: 'learnerPreview' })
+    expect(repository.findAll).toHaveBeenCalledWith(db, { kind: 'learnerPreview' }, undefined)
+  })
+
+  it('passes the course through, so the read can be limited to it', async () => {
+    vi.mocked(repository.findAll).mockResolvedValue([])
+
+    await findAll(context, { kind: 'learnerPreview' }, 'course-1')
+
+    expect(repository.findAll).toHaveBeenCalledWith(db, { kind: 'learnerPreview' }, 'course-1')
   })
 
   it('an empty school still returns an empty array, not an error', async () => {

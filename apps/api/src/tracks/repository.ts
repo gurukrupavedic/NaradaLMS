@@ -6,8 +6,13 @@ import type { TrackWithChapters } from './schema'
 // Archived is invisible in every view, not just learner-preview — an archived chapter is hidden,
 // not merely draft (see `packages/db/src/schema/school.ts`'s `chapter.archived` doc comment).
 
-export async function findAll(db: SchoolDb, view: ContentReadView): Promise<TrackWithChapters[]> {
+export async function findAll(
+  db: SchoolDb,
+  view: ContentReadView,
+  courseId?: string,
+): Promise<TrackWithChapters[]> {
   return db.query.track.findMany({
+    where: (t, { eq }) => (courseId ? eq(t.courseId, courseId) : undefined),
     orderBy: (t, { asc }) => asc(t.order),
     with: {
       chapters: {

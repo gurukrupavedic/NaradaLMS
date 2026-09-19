@@ -10,6 +10,8 @@ import {
   type SchoolProfile,
 } from '@narada/db'
 
+import { findRequestCourse } from './courses/service'
+import type { Course } from './courses/schema'
 import { badRequest, forbidden, notFound } from './error'
 import { SessionService, type User } from './session'
 import { AccessPolicy } from './utils/accessPolicy'
@@ -21,6 +23,9 @@ type School = typeof organization.$inferSelect
  * lookup per request, mirroring `SessionService`'s session cache.
  */
 const schoolCache = new WeakMap<Request, Promise<{ db: SchoolDbClient; school: School }>>
+
+/** Same idea for the course context: at most one lookup per request, and none at all for a handler that never asks. */
+const courseCache = new WeakMap<Request, Promise<Course | undefined>>()
 
 export type PublicRouteArgs = {
   req: Request
@@ -37,6 +42,12 @@ export type SchoolRouteArgs = {
   res: Response
   db: SchoolDbClient
   school: School
+  /**
+   * The course this request is about, from `x-course-slug` — `undefined` when the request names
+   * none (the read is then school-wide), a 404 when it names one that doesn't exist. Lazy: a
+   * handler that doesn't care never pays for the lookup.
+   */
+  getCourse: () => Promise<Course | undefined>
 }
 
 export type UserRouteArgs = SchoolRouteArgs & {
@@ -76,7 +87,7 @@ export function authRoute(handler: (args: AuthRouteArgs) => Promise<void>): Requ
 export function schoolRoute(handler: (args: SchoolRouteArgs) => Promise<void>): RequestHandler {
   return async (req, res) => {
     const { db, school } = await resolveSchool(req)
-    await handler({ req, res, db, school })
+    await handler({ req, res, db, school, getCourse: () => resolveCourseContext(req, db) })
   }
 }
 
@@ -87,7 +98,7 @@ export function userRoute(handler: (args: UserRouteArgs) => Promise<void>): Requ
     const user = await SessionService.getCurrentUser(req)
     const { db, school } = await resolveSchool(req)
 
-    await handler({ req, res, db, school, user })
+    await handler({ req, res, db, school, user, getCourse: () => resolveCourseContext(req, db) })
   }
 }
 
@@ -109,7 +120,16 @@ export function optionalProfileRoute(
     const profile = await resolveOptionalProfile(req, db, user)
 
     const access = await AccessPolicy.load({ db, school, user, profile })
-    await handler({ req, res, db, school, user, profile, access })
+    await handler({
+      req,
+      res,
+      db,
+      school,
+      user,
+      profile,
+      access,
+      getCourse: () => resolveCourseContext(req, db),
+    })
   }
 }
 
@@ -122,8 +142,28 @@ export function profileRoute(handler: (args: ProfileRouteArgs) => Promise<void>)
     const profile = await resolveProfile(req, db, user)
 
     const access = await AccessPolicy.load({ db, school, user, profile })
-    await handler({ req, res, db, school, user, profile, access })
+    await handler({
+      req,
+      res,
+      db,
+      school,
+      user,
+      profile,
+      access,
+      getCourse: () => resolveCourseContext(req, db),
+    })
   }
+}
+
+function resolveCourseContext(req: Request, db: SchoolDb): Promise<Course | undefined> {
+  const cached = courseCache.get(req)
+  if (cached) {
+    return cached
+  }
+
+  const promise = findRequestCourse(db, req.get('x-course-slug'))
+  courseCache.set(req, promise)
+  return promise
 }
 
 /** Validates the presence of the `X-School-Slug` header synchronously, before any I/O. */

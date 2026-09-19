@@ -10,10 +10,15 @@ import type { CreateRegistrationData, FindRegistrationsData, Registration } from
 export async function findAll(
   db: SchoolDb,
   { status, limit, cursor }: FindRegistrationsData,
+  courseId?: string,
 ): Promise<{ items: Registration[]; nextCursor: string | null }> {
   const conditions: SQL[] = []
   if (status) {
     conditions.push(eq(registration.status, status))
+  }
+
+  if (courseId) {
+    conditions.push(eq(registration.courseId, courseId))
   }
 
   if (cursor) {

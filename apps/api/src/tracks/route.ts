@@ -10,9 +10,9 @@ const router = Router()
 
 router.get(
   '/',
-  optionalProfileRoute(async ({ res, db, access }) => {
+  optionalProfileRoute(async ({ res, db, access, getCourse }) => {
     const view = access.getContentReadView()
-    const tracks = await findAll({ db }, view)
+    const tracks = await findAll({ db }, view, (await getCourse())?.id)
     res.status(200).json({ data: tracks })
   }),
 )

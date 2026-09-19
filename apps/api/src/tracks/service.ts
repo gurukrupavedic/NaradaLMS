@@ -11,8 +11,9 @@ type TrackServiceContext = { db: SchoolDbClient }
 export async function findAll(
   context: TrackServiceContext,
   view: ContentReadView,
+  courseId?: string,
 ): Promise<TrackWithChapters[]> {
-  return repository.findAll(context.db, view)
+  return repository.findAll(context.db, view, courseId)
 }
 
 export async function findById(

@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
+import { cookieDomainFor } from '@/lib/course-host'
 import { authProfileQuery } from '@/lib/query/options'
 
 /**
@@ -25,9 +26,22 @@ import { authProfileQuery } from '@/lib/query/options'
 
 const PROFILE_ID_COOKIE = 'narada-profile-id'
 const PROFILE_NAME_KEY = 'narada-profile-name'
+// The name is display-only, but `localStorage` is per address: a person signed in on
+// `vedam.slmts.naradas.app` who opens `smartam.slmts.naradas.app` shares the session and profile-id
+// cookies, and would otherwise see an empty "who's logged in" until they re-selected a profile. So
+// the name also rides in a cookie, shared the same way.
+const PROFILE_NAME_COOKIE = 'narada-profile-name'
+
+// Shared across every course address when this host is on the course domain; host-only anywhere
+// else (local dev, previews), where the browser would refuse a foreign Domain anyway. Must match
+// between set and delete, or the delete silently misses the cookie it meant to remove.
+function domainAttribute(): string {
+  const domain = cookieDomainFor(window.location.hostname, process.env.NEXT_PUBLIC_APP_BASE_DOMAIN)
+  return domain ? `; domain=${domain}` : ''
+}
 
 function setCookie(name: string, value: string): void {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax${domainAttribute()}`
 }
 
 function readCookie(name: string): string | null {
@@ -36,7 +50,7 @@ function readCookie(name: string): string | null {
 }
 
 function deleteCookie(name: string): void {
-  document.cookie = `${name}=; path=/; max-age=0`
+  document.cookie = `${name}=; path=/; max-age=0${domainAttribute()}`
 }
 
 export function getSelectedProfileId(): string | null {
@@ -45,14 +59,15 @@ export function getSelectedProfileId(): string | null {
 
 function getSelectedProfileName(): string | null {
   try {
-    return localStorage.getItem(PROFILE_NAME_KEY)
+    return localStorage.getItem(PROFILE_NAME_KEY) ?? readCookie(PROFILE_NAME_COOKIE)
   } catch {
-    return null
+    return readCookie(PROFILE_NAME_COOKIE)
   }
 }
 
 export function setSelectedProfile(id: string, name: string): void {
   setCookie(PROFILE_ID_COOKIE, id)
+  setCookie(PROFILE_NAME_COOKIE, name)
   try {
     localStorage.setItem(PROFILE_NAME_KEY, name)
   } catch {
@@ -62,6 +77,7 @@ export function setSelectedProfile(id: string, name: string): void {
 
 export function clearSelectedProfile(): void {
   deleteCookie(PROFILE_ID_COOKIE)
+  deleteCookie(PROFILE_NAME_COOKIE)
   try {
     localStorage.removeItem(PROFILE_NAME_KEY)
   } catch {

@@ -7,8 +7,8 @@ const router = Router()
 
 router.get(
   '/',
-  profileRoute(async ({ res, db, profile }) => {
-    const data = await getDashboardData({ db }, profile.id, profile.name)
+  profileRoute(async ({ res, db, profile, getCourse }) => {
+    const data = await getDashboardData({ db }, profile.id, profile.name, (await getCourse())?.id)
     res.status(200).json({ data })
   }),
 )

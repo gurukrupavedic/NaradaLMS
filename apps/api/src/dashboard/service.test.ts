@@ -271,6 +271,32 @@ describe('getDashboardData', () => {
     expect(data.studentEvaluations).toEqual(studentEvaluations)
     expect(data.examResults).toEqual(examResults)
     expect(data.upcomingExams).toEqual(upcomingExams)
-    expect(examsRepository.findResultsForStudent).toHaveBeenCalledWith(db, 'me')
+    expect(examsRepository.findResultsForStudent).toHaveBeenCalledWith(db, 'me', undefined)
+  })
+
+  it('limits every course-aware read to the course when one is given', async () => {
+    vi.mocked(batchesRepository.findAllMembershipsWithDetail).mockResolvedValue([])
+
+    await getDashboardData(context, 'me', 'Me', 'course-1')
+
+    expect(batchesRepository.findAllMembershipsWithDetail).toHaveBeenCalledWith(db, 'me', 'course-1')
+    expect(tracksService.findAll).toHaveBeenCalledWith(context, { kind: 'learnerPreview' }, 'course-1')
+    expect(enrollmentRequestsRepository.findPendingBatchIdsForProfile).toHaveBeenCalledWith(
+      db,
+      'me',
+      'course-1',
+    )
+    expect(evaluationsRepository.findAllForStudent).toHaveBeenCalledWith(db, 'me', 'course-1')
+    expect(examsRepository.findResultsForStudent).toHaveBeenCalledWith(db, 'me', 'course-1')
+    expect(examsRepository.findUpcomingForStudent).toHaveBeenCalledWith(db, 'me', 'course-1')
+  })
+
+  it('stays school-wide when no course is given', async () => {
+    vi.mocked(batchesRepository.findAllMembershipsWithDetail).mockResolvedValue([])
+
+    await getDashboardData(context, 'me', 'Me')
+
+    expect(batchesRepository.findAllMembershipsWithDetail).toHaveBeenCalledWith(db, 'me', undefined)
+    expect(evaluationsRepository.findAllForStudent).toHaveBeenCalledWith(db, 'me', undefined)
   })
 })

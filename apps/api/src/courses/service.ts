@@ -5,6 +5,32 @@ import * as repository from './repository'
 import type { Course } from './schema'
 
 /**
+ * The course a request is *about*, for reads — from the `x-course-slug` header the web proxy stamps
+ * from the hostname (`vedam.slmts.naradas.app`). Unlike {@link resolveCourse} this never guesses:
+ * no header means "no course context" and the read stays school-wide, which is what keeps every
+ * caller that doesn't send one (an API client, a hostname outside the scheme) working exactly as
+ * before. A header naming a course that doesn't exist is a 404, so a mistyped subdomain fails
+ * loudly instead of quietly showing an empty school.
+ *
+ * Hostnames are case-insensitive, so the slug is compared lower-cased.
+ */
+export async function findRequestCourse(
+  db: SchoolDb,
+  slug: string | undefined,
+): Promise<Course | undefined> {
+  if (!slug) {
+    return undefined
+  }
+
+  const course = await repository.findBySlug(db, slug.toLowerCase())
+  if (!course) {
+    throw notFound('course not found')
+  }
+
+  return course
+}
+
+/**
  * Works out which course a request that *creates* something course-owned (a registration, today)
  * is for. `slug` is the value of the `x-course-slug` header when the caller sent one.
  *
@@ -15,7 +41,7 @@ import type { Course } from './schema'
  */
 export async function resolveCourse(db: SchoolDb, slug: string | undefined): Promise<Course> {
   if (slug) {
-    const course = await repository.findBySlug(db, slug)
+    const course = await findRequestCourse(db, slug)
     if (!course) {
       throw notFound('course not found')
     }

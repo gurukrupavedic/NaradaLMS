@@ -9,6 +9,7 @@ import { ChevronDown } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { CommandPalette } from '@/components/command-palette'
+import { CourseSwitcher } from '@/components/course-switcher'
 import { signOut as signOutRequest } from '@/lib/auth/client'
 import {
   clearSelectedProfile,
@@ -125,6 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-rule bg-paper/92 backdrop-blur-[2px]">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-8 px-5">
           <Wordmark />
+          <CourseSwitcher />
 
           <nav className="hidden flex-1 items-center gap-7 md:flex" aria-label="Primary">
             {nav.map(item => {
