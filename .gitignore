@@ -57,3 +57,7 @@ next-env.d.ts
 apps/api/.draft-backend/
 
 .atlas/
+
+# Real school data: the source workbooks (slmts.xlsx, rr.xlsx), everything parsed from them, and the
+# findings write-up. Names, phone numbers and emails — never commit any of it.
+/seed-data/
