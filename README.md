@@ -44,7 +44,7 @@ pnpm seed superadmin --email superadmin@local.test --name "Admin"
 pnpm seed school --slug local
 ```
 
-This creates a super-admin account (`superadmin@local.test` / `testing123`) and a `local` school populated with test tracks, batches, instructors, and students. See [Seed tools](#seed-tools) for all options.
+This creates a super-admin account (`superadmin@local.test`; add `--phoneNumber +1…` to be able to sign in with it) and a `local` school populated with test tracks, batches, instructors, and students. See [Seed tools](#seed-tools) for all options.
 
 **Start the dev servers:**
 
@@ -92,17 +92,13 @@ pnpm db:studio            # open Drizzle Studio
 pnpm auth:generate        # regenerate BetterAuth schema from config
 ```
 
-### Schools
+### Migrations
 
-```sh
-pnpm schools:create --name "..." --slug "..."
-```
-
-Only use this rare provisioning tool as a super-admin user. The tool prompts for the super-admin email and password, verifies that the authenticated user is a super-admin, and adds that user as the initial owner. Pass `--ownerEmail "..."` to make a different user the owner.
+There is no migration command: the API applies the public-schema and every school-schema migration on each boot. To create migration files use `pnpm db:generate:public` / `pnpm db:generate:school`.
 
 ### Seed tools
 
-Tools for local development and testing. All seed user accounts share the password `testing123` unless overridden.
+Tools for local development and operator setup. Sign-in is by SMS code to a phone number (locally the API logs the code when `USE_TWILIO_API` is off); seeded users get fictional phone numbers, and `--phoneNumber` sets a real one.
 
 **Bootstrap a super-admin** (run this first, before anything else):
 
@@ -121,11 +117,11 @@ pnpm seed school --slug test-school --name "Test School" \
   --tracks 2 --chapters 5 --batches 2 --instructors 2 --students 5
 ```
 
-Prompts for super-admin credentials, then idempotently creates:
+Idempotently creates:
 - The school org and its Postgres schema
 - `{slug}-owner@seed.test` and `{slug}-admin@seed.test` as org members
 - Published seed chapters for every track
-- N instructor and M student users, distributed across all batches (max 2 instructors per batch)
+- N instructor and M student users: students are dealt one batch each (a student may hold only one active seat per course), instructors are spread across batches (max 2 per batch)
 
 **Create a single user** with an optional role:
 
@@ -191,7 +187,7 @@ packages/
   db/           @narada/db      Drizzle ORM, schema definitions, connection pooling
   env/          @narada/env     Env validation (t3-oss/env-core + zod), .env.sops storage
   storage/      @narada/storage Cloudflare R2 client (AWS SDK v3)
-tools/          @narada/tools   Internal CLI utilities (env and rare provisioning tools)
+tools/          @narada/tools   Internal CLI utilities (env management, seed/operator setup, spreadsheet import)
 docs/
   api.md        HTTP API reference
   data-model.md Database schema, roles, multi-tenancy strategy
@@ -259,4 +255,4 @@ Uploads use a staged presign → upload → complete flow: the API first creates
 
 **TypeScript style:** prefer `satisfies` over explicit type annotations when inference and shape validation are both needed. Service modules export named free functions, not class instances or default exports.
 
-**Operator actions:** rare provisioning operations such as school creation live in `@narada/tools`. Repair or cleanup work should be designed as explicit domain workflows or infrastructure policy, not as one-off scripts.
+**Operator actions:** a school is created by the spreadsheet importer or `pnpm seed school` (`@narada/tools`), and migrations run when the API boots. Repair or cleanup work should be designed as explicit domain workflows or infrastructure policy, not as one-off scripts.

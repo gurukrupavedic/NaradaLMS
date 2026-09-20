@@ -12,7 +12,6 @@ import {
   uuidv7,
   type SchoolDatabase,
 } from '@narada/db'
-import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
 import {
   requireSchool,
   upsertBatch,
@@ -33,7 +32,6 @@ const BATCH_ROLES = new Set<string>(['instructor', 'ta', 'student'])
 type SchoolSeedInput = {
   slug: string
   name: string
-  operatorPhone: string
   numTracks: number
   numChapters: number
   numBatches: number
@@ -53,11 +51,9 @@ const schoolCmd = defineCommand({
     students: { type: 'string', default: '5', description: 'Number of student users.' },
   },
   async run({ args }) {
-    const operatorPhone = await promptSuperAdminPhone()
     await seedSchool({
       slug: args.slug,
       name: args.name ?? toTitleCase(args.slug),
-      operatorPhone,
       numTracks: parseCount(args.tracks, '--tracks'),
       numChapters: parseCount(args.chapters, '--chapters'),
       numBatches: parseCount(args.batches, '--batches'),
@@ -91,9 +87,7 @@ const userCmd = defineCommand({
     },
   },
   async run({ args }) {
-    const operatorPhone = await promptSuperAdminPhone()
     try {
-      await requireSuperAdminByPhone(operatorPhone)
       const user = await upsertUser(args.email, args.name, args.phoneNumber)
 
       let assignment: Record<string, unknown> = {}
@@ -163,7 +157,7 @@ const superadminCmd = defineCommand({
     phoneNumber: {
       type: 'string',
       description:
-        'Optional phone number (E.164) to set on the super-admin — needed for other CLI commands’ phone-based operator check to find them.',
+        'Phone number (E.164) to set on the super-admin. Sign-in is by SMS code to this number, so without one they cannot log in.',
     },
   },
   async run({ args }) {
@@ -201,8 +195,6 @@ runMain(
 
 async function seedSchool(input: SchoolSeedInput) {
   try {
-    await requireSuperAdminByPhone(input.operatorPhone)
-
     const school = await upsertSchool(input.slug, input.name)
     const schoolDb = getScopedDatabase(school.id)
     const ownerEmail = `${input.slug}-owner@seed.test`
@@ -246,8 +238,6 @@ async function seedSchool(input: SchoolSeedInput) {
     const instructorProfileById = new Map(instructors.map((u, i) => [u.id, instructorProfiles[i]!]))
     const studentProfileById = new Map(students.map((u, i) => [u.id, studentProfiles[i]!]))
     const totalBatches = input.numTracks * input.numBatches
-    const studentsPerBatch =
-      totalBatches === 0 ? 0 : Math.max(1, Math.ceil(input.numStudents / totalBatches))
     // Seed data all lives in one course, like the real school's single course today.
     const courseRow = await upsertCourse(schoolDb, 'vedam', 'Vedam')
     const trackResults = []
@@ -275,7 +265,7 @@ async function seedSchool(input: SchoolSeedInput) {
           await upsertEnrollment(schoolDb, batchRow.id, p.id, 'instructor')
         }
 
-        for (const user of pickForBatch(students, batchIndex, studentsPerBatch)) {
+        for (const user of studentsForBatch(students, batchIndex, totalBatches)) {
           const p = studentProfileById.get(user.id)!
           await upsertEnrollment(schoolDb, batchRow.id, p.id, 'student')
         }
@@ -399,6 +389,13 @@ function parseCount(value: string, option: string): number {
     throw new Error(`${option} must be a non-negative integer`)
   }
   return count
+}
+
+// A student holds at most one active seat per course (a unique index), and all the seeded batches
+// share one course — so each student is seated in exactly one batch, dealt round-robin. Wrapping
+// around the list instead (as instructors safely can) would seat the same student twice.
+function studentsForBatch<T>(students: T[], batchIndex: number, totalBatches: number): T[] {
+  return students.filter((_, i) => i % totalBatches === batchIndex)
 }
 
 function pickForBatch<T>(items: T[], batchIndex: number, count: number): T[] {

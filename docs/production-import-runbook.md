@@ -38,9 +38,9 @@ wrong app's rules.
 
 ## Prerequisites
 
-1. Latest `main` checked out locally, `pnpm install` run. `pnpm db:migrate:public`,
-   `pnpm schools:migrate`, and `pnpm exec tsx src/import-school.ts` (from `tools/`) all need to
-   exist — they're part of `main` today, no specific PR gate to check for anymore.
+1. Latest `main` checked out locally, `pnpm install` run. The tools used below live in `tools/`
+   (`src/import-school.ts`, `src/seed.ts`). Schema migrations are **not** a tool: the API applies them
+   itself on every boot (see Step 1).
 2. **Railway CLI installed and logged in** (`railway whoami` should show your account). Find the
    `narada` project's ID once with `railway status --json` (or `railway status` for the
    human-readable form) — every command below needs it explicitly via `--project`, rather than
@@ -107,9 +107,13 @@ wrong app's rules.
    verification queries will correctly hit staging/production, while every `pnpm exec tsx ...`
    command silently no-ops against your local database instead — with no error, no warning, just the
    wrong org getting migrated/queried/imported into. **Verify this actually worked** by re-running
-   something read-only first, e.g. `cd tools && pnpm exec tsx src/schools.ts migrate` (no `--slug`)
-   and confirming the org id(s) it prints match what `psql` showed you for this environment, not
-   whatever `slmts` org exists in your local dev database.
+   something read-only first — list the organizations through Node and compare with `psql`:
+   ```sh
+   cd tools && pnpm exec tsx -e "import('@narada/db').then(async ({ publicDb, shutdownPools }) => { console.log(await publicDb.query.organization.findMany({ columns: { id: true, slug: true } })); await shutdownPools() })"
+   psql "$DATABASE_URL" -c "SELECT id, slug FROM organization;"
+   ```
+   The two lists must match. If the first one shows your local dev organizations instead, the
+   environment did not load.
 6. **Confirm `USE_TWILIO_API=true` and `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` /
    `TWILIO_VERIFY_SERVICE_SID` are all set** in the file from step 4 (they came from Railway's own
    variables, so if they're missing there, they're missing on the environment itself — go set them
@@ -124,16 +128,18 @@ wrong app's rules.
 
 ---
 
-## Step 1 — Apply the public-schema migration (do this first)
+## Step 1 — Public-schema migrations (applied by the API on boot)
 
-```sh
-cd tools
-pnpm exec tsx src/migrate-public.ts
-```
+There is no migration command to run. `apps/api/src/index.ts` applies the public-schema migrations
+(`migratePublicSchema()`) and every school schema's (`migrateAllSchoolSchemas()`, Step 3) on every
+boot, before the server opens its port. So this step is: make sure the API build you want is deployed
+to this environment and started cleanly.
 
-**Expect:** `Public schema migrations applied.` and exit code 0.
+**Expect** in the API's logs: `applied pending database migrations` (`event: startup.migrated`), and
+the service healthy. A migration that fails stops the boot, so a healthy API means the schema is
+current.
 
-**If it fails with `relation "..." already exists`** (e.g. `relation "account" already exists`, or
+**If the API fails to boot with `relation "..." already exists`** (e.g. `relation "account" already exists`, or
 `column "phoneNumber" of relation "user" already exists`): this means drizzle's migration-tracking
 table (`drizzle.__drizzle_migrations`) doesn't reflect reality — either it's missing the row for a
 migration that's actually already applied, or it doesn't exist at all yet (the likely case if this
@@ -188,8 +194,8 @@ environment's public schema was ever set up via `pnpm db:push`, which never writ
    SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;
    ```
 
-4. **Re-run** `pnpm exec tsx src/migrate-public.ts` — it should now skip whatever you backfilled and
-   apply only what's genuinely still pending.
+4. **Restart the API** — it should now skip whatever you backfilled and apply only what's genuinely
+   still pending.
 
 If the failure doesn't match this pattern (e.g. it's a *different* table/column than expected, or
 you're unsure what's already applied), stop and ask rather than guessing at a backfill under time
@@ -219,8 +225,7 @@ pnpm exec tsx src/seed.ts superadmin --email <real-admin-email> --name "<Name>" 
 **`--phoneNumber` is required in practice, not optional** — sign-in is phone-OTP only
 (`emailAndPassword.enabled: false`), and `seed.ts`'s `upsertUser` never creates a password/`account`
 row at all. A super-admin created without a phone number has **no way to log in** until one is
-added. It's also needed for `schools:migrate` and `schools:create`'s operator check, and for this
-runbook's own Steps 3 and 8, which all prompt for it.
+added.
 
 This creates a real `user` row with `isSuperAdmin: true`. Once created, they log in the same way
 everyone else does: enter their phone number in the app, receive a Twilio Verify OTP (assuming
@@ -228,17 +233,11 @@ prerequisite 6 above is actually satisfied on this environment), enter the code.
 
 ---
 
-## Step 3 — Bring any existing schools up to date
+## Step 3 — Existing schools are migrated by the same boot
 
-Safe to run even if you're not sure whether this environment has other schools yet — it's a no-op
-for anything already current, and only touches schools that already exist (doesn't create anything
-new):
-```sh
-cd tools
-pnpm exec tsx src/schools.ts migrate
-```
-Prompts for the super-admin phone from Step 2. Omitting `--slug` migrates every school; output is a
-JSON list of what was migrated.
+Nothing to run: `migrateAllSchoolSchemas()` (Step 1) brings every school that already exists up to
+date, and a new school is provisioned at its current schema by the importer (Step 6). Check the boot
+log's `startup.migrated` line reports the number of schools you expect.
 
 ---
 
@@ -348,7 +347,7 @@ Assign at least one real owner so the school is actually manageable through the 
 cd tools
 pnpm exec tsx src/seed.ts user --email <real-owner-email> --name "<Name>" --role owner --schoolSlug slmts
 ```
-Prompts for the Step 2 super-admin phone. Use an email that already exists among the imported users
+Use an email that already exists among the imported users
 if you want an existing person to be the owner (they'll log in with whatever phone number they were
 imported with, if any — check first), or a new one otherwise (pass `--phoneNumber` so they can
 actually log in).

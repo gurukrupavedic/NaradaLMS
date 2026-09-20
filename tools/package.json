@@ -7,9 +7,6 @@
     "env:fetch": "tsx src/env.ts fetch",
     "env:encrypt": "tsx src/env.ts encrypt",
     "env:link": "tsx src/env.ts link",
-    "schools:create": "tsx src/schools.ts create",
-    "schools:migrate": "tsx src/schools.ts migrate",
-    "db:migrate:public": "tsx src/migrate-public.ts",
     "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit",
     "parse:excel": "tsx src/parse-excel-to-json.ts",
@@ -18,21 +15,16 @@
   },
   "dependencies": {
     "@narada/api": "workspace:*",
-    "@narada/auth": "workspace:*",
     "@narada/db": "workspace:*",
     "@narada/env": "workspace:*",
-    "better-auth": "1.6.22",
     "drizzle-orm": "^0.45.2",
-    "enquirer": "^2.4.1",
     "uuid": "^14.0.0",
-    "xlsx": "^0.18.5",
-    "zod": "^4.4.3"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20.19.41",
     "@types/uuid": "^11.0.0",
     "citty": "^0.2.2",
-    "csv-parse": "^7.0.2",
     "execa": "^9.6.1",
     "tsx": "^4.20.6",
     "typescript": "^5"
