@@ -379,17 +379,6 @@ WHERE NOT EXISTS (SELECT 1 FROM \"$SCHEMA\".enrollment e WHERE e.\"profileId\" =
 
 # Schema conformance
 psql "$DATABASE_URL" -c "\d \"$SCHEMA\".enrollment"
-
-# slmts only — spot-check one of the known merged/corrected identities (two registrations for the same
-# real person, collapsed into one user+profile — see parse-excel-to-json.ts's KNOWN_DUPLICATE_KEYS)
-psql "$DATABASE_URL" -c "
-SELECT p.name, p.phone, u.email, u.\"phoneNumber\"
-FROM \"$SCHEMA\".profile p JOIN \"user\" u ON u.id = p.\"userId\"
-WHERE p.name = 'Sridhar Tadepalli';
-"
-# Expect exactly 1 row: phone 19591989895, phoneNumber +19591989895, email sridhartad@gmail.com
-# (two registrations, both approved, point at it: SELECT count(*) FROM "$SCHEMA".registration r JOIN
-#  "$SCHEMA".profile p ON p.id = r."convertedProfileId" WHERE p.name = 'Sridhar Tadepalli'  -- expect 2)
 ```
 
 If any of these don't match, **stop and don't proceed to Step 8** — flag it before granting anyone

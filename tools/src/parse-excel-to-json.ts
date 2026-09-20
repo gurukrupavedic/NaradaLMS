@@ -208,12 +208,10 @@ type Report = {
    */
   blocking: (Where & { message: string })[]
   /** Judgement calls the parser made and the things it noticed, none of which stops the import. */
-  primaryKeyAliases: { sheet: string; row: number; key: string; usedAs: string }[]
   suspectPhones: (Where & { phone: string; name: string; city: string | null; reason: string })[]
   phoneCollisions: { phone: string; userId: string; profiles: { profileId: string; name: string }[] }[]
   /** user.email is unique platform-wide, so a repeat gets a synthetic address on the later user. */
   duplicateRealEmails: { email: string; keptForUserId: string; fellBackToSyntheticFor: string }[]
-  resolvedEmailOverrides: { email: string; assignedToPhone: string; fellBackToSyntheticFor: string }[]
   /** Same PRIMARY KEY in both schools' registration sheets, with a different name or email. */
   sharedWithOtherSchool: { key: string; thisRow: number; otherRow: number; name: string[]; email: string[] }[]
   notAdmittedRegistrations: (Where & { admitted: string })[]
@@ -300,35 +298,6 @@ function syntheticEmail(key: string): string {
 /** Header comparison key: the tracker sheets disagree on case and embed "\r\n" in titles. */
 const normHeader = (header: unknown) => String(header ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
 
-// Known cases where the same real person is in the registration sheet under two different PRIMARY
-// KEYs — confirmed by hand against the source rows (same name, city and year of birth; one
-// registration superseding the other), not an algorithmic guess. Each entry aliases the older key to
-// the one with real batch/assessment history, so both registrations collapse into one profile. Add
-// to this list only after checking the raw rows.
-const KNOWN_DUPLICATE_KEYS: Record<string, string> = {
-  // Sridhar Tadepalli, Frisco, YOB 1973 — registered 2025-11-30 under this number, then again
-  // 2026-01-01 under 1-9591989895-1973, which is the one with an actual batch and evaluations.
-  '1-5107668743-1973': '1-9591989895-1973',
-}
-const resolveKey = (key: string) => KNOWN_DUPLICATE_KEYS[key] ?? key
-
-// Known cases where one real email address is entered on several households' registration rows (a
-// parent's personal email reused for a child's registration, or a shared family email), where naive
-// first-come-first-served claim order gave the real address to the wrong household — confirmed by
-// hand against the source spreadsheet, not an algorithmic guess. Maps email -> the phone (country
-// code + number, digits only) whose household should keep it; every other household proposing the
-// same email always gets a synthetic one instead, regardless of row order.
-const PREFERRED_EMAIL_OWNERS: Record<string, string> = {
-  // Surya Srinivas Jagarlapudi (adult, Austin) — "J" + "suryasrinivas" is his name almost verbatim.
-  'jsuryasrinivas@gmail.com': '17373779389',
-  // Venkata Dileep Bommakanti (adult, Hyderabad) — "B" + "V" + "dileep" matches his name exactly.
-  'bvdileep@gmail.com': '919885883979',
-  // Sashikanth Pochimcherla (adult, Hyderabad) — the email is his exact full name.
-  'sashikanth.pochimcharla@gmail.com': '919949054060',
-  // Kameswara Rao Mandalika (adult, Visakhapatnam) — "kamesh" is a common short form of "Kameswara".
-  'ratnamkamesh4545@gmail.com': '919885774264',
-}
-
 // ==========================================
 // Sheet reading
 // ==========================================
@@ -410,11 +379,9 @@ function parseSchool(source: SourceConfig, workbook: any, shared: Shared): Schoo
       'spreadsheet; the rest are judgement calls made, or things noticed, that do not.',
     school,
     blocking: [],
-    primaryKeyAliases: [],
     suspectPhones: [],
     phoneCollisions: [],
     duplicateRealEmails: [],
-    resolvedEmailOverrides: [],
     sharedWithOtherSchool: [],
     notAdmittedRegistrations: [],
     guruDisagreements: [],
@@ -449,17 +416,6 @@ function parseSchool(source: SourceConfig, workbook: any, shared: Shared): Schoo
   function claimEmail(candidate: string | null, householdKey: string, userId: string): string {
     const { emailOwners } = shared
     if (candidate) {
-      const preferredOwnerPhone = PREFERRED_EMAIL_OWNERS[candidate]
-      if (preferredOwnerPhone && preferredOwnerPhone !== householdKey) {
-        // A specific, hand-verified household owns this email — never let a different household
-        // claim it, regardless of which row is processed first. Deliberately not registered in
-        // emailOwners, so the real slot stays free whenever the true owner's row is reached.
-        const fallback = syntheticEmail(householdKey)
-        emailOwners.set(fallback, userId)
-        report.resolvedEmailOverrides.push({ email: candidate, assignedToPhone: preferredOwnerPhone, fellBackToSyntheticFor: userId })
-        return fallback
-      }
-
       const existingOwner = emailOwners.get(candidate)
       if (!existingOwner || existingOwner === userId) {
         emailOwners.set(candidate, userId)
@@ -501,8 +457,7 @@ function parseSchool(source: SourceConfig, workbook: any, shared: Shared): Schoo
       }
       seenKeys.set(rawKey, excelRow)
 
-      const key = resolveKey(rawKey)
-      if (key !== rawKey) report.primaryKeyAliases.push({ sheet: sheet.name, row: excelRow, key: rawKey, usedAs: key })
+      const key = rawKey
 
       const firstName = clean(at(row, 'FIRST NAME'))
       const lastName = clean(at(row, 'LAST NAME'))
@@ -725,7 +680,7 @@ function parseSchool(source: SourceConfig, workbook: any, shared: Shared): Schoo
     }
     seenTrackerKeys.set(rawKey, excelRow)
 
-    const key = resolveKey(rawKey)
+    const key = rawKey
     const profile = profilesByKey.get(key)
     if (!profile) {
       block(where, 'PRIMARY KEY is in no row of the registration sheet')
@@ -787,7 +742,7 @@ function parseSchool(source: SourceConfig, workbook: any, shared: Shared): Schoo
       perBatch.set(column, values)
       guruValuesByBatch.set(batchCode, perBatch)
 
-      const guruKey = resolveKey(guruRawKey)
+      const guruKey = guruRawKey
       const guru = profilesByKey.get(guruKey)
       if (!guru) {
         const near = [...profilesByKey.keys()].filter(k => k.split('-')[1] === guruKey.split('-')[1])
@@ -885,7 +840,7 @@ function parseSchool(source: SourceConfig, workbook: any, shared: Shared): Schoo
       const rawKey = clean(row[iKey])
       // Empty template rows carry "--" (or nothing) in the PRIMARY KEY column.
       if (!PRIMARY_KEY_PATTERN.test(rawKey)) return
-      const key = resolveKey(rawKey)
+      const key = rawKey
       const where: Where = { sheet: sheetName, row: rowNumber(marks, i), key: rawKey }
 
       if (!track) {
