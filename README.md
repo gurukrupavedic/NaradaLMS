@@ -96,6 +96,10 @@ pnpm auth:generate        # regenerate BetterAuth schema from config
 
 There is no migration command: the API applies the public-schema and every school-schema migration on each boot. To create migration files use `pnpm db:generate:public` / `pnpm db:generate:school`.
 
+### Importing school data
+
+`tools/` parses the two school workbooks into `seed-data/<school>/` and imports them: put `slmts.xlsx` and `rr.xlsx` in `seed-data/`, then `cd tools && pnpm parse:excel` and `pnpm exec tsx src/import-school.ts data --slug <school> [--commit]`. `seed-data/` is gitignored — it holds real people's names, phone numbers and emails, so the workbooks are shared out of band, never committed. The parser lists every problem it finds in the spreadsheets and the importer refuses to run until the blocking ones are fixed. For staging/production follow `docs/production-import-runbook.md`.
+
 ### Seed tools
 
 Tools for local development and operator setup. Sign-in is by SMS code to a phone number (locally the API logs the code when `USE_TWILIO_API` is off); seeded users get fictional phone numbers, and `--phoneNumber` sets a real one.

@@ -14,7 +14,7 @@ import { PhoneInput } from '@/components/phone-input'
 
 /**
  * A prospective student's application — the same data a paper registration form used to collect
- * (`tools/src/parse-excel-to-json.ts`'s `RegistrationMetadataRow`), now filed straight into
+ * (the registration sheets `tools/src/parse-excel-to-json.ts` reads), now filed straight into
  * `POST /registrations` instead of a spreadsheet row someone re-keys by hand later.
  *
  * Three steps, like `app/login/page.tsx`'s phone → code → profile ladder, but linear rather than

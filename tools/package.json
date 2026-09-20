@@ -10,8 +10,7 @@
     "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit",
     "parse:excel": "tsx src/parse-excel-to-json.ts",
-    "import:school:data": "tsx src/import-school.ts data",
-    "import:school:grant-passwords": "tsx src/import-school.ts grant-passwords"
+    "import:school:data": "tsx src/import-school.ts data"
   },
   "dependencies": {
     "@narada/api": "workspace:*",
