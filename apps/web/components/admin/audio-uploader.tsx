@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import { ApiError } from '@/lib/api/client'
+import { Spinner } from '@/components/spinner'
 import { useUploadChapterAudio } from '@/lib/query/use-content-mutations'
 
 /** Upload one audio take, with a real byte-level progress bar driven by `XMLHttpRequest`. */
@@ -29,8 +29,6 @@ export function AudioUploader({ chapterId }: { chapterId: string }) {
       },
     )
   }
-
-  const errorMessage = mutation.error instanceof ApiError ? mutation.error.message : mutation.error?.message
 
   return (
     <div className="space-y-3.5">
@@ -63,8 +61,6 @@ export function AudioUploader({ chapterId }: { chapterId: string }) {
         </label>
       </div>
 
-      {errorMessage && <p className="label text-vermilion">{errorMessage}</p>}
-
       {mutation.isPending && (
         <div className="h-1 w-full bg-ink/10">
           <div className="h-full bg-ink transition-[width]" style={{ width: `${progress}%` }} />
@@ -75,13 +71,15 @@ export function AudioUploader({ chapterId }: { chapterId: string }) {
         type="button"
         onClick={handleUpload}
         disabled={!file || !reciter.trim() || mutation.isPending}
+        aria-busy={mutation.isPending}
         className={cn(
-          'label border border-rule px-3 py-1.5 transition-colors',
+          'label inline-flex items-center gap-2 border border-rule px-3 py-1.5 transition-colors',
           !file || !reciter.trim() || mutation.isPending
             ? 'text-ink-muted/50'
             : 'text-ink hover:border-vermilion hover:text-vermilion',
         )}
       >
+        {mutation.isPending && <Spinner />}
         {mutation.isPending ? `Uploading… ${progress}%` : 'Upload'}
       </button>
     </div>

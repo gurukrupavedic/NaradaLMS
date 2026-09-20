@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Dialog } from '@base-ui/react/dialog'
 import { useQuery } from '@tanstack/react-query'
 
-import { ApiError } from '@/lib/api/client'
+import { Spinner } from '@/components/spinner'
 import type { AdminSittingRow } from '@/lib/api/resources'
 import {
   childrenBonus,
@@ -192,14 +192,6 @@ function ResultForm({ sitting, onCancel }: { sitting: AdminSittingRow; onCancel:
         />
       </label>
 
-      {recording.isError && (
-        <p className="text-[0.8125rem] text-vermilion">
-          {recording.error instanceof ApiError
-            ? recording.error.message
-            : 'Could not save that result.'}
-        </p>
-      )}
-
       <div className="flex justify-end gap-3">
         <button
           type="button"
@@ -211,8 +203,10 @@ function ResultForm({ sitting, onCancel }: { sitting: AdminSittingRow; onCancel:
         <button
           type="submit"
           disabled={!complete || bonus === null || recording.isPending}
-          className="label bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
+          aria-busy={recording.isPending}
+          className="label inline-flex items-center gap-2 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
         >
+          {recording.isPending && <Spinner />}
           {recording.isPending ? 'Saving…' : 'Save result'}
         </button>
       </div>

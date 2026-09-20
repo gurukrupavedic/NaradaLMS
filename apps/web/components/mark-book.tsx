@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { PROFICIENCY_LABEL, PROFICIENCY_SHORT, type ProficiencyLevel } from '@/lib/proficiency'
 import type { RosterStudent } from '@/lib/mock-dashboard'
 import { GradeDialog, type GradeDialogTarget, type GradeMutation } from '@/components/grade-dialog'
+import { Spinner } from '@/components/spinner'
 import type { SetLevelInput } from '@/lib/query/use-evaluation-mutations'
 import {
   DropdownMenu,
@@ -304,7 +305,13 @@ function StudentMenu({
           hasError ? 'text-vermilion' : 'text-ink-muted/70',
         )}
       >
-        <MoreHorizontal className="size-4" aria-hidden />
+        {/* The menu closes the moment an action is picked, so this trigger is the only thing left
+            on screen to show the write is still in flight. */}
+        {status === 'pending' || breakStatus === 'pending' ? (
+          <Spinner className="size-4" />
+        ) : (
+          <MoreHorizontal className="size-4" aria-hidden />
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"

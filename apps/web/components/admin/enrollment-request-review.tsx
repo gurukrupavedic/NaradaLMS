@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Section } from '@/components/section'
+import { Spinner } from '@/components/spinner'
 import { enrollmentRequestsQuery } from '@/lib/query/options'
 import {
   useApproveEnrollmentRequest,
@@ -94,17 +95,21 @@ function EnrollmentRequestRow({ request }: { request: ApiEnrollmentRequest }) {
           <button
             type="button"
             disabled={pending}
+            aria-busy={reject.isPending}
             onClick={() => reject.mutate(request.id)}
-            className="label border border-rule px-3 py-1.5 text-ink-muted transition-colors hover:border-vermilion hover:text-vermilion disabled:pointer-events-none disabled:opacity-50"
+            className="label inline-flex items-center gap-2 border border-rule px-3 py-1.5 text-ink-muted transition-colors hover:border-vermilion hover:text-vermilion disabled:pointer-events-none disabled:opacity-50"
           >
+            {reject.isPending && <Spinner />}
             Reject
           </button>
           <button
             type="button"
             disabled={pending}
+            aria-busy={approve.isPending}
             onClick={() => approve.mutate(request.id)}
-            className="label bg-ink px-3 py-1.5 text-paper transition-opacity disabled:opacity-50"
+            className="label inline-flex items-center gap-2 bg-ink px-3 py-1.5 text-paper transition-opacity disabled:opacity-50"
           >
+            {approve.isPending && <Spinner />}
             Approve
           </button>
         </div>

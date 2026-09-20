@@ -9,6 +9,7 @@ import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
+import { Spinner } from '@/components/spinner'
 import { registrationQuery } from '@/lib/query/options'
 import { useApproveRegistration, useRejectRegistration } from '@/lib/query/use-registration-mutations'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
@@ -46,7 +47,6 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
   const approve = useApproveRegistration()
   const reject = useRejectRegistration()
   const pending = approve.isPending || reject.isPending
-  const mutationError = approve.error ?? reject.error
 
   async function handleApprove() {
     await approve.mutateAsync(registration.id)
@@ -157,26 +157,25 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
 
         {registration.status === 'pending' ? (
           <Section title="Decision">
-            {mutationError && (
-              <p className="text-[0.8125rem] text-vermilion">
-                {mutationError instanceof Error ? mutationError.message : 'Something went wrong.'}
-              </p>
-            )}
             <div className="flex gap-3">
               <button
                 type="button"
                 disabled={pending}
+                aria-busy={reject.isPending}
                 onClick={handleReject}
-                className="label flex-1 border border-rule px-5 py-3 text-ink-muted transition-colors hover:border-vermilion hover:text-vermilion disabled:pointer-events-none disabled:opacity-50 sm:flex-none sm:px-8"
+                className="label inline-flex flex-1 items-center justify-center gap-2 border border-rule px-5 py-3 text-ink-muted transition-colors hover:border-vermilion hover:text-vermilion disabled:pointer-events-none disabled:opacity-50 sm:flex-none sm:px-8"
               >
+                {reject.isPending && <Spinner />}
                 Reject
               </button>
               <button
                 type="button"
                 disabled={pending}
+                aria-busy={approve.isPending}
                 onClick={handleApprove}
-                className="label flex-1 bg-ink px-5 py-3 text-paper transition-opacity disabled:opacity-50 sm:flex-none sm:px-8"
+                className="label inline-flex flex-1 items-center justify-center gap-2 bg-ink px-5 py-3 text-paper transition-opacity disabled:opacity-50 sm:flex-none sm:px-8"
               >
+                {approve.isPending && <Spinner />}
                 Approve
               </button>
             </div>

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
-import { ApiError } from '@/lib/api/client'
+import { Spinner } from '@/components/spinner'
 import { chapterAuthoringDetailQuery } from '@/lib/query/options'
 import { useSaveChapterScript } from '@/lib/query/use-content-mutations'
 import { formatSegments, parseSegments } from '@/lib/segment-text'
@@ -68,8 +68,6 @@ function ScriptEditorForm({
     mutation.mutate({ script, data: { label, short, fontClass, text, segments } })
   }
 
-  const errorMessage = parseError ?? (mutation.error instanceof ApiError ? mutation.error.message : null)
-
   return (
     <div className="space-y-3.5">
       <div className="grid gap-3.5 sm:grid-cols-3">
@@ -120,21 +118,22 @@ function ScriptEditorForm({
         />
       </label>
 
-      {errorMessage && <p className="label text-vermilion">{errorMessage}</p>}
+      {parseError && <p className="label text-vermilion">{parseError}</p>}
 
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={handleSave}
           disabled={mutation.isPending}
+          aria-busy={mutation.isPending}
           className={cn(
-            'label border border-rule px-3 py-1.5 transition-colors',
+            'label inline-flex items-center gap-2 border border-rule px-3 py-1.5 transition-colors',
             mutation.isPending ? 'text-ink-muted/50' : 'text-ink hover:border-vermilion hover:text-vermilion',
           )}
         >
+          {mutation.isPending && <Spinner />}
           {mutation.isPending ? 'Saving…' : 'Save script'}
         </button>
-        {mutation.isSuccess && <span className="label text-ink-muted">Saved — persists for real.</span>}
       </div>
     </div>
   )

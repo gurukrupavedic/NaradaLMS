@@ -1,9 +1,10 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { recordExamResult, type RecordExamResultInput } from '@/lib/api/resources'
 import { keys } from '@/lib/query/options'
+import { useEditMutation } from '@/lib/query/use-edit-mutation'
 
 /**
  * Grades a track exam (components/admin/record-exam-result-dialog.tsx). Recording a result does
@@ -15,13 +16,16 @@ import { keys } from '@/lib/query/options'
 export function useRecordExamResult(examId: string) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (input: RecordExamResultInput) => recordExamResult(examId, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: keys.exams })
-      void queryClient.invalidateQueries({ queryKey: keys.dashboard })
-      void queryClient.invalidateQueries({ queryKey: keys.batches.all })
-      void queryClient.invalidateQueries({ queryKey: keys.profiles.detailAll })
+  return useEditMutation(
+    {
+      mutationFn: (input: RecordExamResultInput) => recordExamResult(examId, input),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: keys.exams })
+        void queryClient.invalidateQueries({ queryKey: keys.dashboard })
+        void queryClient.invalidateQueries({ queryKey: keys.batches.all })
+        void queryClient.invalidateQueries({ queryKey: keys.profiles.detailAll })
+      },
     },
-  })
+    { success: 'Exam result recorded.', failure: "Couldn't record the exam result." },
+  )
 }

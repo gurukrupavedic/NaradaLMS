@@ -266,6 +266,23 @@ describe('search (admin "enroll a student" support)', () => {
     expect(results.map(r => r.id)).toEqual([match.id])
   })
 
+  it('matches by email or phone as well as name', async () => {
+    world = await createTestSchool()
+    const byEmail = await createProfile(world, { name: 'Ada Anderson', email: 'ada.a@example.org' })
+    const byPhone = await createProfile(world, { name: 'Bea Baker', phone: '+919885981818' })
+    await createProfile(world, { name: 'Zed Zephyr', email: 'zed@example.org', phone: '+14155550100' })
+
+    const emailResults = await repository.search(world.schoolDb, { query: 'ada.a@example' })
+    const phoneResults = await repository.search(world.schoolDb, { query: '98859 81818' })
+    const partialPhone = await repository.search(world.schoolDb, { query: '9885981818' })
+
+    expect(emailResults.map(r => r.id)).toEqual([byEmail.id])
+    // Two words that are each a substring of the stored number — the same whitespace-token rule
+    // a name uses, which is what lets a spaced-out "98859 81818" find "+919885981818".
+    expect(phoneResults.map(r => r.id)).toEqual([byPhone.id])
+    expect(partialPhone.map(r => r.id)).toEqual([byPhone.id])
+  })
+
   it('excludes profiles already enrolled in excludeBatchId', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)

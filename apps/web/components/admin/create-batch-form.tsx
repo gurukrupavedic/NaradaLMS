@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 
-import { ApiError } from '@/lib/api/client'
 import { catalogTracksQuery } from '@/lib/query/options'
 import { useCreateBatch } from '@/lib/query/use-batch-mutations'
+import { Spinner } from '@/components/spinner'
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
@@ -108,15 +108,12 @@ export function CreateBatchForm() {
             <button
               type="submit"
               disabled={create.isPending}
-              className="label bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
+              aria-busy={create.isPending}
+              className="label inline-flex items-center gap-2 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
             >
+              {create.isPending && <Spinner />}
               {create.isPending ? 'Creating…' : 'Create batch'}
             </button>
-            {create.isError && (
-              <p className="text-[0.8125rem] text-vermilion">
-                {create.error instanceof ApiError ? create.error.message : 'Something went wrong.'}
-              </p>
-            )}
           </div>
         </form>
       </div>

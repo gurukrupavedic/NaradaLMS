@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 
+import { SHLOKA, SHLOKA_TRANSLATION, TAGLINE } from '@/lib/brand'
+
 export const metadata: Metadata = {
   title: 'Arriving Devi Navaratri',
   description: "Narada's app is still being built — arriving this Devi Navaratri.",
@@ -41,18 +43,17 @@ export default async function ComingSoonPage({
 
         <div className="mx-auto mt-6 max-w-md">
           <p className="font-deva text-[1.125rem] leading-loose text-ink">
-            तपःस्वाध्यायनिरतं तपस्वी वाग्विदां वरम् ।
+            {SHLOKA[0]}
             <br />
-            नारदं परिपप्रच्छ वाल्मीकिर्मुनिपुङ्गवम् ॥
+            {SHLOKA[1]}
           </p>
 
           <p className="mt-4 text-[0.9375rem] leading-relaxed text-ink-muted italic">
-            &ldquo;Sage Vālmīki approached Devarṣi Nārada—the great sage devoted to Tapas and
-            Svādhyāya, and foremost among the wise.&rdquo;
+            &ldquo;{SHLOKA_TRANSLATION}&rdquo;
           </p>
         </div>
 
-        <p className="label mt-12 text-ink-muted/60">Adhyayana, Anuṣṭhāna, Avagāhana · Est. 2017</p>
+        <p className="label mt-12 text-ink-muted/60">{TAGLINE}</p>
 
         {unlockEnabled && (
           <details className="mx-auto mt-10 w-fit" open={unlockFailed}>

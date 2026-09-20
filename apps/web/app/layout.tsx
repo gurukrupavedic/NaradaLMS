@@ -9,6 +9,7 @@ import {
 } from 'next/font/google'
 
 import { QueryProvider } from '@/components/query-provider'
+import { Toaster } from '@/components/toaster'
 
 import './globals.css'
 
@@ -98,6 +99,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body>
         <QueryProvider>{children}</QueryProvider>
+        <Toaster />
       </body>
     </html>
   )

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
-import { ApiError } from '@/lib/api/client'
+import { Spinner } from '@/components/spinner'
 import { chapterAuthoringDetailQuery } from '@/lib/query/options'
 import { useResegmentChapter } from '@/lib/query/use-content-mutations'
 import { formatSegments, parseSegments } from '@/lib/segment-text'
@@ -62,8 +62,6 @@ function ResegmentEditorForm({ chapterId, scripts }: { chapterId: string; script
     mutation.mutate({ scripts: parsedByScript })
   }
 
-  const errorMessage = parseError ?? (mutation.error instanceof ApiError ? mutation.error.message : null)
-
   return (
     <div className="space-y-3.5">
       <p className="label text-vermilion">
@@ -101,23 +99,24 @@ function ResegmentEditorForm({ chapterId, scripts }: { chapterId: string; script
         <p className="label text-vermilion">Every script must have the same number of segment lines before resegmenting.</p>
       )}
 
-      {errorMessage && <p className="label text-vermilion">{errorMessage}</p>}
+      {parseError && <p className="label text-vermilion">{parseError}</p>}
 
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={handleSubmit}
           disabled={mutation.isPending || countsMismatch}
+          aria-busy={mutation.isPending}
           className={cn(
-            'label border border-rule px-3 py-1.5 transition-colors',
+            'label inline-flex items-center gap-2 border border-rule px-3 py-1.5 transition-colors',
             mutation.isPending || countsMismatch
               ? 'text-ink-muted/50'
               : 'text-ink hover:border-vermilion hover:text-vermilion',
           )}
         >
+          {mutation.isPending && <Spinner />}
           {mutation.isPending ? 'Resegmenting…' : 'Resegment all scripts'}
         </button>
-        {mutation.isSuccess && <span className="label text-ink-muted">Resegmented — persists for real.</span>}
       </div>
     </div>
   )

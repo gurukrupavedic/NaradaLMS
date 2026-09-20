@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { Dialog } from '@base-ui/react/dialog'
 
 import { cn } from '@/lib/utils'
-import { ApiError } from '@/lib/api/client'
 import { Pill } from '@/components/proficiency-pill'
+import { Spinner } from '@/components/spinner'
 import { PROFICIENCY_LABEL, PROFICIENCY_ORDER, type ProficiencyLevel } from '@/lib/proficiency'
 
 /**
@@ -45,8 +45,6 @@ export type GradeMutation = {
     opts?: { onSuccess?: () => void },
   ) => void
   isPending: boolean
-  isError: boolean
-  error: unknown
 }
 
 export function GradeDialog({
@@ -149,12 +147,6 @@ function GradeForm({
         />
       </label>
 
-      {grading.isError && (
-        <p className="text-[0.8125rem] text-vermilion">
-          {grading.error instanceof ApiError ? grading.error.message : 'Could not save that grade.'}
-        </p>
-      )}
-
       <div className="flex justify-end gap-3">
         <button
           type="button"
@@ -166,8 +158,10 @@ function GradeForm({
         <button
           type="submit"
           disabled={grading.isPending}
-          className="label bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
+          aria-busy={grading.isPending}
+          className="label inline-flex items-center gap-2 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
         >
+          {grading.isPending && <Spinner />}
           {grading.isPending ? 'Saving…' : 'Save evaluation'}
         </button>
       </div>

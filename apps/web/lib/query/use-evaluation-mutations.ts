@@ -1,8 +1,9 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { createEvaluation, createEvaluations } from '@/lib/api/resources'
+import { useEditMutation } from '@/lib/query/use-edit-mutation'
 import type { ProficiencyLevel } from '@/lib/proficiency'
 
 export type SetLevelInput = {
@@ -22,12 +23,15 @@ export type SetLevelInput = {
 export function useSetEvaluation(batchId: string, invalidateKey: readonly unknown[]) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (input: SetLevelInput) => createEvaluation(batchId, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: invalidateKey })
+  return useEditMutation(
+    {
+      mutationFn: (input: SetLevelInput) => createEvaluation(batchId, input),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: invalidateKey })
+      },
     },
-  })
+    { success: 'Evaluation saved.', failure: "Couldn't save that evaluation." },
+  )
 }
 
 /**
@@ -41,10 +45,13 @@ export function useSetEvaluation(batchId: string, invalidateKey: readonly unknow
 export function useSetEvaluations(batchId: string, invalidateKey: readonly unknown[]) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (items: SetLevelInput[]) => createEvaluations(batchId, items),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: invalidateKey })
+  return useEditMutation(
+    {
+      mutationFn: (items: SetLevelInput[]) => createEvaluations(batchId, items),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: invalidateKey })
+      },
     },
-  })
+    { success: 'Promoted to L3.', failure: "Couldn't promote to L3." },
+  )
 }
