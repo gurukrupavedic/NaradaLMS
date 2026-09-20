@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { isUnlocked, PREVIEW_COOKIE, PREVIEW_UNLOCK_PATH } from '@/lib/preview-unlock'
+
 /**
  * Gate on cookie presence only — not a real session check. Validating the session would mean this
  * proxy making its own round trip to api-next on every navigation, and a stale-but-present
@@ -72,7 +74,12 @@ function hasSession(request: NextRequest): boolean {
   return Boolean(session && request.cookies.get(PROFILE_COOKIE))
 }
 
-export function proxy(request: NextRequest) {
+// TEMPORARY(preview-unlock)
+function hasPreviewAccess(request: NextRequest): Promise<boolean> {
+  return isUnlocked(request.cookies.get(PREVIEW_COOKIE)?.value, process.env.PREVIEW_PASSWORD)
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // OTP send/verify and OAuth sign-in have to reach api-next before any session exists, and
@@ -88,8 +95,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(destination, { request: { headers } })
   }
 
-  if (process.env.COMING_SOON_MODE === 'true') {
-    if (pathname === COMING_SOON_PATH) {
+  // TEMPORARY(preview-unlock): a browser that has entered `PREVIEW_PASSWORD` (see
+  // lib/preview-unlock.ts) skips the maintenance page and gets the app's normal behaviour below.
+  if (process.env.COMING_SOON_MODE === 'true' && !(await hasPreviewAccess(request))) {
+    if (pathname === COMING_SOON_PATH || pathname === PREVIEW_UNLOCK_PATH) {
       return NextResponse.next()
     }
 
