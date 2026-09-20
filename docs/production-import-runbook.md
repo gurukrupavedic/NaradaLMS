@@ -39,8 +39,8 @@ fixed in the spreadsheets before Step 4 can pass. The counts below are what the 
 
 | | users | profiles | registrations | tracks | chapters | batches | enrollments | evaluations | exams |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `slmts` | 981 | 1046 | 1046 | 8 | 90 | 55 | 825 | 11,922 | 463 |
-| `rr` | 877 | 978 | 978 | 10 | 114 | 40 | 625 | 10,569 | 379 |
+| `slmts` | 981 | 1046 | 1046 | 8 | 90 | 55 | 825 | 21,020 | 463 |
+| `rr` | 877 | 978 | 978 | 10 | 114 | 40 | 625 | 18,607 | 379 |
 
 (128 users appear in both, so the platform gains 1,730 users, not 1,858.)
 
@@ -288,7 +288,7 @@ error midway through Step 6.
 
 **Expect**, for `slmts` (then the `rr` counts from the table above):
 ```
-Loaded 1 courses (ved), 981 users, 1046 profiles, 1046 registrations, 8 tracks, 90 chapters, 55 batches, 825 enrollments, 11922 evaluations, 463 exams from ...
+Loaded 1 courses (ved), 981 users, 1046 profiles, 1046 registrations, 8 tracks, 90 chapters, 55 batches, 825 enrollments, 21020 evaluations, 463 exams from ...
 ✅ All rows pass validation against the live API schemas, and every person can reach a course.
 Dry run only — pass --commit to write to the database. No rows were inserted.
 ```
@@ -322,7 +322,7 @@ pnpm exec tsx src/import-school.ts data --slug rr --name "RR" --commit
 ✅ All rows pass validation against the live API schemas, and every person can reach a course.
 Importing into organization "slmts" (<uuid>)
 ✅ Imported 981 new users (0 reused existing accounts, 0 already present) + 981 org memberships.
-✅ Import committed: 1 courses, 8 tracks, 90 chapters, 55 batches, 1046 profiles, 1046 registrations, 825 enrollments, 11922 evaluations, 463 exams with results.
+✅ Import committed: 1 courses, 8 tracks, 90 chapters, 55 batches, 1046 profiles, 1046 registrations, 825 enrollments, 21020 evaluations, 463 exams with results.
 ```
 and for `rr` (run second): `Imported 749 new users (0 reused existing accounts, 128 already present) + 877 org
 memberships` — the 128 are people whose phone number is also in the SLMTS workbook, whose login already
@@ -361,9 +361,9 @@ UNION ALL SELECT 'exam', count(*) FROM \"$SCHEMA\".exam
 UNION ALL SELECT 'examResult', count(*) FROM \"$SCHEMA\".\"examResult\";
 "
 # Expect for slmts: track 8, chapter 90, batch 55, profile 1046, registration 1046, enrollment 825,
-#                   evaluation 11922, exam 463, examResult 463
+#                   evaluation 21020, exam 463, examResult 463
 # Expect for rr:    track 10, chapter 114, batch 40, profile 978, registration 978, enrollment 625,
-#                   evaluation 10569, exam 379, examResult 379
+#                   evaluation 18607, exam 379, examResult 379
 
 # Every profile must be part of a course (an enrollment, or the approved registration it came from),
 # or that person reads no content and is told they are in no course.
@@ -424,13 +424,15 @@ and prints a summary:
   as written, each with its Excel row number: a `GURUVU GARU` key no registration has, a `PRIMARY KEY`
   that repeats or isn't its own row's country code + phone + year of birth, an invalid phone or blank
   name, `ADMITTED?` other than YES, a `STUDENT STATUS` other than Active or Break, a batch code that
-  doesn't parse, a grade cell that isn't 1–4 (or the skipped 0/−1/−2), a mark above its maximum, or a
+  doesn't parse, a grade cell that isn't 1–4, 0, −1 or −2, a mark above its maximum, or a
   total that isn't the sum. The importer refuses to run until they are fixed in the spreadsheet.
 - Everything else is a judgement the parser made, listed so it isn't silent: `enrollmentRoleOverrides`
   (a guru who is also a student of the batch — the guru role is kept), `guruDisagreements` (a batch whose
   guru columns differ between its rows — everyone named is enrolled), `batchCodeAssumptions` (`REM` and
-  `TEACH` batches mapped to the final track), `ignoredGradeCells` (0/−1/−2 chapter cells — meaning
-  unknown, not imported) and `examRowsNotSat` (mark-sheet rows with no marks — not results).
+  `TEACH` batches mapped to the final track) and `examRowsNotSat` (mark-sheet rows with no marks — not
+  results).
+- Chapter grade cells in the tracker sheet read as: 1–4 → L1–L4, −1 → L0 (taught), −2 → absent, and a
+  blank or 0 → no result, so no evaluation row.
 
 ---
 
