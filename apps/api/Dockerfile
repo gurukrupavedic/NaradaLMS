@@ -12,9 +12,7 @@ WORKDIR /repo
 # Source is excluded here so dependency layers are cached independently of code changes.
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY apps/api/package.json        apps/api/package.json
-COPY apps/api-legacy/package.json apps/api-legacy/package.json
 COPY apps/web/package.json        apps/web/package.json
-COPY apps/web-legacy/package.json apps/web-legacy/package.json
 COPY packages/auth/package.json    packages/auth/package.json
 COPY packages/db/package.json      packages/db/package.json
 COPY packages/env/package.json     packages/env/package.json

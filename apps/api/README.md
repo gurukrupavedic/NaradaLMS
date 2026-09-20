@@ -1,8 +1,7 @@
 # Backend
 
-This is the current backend API (promoted from `apps/api-next`, its name during the rewrite).
-`apps/api-legacy` is the frozen, executable pre-rewrite reference it replaced — still runnable,
-testable, and reviewable independently, kept as a fallback while this rewrite is still settling in.
+This is the backend API (promoted from `apps/api-next`, its name during the rewrite). The pre-rewrite
+API it replaced has been removed; it remains in Git history (`git show 9a35fcdc:apps/api-legacy/src/…`).
 
 This app intentionally imports live workspace contracts instead of copying them:
 
@@ -28,12 +27,7 @@ pnpm api:test
 pnpm api:dev
 ```
 
-The default development port still comes from the shared environment. To also run the legacy API
-through Docker, use its Compose profile; it exposes that service on host port 3001:
-
-```sh
-docker compose --profile legacy up narada-db narada-api-legacy
-```
+The default development port still comes from the shared environment.
 
 Planning documents (written during the rewrite — still the audit trail for the decisions behind
 this app's shape, not a live spec):

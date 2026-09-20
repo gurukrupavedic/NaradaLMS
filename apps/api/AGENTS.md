@@ -1,13 +1,13 @@
 # Working in this directory
 
 Only reuse patterns that already exist inside this directory (`apps/api`). Do not port
-patterns from `apps/api-legacy/src` (the old, pre-rewrite implementation), even when
-`src/` already solves a structurally similar problem — cursor pagination,
-conditional `where` filters, authorization, etc.
+patterns from the old, pre-rewrite API (removed; it is still in Git history —
+`git show 9a35fcdc:apps/api-legacy/src/…`), even when `src/` already solves a structurally
+similar problem — cursor pagination, conditional `where` filters, authorization, etc.
 
-`apps/api-legacy/src` is useful as reference for _what a feature needs to do_
+That old code is useful only as reference for _what a feature needs to do_
 (business rules, edge cases it handles), not _how the code should be shaped_.
-If the rewrite doesn't yet have a local precedent for something, prefer
+If this app doesn't yet have a local precedent for something, prefer
 the underlying library's own idioms (e.g. Drizzle's
 [dynamic query building](https://orm.drizzle.team/docs/dynamic-query-building))
 over copying the old codebase's style.
