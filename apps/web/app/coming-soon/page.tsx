@@ -23,12 +23,10 @@ export default function ComingSoonPage() {
 
       <div className="relative">
         <h1 className="display text-[2rem] leading-[1.1] sm:text-[2.75rem]">
-          Narada&apos;s app is
+          Narada arriving
           <br />
-          still being built
+          <span className="text-[1.8rem] text-vermilion">Devi Navaratri</span>
         </h1>
-
-        <p className="label mt-4 text-vermilion">Arriving Devi Navaratri</p>
 
         <div className="mx-auto mt-6 max-w-md">
           <p className="font-deva text-[1.125rem] leading-loose text-ink">
