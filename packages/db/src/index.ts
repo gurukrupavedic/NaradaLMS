@@ -1,6 +1,4 @@
-import type { ExtractTablesWithRelations } from 'drizzle-orm/relations'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
-import type { NodePgTransaction } from 'drizzle-orm/node-postgres/session'
 import { LRUCache } from 'lru-cache'
 import { Pool } from 'pg'
 
@@ -10,15 +8,9 @@ import { publicSchema, schoolSchema } from './schema'
 
 type PublicSchema = typeof publicSchema
 type SchoolSchema = typeof schoolSchema
-type SchoolSchemaRelations = ExtractTablesWithRelations<SchoolSchema>
 
 type PublicBaseDatabase = NodePgDatabase<PublicSchema> & { $client: Pool }
 type SchoolBaseDatabase = NodePgDatabase<SchoolSchema> & { $client: Pool }
-
-// Concrete transaction type stays private to @narada/db; only SchoolTransaction is needed
-// today (the deprecated SchoolDbExecutor alias for apps/api/src). Add PublicTransaction back
-// only if a deprecated public-transaction-capable alias is ever needed.
-type SchoolTransaction = NodePgTransaction<SchoolSchema, SchoolSchemaRelations>
 
 /** Root public-schema Drizzle client. May open transactions; only services/application composition should receive it. */
 export type PublicDbClient = PublicBaseDatabase
@@ -33,15 +25,6 @@ export type SchoolDbClient = SchoolBaseDatabase
 export type SchoolDb = Pick<SchoolDbClient, 'query' | 'select' | 'insert' | 'update' | 'delete'>
 /** Narrow public-schema query/mutation capability for repository functions. See {@link SchoolDb}. */
 export type PublicDb = Pick<PublicDbClient, 'query' | 'select' | 'insert' | 'update' | 'delete'>
-
-/** @deprecated use SchoolDbClient */
-export type SchoolDatabase = SchoolDbClient
-/** @deprecated use PublicDbClient */
-export type PublicDatabase = PublicDbClient
-/** @deprecated use SchoolDb (repositories) or SchoolDbClient (services) */
-export type SchoolDbExecutor = SchoolDbClient | SchoolTransaction
-/** @deprecated split in H8 */
-export type Database = PublicDbClient | SchoolDbClient
 
 type CachedDb = { db: SchoolDbClient; pool: Pool }
 
@@ -124,9 +107,6 @@ export function getSchoolDb(organizationId: string): SchoolDbClient {
   dbCache.set(organizationId, { db, pool })
   return db
 }
-
-/** @deprecated use getSchoolDb */
-export const getScopedDatabase = getSchoolDb
 
 /** Closes the public pool and every cached school pool exactly once; aggregates any close failures. */
 export async function shutdownPools(): Promise<void> {

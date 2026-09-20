@@ -51,16 +51,13 @@ prerequisite below).
 
 ---
 
-## ⚠️ Which API is actually live matters here
+## ⚠️ The importer validates against the API's own rules
 
-`railway.json` builds `apps/api/Dockerfile` — the rewritten API (the "Backend rewrite" PR), not
-`apps/api-legacy` (the pre-rewrite app, kept only as a buildable fallback behind
-`docker-compose.yaml`'s `legacy` profile). `tools/src/import-school.ts` validates every imported row
-against `@narada/api`'s own live schemas for exactly this reason — a bulk import that bypasses the
-HTTP layer should never write a row the real, currently-deployed API would reject. If that ever
-changes (a future rewrite, a rollback to the legacy app), update `import-school.ts`'s imports
-*before* running this runbook — otherwise Step 4/6's "passes validation" is validating against the
-wrong app's rules.
+`railway.json` builds `apps/api/Dockerfile`. `tools/src/import-school.ts` validates every imported row
+against `@narada/api`'s own schemas for exactly this reason — a bulk import that bypasses the HTTP
+layer should never write a row the deployed API would reject. If the API's location or shape ever
+changes, update `import-school.ts`'s imports *before* running this runbook — otherwise Step 4/6's
+"passes validation" is validating against the wrong app's rules.
 
 ---
 

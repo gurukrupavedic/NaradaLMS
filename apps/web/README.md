@@ -1,9 +1,8 @@
 # Narada web
 
-The current Next.js frontend (promoted from `apps/web-next`, its name during the rewrite —
-rethinking Narada's web application from first principles against the new `apps/api`).
-`apps/web-legacy` is the pre-rewrite frontend, kept as a fallback while this rewrite is still
-settling in.
+The Next.js frontend (promoted from `apps/web-next`, its name during the rewrite —
+rethinking Narada's web application from first principles against the new `apps/api`). The
+pre-rewrite frontend has been removed; it remains in Git history (`git show 9a35fcdc:apps/web-legacy/…`).
 
 Part of the root pnpm workspace (shared lockfile, shared `node_modules`) — it was its own
 standalone workspace early in the rewrite, before being folded in.

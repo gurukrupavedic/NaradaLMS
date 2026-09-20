@@ -9,17 +9,17 @@ import { Pill } from '@/components/proficiency-pill'
 import { PROFICIENCY_LABEL, PROFICIENCY_ORDER, type ProficiencyLevel } from '@/lib/proficiency'
 
 /**
- * The grade dialog — apps/web's own version of apps/web-legacy's
- * components/teacher/evaluate-dialog.tsx, ported rather than imported: the legacy one is built on
+ * The grade dialog — apps/web's own version of the old frontend's
+ * components/teacher/evaluate-dialog.tsx, ported rather than imported: the old one was built on
  * shadcn's theme tokens (bg-primary, rounded-full, sonner toasts) that this app's register
  * aesthetic deliberately doesn't use anywhere real (grep components/ui/* — nothing outside that
  * folder imports from it). Same shape and interaction otherwise: a level picker plus an optional
  * notes field, in one dialog shared across every cell in the grid rather than one dialog per cell
- * (the legacy component's own doc comment recommends exactly this for a matrix).
+ * (the old component's own doc comment recommended exactly this for a matrix).
  */
 
 // `notStarted` means "no evaluation exists yet" — a teacher grading a chapter picks a real
-// outcome, never that placeholder (same exclusion the legacy dialog made). `level4` is excluded
+// outcome, never that placeholder (same exclusion the old dialog made). `level4` is excluded
 // too: that grade only certifies an exam result (see exams/service.ts's recordExamResult), never
 // a teacher's own evaluation.
 const GRADABLE_LEVELS = PROFICIENCY_ORDER.filter(

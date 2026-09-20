@@ -53,9 +53,6 @@ pnpm api:dev        # API on port 3000
 pnpm web:dev        # Next.js frontend
 ```
 
-`apps/api-legacy` and `apps/web-legacy` are the pre-rewrite apps, kept as a fallback while the
-rewrite is still settling in — same scripts, `api-legacy:*` / `web-legacy:*` instead.
-
 ## Commands
 
 ### Development
@@ -63,8 +60,6 @@ rewrite is still settling in — same scripts, `api-legacy:*` / `web-legacy:*` i
 ```sh
 pnpm api:dev          # start API with tsx watch (hot reload)
 pnpm web:dev          # start Next.js dev server
-pnpm api-legacy:dev    # start the pre-rewrite API
-pnpm web-legacy:dev    # start the pre-rewrite frontend
 ```
 
 ### Build
@@ -72,8 +67,6 @@ pnpm web-legacy:dev    # start the pre-rewrite frontend
 ```sh
 pnpm api:build          # tsc → dist/
 pnpm web:build          # next build
-pnpm api-legacy:build   # pre-rewrite API: tsc → dist/
-pnpm web-legacy:build   # pre-rewrite frontend: next build
 pnpm typecheck          # typecheck all packages
 ```
 
@@ -182,10 +175,8 @@ The `packages/env/src/index.ts` module validates all required variables at start
 
 ```
 apps/
-  api/          @narada/api        current backend (formerly the "api-next" rewrite)
-  web/          @narada/web        current Next.js 16 frontend (formerly "web-next")
-  api-legacy/   @narada/api-legacy pre-rewrite Express 5 backend, kept as a fallback
-  web-legacy/   @narada/web-legacy pre-rewrite frontend, kept as a fallback
+  api/          @narada/api        Express backend
+  web/          @narada/web        Next.js 16 frontend
 packages/
   auth/         @narada/auth    BetterAuth config, permissions, ids
   db/           @narada/db      Drizzle ORM, schema definitions, connection pooling
