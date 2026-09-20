@@ -4,10 +4,18 @@ import { clean, columns, rowNumber, stableId, type Ctx, type Sheet } from './she
 const GURU_COLUMNS = ['GURUVU GARU 1', 'GURUVU GARU 2', 'GURUVU GARU 3', 'GURUVU GARU 4']
 const ROLE_RANK = { instructor: 3, ta: 2, student: 1 } as const
 
-// The sheet's own scale: 1-4 are levels 1-4. Zero and the negatives (-1 is by far the commonest value
-// in the data) carry a meaning the schema has no direct home for, so they are skipped — and counted in
-// the report. Anything else in a grade cell is a mistake in the spreadsheet.
-const SKIPPED_GRADES = new Set([0, -1, -2])
+// The sheet's own scale: 1-4 are levels 1-4, -1 is L0 (taught, not yet graded) and -2 is absent. Zero
+// is "no result", the same as a blank cell, so it makes no evaluation. Anything else in a grade cell is
+// a mistake in the spreadsheet.
+const GRADE_LEVELS: Record<number, EvaluationRow['level']> = {
+  [-2]: 'absent',
+  [-1]: 'level0',
+  1: 'level1',
+  2: 'level2',
+  3: 'level3',
+  4: 'level4',
+}
+const NO_RESULT_GRADE = 0
 
 /**
  * Reads the tracker sheet: one row per student in their current batch, naming the batch's gurus and
@@ -126,12 +134,12 @@ export function parseTracker(
       const cell = row[index]
       if (cell === '' || cell == null) continue
       const grade = typeof cell === 'number' ? cell : Number(String(cell).trim())
-      if (SKIPPED_GRADES.has(grade)) {
-        report.ignoredGradeCells[grade] = (report.ignoredGradeCells[grade] ?? 0) + 1
-      } else if ([1, 2, 3, 4].includes(grade)) {
-        evaluations.push({ id: stableId('evaluation', course, key, chapterId), studentId: profile.id, chapterId, level: `level${grade}` as EvaluationRow['level'], evaluatorId })
+      if (grade === NO_RESULT_GRADE) continue
+      const level = GRADE_LEVELS[grade]
+      if (level) {
+        evaluations.push({ id: stableId('evaluation', course, key, chapterId), studentId: profile.id, chapterId, level, evaluatorId })
       } else {
-        block(where, `grade cell "${tracker.titles[index]}" = ${JSON.stringify(cell)} is not 1-4 (or 0, -1, -2, which are not imported)`)
+        block(where, `grade cell "${tracker.titles[index]}" = ${JSON.stringify(cell)} is not 1-4, 0 (no result), -1 (L0) or -2 (absent)`)
       }
     }
   })

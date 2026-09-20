@@ -58,7 +58,6 @@ function parseSchool(source: (typeof SOURCES)[number], shared: SharedUsers) {
     enrollmentRoleOverrides: [],
     batchCodeAssumptions: [],
     guruDisagreements: [],
-    ignoredGradeCells: {},
     examRowsNotSat: [],
   }
   const workbook = XLSX.readFile(file)
@@ -113,7 +112,7 @@ function main() {
     console.log(`
 ✅ ${source.school.slug} → seed-data/${source.school.slug}/
    ${Object.entries(dataset).map(([name, rows]) => `${name}: ${n(rows)}`).join('  ')}
-   for review in _report.json: ${n(report.enrollmentRoleOverrides)} guru/student role conflicts (guru role kept), ${n(report.guruDisagreements)} batches whose guru columns disagree, ${n(report.batchCodeAssumptions)} batches with no track in their code, ${n(report.examRowsNotSat)} mark rows with no marks (not sat), grade cells not imported: ${Object.entries(report.ignoredGradeCells).map(([grade, count]) => `${grade}×${count}`).join(' ') || 'none'}`)
+   for review in _report.json: ${n(report.enrollmentRoleOverrides)} guru/student role conflicts (guru role kept), ${n(report.guruDisagreements)} batches whose guru columns disagree, ${n(report.batchCodeAssumptions)} batches with no track in their code, ${n(report.examRowsNotSat)} mark rows with no marks (not sat)`)
 
     if (report.blocking.length) {
       blocked += report.blocking.length

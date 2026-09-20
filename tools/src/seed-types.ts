@@ -135,8 +135,6 @@ export type Report = {
   batchCodeAssumptions: { batchCode: string; reason: string }[]
   /** A batch whose guru columns differ between its own student rows; every person named is enrolled. */
   guruDisagreements: { batchCode: string; column: string; values: string[] }[]
-  /** Grade cells not imported (0, -1, -2 — meaning unknown), by value. */
-  ignoredGradeCells: Record<string, number>
   /** Mark-sheet rows with a person but no marks: an exam not yet sat, not a result. */
   examRowsNotSat: Where[]
 }
