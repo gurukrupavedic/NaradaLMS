@@ -10,11 +10,39 @@ shared between them. Don't skip straight to production because staging "should" 
 the whole point of doing staging first is to catch anything environment-specific before it matters.
 
 **Covers:** applying any pending `packages/db/drizzle/public` migrations, bringing existing school
-schemas up to date, and importing the real SLMTS registration/tracker data (currently: 1054 users /
-1212 profiles / 8 tracks / 74 chapters / 91 batches / 957 enrollments / 10,396 evaluations — see
-`seed-data/_report.json` for the exact numbers behind this run) into a new `slmts` school. Exams
-and their results are **not** part of this import: a track's certification is its latest
-`examResult`, which needs the real mark sheet, so seed those from data that carries the marks.
+schemas up to date, and importing the real registration/tracker/mark-sheet data into **two schools**,
+one per workbook (`seed-data/slmts.xlsx`, `seed-data/rr.xlsx`):
+
+| School (`--slug`) | Workbook | Course (URL segment) | Batches |
+| --- | --- | --- | --- |
+| `slmts` ("SLMTS") | `slmts.xlsx` | Vedam (`ved`) | `VED-…` |
+| `rr` ("RR") | `rr.xlsx` | Puranokta (`pur`) | `PUR-…` |
+
+Every person is identified by the sheets' `PRIMARY KEY` (`<country code>-<phone>-<year of birth>`).
+`user` is platform-wide — one login per phone number — so someone in both workbooks is one user with a
+profile in each school; nothing else is shared. Each registration-sheet row becomes an **approved
+registration** linked to the profile, which is what makes a person with no batch "part of" the course
+(see `importer-watchouts.md`); each mark-sheet row with marks becomes a completed `exam` + `examResult`. The workbooks record no exam date (the `TRACK n` sheets' `YEAR`/`SEMESTER`
+columns are certificate print details and are ignored), so every imported exam is dated the day of import.
+
+**The data is not in Git.** `seed-data/` is gitignored — the workbooks and everything parsed from
+them are real people's names, phone numbers and emails. Get the two workbooks from whoever holds them,
+save them as `seed-data/slmts.xlsx` and `seed-data/rr.xlsx`, and run `cd tools && pnpm parse:excel`
+before Step 4; it writes `seed-data/<school>/*.json` (and `_report.json`) next to them. A fresh
+checkout has neither, so Step 4 cannot pass until you do.
+
+**Read the findings write-up first** (`seed-data/source-data-issues.md`, kept alongside the data for
+the same reason; ask for it if you don't have it). The parser refuses to hand the importer any data while a
+*blocking* finding is open (a teacher key that matches nobody, an impossible mark, …), so those must be
+fixed in the spreadsheets before Step 4 can pass. The counts below are what the workbooks give as of 2026-09-20
+(with no blocking findings open); re-parse and update them if the workbooks change:
+
+| | users | profiles | registrations | tracks | chapters | batches | enrollments | evaluations | exams |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `slmts` | 981 | 1046 | 1046 | 8 | 90 | 55 | 825 | 11,922 | 463 |
+| `rr` | 877 | 978 | 978 | 10 | 114 | 40 | 625 | 10,569 | 379 |
+
+(128 users appear in both, so the platform gains 1,730 users, not 1,858.)
 
 **Does not cover:** anything about the Twilio Verify OTP integration itself (that's already live —
 see the login note in Step 2) beyond confirming its environment variables are set; anything about
@@ -39,8 +67,8 @@ wrong app's rules.
 ## Prerequisites
 
 1. Latest `main` checked out locally, `pnpm install` run. The tools used below live in `tools/`
-   (`src/import-school.ts`, `src/seed.ts`). Schema migrations are **not** a tool: the API applies them
-   itself on every boot (see Step 1).
+   (`src/parse-excel-to-json.ts`, `src/import-school.ts`, `src/seed.ts`). Schema migrations are **not**
+   a tool: the API applies them itself on every boot (see Step 1).
 2. **Railway CLI installed and logged in** (`railway whoami` should show your account). Find the
    `narada` project's ID once with `railway status --json` (or `railway status` for the
    human-readable form) — every command below needs it explicitly via `--project`, rather than
@@ -145,7 +173,7 @@ table (`drizzle.__drizzle_migrations`) doesn't reflect reality — either it's m
 migration that's actually already applied, or it doesn't exist at all yet (the likely case if this
 environment's public schema was ever set up via `pnpm db:push`, which never writes to that table).
 `migrate()` runs in one transaction, so the failure itself is safe — nothing partial is left behind
-— but don't just re-run it blindly. Reconcile first:
+— but don't just restart it blindly. Reconcile first:
 
 > **A note on the SQL below:** it's written as plain SQL to paste into an already-open `psql` session
 > (e.g. Railway's console) — no shell involved, no shell-quoting needed. If you'd rather run it as a
@@ -241,58 +269,69 @@ log's `startup.migrated` line reports the number of schools you expect.
 
 ---
 
-## Step 4 — Dry-run the import
+## Step 4 — Dry-run the import (each school)
 
 ```sh
 cd tools
+pnpm parse:excel                                              # re-check the workbooks; must exit 0
 pnpm exec tsx src/import-school.ts data --slug slmts --name "SLMTS"
+pnpm exec tsx src/import-school.ts data --slug rr --name "RR"
 ```
 
-Every imported track goes into one course, `vedam` by default (`--course <slug>` to change it; it is
-created if missing). The dry run also rejects any student who would hold more than one **active**
-seat in that course, naming each offender, since the database allows only one.
+Each school reads its own `seed-data/<slug>/` (written by `pnpm parse:excel`; `--dataDir` overrides)
+and creates its course if missing, stamping every track, batch and enrollment with it. The dry run
+refuses to continue while `seed-data/<slug>/_report.json` lists any **blocking** finding, and also
+rejects any student who would hold more than one **active** seat in the course, any person who could
+reach no course after the import (no enrollment and no approved registration), and any exam mark the
+database would refuse — naming each offender, since otherwise they surface as one opaque error midway
+through Step 6. It prints warnings (imported anyway) for anything it can't fully vouch for, such as an
+exam total whose sheet label disagrees with the API's grading.
 
 (No `--commit` — this only validates and reports. **Nothing is written in this step.**)
 
-**Expect:**
+**Expect**, for `slmts` (then the `rr` counts from the table above):
 ```
-Loaded 1054 users, 1212 profiles, 8 tracks, 74 chapters, 91 batches, 957 enrollments, 10396 evaluations, 1053 registration-metadata rows from ...
-✅ All rows pass validation against the live API schemas.
+Loaded 1 courses (ved), 981 users, 1046 profiles, 1046 registrations, 8 tracks, 90 chapters, 55 batches, 825 enrollments, 11922 evaluations, 463 exams from ...
+✅ All rows pass validation against the live API schemas, and every person can reach a course.
 Dry run only — pass --commit to write to the database. No rows were inserted.
 ```
 
-If the counts differ from the above, or validation fails, **stop** — that means `seed-data/*.json`
-in your checked-out `main` doesn't match what was verified when this runbook was last updated (check
-`seed-data/_report.json`'s own numbers against the log line). Don't proceed on a mismatch; figure out
-why first — most likely `tools/src/parse-excel-to-json.ts` hasn't been re-run against the current
-`data/*.xlsx`, or the source spreadsheet changed since.
+If the counts differ, or validation fails, **stop** — the spreadsheets, `seed-data/` and this runbook
+disagree. Re-parse and read `seed-data/<slug>/_report.json` (and `seed-data/source-data-issues.md`), which
+lists every finding about the spreadsheets themselves; don't proceed on a mismatch.
 
 ---
 
-## Step 5 — Confirm the target org doesn't already exist
+## Step 5 — Confirm the target orgs don't already exist
 
 ```sh
-psql "$DATABASE_URL" -c "SELECT id, slug FROM organization WHERE slug = 'slmts';"
+psql "$DATABASE_URL" -c "SELECT id, slug FROM organization WHERE slug IN ('slmts', 'rr');"
 ```
 Expect zero rows. If a row already exists, **stop** — re-running the importer against an org that's
 already been imported will not cleanly re-apply (see "Re-running this runbook" below).
 
 ---
 
-## Step 6 — Commit the import
+## Step 6 — Commit the import (each school)
 
 ```sh
 cd tools
 pnpm exec tsx src/import-school.ts data --slug slmts --name "SLMTS" --commit
+pnpm exec tsx src/import-school.ts data --slug rr --name "RR" --commit
 ```
 
-**Expect:**
+**Expect**, for `slmts`:
 ```
-✅ All rows pass validation against the live API schemas.
+✅ All rows pass validation against the live API schemas, and every person can reach a course.
 Importing into organization "slmts" (<uuid>)
-✅ Imported 1054 new users (0 reused existing accounts) + 1054 org memberships.
-✅ Import committed: 8 tracks, 74 chapters, 91 batches, 1212 profiles, 957 enrollments, 10396 evaluations.
+✅ Imported 981 new users (0 reused existing accounts, 0 already present) + 981 org memberships.
+✅ Import committed: 1 courses, 8 tracks, 90 chapters, 55 batches, 1046 profiles, 1046 registrations, 825 enrollments, 11922 evaluations, 463 exams with results.
 ```
+and for `rr` (run second): `Imported 749 new users (0 reused existing accounts, 128 already present) + 877 org
+memberships` — the 128 are people whose phone number is also in the SLMTS workbook, whose login already
+exists. Every table counts the rows it actually inserted; if any inserted fewer than it loaded (a batch
+code already used, a track order already taken, …) the whole transaction aborts and names the table,
+instead of silently skipping rows. Pass `--allow-existing` only when that is expected.
 The "reused existing accounts" count will be higher than 0 if this environment already has `user`
 rows matching one of the roster's emails/phone numbers (e.g. this environment was used for earlier
 testing) — that's expected and safe, not a sign of a problem; see `import-school.ts`'s own id-remap
@@ -303,10 +342,13 @@ read-only or additive/idempotent (Steps 1 and 3 are safe to re-run; Step 2 check
 
 ---
 
-## Step 7 — Verify
+## Step 7 — Verify (each school)
+
+Repeat for `SLUG=slmts` and `SLUG=rr`.
 
 ```sh
-SCHOOL_ID=$(psql "$DATABASE_URL" -t -c "SELECT id FROM organization WHERE slug = 'slmts';" | xargs)
+SLUG=slmts   # then rr
+SCHOOL_ID=$(psql "$DATABASE_URL" -t -c "SELECT id FROM organization WHERE slug = '$SLUG';" | xargs)
 SCHEMA="school-$SCHOOL_ID"
 
 # Row counts
@@ -315,26 +357,43 @@ SELECT 'track' t, count(*) FROM \"$SCHEMA\".track
 UNION ALL SELECT 'chapter', count(*) FROM \"$SCHEMA\".chapter
 UNION ALL SELECT 'batch', count(*) FROM \"$SCHEMA\".batch
 UNION ALL SELECT 'profile', count(*) FROM \"$SCHEMA\".profile
+UNION ALL SELECT 'registration', count(*) FROM \"$SCHEMA\".registration
 UNION ALL SELECT 'enrollment', count(*) FROM \"$SCHEMA\".enrollment
-UNION ALL SELECT 'evaluation', count(*) FROM \"$SCHEMA\".evaluation;
+UNION ALL SELECT 'evaluation', count(*) FROM \"$SCHEMA\".evaluation
+UNION ALL SELECT 'exam', count(*) FROM \"$SCHEMA\".exam
+UNION ALL SELECT 'examResult', count(*) FROM \"$SCHEMA\".\"examResult\";
 "
-# Expect: track 8, chapter 74, batch 91, profile 1212, enrollment 957, evaluation 10396
+# Expect for slmts: track 8, chapter 90, batch 55, profile 1046, registration 1046, enrollment 825,
+#                   evaluation 11922, exam 463, examResult 463
+# Expect for rr:    track 10, chapter 114, batch 40, profile 978, registration 978, enrollment 625,
+#                   evaluation 10569, exam 379, examResult 379
+
+# Every profile must be part of a course (an enrollment, or the approved registration it came from),
+# or that person reads no content and is told they are in no course.
+psql "$DATABASE_URL" -c "
+SELECT count(*) FROM \"$SCHEMA\".profile p
+WHERE NOT EXISTS (SELECT 1 FROM \"$SCHEMA\".enrollment e WHERE e.\"profileId\" = p.id)
+  AND NOT EXISTS (SELECT 1 FROM \"$SCHEMA\".registration r WHERE r.\"convertedProfileId\" = p.id);
+"
+# Expect: 0
 
 # Schema conformance
 psql "$DATABASE_URL" -c "\d \"$SCHEMA\".enrollment"
 
-# Spot-check one of the known merged/corrected identities (two registrations for the same real
-# person, collapsed into one user+profile — see parse-excel-to-json.ts's KNOWN_DUPLICATE_PHONES)
+# slmts only — spot-check one of the known merged/corrected identities (two registrations for the same
+# real person, collapsed into one user+profile — see parse-excel-to-json.ts's KNOWN_DUPLICATE_KEYS)
 psql "$DATABASE_URL" -c "
 SELECT p.name, p.phone, u.email, u.\"phoneNumber\"
 FROM \"$SCHEMA\".profile p JOIN \"user\" u ON u.id = p.\"userId\"
 WHERE p.name = 'Sridhar Tadepalli';
 "
 # Expect exactly 1 row: phone 19591989895, phoneNumber +19591989895, email sridhartad@gmail.com
+# (two registrations, both approved, point at it: SELECT count(*) FROM "$SCHEMA".registration r JOIN
+#  "$SCHEMA".profile p ON p.id = r."convertedProfileId" WHERE p.name = 'Sridhar Tadepalli'  -- expect 2)
 ```
 
 If any of these don't match, **stop and don't proceed to Step 8** — flag it before granting anyone
-access to the school.
+access to the schools.
 
 ---
 
@@ -345,7 +404,7 @@ Assign at least one real owner so the school is actually manageable through the 
 
 ```sh
 cd tools
-pnpm exec tsx src/seed.ts user --email <real-owner-email> --name "<Name>" --role owner --schoolSlug slmts
+pnpm exec tsx src/seed.ts user --email <real-owner-email> --name "<Name>" --role owner --schoolSlug slmts   # and again with --schoolSlug rr
 ```
 Use an email that already exists among the imported users
 if you want an existing person to be the owner (they'll log in with whatever phone number they were
@@ -354,40 +413,61 @@ actually log in).
 
 ---
 
-## Known gap: some imported people can't log in yet
+## Known gap: some imported people may not be able to log in
 
-Every imported person gets a `user` row with whatever `phoneNumber` the spreadsheet gave them (a
-valid E.164 number, since the importer refuses anything else — see `_report.json`'s
-`invalidE164Phones`). **Sign-in is phone-OTP only, and there is no password fallback anymore**
-(`emailAndPassword.enabled: false`; the old `import-school.ts grant-passwords` stopgap was retired
-along with email/password when Twilio OTP shipped, and now unconditionally errors if invoked).
+Every imported person gets a `user` row keyed by the phone number in their `PRIMARY KEY`, and every
+one of them has one (the guru columns are PRIMARY KEYs too, so teachers are real registrants with
+phones — nobody is imported phone-less any more). **Sign-in is phone-OTP only, and there is no
+password fallback** (`emailAndPassword.enabled: false`; the old `import-school.ts grant-passwords`
+stopgap was retired along with email/password when Twilio OTP shipped, and now unconditionally errors
+if invoked).
 
-As of the current `seed-data`, **76 of 1054 imported users have no phone number on file at all** —
-they have literally no way to sign in until one is collected. This isn't something this runbook or
-its tooling can paper over; check `seed-data/_report.json`'s `invalidE164Phones` (currently empty —
-every phone that *is* present is valid) and cross-reference `users.json` for `phoneNumber: null` to
-get the current list, and get real phone numbers from those people some other way before they'll be
-able to use the app.
+What can still fail is a phone that is well-formed but wrong. `seed-data/<school>/_report.json`'s
+`suspectPhones` lists the ones whose country code doesn't fit the number (e.g. `+91` on a 10-digit
+number starting 5, which is a US area code) — an OTP to those goes nowhere. The phone is baked into the
+`PRIMARY KEY`, so fix it in the spreadsheet everywhere the key appears and re-parse.
+
+---
+
+## Source-data findings
+
+`seed-data/source-data-issues.md` lists every inconsistency and open question found in the two workbooks,
+with Excel row numbers. The parser never guesses or drops silently:
+
+- **Blocking** findings (`blocking` in `seed-data/<school>/_report.json`; also printed by
+  `pnpm parse:excel`, which exits 1) are rows the importer cannot load exactly as written — a
+  `GURUVU GARU` key no registration has, a mark above its maximum, a repeated
+  `PRIMARY KEY`, a `PRIMARY KEY` that isn't its own row's country code + phone + year of birth. The
+  importer refuses to run until they are fixed in the spreadsheet.
+- Everything else (`_report.json`'s other sections) is a judgement the parser made or a thing it
+  noticed: `enrollmentRoleOverrides` (a guru who is also a student of the batch — the guru role is
+  kept), `guruDisagreements`, `examRowsNotSat` (mark-sheet rows with no marks — not results),
+  `ignoredGradeCells` (−1/−2/0 chapter cells — meaning unknown), `childrenBonusMismatches`,
+  `identicalMarksAcrossTracks`, `batchCodeAssumptions` (`REM`/`TEACH` batches mapped to the final track).
 
 ---
 
 ## Re-running this runbook / partial failures
 
 - **Steps 1–3** are idempotent — safe to re-run from a clean start at any point, in any environment.
-- **Step 6 is not safely re-runnable against the same org.** `profile` and `evaluation` have no
-  natural unique constraint (by design), so a second `--commit` against a school that already has
-  profiles risks duplicating data rather than cleanly resuming. If Step 6 fails partway:
+- **Step 6 is atomic per school and, as of the deterministic-id importer, re-runnable.** Every row's id
+  is derived from its spreadsheet key (a person's `PRIMARY KEY`, a batch code, …), so parsing the same
+  workbooks twice gives identical JSON and importing it twice inserts nothing new. A second `--commit`
+  without `--allow-existing` aborts on the first table that inserts nothing new and says which; with
+  `--allow-existing` it completes as a no-op. Neither duplicates anyone.
   - User/membership inserts (before the school-scoped transaction) use `ON CONFLICT DO NOTHING` on
     `id` — safe to leave as-is.
-  - The `track`/`chapter`/`batch`/`profile`/`enrollment`/`evaluation` writes are
-    one transaction — a failure there rolls back cleanly, so nothing partial persists at the
-    school-schema level.
-  - If it failed and rolled back: check `SELECT id FROM organization WHERE slug='slmts'` — if the org
+  - The `course`/`track`/`chapter`/`batch`/`profile`/`registration`/`enrollment`/`evaluation`/`exam`/
+    `examResult` writes are one transaction — a failure there rolls back cleanly, so nothing partial
+    persists at the school-schema level.
+  - If it failed and rolled back: check `SELECT id FROM organization WHERE slug='<school>'` — if the org
     row exists but the school schema has no data, something is inconsistent; **stop and ask** rather
     than retrying blindly.
-  - If it succeeded once and you need to run it again for any reason (e.g. corrected `seed-data`),
-    the current tooling doesn't support a clean re-import into the same org — that needs a real
-    decision (wipe and redo, or a proper upsert pass), not a runbook improvisation.
+  - **Corrected data is not merged in.** Re-importing after fixing the spreadsheet only adds rows whose
+    ids are new; it does not change a row that already exists (a fixed name, a corrected batch, a
+    changed mark). That needs a wipe-and-redo or a proper upsert pass — a decision, not a runbook
+    improvisation. (Ids that were written by an *older* importer are random, so a school imported
+    before this change has to be wiped, not re-imported over.)
 
 ## What not to do
 
