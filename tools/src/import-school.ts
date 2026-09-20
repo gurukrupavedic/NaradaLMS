@@ -27,123 +27,15 @@ import {
   CreateEvaluationSchema,
   proficiencyLevelSchema,
 } from '@narada/api/src/evaluations/schema'
-import { EXAM_MARK_MAX, outcomeForTotal, type ExamOutcome } from '@narada/api/src/exams/grading'
+import { outcomeForTotal } from '@narada/api/src/exams/grading'
 import { CreateRegistrationSchema } from '@narada/api/src/registrations/schema'
+import type { Dataset } from './seed-types'
 import { addOrgMembers, assertCourseSlug, upsertSchool } from './school-helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // One directory per school, written by parse-excel-to-json.ts: seed-data/<school slug>/.
 const SEED_DATA_ROOT = path.join(__dirname, '../../seed-data')
 const CHUNK_SIZE = 1000
-
-// Row shapes below are parse-excel-to-json.ts's own output, narrowed to what this file reads.
-type CourseRow = { slug: string; name: string }
-type TrackRow = { id: string; courseSlug: string; name: string; order: number }
-type ChapterRow = {
-  id: string
-  trackId: string
-  code: string
-  title: string
-  status: 'draft' | 'published'
-  order: number
-  script: 'te' | 'sa' | 'en' | null
-}
-type BatchRow = {
-  id: string
-  trackId: string
-  code: string
-  status: 'upcoming' | 'active' | 'completed'
-  startDate: string | null
-  meetingUrl: string | null
-}
-type UserRow = {
-  id: string
-  name: string
-  email: string
-  isSuperAdmin: false
-  phoneNumber: string | null
-  phoneNumberVerified: boolean | null
-}
-type ProfileRow = { id: string; userId: string; name: string; phone: string | null; city: string | null; sourceKey: string }
-// One registration-sheet row — what one person filed for one course. Raw strings from the sheet;
-// `toRegistrationFields` below is the one place they become typed columns, for the registration row
-// and for the profile it is copied onto.
-type RegistrationRow = {
-  id: string
-  courseSlug: string
-  profileId: string
-  sourceKey: string
-  status: 'approved' | 'pending'
-  registeredYear: number | null
-  firstName: string
-  lastName: string
-  yearOfBirth: number
-  phone: string | null
-  email: string | null
-  city: string | null
-  countryTimeZone: string | null
-  spokenLanguages: string | null
-  readLanguages: string | null
-  parentNames: string | null
-  learningGoal: string | null
-  currentProficiency: string | null
-  dressCodeAgreed: string | null
-  noMeatAgreed: string | null
-  noAlcoholAgreed: string | null
-  noSmokingAgreed: string | null
-  comments: string | null
-}
-type ProficiencyLevel = 'absent' | 'notStarted' | 'practicing' | 'level0' | 'level1' | 'level2' | 'level3' | 'level4'
-// The columns `registration` and `profile` share, typed. `profile` is a snapshot of them taken from
-// the person's first registration (registrations/service.ts::provisionApprovedApplicant copies the same
-// fields on approval).
-type RegistrationFields = {
-  email: string | null
-  yearOfBirth: number
-  countryTimeZone: string | null
-  learningGoal: string | null
-  currentProficiency: ProficiencyLevel | null
-  spokenLanguages: string[]
-  readLanguages: string[]
-  parentNames: string[]
-  dressCodeAgreed: boolean
-  noMeatAgreed: boolean
-  noAlcoholAgreed: boolean
-  noSmokingAgreed: boolean
-  comments: string | null
-}
-type EnrollmentRow = {
-  profileId: string
-  batchId: string
-  role: 'instructor' | 'ta' | 'student'
-  status: 'active' | 'break' | 'dropped' | 'inactive'
-  joinedAt: string | null
-  leftDate: string | null
-}
-type EvaluationRow = {
-  id: string
-  studentId: string
-  chapterId: string
-  level: ProficiencyLevel
-  evaluatorId: string
-}
-type ExamRow = {
-  id: string
-  trackId: string
-  studentId: string
-  batchId: string
-  marks: {
-    aksharaShuddhi: number
-    swaraShuddhi: number
-    niyantranaAnargalata: number
-    shraavyata: number
-    pratishakyaGrammar: number
-  }
-  childrenBonus: number
-  total: number
-  sheetGrade: string
-  evaluatorId: string
-}
 
 function chunk<T>(rows: T[], size: number): T[][] {
   const out: T[][] = []
@@ -159,112 +51,6 @@ function readJson<T>(dataDir: string, fileName: string): T {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T
 }
 
-function parseYesNo(value: string | null): boolean {
-  return value?.trim().toLowerCase() === 'yes'
-}
-
-// Free-text lists in the source spreadsheet mix comma-separated ("Telugu, Hindi") and
-// space-separated ("telugu English") entries inconsistently; splitting on commas handles the
-// overwhelming majority without guessing at anything more elaborate — a handful of purely
-// space-separated entries stay as one combined string rather than being force-split on a boundary
-// that isn't actually there.
-//
-// Junk placeholder entries are dropped rather than kept as a fake language/parent name. The
-// "not applicable" family shows up in a lot of different spellings/punctuation across ~1000 rows
-// ("N/A", "N.A.", "N-A", "n/a", "Not Applicable") — stripping non-alphanumerics before comparing
-// collapses all of those to one check instead of hand-enumerating every variant.
-const LIST_JUNK_VALUES = new Set(['na', 'none', 'no', 'notapplicable', '0'])
-function normalizeForJunkCheck(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, '')
-}
-function splitList(value: string | null): string[] {
-  if (!value) return []
-  return value
-    .split(',')
-    .map(entry => entry.trim())
-    .filter(entry => entry.length > 0 && !LIST_JUNK_VALUES.has(normalizeForJunkCheck(entry)))
-}
-
-// The historical registration sheets asked a differently-worded self-assessment question ("None" /
-// "Low" / "Medium" / "High", each with or without a long free-text explanation) than the live
-// registration form's Level 1-4 scale (lib/registration-proficiency.ts in apps/web) — there is no
-// exact mapping between them. This keeps only the leading keyword's coarse intent: no experience,
-// some practice, or meaningfully experienced — kept at the lowest formal tier rather than guessing
-// a specific level 1-4 number the data doesn't actually claim. "Medium" (only the newer sheet has
-// it) is held at 'practicing' with "Low": claiming a formal level from a self-report would
-// over-state it. ('practicing' is what the web app shows as L0.)
-function mapSelfReportedProficiency(value: string | null): ProficiencyLevel | null {
-  const lower = value?.trim().toLowerCase()
-  if (!lower) return null
-  if (lower.startsWith('no')) return 'notStarted' // "None. …" and "No Proficiency"
-  if (lower.startsWith('low') || lower.startsWith('medium')) return 'practicing'
-  if (lower.startsWith('high')) return 'level1'
-  return null
-}
-
-// The sheets' "COUNTRY TIME ZONE" is a pick-list bucket ("1-INDIA IST"), not the IANA identifier
-// `profile.countryTimeZone` holds (see that column's doc comment) — the web app would print the
-// bucket text raw. Only the buckets that name a single zone convert; "MST/PST" spans two and
-// "OTHER" none, so those stay empty rather than guessed.
-const SHEET_TIME_ZONES: Record<string, string> = {
-  '1-india ist': 'Asia/Kolkata',
-  '2-usa est': 'America/New_York',
-  '3-usa cst': 'America/Chicago',
-}
-
-function toRegistrationFields(row: RegistrationRow): RegistrationFields {
-  return {
-    email: row.email,
-    yearOfBirth: row.yearOfBirth,
-    countryTimeZone: row.countryTimeZone ? (SHEET_TIME_ZONES[row.countryTimeZone.trim().toLowerCase()] ?? null) : null,
-    learningGoal: row.learningGoal,
-    currentProficiency: mapSelfReportedProficiency(row.currentProficiency),
-    spokenLanguages: splitList(row.spokenLanguages),
-    readLanguages: splitList(row.readLanguages),
-    parentNames: splitList(row.parentNames),
-    dressCodeAgreed: parseYesNo(row.dressCodeAgreed),
-    noMeatAgreed: parseYesNo(row.noMeatAgreed),
-    noAlcoholAgreed: parseYesNo(row.noAlcoholAgreed),
-    noSmokingAgreed: parseYesNo(row.noSmokingAgreed),
-    comments: row.comments,
-  }
-}
-
-/**
- * Merges each profile with the details from its first registration (file order — the Vedam sheet
- * before the Puranokta one), the same fields `registrations/service.ts::provisionApprovedApplicant`
- * copies from a live registration approval, so a bulk-imported profile ends up carrying the same
- * kind of detail one approved through the app would. A person's later registrations (the other
- * course) stay on their own `registration` row and don't overwrite it.
- */
-function applyRegistrationFields(profiles: ProfileRow[], registrations: RegistrationRow[]) {
-  const firstByProfile = new Map<string, RegistrationRow>()
-  for (const row of registrations) if (!firstByProfile.has(row.profileId)) firstByProfile.set(row.profileId, row)
-
-  return profiles.map(({ sourceKey: _sourceKey, ...rest }) => {
-    const first = firstByProfile.get(rest.id)
-    const fields = first ? toRegistrationFields(first) : null
-    return {
-      ...rest,
-      email: fields?.email ?? null,
-      yearOfBirth: fields?.yearOfBirth ?? null,
-      countryTimeZone: fields?.countryTimeZone ?? null,
-      learningGoal: fields?.learningGoal ?? null,
-      currentProficiency: fields?.currentProficiency ?? null,
-      spokenLanguages: fields?.spokenLanguages ?? [],
-      readLanguages: fields?.readLanguages ?? [],
-      parentNames: fields?.parentNames ?? [],
-      dressCodeAgreed: fields?.dressCodeAgreed ?? false,
-      noMeatAgreed: fields?.noMeatAgreed ?? false,
-      noAlcoholAgreed: fields?.noAlcoholAgreed ?? false,
-      noSmokingAgreed: fields?.noSmokingAgreed ?? false,
-      comments: fields?.comments ?? null,
-    }
-  })
-}
-
-// Matches the phoneNumber plugin's validator in packages/auth/src/index.ts — kept in sync
-// manually rather than imported, since that's server auth config and this is an offline CLI import.
 // The live API refuses a teacher's own evaluation at `level4` (only a graded track exam grants it),
 // but a bulk import loads history, not a teacher grading today — the source spreadsheet has chapters
 // already marked L4 (72 in the Vedam data). So the imported level is checked against the full
@@ -272,37 +58,17 @@ function applyRegistrationFields(profiles: ProfileRow[], registrations: Registra
 // checked against the API's own schema.
 const createEvaluationSchema = CreateEvaluationSchema.extend({ level: proficiencyLevelSchema })
 
-const E164_PATTERN = /^\+[1-9]\d{7,14}$/
-
-// What the mark sheet's own "Exam Grade" label says an outcome is called, to catch a total and a
-// label that disagree. The Puranokta sheet also prints "L1/L2 - Reappear" on a 65-84 total, i.e.
-// "passed the level but must sit again" — a nuance the outcome enum has no place for.
-const OUTCOME_LABELS: Record<ExamOutcome, RegExp> = {
-  athiUttamam: /^athi uttamam/i,
-  prathamaSreni: /^prathama sreni/i,
-  dwitiyaSreni: /^dwitiya sreni/i,
-  level2: /^l2\b/i,
-  level1: /^l1\b/i,
-  reappear: /reappear/i,
-}
-
-type Dataset = {
-  courses: CourseRow[]
-  tracks: TrackRow[]
-  chapters: ChapterRow[]
-  batches: BatchRow[]
-  users: UserRow[]
-  profiles: ProfileRow[]
-  registrations: RegistrationRow[]
-  enrollments: EnrollmentRow[]
-  evaluations: EvaluationRow[]
-  exams: ExamRow[]
-}
-
-/** Everything wrong with the dataset that would otherwise surface as one opaque error midway through the transaction. */
-function validate(data: Dataset): { errors: string[]; warnings: string[] } {
+/**
+ * What only this side can check: the rows against the API's own schemas (a bulk import that bypasses
+ * the HTTP layer must never write a row the API would reject), and two rules about the whole school.
+ * Everything about the spreadsheet itself — keys, marks, batch codes — the parser has already checked
+ * and reported with Excel row numbers, so it is not checked twice.
+ */
+function validate(data: Dataset): string[] {
   const errors: string[] = []
-  const warnings: string[] = []
+  const problems = (label: string, result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) => {
+    if (!result.success) errors.push(`${label}: ${result.error!.issues.map(i => `${i.path.join('.')} ${i.message}`.trim()).join('; ')}`)
+  }
 
   for (const c of data.courses) {
     try {
@@ -311,119 +77,31 @@ function validate(data: Dataset): { errors: string[]; warnings: string[] } {
       errors.push((e as Error).message)
     }
   }
+  for (const e of data.enrollments) problems(`enrollment ${e.profileId}/${e.batchId}`, enrollSchema.safeParse(e))
+  for (const r of data.registrations) problems(`registration ${r.sourceKey}`, CreateRegistrationSchema.safeParse(r))
+  for (const ev of data.evaluations) problems(`evaluation ${ev.id}`, createEvaluationSchema.safeParse(ev))
 
-  const ids = (rows: { id: string }[]) => new Set(rows.map(r => r.id))
-  const courseSlugs = new Set(data.courses.map(c => c.slug))
-  const trackById = new Map(data.tracks.map(t => [t.id, t]))
-  const batchById = new Map(data.batches.map(b => [b.id, b]))
-  const chapterIds = ids(data.chapters)
-  const profileIds = ids(data.profiles)
-
-  // Foreign keys: named here rather than as a bare constraint violation partway through.
-  for (const t of data.tracks) if (!courseSlugs.has(t.courseSlug)) errors.push(`track ${t.id}: unknown course "${t.courseSlug}"`)
-  for (const c of data.chapters) if (!trackById.has(c.trackId)) errors.push(`chapter ${c.code}: unknown track ${c.trackId}`)
-  for (const b of data.batches) if (!trackById.has(b.trackId)) errors.push(`batch ${b.code}: unknown track ${b.trackId}`)
-  const userIds = ids(data.users)
-  for (const p of data.profiles) if (!userIds.has(p.userId)) errors.push(`profile ${p.sourceKey}: unknown user ${p.userId}`)
-
-  for (const u of data.users) {
-    if (u.phoneNumber && !E164_PATTERN.test(u.phoneNumber)) {
-      errors.push(`user ${u.id}: phoneNumber "${u.phoneNumber}" is not valid E.164`)
-    }
-  }
-
+  // A student holds at most one active seat per course. The database refuses a violation with one
+  // opaque error midway through the transaction, so name every offender up front.
+  const courseOfTrack = new Map(data.tracks.map(t => [t.id, t.courseSlug]))
+  const courseOfBatch = new Map(data.batches.map(b => [b.id, courseOfTrack.get(b.trackId)]))
+  const seats = new Map<string, number>()
   for (const e of data.enrollments) {
-    if (!profileIds.has(e.profileId)) errors.push(`enrollment ${e.profileId}/${e.batchId}: unknown profile`)
-    if (!batchById.has(e.batchId)) errors.push(`enrollment ${e.profileId}/${e.batchId}: unknown batch`)
-    const result = enrollSchema.safeParse({ profileId: e.profileId, role: e.role })
-    if (!result.success) {
-      errors.push(`enrollment ${e.profileId}/${e.batchId}: ${result.error.issues.map(i => i.message).join('; ')}`)
-    }
+    if (e.role !== 'student' || e.status !== 'active') continue
+    const seat = `${e.profileId} in course "${courseOfBatch.get(e.batchId)}"`
+    seats.set(seat, (seats.get(seat) ?? 0) + 1)
   }
+  for (const [seat, count] of seats) if (count > 1) errors.push(`profile ${seat}: ${count} active student seats — only one is allowed`)
 
-  // A student holds at most one active seat per course. The database refuses a violation with a
-  // single opaque error midway through the transaction, so name every offender up front.
-  const courseOfBatch = (batchId: string) => {
-    const b = batchById.get(batchId)
-    return b ? trackById.get(b.trackId)?.courseSlug : undefined
-  }
-  const activeSeats = new Map<string, string[]>()
-  for (const e of data.enrollments) {
-    if (e.role === 'student' && e.status === 'active') {
-      const key = `${e.profileId}|${courseOfBatch(e.batchId)}`
-      activeSeats.set(key, [...(activeSeats.get(key) ?? []), e.batchId])
-    }
-  }
-  for (const [key, batchIds] of activeSeats) {
-    if (batchIds.length > 1) {
-      const [profileId, courseSlug] = key.split('|')
-      errors.push(
-        `profile ${profileId}: active student in ${batchIds.length} batches of course "${courseSlug}" (${batchIds.join(', ')}) — only one is allowed`,
-      )
-    }
-  }
-
-  // The registration each row would become is checked against the API's own create schema (which
-  // wants a valid E.164 phone, a name, a year of birth in range, …).
-  for (const r of data.registrations) {
-    if (!courseSlugs.has(r.courseSlug)) errors.push(`registration ${r.sourceKey}: unknown course "${r.courseSlug}"`)
-    if (!profileIds.has(r.profileId)) errors.push(`registration ${r.sourceKey}: unknown profile`)
-    const result = CreateRegistrationSchema.safeParse({
-      firstName: r.firstName,
-      lastName: r.lastName,
-      phone: r.phone,
-      city: r.city,
-      ...toRegistrationFields(r),
-    })
-    if (!result.success) {
-      errors.push(`registration ${r.sourceKey} (${r.courseSlug}): ${result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')}`)
-    }
-  }
-
-  for (const ev of data.evaluations) {
-    if (!profileIds.has(ev.studentId) || !profileIds.has(ev.evaluatorId) || !chapterIds.has(ev.chapterId)) {
-      errors.push(`evaluation ${ev.id}: unknown student, evaluator or chapter`)
-    }
-    const result = createEvaluationSchema.safeParse({
-      studentId: ev.studentId,
-      chapterId: ev.chapterId,
-      level: ev.level,
-    })
-    if (!result.success) {
-      errors.push(`evaluation ${ev.id}: ${result.error.issues.map(i => i.message).join('; ')}`)
-    }
-  }
-
-  const enrolledIn = new Set(data.enrollments.map(e => `${e.profileId}|${e.batchId}`))
-  for (const x of data.exams) {
-    const label = `exam ${x.id} (student ${x.studentId})`
-    if (!profileIds.has(x.studentId) || !profileIds.has(x.evaluatorId)) errors.push(`${label}: unknown student or evaluator`)
-    if (!trackById.has(x.trackId)) errors.push(`${label}: unknown track`)
-    if (!enrolledIn.has(`${x.studentId}|${x.batchId}`)) errors.push(`${label}: student is not enrolled in batch ${x.batchId}`)
-    for (const [mark, value] of Object.entries(x.marks) as [keyof typeof EXAM_MARK_MAX, number][]) {
-      if (!Number.isInteger(value) || value < 0 || value > EXAM_MARK_MAX[mark]) {
-        errors.push(`${label}: ${mark} = ${value} is outside 0..${EXAM_MARK_MAX[mark]}`)
-      }
-    }
-    if (![0, 5, 10].includes(x.childrenBonus)) errors.push(`${label}: children's bonus ${x.childrenBonus} is not 0, 5 or 10`)
-    const sum = Object.values(x.marks).reduce((a, b) => a + b, 0) + x.childrenBonus
-    if (sum !== x.total) errors.push(`${label}: total ${x.total} is not the sum of its marks (${sum})`)
-    const outcome = outcomeForTotal(x.total)
-    if (!OUTCOME_LABELS[outcome].test(x.sheetGrade)) {
-      warnings.push(`${label}: total ${x.total} grades as "${outcome}" under the API's rules, but the sheet says "${x.sheetGrade}"`)
-    }
-  }
-
-  // The check the importer lacked: can each person reach any content afterwards? A non-admin is
-  // "part of" a course only through an enrollment in it or an approved registration that converted
-  // to their profile (AccessPolicy#canReadCourseContent) — anyone with neither reads nothing.
-  const reachable = new Set(data.enrollments.map(e => e.profileId))
-  for (const r of data.registrations) if (r.status === 'approved') reachable.add(r.profileId)
+  // Can each person reach any content afterwards? A non-admin is "part of" a course only through an
+  // enrollment in it or an approved registration that converted to their profile
+  // (AccessPolicy#canReadCourseContent); every registration here is approved, so anyone with neither
+  // an enrollment nor a registration reads nothing.
+  const reachable = new Set([...data.enrollments.map(e => e.profileId), ...data.registrations.map(r => r.profileId)])
   for (const p of data.profiles) {
-    if (!reachable.has(p.id)) errors.push(`profile ${p.sourceKey} (${p.name}): no enrollment and no approved registration — part of no course, would read no content`)
+    if (!reachable.has(p.id)) errors.push(`profile ${p.sourceKey} (${p.name}): no enrollment and no registration — part of no course, would read no content`)
   }
-
-  return { errors, warnings }
+  return errors
 }
 
 const dataCmd = defineCommand({
@@ -474,18 +152,13 @@ const dataCmd = defineCommand({
           `${evaluations.length} evaluations, ${exams.length} exams from ${dataDir}`,
       )
 
-      const { errors, warnings } = validate(data)
+      const errors = validate(data)
       // Findings the parser could not load around — a row with an impossible mark, a guru who is
       // nobody, … — are the spreadsheet's to fix, not this importer's to skip.
       const report = readJson<{ blocking: { sheet: string; row?: number; key?: string; message: string }[] }>(dataDir, '_report.json')
       errors.unshift(
         ...report.blocking.map(b => `${b.sheet}${b.row ? ` row ${b.row}` : ''}${b.key ? ` [${b.key}]` : ''}: ${b.message}`),
       )
-      if (warnings.length > 0) {
-        console.warn(`⚠️  ${warnings.length} warning(s) — imported anyway:`)
-        for (const w of warnings.slice(0, 10)) console.warn(`  - ${w}`)
-        if (warnings.length > 10) console.warn(`  ...and ${warnings.length - 10} more`)
-      }
       if (errors.length > 0) {
         console.error(`❌ ${errors.length} problem(s) found before writing anything:`)
         for (const e of errors.slice(0, 20)) console.error(`  - ${e}`)
@@ -546,10 +219,8 @@ const dataCmd = defineCommand({
       }
 
       const usersToInsert = users.filter(u => !idRemap.has(u.id))
-      const remappedProfiles = applyRegistrationFields(
-        profiles.map(p => (idRemap.has(p.userId) ? { ...p, userId: idRemap.get(p.userId)! } : p)),
-        registrations,
-      )
+      // `sourceKey` is for audit only, not a column; a person whose login already exists keeps it.
+      const remappedProfiles = profiles.map(({ sourceKey: _sourceKey, ...p }) => ({ ...p, userId: idRemap.get(p.userId) ?? p.userId }))
 
       // publicDb: user, then org membership for every imported user.
       let usersInserted = 0
@@ -635,17 +306,12 @@ const dataCmd = defineCommand({
         // the sheet says they registered (it has no finer date).
         n = 0
         for (const rows of chunk(registrations, CHUNK_SIZE)) {
-          const values = rows.map(r => ({
-            id: r.id,
-            status: r.status,
-            courseId: courseIdBySlug.get(r.courseSlug)!,
-            firstName: r.firstName,
-            lastName: r.lastName,
-            phone: r.phone!,
-            city: r.city,
-            ...toRegistrationFields(r),
-            convertedProfileId: r.status === 'approved' ? r.profileId : null,
-            createdAt: r.registeredYear ? new Date(`${r.registeredYear}-01-01T00:00:00.000Z`) : new Date(),
+          const values = rows.map(({ courseSlug, profileId, sourceKey: _sourceKey, registeredYear, ...columns }) => ({
+            ...columns,
+            status: 'approved' as const,
+            courseId: courseIdBySlug.get(courseSlug)!,
+            convertedProfileId: profileId,
+            createdAt: registeredYear ? new Date(`${registeredYear}-01-01T00:00:00.000Z`) : new Date(),
           }))
           n += (await tx.insert(registration).values(values).onConflictDoNothing().returning({ id: registration.id })).length
         }
@@ -657,7 +323,6 @@ const dataCmd = defineCommand({
             ...r,
             courseId: courseIdOfBatch.get(r.batchId)!,
             joinedAt: r.joinedAt ? new Date(r.joinedAt) : null,
-            leftDate: r.leftDate ? new Date(r.leftDate) : null,
           }))
           n += (await tx.insert(enrollment).values(values).onConflictDoNothing().returning({ profileId: enrollment.profileId })).length
         }

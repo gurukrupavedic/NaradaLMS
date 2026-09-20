@@ -277,12 +277,12 @@ pnpm exec tsx src/import-school.ts data --slug rr --name "RR"
 
 Each school reads its own `seed-data/<slug>/` (written by `pnpm parse:excel`; `--dataDir` overrides)
 and creates its course if missing, stamping every track, batch and enrollment with it. The dry run
-refuses to continue while `seed-data/<slug>/_report.json` lists any **blocking** finding, and also
-rejects any student who would hold more than one **active** seat in the course, any person who could
-reach no course after the import (no enrollment and no approved registration), and any exam mark the
-database would refuse — naming each offender, since otherwise they surface as one opaque error midway
-through Step 6. It prints warnings (imported anyway) for anything it can't fully vouch for, such as an
-exam total whose sheet label disagrees with the API's grading.
+refuses to continue while `seed-data/<slug>/_report.json` lists any **blocking** finding (everything
+about the spreadsheet itself, with Excel row numbers), and then checks what only the importer can:
+every enrollment, registration and evaluation against the API's own schemas, that no student would hold
+more than one **active** seat in the course, and that every person could reach a course after the import
+(an enrollment or a registration) — naming each offender, since otherwise they surface as one opaque
+error midway through Step 6.
 
 (No `--commit` — this only validates and reports. **Nothing is written in this step.**)
 
@@ -408,28 +408,29 @@ password fallback** (`emailAndPassword.enabled: false`; the old `import-school.t
 stopgap was retired along with email/password when Twilio OTP shipped, and now unconditionally errors
 if invoked).
 
-What can still fail is a phone that is well-formed but wrong. `seed-data/<school>/_report.json`'s
-`suspectPhones` lists the ones whose country code doesn't fit the number (e.g. `+91` on a 10-digit
-number starting 5, which is a US area code) — an OTP to those goes nowhere. The phone is baked into the
-`PRIMARY KEY`, so fix it in the spreadsheet everywhere the key appears and re-parse.
+What can still fail is a phone that is well-formed but wrong (a `+91` number that is really a US
+number, say): the tooling checks the format, not whether the number belongs to the person, and an OTP
+to a wrong number goes nowhere. The phone is baked into the `PRIMARY KEY`, so correct it in the
+spreadsheet everywhere the key appears and re-parse.
 
 ---
 
 ## Source-data findings
 
-`seed-data/source-data-issues.md` lists every inconsistency and open question found in the two workbooks,
-with Excel row numbers. The parser never guesses or drops silently:
+The parser never guesses or drops silently. `pnpm parse:excel` writes `seed-data/<school>/_report.json`
+and prints a summary:
 
-- **Blocking** findings (`blocking` in `seed-data/<school>/_report.json`; also printed by
-  `pnpm parse:excel`, which exits 1) are rows the importer cannot load exactly as written — a
-  `GURUVU GARU` key no registration has, a mark above its maximum, a repeated
-  `PRIMARY KEY`, a `PRIMARY KEY` that isn't its own row's country code + phone + year of birth. The
-  importer refuses to run until they are fixed in the spreadsheet.
-- Everything else (`_report.json`'s other sections) is a judgement the parser made or a thing it
-  noticed: `enrollmentRoleOverrides` (a guru who is also a student of the batch — the guru role is
-  kept), `guruDisagreements`, `examRowsNotSat` (mark-sheet rows with no marks — not results),
-  `ignoredGradeCells` (−1/−2/0 chapter cells — meaning unknown), `childrenBonusMismatches`,
-  `identicalMarksAcrossTracks`, `batchCodeAssumptions` (`REM`/`TEACH` batches mapped to the final track).
+- **Blocking** findings (`blocking`; the parser then exits 1) are rows the importer cannot load exactly
+  as written, each with its Excel row number: a `GURUVU GARU` key no registration has, a `PRIMARY KEY`
+  that repeats or isn't its own row's country code + phone + year of birth, an invalid phone or blank
+  name, `ADMITTED?` other than YES, a `STUDENT STATUS` other than Active or Break, a batch code that
+  doesn't parse, a grade cell that isn't 1–4 (or the skipped 0/−1/−2), a mark above its maximum, or a
+  total that isn't the sum. The importer refuses to run until they are fixed in the spreadsheet.
+- Everything else is a judgement the parser made, listed so it isn't silent: `enrollmentRoleOverrides`
+  (a guru who is also a student of the batch — the guru role is kept), `guruDisagreements` (a batch whose
+  guru columns differ between its rows — everyone named is enrolled), `batchCodeAssumptions` (`REM` and
+  `TEACH` batches mapped to the final track), `ignoredGradeCells` (0/−1/−2 chapter cells — meaning
+  unknown, not imported) and `examRowsNotSat` (mark-sheet rows with no marks — not results).
 
 ---
 
