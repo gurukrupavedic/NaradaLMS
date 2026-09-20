@@ -4,27 +4,23 @@ import { defineCommand, runMain } from 'citty'
 import { eq } from 'drizzle-orm'
 
 import {
+  batch,
   batchClassSlot,
-  getScopedDatabase,
+  chapter,
+  course,
+  enrollment,
+  getSchoolDb,
+  profile,
   publicDb,
   shutdownPools,
+  track,
   user as userTable,
   uuidv7,
-  type SchoolDatabase,
+  type SchoolDb,
 } from '@narada/db'
-import {
-  requireSchool,
-  upsertBatch,
-  upsertCourse,
-  upsertChapter,
-  upsertEnrollment,
-  upsertOrgMember,
-  upsertProfile,
-  upsertSchool,
-  upsertTrack,
-  type BatchRole,
-  type OrgRole,
-} from './school-helpers'
+import { addOrgMembers, upsertSchool, type OrgRole } from './school-helpers'
+
+type BatchRole = 'instructor' | 'ta' | 'student'
 
 const ORG_ROLES = new Set<string>(['owner', 'admin', 'member'])
 const BATCH_ROLES = new Set<string>(['instructor', 'ta', 'student'])
@@ -96,8 +92,8 @@ const userCmd = defineCommand({
 
         const school = await requireSchool(args.schoolSlug)
         if (ORG_ROLES.has(args.role)) {
-          await upsertOrgMember(school.id, user.id, args.role as OrgRole)
-          const schoolDb = getScopedDatabase(school.id)
+          await addOrgMembers(school.id, [user.id], args.role as OrgRole)
+          const schoolDb = getSchoolDb(school.id)
           const userProfile = await upsertProfile(schoolDb, user.id, args.name)
           assignment = {
             schoolSlug: args.schoolSlug,
@@ -109,14 +105,14 @@ const userCmd = defineCommand({
             throw new Error('--batchId is required for batch roles (instructor, ta, student)')
           }
 
-          const schoolDb = getScopedDatabase(school.id)
+          const schoolDb = getSchoolDb(school.id)
           const batchRow = await schoolDb.query.batch.findFirst({
             where: (t, { eq }) => eq(t.id, args.batchId!),
           })
 
           if (!batchRow) throw new Error(`Batch not found: ${args.batchId}`)
           const userProfile = await upsertProfile(schoolDb, user.id, args.name)
-          await upsertEnrollment(schoolDb, args.batchId, userProfile.id, args.role as BatchRole)
+          await upsertEnrollment(schoolDb, batchRow, userProfile.id, args.role as BatchRole)
           assignment = {
             schoolSlug: args.schoolSlug,
             batchId: args.batchId,
@@ -196,15 +192,15 @@ runMain(
 async function seedSchool(input: SchoolSeedInput) {
   try {
     const school = await upsertSchool(input.slug, input.name)
-    const schoolDb = getScopedDatabase(school.id)
+    const schoolDb = getSchoolDb(school.id)
     const ownerEmail = `${input.slug}-owner@seed.test`
     const adminEmail = `${input.slug}-admin@seed.test`
     const ownerPhone = fictionalPhoneNumber(input.slug, 'owner', 0)
     const adminPhone = fictionalPhoneNumber(input.slug, 'admin', 0)
     const owner = await upsertUser(ownerEmail, 'Owner', ownerPhone)
     const admin = await upsertUser(adminEmail, 'Admin', adminPhone)
-    await upsertOrgMember(school.id, owner.id, 'owner')
-    await upsertOrgMember(school.id, admin.id, 'admin')
+    await addOrgMembers(school.id, [owner.id], 'owner')
+    await addOrgMembers(school.id, [admin.id], 'admin')
     const ownerProfile = await upsertProfile(schoolDb, owner.id, 'Owner')
     const adminProfile = await upsertProfile(schoolDb, admin.id, 'Admin')
 
@@ -224,9 +220,7 @@ async function seedSchool(input: SchoolSeedInput) {
     )
 
     // All users with profiles must be org members
-    for (const user of [...instructors, ...students]) {
-      await upsertOrgMember(school.id, user.id, 'member')
-    }
+    await addOrgMembers(school.id, [...instructors, ...students].map(u => u.id), 'member')
 
     const instructorProfiles = await Promise.all(
       instructors.map(u => upsertProfile(schoolDb, u.id, u.name)),
@@ -243,7 +237,7 @@ async function seedSchool(input: SchoolSeedInput) {
     const trackResults = []
     let batchIndex = 0
     for (let t = 1; t <= input.numTracks; t++) {
-      const trackRow = await upsertTrack(schoolDb, courseRow.id, `Seed Track ${t}`)
+      const trackRow = await upsertTrack(schoolDb, courseRow.id, t)
       const chapters = await Promise.all(
         range(input.numChapters).map(index =>
           upsertChapter(schoolDb, trackRow.id, {
@@ -256,18 +250,16 @@ async function seedSchool(input: SchoolSeedInput) {
       const batchResults = []
       for (let b = 1; b <= input.numBatches; b++) {
         const batchCode = `${input.slug}-t${t}-batch${b}`
-        const batchRow = await upsertBatch(schoolDb, trackRow.id, batchCode, {
-          meetingUrl: `https://meet.google.com/${batchCode}`,
-        })
+        const batchRow = await upsertBatch(schoolDb, trackRow, batchCode)
         await upsertClassSlots(schoolDb, batchRow.id)
         for (const user of pickForBatch(instructors, batchIndex, 2)) {
           const p = instructorProfileById.get(user.id)!
-          await upsertEnrollment(schoolDb, batchRow.id, p.id, 'instructor')
+          await upsertEnrollment(schoolDb, batchRow, p.id, 'instructor')
         }
 
         for (const user of studentsForBatch(students, batchIndex, totalBatches)) {
           const p = studentProfileById.get(user.id)!
-          await upsertEnrollment(schoolDb, batchRow.id, p.id, 'student')
+          await upsertEnrollment(schoolDb, batchRow, p.id, 'student')
         }
 
         batchResults.push({ id: batchRow.id, code: batchRow.code })
@@ -350,7 +342,7 @@ const DEFAULT_CLASS_SLOTS = [
   { dayOfWeek: 5, time: '18:00', durationMinutes: 60 },
 ]
 
-async function upsertClassSlots(db: SchoolDatabase, batchId: string) {
+async function upsertClassSlots(db: SchoolDb, batchId: string) {
   const existing = await db.query.batchClassSlot.findMany({
     where: (t, { eq }) => eq(t.batchId, batchId),
   })
@@ -401,4 +393,84 @@ function studentsForBatch<T>(students: T[], batchIndex: number, totalBatches: nu
 function pickForBatch<T>(items: T[], batchIndex: number, count: number): T[] {
   const n = Math.min(count, items.length)
   return Array.from({ length: n }, (_, i) => items[(batchIndex * n + i) % items.length])
+}
+
+// ---- Local-dev fixtures. Each finds the row by its natural key or creates it, so `seed` can be
+// re-run; the parent row is passed in (it carries the course the child must share), so nothing is
+// looked up twice.
+
+async function requireSchool(slug: string) {
+  const school = await publicDb.query.organization.findFirst({ where: (t, { eq }) => eq(t.slug, slug) })
+  if (!school) throw new Error(`School not found: ${slug}`)
+  return school
+}
+
+async function upsertCourse(db: SchoolDb, slug: string, name: string) {
+  const existing = await db.query.course.findFirst({ where: (t, { eq }) => eq(t.slug, slug) })
+  if (existing) return existing
+  const [row] = await db.insert(course).values({ slug, name }).returning()
+  return row!
+}
+
+// A track is identified by its place in the course, which is what the table is unique on.
+async function upsertTrack(db: SchoolDb, courseId: string, order: number) {
+  const existing = await db.query.track.findFirst({
+    where: (t, { and, eq }) => and(eq(t.courseId, courseId), eq(t.order, order)),
+  })
+  if (existing) return existing
+  const [row] = await db.insert(track).values({ courseId, order, name: `Seed Track ${order}` }).returning()
+  return row!
+}
+
+async function upsertChapter(db: SchoolDb, trackId: string, values: { code: string; title: string; order: number }) {
+  const existing = await db.query.chapter.findFirst({
+    where: (t, { and, eq }) => and(eq(t.trackId, trackId), eq(t.code, values.code)),
+  })
+  if (existing) return existing
+  const [row] = await db.insert(chapter).values({ trackId, ...values, status: 'published' }).returning()
+  return row!
+}
+
+async function upsertBatch(db: SchoolDb, parentTrack: { id: string; courseId: string }, code: string) {
+  const existing = await db.query.batch.findFirst({ where: (t, { eq }) => eq(t.code, code) })
+  if (existing) return existing
+  const [row] = await db
+    .insert(batch)
+    .values({
+      trackId: parentTrack.id,
+      courseId: parentTrack.courseId,
+      code,
+      status: 'active',
+      meetingUrl: `https://meet.google.com/${code}`,
+    })
+    .returning()
+  return row!
+}
+
+// Matches on (userId, name) rather than userId alone: one user can own several profiles (family
+// members sharing one phone), so the first profile found for a userId is not necessarily this one.
+async function upsertProfile(db: SchoolDb, userId: string, name: string) {
+  const existing = await db.query.profile.findFirst({
+    where: (t, { and, eq }) => and(eq(t.userId, userId), eq(t.name, name)),
+  })
+  if (existing) return existing
+  const [row] = await db.insert(profile).values({ userId, name }).returning()
+  return row!
+}
+
+async function upsertEnrollment(
+  db: SchoolDb,
+  parentBatch: { id: string; courseId: string },
+  profileId: string,
+  role: BatchRole,
+) {
+  const existing = await db.query.enrollment.findFirst({
+    where: (t, { and, eq }) => and(eq(t.batchId, parentBatch.id), eq(t.profileId, profileId)),
+  })
+  if (existing) return existing
+  const [row] = await db
+    .insert(enrollment)
+    .values({ batchId: parentBatch.id, courseId: parentBatch.courseId, profileId, role })
+    .returning()
+  return row!
 }

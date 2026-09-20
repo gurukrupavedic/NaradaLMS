@@ -12,7 +12,7 @@ import {
   evaluation,
   exam,
   examResult,
-  getScopedDatabase,
+  getSchoolDb,
   profile,
   publicDb,
   registration,
@@ -32,7 +32,7 @@ import {
 } from '@narada/api/src/evaluations/schema'
 import { EXAM_MARK_MAX, outcomeForTotal, type ExamOutcome } from '@narada/api/src/exams/grading'
 import { CreateRegistrationSchema } from '@narada/api/src/registrations/schema'
-import { assertCourseSlug, upsertOrgMember, upsertSchool } from './school-helpers'
+import { addOrgMembers, assertCourseSlug, upsertSchool } from './school-helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // One directory per school, written by parse-excel-to-json.ts: seed-data/<school slug>/.
@@ -506,7 +506,7 @@ const dataCmd = defineCommand({
       }
 
       const school = await upsertSchool(args.slug, args.name ?? args.slug.toUpperCase())
-      const schoolDb = getScopedDatabase(school.id)
+      const schoolDb = getSchoolDb(school.id)
       console.log(`Importing into organization "${school.slug}" (${school.id})`)
 
       // Roster rows can belong to people who already have a production account (own email/phone
@@ -561,13 +561,12 @@ const dataCmd = defineCommand({
           await publicDb.insert(userTable).values(rows).onConflictDoNothing({ target: userTable.id }).returning({ id: userTable.id })
         ).length
       }
-      const memberUserIds = new Set(users.map(u => idRemap.get(u.id) ?? u.id))
-      for (const userId of memberUserIds) {
-        await upsertOrgMember(school.id, userId, 'member')
-      }
+      const memberUserIds = [...new Set(users.map(u => idRemap.get(u.id) ?? u.id))]
+      const membersAdded = await addOrgMembers(school.id, memberUserIds, 'member')
       console.log(
         `✅ Imported ${usersInserted} new users (${idRemap.size} reused existing accounts, ` +
-          `${usersToInsert.length - usersInserted} already present) + ${memberUserIds.size} org memberships.`,
+          `${usersToInsert.length - usersInserted} already present) + ${membersAdded} org memberships ` +
+          `(${memberUserIds.length - membersAdded} already members).`,
       )
 
       // Scoped school DB, in FK dependency order, inside one transaction per school.
