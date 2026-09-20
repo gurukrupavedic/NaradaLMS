@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, inArray, lt, or, type SQL } from 'drizzle-orm'
 
-import { batch, enrollmentRequest, type SchoolDb, type SchoolDbExecutor } from '@narada/db'
+import { batch, enrollmentRequest, type SchoolDb } from '@narada/db'
 
 import { paginateResponse } from '../utils/cursor'
 import type { EnrollmentRequest, FindEnrollmentRequestsData } from './schema'
@@ -86,7 +86,7 @@ export async function findAll(
   }))
 }
 
-export async function findById(db: SchoolDbExecutor, id: string): Promise<EnrollmentRequest | undefined> {
+export async function findById(db: SchoolDb, id: string): Promise<EnrollmentRequest | undefined> {
   const row = await db.query.enrollmentRequest.findFirst({
     where: (t, { eq: eqCol }) => eqCol(t.id, id),
     with: WITH_DISPLAY_FIELDS,
@@ -98,7 +98,7 @@ export async function findById(db: SchoolDbExecutor, id: string): Promise<Enroll
 /** Backs the "don't let a student pile up duplicate requests for the same batch" guard in
  * `service.ts::request` — a rejected or already-approved request doesn't block a fresh one. */
 export async function findPending(
-  db: SchoolDbExecutor,
+  db: SchoolDb,
   profileId: string,
   batchId: string,
 ): Promise<{ id: string } | undefined> {
@@ -131,7 +131,7 @@ export async function findPendingBatchIdsForProfile(
 }
 
 export async function insert(
-  db: SchoolDbExecutor,
+  db: SchoolDb,
   batchId: string,
   profileId: string,
 ): Promise<{ id: string } | undefined> {
@@ -147,7 +147,7 @@ export async function insert(
  * "double review is a no-op update, not a silent overwrite" shape as `registrations/repository.ts`'s
  * own `transitionStatus`. */
 export async function transitionStatus(
-  db: SchoolDbExecutor,
+  db: SchoolDb,
   id: string,
   status: 'approved' | 'rejected',
   reviewedBy: string | null,

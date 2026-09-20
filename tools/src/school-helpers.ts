@@ -1,39 +1,30 @@
 import { eq } from 'drizzle-orm'
 
 import {
-  batch,
-  type batchStatus,
-  chapter,
-  course,
   dropSchoolSchema,
-  enrollment,
-  type enrollmentStatus,
-  getScopedDatabase,
   isValidCourseSlug,
   member,
   organization,
-  profile,
   provisionSchool,
   publicDb,
-  track,
   uuidv7,
-  type SchoolDatabase,
 } from '@narada/db'
 
 export type OrgRole = 'owner' | 'admin' | 'member'
-export type BatchRole = 'instructor' | 'ta' | 'student'
-export type BatchStatus = (typeof batchStatus.enumValues)[number]
-export type EnrollmentStatus = (typeof enrollmentStatus.enumValues)[number]
 
-export async function requireSchool(slug: string) {
-  const school = await publicDb.query.organization.findFirst({
-    where: (t, { eq }) => eq(t.slug, slug),
-  })
-
-  if (!school) throw new Error(`School not found: ${slug}`)
-  return school
+// A course lives in the URL (`/vedam/dashboard`), so its slug must be a lower-case URL segment that
+// isn't a word the web app already uses at the top level. The database refuses one anyway; this says
+// why before anything is written.
+export function assertCourseSlug(slug: string): void {
+  if (!isValidCourseSlug(slug)) {
+    throw new Error(
+      `Course slug "${slug}" isn't usable: it must be lower-case letters, digits and single hyphens ` +
+        `(like "vedam" or "smartam-2"), and not a reserved word such as "login" or "admin".`,
+    )
+  }
 }
 
+/** Finds the school by slug, or creates it and provisions its Postgres schema. */
 export async function upsertSchool(slug: string, name: string) {
   const existing = await publicDb.query.organization.findFirst({
     where: (t, { eq }) => eq(t.slug, slug),
@@ -59,152 +50,20 @@ export async function upsertSchool(slug: string, name: string) {
   return school!
 }
 
-export async function upsertOrgMember(organizationId: string, userId: string, role: OrgRole) {
-  const existing = await publicDb.query.member.findFirst({
-    where: (t, { and, eq }) => and(eq(t.organizationId, organizationId), eq(t.userId, userId)),
-  })
+const MEMBER_CHUNK = 1000
 
-  if (existing) return existing
-  const [row] = await publicDb
-    .insert(member)
-    .values({ id: uuidv7(), organizationId, userId, role, createdAt: new Date() })
-    .returning()
-
-  return row!
-}
-
-export async function upsertCourse(db: SchoolDatabase, slug: string, name: string) {
-  assertCourseSlug(slug)
-  const existing = await db.query.course.findFirst({
-    where: (t, { eq }) => eq(t.slug, slug),
-  })
-
-  if (existing) return existing
-  const [row] = await db.insert(course).values({ slug, name }).returning()
-  if (!row) throw new Error(`Failed to create course: ${slug}`)
-  return row
-}
-
-// A course lives in the URL (`/vedam/dashboard`), so its slug must be a lower-case URL segment that
-// isn't a word the web app already uses at the top level. The database refuses one anyway; this says
-// why before anything is written.
-export function assertCourseSlug(slug: string): void {
-  if (!isValidCourseSlug(slug)) {
-    throw new Error(
-      `Course slug "${slug}" isn't usable: it must be lower-case letters, digits and single hyphens ` +
-        `(like "vedam" or "smartam-2"), and not a reserved word such as "login" or "admin".`,
-    )
+/**
+ * Makes each user a member of the school with `role`. Someone who is already a member is left as they
+ * are (`member` is unique on organization + user), so this is safe to repeat. Returns how many were
+ * added.
+ */
+export async function addOrgMembers(organizationId: string, userIds: string[], role: OrgRole): Promise<number> {
+  let added = 0
+  for (let i = 0; i < userIds.length; i += MEMBER_CHUNK) {
+    const rows = userIds
+      .slice(i, i + MEMBER_CHUNK)
+      .map(userId => ({ id: uuidv7(), organizationId, userId, role, createdAt: new Date() }))
+    added += (await publicDb.insert(member).values(rows).onConflictDoNothing().returning({ id: member.id })).length
   }
-}
-
-// Tracks are numbered within their course, so the next order is the course's own max + 1.
-export async function upsertTrack(db: SchoolDatabase, courseId: string, name: string) {
-  const existing = await db.query.track.findFirst({
-    where: (t, { and, eq }) => and(eq(t.courseId, courseId), eq(t.name, name)),
-  })
-
-  if (existing) return existing
-  const currentTracks = await db.query.track.findMany({
-    where: (t, { eq }) => eq(t.courseId, courseId),
-    columns: { order: true },
-  })
-  const order = currentTracks.length > 0 ? Math.max(...currentTracks.map(r => r.order)) + 1 : 1
-  const [row] = await db.insert(track).values({ courseId, name, order }).returning()
-  if (!row) throw new Error(`Failed to create track: ${name}`)
-  return row
-}
-
-export async function upsertBatch(
-  db: SchoolDatabase,
-  trackId: string,
-  code: string,
-  values: { status?: BatchStatus; startDate?: Date | null; meetingUrl?: string | null } = {},
-) {
-  const existing = await db.query.batch.findFirst({
-    where: (t, { eq }) => eq(t.code, code),
-  })
-
-  if (existing) return existing
-  // A batch carries its track's course.
-  const trackRow = await db.query.track.findFirst({
-    where: (t, { eq }) => eq(t.id, trackId),
-    columns: { courseId: true },
-  })
-  if (!trackRow) throw new Error(`Track not found: ${trackId}`)
-  const [row] = await db
-    .insert(batch)
-    .values({
-      trackId,
-      courseId: trackRow.courseId,
-      code,
-      status: values.status ?? 'active',
-      startDate: values.startDate,
-      meetingUrl: values.meetingUrl,
-    })
-    .returning()
-  if (!row) throw new Error(`Failed to create batch: ${code}`)
-  return row
-}
-
-export async function upsertChapter(
-  db: SchoolDatabase,
-  trackId: string,
-  values: { code: string; title: string; order: number; script?: 'te' | 'sa' | 'en' | null },
-) {
-  const existing = await db.query.chapter.findFirst({
-    where: (table, { and, eq }) => and(eq(table.trackId, trackId), eq(table.code, values.code)),
-  })
-
-  if (existing) return existing
-  const [row] = await db
-    .insert(chapter)
-    .values({ trackId, ...values, status: 'published' })
-    .returning()
-  if (!row) throw new Error(`Failed to create chapter: ${values.code}`)
-  return row
-}
-
-// Matches on (userId, name) rather than userId alone: one user can own several profiles (e.g.
-// family members sharing a WhatsApp-registered phone number), so the first profile found for a
-// userId is not necessarily the one being upserted.
-export async function upsertProfile(
-  db: SchoolDatabase,
-  userId: string,
-  name: string,
-  values: { phone?: string | null; city?: string | null } = {},
-) {
-  const existing = await db.query.profile.findFirst({
-    where: (t, { and, eq }) => and(eq(t.userId, userId), eq(t.name, name)),
-  })
-
-  if (existing) return existing
-  const [row] = await db.insert(profile).values({ userId, name, ...values }).returning()
-  if (!row) throw new Error('Failed to create profile')
-  return row
-}
-
-export async function upsertEnrollment(
-  db: SchoolDatabase,
-  batchId: string,
-  profileId: string,
-  role: BatchRole,
-  values: { status?: EnrollmentStatus; joinedAt?: Date | null; leftDate?: Date | null } = {},
-) {
-  const existing = await db.query.enrollment.findFirst({
-    where: (t, { and, eq }) => and(eq(t.batchId, batchId), eq(t.profileId, profileId)),
-  })
-
-  if (existing) return existing
-  // An enrollment carries its batch's course.
-  const batchRow = await db.query.batch.findFirst({
-    where: (t, { eq }) => eq(t.id, batchId),
-    columns: { courseId: true },
-  })
-  if (!batchRow) throw new Error(`Batch not found: ${batchId}`)
-  const [row] = await db
-    .insert(enrollment)
-    .values({ batchId, courseId: batchRow.courseId, profileId, role, ...values })
-    .returning()
-  if (!row) throw new Error('Failed to create enrollment')
-  return row
+  return added
 }
