@@ -19,8 +19,10 @@
 
 import { clearSelectedProfile, getSelectedProfileId } from '@/lib/auth/profile-store'
 import { courseFromPathname } from '@/lib/course-path'
+import { resolveSchoolSlug } from '@/lib/school-host'
 
-const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG
+// Only a fallback for hosts that name no school (localhost, previews, tunnels) — see `lib/school-host.ts`.
+const FALLBACK_SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG
 
 export class ApiError extends Error {
   readonly status: number
@@ -36,6 +38,9 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const profileId = getSelectedProfileId()
+  // The school is the host's subdomain (`slmts.naradas.app`), read at request time for the same
+  // reason as the course below: one build serves every school.
+  const schoolSlug = resolveSchoolSlug(window.location.hostname, FALLBACK_SCHOOL_SLUG)
   // The course is the URL's first segment (`/vedam/dashboard`) — read here, at request time, so a
   // request can only ever name the course the tab is actually on. Top-level pages (`/login`, `/`)
   // are in no course and send none.
@@ -43,7 +48,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/v1${path}`, {
     ...init,
     headers: {
-      'x-school-slug': SCHOOL_SLUG ?? '',
+      'x-school-slug': schoolSlug ?? '',
       ...(profileId ? { 'x-profile-id': profileId } : {}),
       ...(courseSlug ? { 'x-course-slug': courseSlug } : {}),
       ...init?.headers,
