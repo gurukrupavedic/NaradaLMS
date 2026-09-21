@@ -8,6 +8,8 @@ describe('schoolFromHostname', () => {
     ['rr.naradas.app', 'rr'],
     ['my-school-2.naradas.app', 'my-school-2'],
     ['SLMTS.Naradas.App', 'slmts'],
+    ['www.rr.naradas.app', 'rr'],
+    ['www.slmts.naradas.app', 'slmts'],
   ])('%s is the %s school', (hostname, school) => {
     expect(schoolFromHostname(hostname)).toBe(school)
   })
@@ -15,7 +17,9 @@ describe('schoolFromHostname', () => {
   it.each([
     'naradas.app',
     'www.naradas.app',
+    'www.www.naradas.app',
     'a.b.naradas.app',
+    'www.a.b.naradas.app',
     '.naradas.app',
     'bad_label.naradas.app',
     'localhost',
