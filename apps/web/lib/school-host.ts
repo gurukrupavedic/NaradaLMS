@@ -17,10 +17,11 @@ const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 /**
  * The school a hostname names, or `null` when it names none: the bare apex, `localhost`, a
  * `*.vercel.app` preview, an ngrok tunnel. Only a single label directly under the root domain
- * counts — `a.b.naradas.app` is not school `a`.
+ * counts — `a.b.naradas.app` is not school `a` — except that one leading `www.` is ignored, so
+ * `www.rr.naradas.app` is the same school as `rr.naradas.app`.
  */
 export function schoolFromHostname(hostname: string): string | null {
-  const host = hostname.toLowerCase()
+  const host = hostname.toLowerCase().replace(/^www\./, '')
   const suffix = `.${SCHOOL_ROOT_DOMAIN}`
   if (!host.endsWith(suffix)) return null
 
