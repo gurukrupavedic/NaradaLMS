@@ -54,7 +54,9 @@ export async function findById(db: SchoolDb, id: string): Promise<Profile | unde
 
 /**
  * Backs the admin "enroll a student" search — the only reason to search across every profile in
- * the school rather than just one's own (`findByUserId`). `excludeBatchId` filters out profiles
+ * the school rather than just one's own (`findByUserId`). The query matches a profile's name,
+ * email, or phone, since an admin adding someone usually has whichever of those the student
+ * happened to give them. `excludeBatchId` filters out profiles
  * who already hold a *live* (`'active'`) seat in that batch at the query level, so `SEARCH_LIMIT`
  * still returns useful candidates rather than being eaten by already-enrolled matches — a profile
  * on a break there (`enrollment/service.ts::putOnBreak`) is deliberately left findable, since
@@ -66,7 +68,7 @@ export async function search(db: SchoolDb, options: SearchProfilesQuery): Promis
     where: (t, { and, isNull: isNullCol }) => {
       const conditions = [isNullCol(t.deletedAt)]
       if (options.query) {
-        const match = tokenMatch(options.query, [t.name])
+        const match = tokenMatch(options.query, [t.name, t.email, t.phone])
         if (match) conditions.push(match)
       }
 

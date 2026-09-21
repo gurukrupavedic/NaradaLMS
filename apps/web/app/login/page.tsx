@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
+import { SHLOKA, SHLOKA_TRANSLATION, TAGLINE } from '@/lib/brand'
 import { getAuthSession, sendOtp, signInWithGoogle, verifyOtp } from '@/lib/auth/client'
 import { setSelectedProfile } from '@/lib/auth/profile-store'
 import { fetchProfiles } from '@/lib/api/resources'
@@ -253,18 +254,19 @@ export default function LoginPage() {
           </span>
         </div>
 
-        <div className="relative max-w-sm">
-          <p className="display text-[2.5rem] leading-[1.05]">
-            The register of
-            <br />a practice kept.
+        {/* The same verse, translation and tagline as the coming-soon page (lib/brand.ts). */}
+        <div className="relative max-w-md">
+          <p className="font-deva text-[1.375rem] leading-loose">
+            {SHLOKA[0]}
+            <br />
+            {SHLOKA[1]}
           </p>
-          <p className="mt-5 text-[0.875rem] leading-relaxed text-paper/60">
-            Every chapter marked, every sitting recorded — the same ledger a
-            teacher would keep by hand, shared with the student it belongs to.
+          <p className="mt-5 text-[0.9375rem] leading-relaxed text-paper/60 italic">
+            &ldquo;{SHLOKA_TRANSLATION}&rdquo;
           </p>
         </div>
 
-        <p className="label relative text-paper/40">Vedic studies · est. 2024</p>
+        <p className="label relative text-paper/40">{TAGLINE}</p>
       </aside>
 
       {/* ── The form ─────────────────────────────────────────────────────── */}

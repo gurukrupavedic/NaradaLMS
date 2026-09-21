@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react
 import { useQuery } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
-import { ApiError } from '@/lib/api/client'
+import { Spinner } from '@/components/spinner'
 import { formatClock } from '@/lib/mock-content'
 import { chapterAuthoringDetailQuery } from '@/lib/query/options'
 import { useDeleteChapterAudioAsset, useSetChapterAudioMappings } from '@/lib/query/use-content-mutations'
@@ -126,8 +126,6 @@ function AudioAssetMappings({
     setMappings.mutate({ audioId: asset.id, mappings })
   }
 
-  const errorMessage = setMappings.error instanceof ApiError ? setMappings.error.message : null
-
   return (
     <div className="border-t border-rule-soft pt-3.5 first:border-0 first:pt-0">
       <div className="flex items-center gap-2.5">
@@ -137,8 +135,10 @@ function AudioAssetMappings({
           type="button"
           onClick={() => deleteAsset.mutate(asset.id)}
           disabled={deleteAsset.isPending}
-          className="label ml-auto text-ink-muted transition-colors hover:text-vermilion"
+          aria-busy={deleteAsset.isPending}
+          className="label ml-auto inline-flex items-center gap-2 text-ink-muted transition-colors hover:text-vermilion"
         >
+          {deleteAsset.isPending && <Spinner />}
           {deleteAsset.isPending ? 'Removing…' : 'Remove take'}
         </button>
       </div>
@@ -257,15 +257,16 @@ function AudioAssetMappings({
           type="button"
           onClick={handleSave}
           disabled={setMappings.isPending}
+          aria-busy={setMappings.isPending}
           className={cn(
-            'label border border-rule px-3 py-1.5 transition-colors',
+            'label inline-flex items-center gap-2 border border-rule px-3 py-1.5 transition-colors',
             setMappings.isPending ? 'text-ink-muted/50' : 'text-ink hover:border-vermilion hover:text-vermilion',
           )}
         >
+          {setMappings.isPending && <Spinner />}
           {setMappings.isPending ? 'Saving…' : 'Save mappings'}
         </button>
       </div>
-      {errorMessage && <p className="label mt-1.5 text-vermilion">{errorMessage}</p>}
     </div>
   )
 }

@@ -1,8 +1,9 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { keys } from '@/lib/query/options'
+import { useEditMutation } from '@/lib/query/use-edit-mutation'
 import { updateProfile, type UpdateProfileInput } from '@/lib/api/resources'
 
 /**
@@ -13,10 +14,13 @@ import { updateProfile, type UpdateProfileInput } from '@/lib/api/resources'
 export function useUpdateProfile(profileId: string) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (patch: UpdateProfileInput) => updateProfile(profileId, patch),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: keys.profiles.detail(profileId) })
+  return useEditMutation(
+    {
+      mutationFn: (patch: UpdateProfileInput) => updateProfile(profileId, patch),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: keys.profiles.detail(profileId) })
+      },
     },
-  })
+    { success: 'Profile saved.', failure: "Couldn't save your profile." },
+  )
 }

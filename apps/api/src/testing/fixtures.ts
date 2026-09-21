@@ -193,6 +193,7 @@ export async function createProfile(
     name?: string
     phone?: string | null
     city?: string | null
+    email?: string | null
     yearOfBirth?: number | null
   },
 ): Promise<ProfileRow> {
@@ -203,6 +204,7 @@ export async function createProfile(
       name: overrides?.name ?? `Profile ${nextUnique()}`,
       phone: overrides?.phone ?? null,
       city: overrides?.city ?? null,
+      email: overrides?.email ?? null,
       yearOfBirth: overrides?.yearOfBirth ?? null,
     })
     .returning()

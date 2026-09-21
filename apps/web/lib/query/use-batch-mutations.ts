@@ -1,8 +1,9 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { keys } from '@/lib/query/options'
+import { useEditMutation } from '@/lib/query/use-edit-mutation'
 import { createBatch, requestBatchEnrollment, type CreateBatchInput } from '@/lib/api/resources'
 
 /**
@@ -17,12 +18,15 @@ import { createBatch, requestBatchEnrollment, type CreateBatchInput } from '@/li
 export function useRequestEnrollment() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (batchId: string) => requestBatchEnrollment(batchId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: keys.dashboard })
+  return useEditMutation(
+    {
+      mutationFn: (batchId: string) => requestBatchEnrollment(batchId),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: keys.dashboard })
+      },
     },
-  })
+    { success: 'Request sent — pending approval.', failure: "Couldn't send your request." },
+  )
 }
 
 // The admin "create batch" form (components/admin/create-batch-form.tsx). Affects the admin
@@ -31,11 +35,17 @@ export function useRequestEnrollment() {
 export function useCreateBatch() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (input: CreateBatchInput) => createBatch(input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: keys.batches.all })
-      void queryClient.invalidateQueries({ queryKey: keys.batches.open })
+  return useEditMutation(
+    {
+      mutationFn: (input: CreateBatchInput) => createBatch(input),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: keys.batches.all })
+        void queryClient.invalidateQueries({ queryKey: keys.batches.open })
+      },
     },
-  })
+    {
+      success: (_batch, { code }) => `Created batch ${code}.`,
+      failure: ({ code }) => `Couldn't create batch ${code}.`,
+    },
+  )
 }

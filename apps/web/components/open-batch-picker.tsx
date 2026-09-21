@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { Section } from '@/components/section'
-import { ApiError } from '@/lib/api/client'
+import { Spinner } from '@/components/spinner'
 import { openBatchesQuery } from '@/lib/query/options'
 import { useRequestEnrollment } from '@/lib/query/use-batch-mutations'
 import type { ApiOpenBatch } from '@/lib/api/api-types'
@@ -80,17 +80,13 @@ function OpenBatchRow({ batch, pending }: { batch: ApiOpenBatch; pending: boolea
         <button
           type="button"
           disabled={enroll.isPending}
+          aria-busy={enroll.isPending}
           onClick={() => enroll.mutate(batch.id)}
-          className="label shrink-0 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
+          className="label inline-flex shrink-0 items-center gap-2 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
         >
+          {enroll.isPending && <Spinner />}
           {enroll.isPending ? 'Requesting…' : 'Request to join'}
         </button>
-      )}
-
-      {enroll.isError && (
-        <p className="w-full text-[0.8125rem] text-vermilion">
-          {enroll.error instanceof ApiError ? enroll.error.message : 'Something went wrong. Try again.'}
-        </p>
       )}
     </li>
   )

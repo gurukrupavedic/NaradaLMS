@@ -1,8 +1,9 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { keys } from '@/lib/query/options'
+import { useEditMutation } from '@/lib/query/use-edit-mutation'
 import {
   createChapterAudioAsset,
   deleteChapterAudioAsset,
@@ -33,11 +34,14 @@ function invalidateChapter(queryClient: ReturnType<typeof useQueryClient>, chapt
 
 export function useSaveChapterScript(chapterId: string) {
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ script, data }: { script: ApiScriptKey; data: SaveChapterScriptInput }) =>
-      saveChapterScript(chapterId, script, data),
-    onSuccess: () => invalidateChapter(queryClient, chapterId),
-  })
+  return useEditMutation(
+    {
+      mutationFn: ({ script, data }: { script: ApiScriptKey; data: SaveChapterScriptInput }) =>
+        saveChapterScript(chapterId, script, data),
+      onSuccess: () => invalidateChapter(queryClient, chapterId),
+    },
+    { success: 'Script saved.', failure: "Couldn't save the script." },
+  )
 }
 
 /** `fetch` has no upload-progress event — only `XMLHttpRequest` exposes byte-level progress on a PUT. */
@@ -73,42 +77,54 @@ export type UploadChapterAudioInput = {
  */
 export function useUploadChapterAudio(chapterId: string) {
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ file, label, reciter, onProgress }: UploadChapterAudioInput) => {
-      const { uploadId, uploadUrl } = await presignChapterAudioUpload(chapterId, file.type)
-      await putWithProgress(uploadUrl, file, onProgress)
-      return createChapterAudioAsset(chapterId, { uploadId, label, reciter })
+  return useEditMutation(
+    {
+      mutationFn: async ({ file, label, reciter, onProgress }: UploadChapterAudioInput) => {
+        const { uploadId, uploadUrl } = await presignChapterAudioUpload(chapterId, file.type)
+        await putWithProgress(uploadUrl, file, onProgress)
+        return createChapterAudioAsset(chapterId, { uploadId, label, reciter })
+      },
+      onSuccess: () => invalidateChapter(queryClient, chapterId),
     },
-    onSuccess: () => invalidateChapter(queryClient, chapterId),
-  })
+    { success: 'Audio uploaded.', failure: "Couldn't upload the audio." },
+  )
 }
 
 export function useSetChapterAudioMappings(chapterId: string) {
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      audioId,
-      mappings,
-    }: {
-      audioId: string
-      mappings: { segmentId: string; audioStart: number; audioEnd: number }[]
-    }) => setChapterAudioMappings(chapterId, audioId, mappings),
-    onSuccess: () => invalidateChapter(queryClient, chapterId),
-  })
+  return useEditMutation(
+    {
+      mutationFn: ({
+        audioId,
+        mappings,
+      }: {
+        audioId: string
+        mappings: { segmentId: string; audioStart: number; audioEnd: number }[]
+      }) => setChapterAudioMappings(chapterId, audioId, mappings),
+      onSuccess: () => invalidateChapter(queryClient, chapterId),
+    },
+    { success: 'Audio mapping saved.', failure: "Couldn't save the audio mapping." },
+  )
 }
 
 export function useDeleteChapterAudioAsset(chapterId: string) {
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (audioId: string) => deleteChapterAudioAsset(chapterId, audioId),
-    onSuccess: () => invalidateChapter(queryClient, chapterId),
-  })
+  return useEditMutation(
+    {
+      mutationFn: (audioId: string) => deleteChapterAudioAsset(chapterId, audioId),
+      onSuccess: () => invalidateChapter(queryClient, chapterId),
+    },
+    { success: 'Audio take removed.', failure: "Couldn't remove the audio take." },
+  )
 }
 
 export function useResegmentChapter(chapterId: string) {
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (data: ResegmentChapterInput) => resegmentChapter(chapterId, data),
-    onSuccess: () => invalidateChapter(queryClient, chapterId),
-  })
+  return useEditMutation(
+    {
+      mutationFn: (data: ResegmentChapterInput) => resegmentChapter(chapterId, data),
+      onSuccess: () => invalidateChapter(queryClient, chapterId),
+    },
+    { success: 'Chapter resegmented.', failure: "Couldn't resegment the chapter." },
+  )
 }

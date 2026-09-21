@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Dialog } from '@base-ui/react/dialog'
 
-import { ApiError } from '@/lib/api/client'
+import { Spinner } from '@/components/spinner'
 import type { ApiProfile, ApiProficiencyLevel } from '@/lib/api/api-types'
 import type { UpdateProfileInput } from '@/lib/api/resources'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
@@ -24,8 +24,6 @@ import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 export type UpdateProfileMutation = {
   mutate: (input: UpdateProfileInput, opts?: { onSuccess?: () => void }) => void
   isPending: boolean
-  isError: boolean
-  error: unknown
 }
 
 export function EditProfileDialog({
@@ -222,12 +220,6 @@ function EditProfileForm({
         />
       </div>
 
-      {updating.isError && (
-        <p className="text-[0.8125rem] text-vermilion">
-          {updating.error instanceof ApiError ? updating.error.message : 'Could not save your profile.'}
-        </p>
-      )}
-
       <div className="flex justify-end gap-3">
         <button
           type="button"
@@ -239,8 +231,10 @@ function EditProfileForm({
         <button
           type="submit"
           disabled={updating.isPending || !name.trim()}
-          className="label bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
+          aria-busy={updating.isPending}
+          className="label inline-flex items-center gap-2 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
         >
+          {updating.isPending && <Spinner />}
           {updating.isPending ? 'Saving…' : 'Save changes'}
         </button>
       </div>
