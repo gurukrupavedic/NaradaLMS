@@ -47,7 +47,7 @@ export function AddStudentDrawer({
     return () => clearTimeout(timer)
   }, [query])
 
-  const { data: results, isFetching } = useQuery(profileSearchQuery(debounced, batch.id))
+  const { data: results, isFetching, isError } = useQuery(profileSearchQuery(debounced, batch.id))
   const enroll = useEnrollProfile(batch.code, batch.id)
 
   return (
@@ -64,6 +64,10 @@ export function AddStudentDrawer({
         <ul className="mt-3 divide-y divide-rule">
           {isFetching && !results ? (
             <li className="py-3 text-[0.8125rem] text-ink-muted">Searching…</li>
+          ) : isError ? (
+            <li className="py-3 text-[0.8125rem] text-vermilion">
+              Couldn&rsquo;t search right now — try again.
+            </li>
           ) : results && results.length > 0 ? (
             results.map(candidate => {
               const adding = enroll.isPending && enroll.variables?.profileId === candidate.id

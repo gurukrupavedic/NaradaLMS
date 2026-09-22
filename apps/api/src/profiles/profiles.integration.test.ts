@@ -351,6 +351,20 @@ describe('search (admin "enroll a student" support)', () => {
     expect(partialPhone.map(r => r.id)).toEqual([byPhone.id])
   })
 
+  it('finds a phone number stored without its leading "+" (a historically imported profile) when the query has one', async () => {
+    world = await createTestSchool()
+    // tools/src/parse/people.ts used to write `profile.phone` without the "+" it always includes
+    // for `registration.phone` — fixed for new imports, but rows already imported before the fix
+    // still look like this, and an admin naturally searches the way the number is displayed
+    // elsewhere (with the "+").
+    const importedStyle = await createProfile(world, { name: 'Imported Student', phone: '14255551234' })
+    const selfRegisteredStyle = await createProfile(world, { name: 'Self Registered', phone: '+14255559999' })
+
+    const results = await repository.search(world.schoolDb, { query: '+1425' })
+
+    expect(results.map(r => r.id).sort()).toEqual([importedStyle.id, selfRegisteredStyle.id].sort())
+  })
+
   it('excludes profiles already enrolled in excludeBatchId', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)

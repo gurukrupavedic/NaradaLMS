@@ -140,7 +140,7 @@ export function parsePeople(ctx: Ctx, sheetName: string, shared: SharedUsers) {
     }
 
     const profileId = stableId('profile', school, key)
-    profiles.set(key, { ...person, id: profileId, userId: user.id, name, phone: household, city, sourceKey: key })
+    profiles.set(key, { ...person, id: profileId, userId: user.id, name, phone, city, sourceKey: key })
     registrations.push({
       ...person,
       id: stableId('registration', school, key),

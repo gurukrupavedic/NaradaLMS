@@ -62,13 +62,21 @@ export async function findById(db: SchoolDb, id: string): Promise<Profile | unde
  * on a break there (`enrollment/service.ts::putOnBreak`) is deliberately left findable, since
  * `enroll`'s own conflict check (`enrollment/service.ts::enroll`) reactivates a non-active row
  * instead of rejecting it, and an admin can't do that for someone this search hides from them.
+ *
+ * Also matches with any `+` stripped from the query — historically imported profiles
+ * (`tools/src/parse/people.ts`, fixed to stop doing this on new imports, but existing rows are
+ * unaffected) can have `phone` stored without the leading `+` that self-registration always
+ * includes (`e164Phone`), so a query typed the normal way (with the `+`) would otherwise never
+ * find one of those rows — `ilike` is a literal substring match, and none of those numbers
+ * contain a `+` at all. Stripping it costs nothing on a query that doesn't have one, and a
+ * `+` essentially never appears in a name or a plain email search anyway.
  */
 export async function search(db: SchoolDb, options: SearchProfilesQuery): Promise<Profile[]> {
   return db.query.profile.findMany({
     where: (t, { and, isNull: isNullCol }) => {
       const conditions = [isNullCol(t.deletedAt)]
       if (options.query) {
-        const match = tokenMatch(options.query, [t.name, t.email, t.phone])
+        const match = tokenMatch(options.query.replace(/\+/g, ''), [t.name, t.email, t.phone])
         if (match) conditions.push(match)
       }
 
