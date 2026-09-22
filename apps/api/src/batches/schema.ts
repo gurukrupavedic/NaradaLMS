@@ -118,9 +118,14 @@ export const UpdateBatchSchema = requireNonEmpty(
 // GET /batches/open — deliberately its own shape, not `BatchDetail`: a student browsing batches to
 // join should see the schedule, never the existing roster (who's already in it). `trackName` is
 // denormalized onto the row (rather than making the client resolve `trackId` itself) — a student
-// choosing between open batches across tracks needs to know which is which at a glance.
+// choosing between open batches across tracks needs to know which is which at a glance. `eligible`
+// is whether the requesting student holds at least L1 on the track before this one (courses'
+// first tracks are always eligible) — computed per-request in `service.ts::findOpenBatches`, not
+// stored, so the "Request to join" button can be disabled up front instead of only failing the
+// POST after the fact (`enrollmentRequests/service.ts::request` still enforces this server-side).
 export type OpenBatch = z.infer<typeof OpenBatchSchema>
 export const OpenBatchSchema = BatchSchema.extend({
   trackName: z.string(),
   classSlots: z.array(ClassSlotSchema),
+  eligible: z.boolean(),
 })

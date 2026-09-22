@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, getTableColumns, gt, inArray, or, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns, gt, inArray, ne, or, type SQL } from 'drizzle-orm'
 
 import { chapter, evaluation, exam, examResult, track, type SchoolDb } from '@narada/db'
 
@@ -149,6 +149,50 @@ export async function findResultsForStudent(
     .orderBy(desc(examResult.evaluatedAt))
 
   return rows.map(withLevel)
+}
+
+/**
+ * Whether `studentId` holds at least L1 on `trackId` — any recorded result other than `reappear`
+ * (§`grading.ts::levelForOutcome`: everything but `reappear` grants a real level, and the lowest
+ * of those is L1). Backs `enrollmentRequests/service.ts::request`'s prerequisite gate: a student
+ * may only request the batch after the one for the track before it.
+ */
+export async function hasPassedTrack(db: SchoolDb, studentId: string, trackId: string): Promise<boolean> {
+  const rows = await db
+    .select({ examId: examResult.examId })
+    .from(examResult)
+    .innerJoin(exam, eq(exam.id, examResult.examId))
+    .where(and(eq(exam.studentId, studentId), eq(exam.trackId, trackId), ne(examResult.outcome, 'reappear')))
+    .limit(1)
+
+  return rows.length > 0
+}
+
+/**
+ * Every trackId in `courseId` that `studentId` holds at least L1 on — the bulk counterpart to
+ * {@link hasPassedTrack}, one query for the whole course instead of one per track (backs
+ * `batches/service.ts::findOpenBatches`'s eligibility check across every open batch at once).
+ * `SchoolDb` doesn't expose `selectDistinct`, so this dedupes in JS via the `Set` instead — the row
+ * count here is bounded by a student's own exam history, never large enough to matter.
+ */
+export async function findPassedTrackIds(
+  db: SchoolDb,
+  studentId: string,
+  courseId: string,
+): Promise<Set<string>> {
+  const rows = await db
+    .select({ trackId: exam.trackId })
+    .from(examResult)
+    .innerJoin(exam, eq(exam.id, examResult.examId))
+    .where(
+      and(
+        eq(exam.studentId, studentId),
+        ne(examResult.outcome, 'reappear'),
+        inArray(exam.trackId, tracksOfCourse(db, courseId)),
+      ),
+    )
+
+  return new Set(rows.map(row => row.trackId))
 }
 
 export async function findTrackById(

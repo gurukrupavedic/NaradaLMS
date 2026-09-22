@@ -231,9 +231,10 @@ export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Batch
 /**
  * Every batch a student can request to join: any batch not yet marked `completed` — no separate
  * "open" state to opt a batch into. No seat cap to check against — every joinable batch takes any
- * number of students.
+ * number of students. Doesn't set `eligible` — that's per-requesting-student and computed by
+ * `service.ts::findOpenBatches`, not this single-domain read.
  */
-export async function findOpen(db: SchoolDb, courseId: string): Promise<OpenBatch[]> {
+export async function findOpen(db: SchoolDb, courseId: string): Promise<Omit<OpenBatch, 'eligible'>[]> {
   const rows = await db.query.batch.findMany({
     where: (t, { and: andCols, eq: eqCol, ne }) =>
       andCols(ne(t.status, 'completed'), eqCol(t.courseId, courseId)),
