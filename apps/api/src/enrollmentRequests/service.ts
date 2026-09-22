@@ -1,9 +1,11 @@
 import type { SchoolDbClient } from '@narada/db'
 
 import * as batchesRepository from '../batches/repository'
-import { conflict, internalError, notFound } from '../error'
+import { conflict, forbidden, internalError, notFound } from '../error'
 import * as enrollmentRepository from '../enrollment/repository'
 import { enroll } from '../enrollment/service'
+import * as examRepository from '../exams/repository'
+import * as trackRepository from '../tracks/repository'
 import * as repository from './repository'
 import type { EnrollmentRequest, FindEnrollmentRequestsData } from './schema'
 
@@ -62,6 +64,13 @@ export async function request(db: SchoolDbClient, batchId: string, profileId: st
 
     if (await repository.findPending(tx, profileId, batchId)) {
       throw conflict('a request to join this batch is already pending')
+    }
+
+    // Gate on the track before this one, if any — the course's first track has no prerequisite.
+    // "at least L1" is any recorded result other than `reappear` (grading.ts::levelForOutcome).
+    const previousTrack = await trackRepository.findPreviousTrack(tx, batchRow.trackId)
+    if (previousTrack && !(await examRepository.hasPassedTrack(tx, profileId, previousTrack.id))) {
+      throw forbidden('you need at least L1 in the previous track to join this batch')
     }
 
     const inserted = await repository.insert(tx, batchId, profileId)

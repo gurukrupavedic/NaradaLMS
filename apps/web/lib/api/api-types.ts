@@ -126,6 +126,7 @@ export type ApiBatchMember = {
   profileId: string
   name: string
   phone: string | null
+  email: string | null
   city: string | null
   role: ApiEnrollmentRole
   joinedAt: string | null
@@ -154,10 +155,13 @@ export type ApiBatchWithRole = ApiBatchDetail & {
 
 // GET /v1/batches/open — a student's own "batches I can request to join" view (any batch not
 // marked completed — POST /batches/:batchId/enroll files a request, apps/api/src/enrollmentRequests
-// — with the schedule, never the roster (unlike ApiBatchDetail).
+// — with the schedule, never the roster (unlike ApiBatchDetail). `eligible` is whether the caller
+// holds at least L1 on the track before this one (always true for a course's first track) — the
+// server still enforces this on the POST itself, so `eligible` only drives the button up front.
 export type ApiOpenBatch = ApiBatch & {
   trackName: string
   classSlots: ApiClassSlot[]
+  eligible: boolean
 }
 
 export type ApiProficiencyLevel =

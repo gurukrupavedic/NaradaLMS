@@ -44,7 +44,8 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const isSelf = useSelectedProfileId() === profileId
   const [moveOpen, setMoveOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
-  const updating = useUpdateProfile(profileId)
+  const canEdit = isSelf || isAdmin
+  const updating = useUpdateProfile(profileId, isSelf)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
@@ -71,9 +72,9 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           { value: `${certifiedCount}/${certifications.length}`, label: 'Certified' },
         ]}
         action={
-          isSelf || (isAdmin && movableTrack) ? (
+          canEdit || (isAdmin && movableTrack) ? (
             <div className="flex shrink-0 items-center gap-2">
-              {isSelf && (
+              {canEdit && (
                 <button
                   type="button"
                   onClick={() => setEditOpen(true)}
@@ -234,12 +235,13 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
         />
       )}
 
-      {isSelf && (
+      {canEdit && (
         <EditProfileDialog
           open={editOpen}
           onOpenChange={setEditOpen}
           profile={profile}
           updating={updating}
+          isSelf={isSelf}
         />
       )}
     </>

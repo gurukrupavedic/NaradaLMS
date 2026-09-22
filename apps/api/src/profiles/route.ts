@@ -13,8 +13,7 @@ import {
 } from './schema'
 import {
   createProfile,
-  deactivateByAdmin,
-  deleteById,
+  deleteProfile,
   findById,
   findByUserId,
   searchProfiles,
@@ -90,37 +89,29 @@ router.post(
   }),
 )
 
+// One route for both the owner's self-edit and a school admin correcting someone else's profile
+// — `service.ts::updateProfile` branches on `access.isSchoolAdmin()` itself, so there's exactly
+// one authorization story to get right rather than two routes that each have to. optionalProfileRoute,
+// not userRoute: an admin correcting another student's details shouldn't need an active profile of
+// their own (the same gap piece 4 fixed for batches/exams/evaluations); self-edit doesn't need one
+// either, since ownership is keyed on `user.id`, not the active profile.
 router.patch(
   '/:profileId',
-  userRoute(async ({ req, res, db, school, user }) => {
+  optionalProfileRoute(async ({ req, res, db, school, user, access }) => {
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     const data = await parse(UpdateProfileSchema, req.body)
-    const profile = await updateProfile({ db, school, user }, profileId, data)
+    const profile = await updateProfile({ db, school, user, access }, profileId, data)
     res.status(200).json({ data: profile })
   }),
 )
 
+// Same split as the PATCH above, in one route: `service.ts::deleteProfile` deactivates the
+// caller's own profile, or (school admin) anyone else's.
 router.delete(
   '/:profileId',
-  userRoute(async ({ req, res, db, school, user }) => {
-    const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
-    await deleteById({ db, school, user }, profileId)
-    res.status(204).send()
-  }),
-)
-
-// Admin-deactivation (DD-011 §9): a separate route from the owner-only DELETE above, since the
-// authorization check (school admin acting on someone else's profile) is a different question
-// from "does the caller own this profile" and shouldn't be conflated behind one path.
-// optionalProfileRoute, not profileRoute: requireCanDeactivateProfile is purely isSchoolAdmin() —
-// an admin performing an admin action on someone else's profile shouldn't need an active profile
-// of their own, the same gap piece 4 fixed for batches/exams/evaluations.
-router.post(
-  '/:profileId/deactivate',
   optionalProfileRoute(async ({ req, res, db, school, user, access }) => {
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
-    access.requireCanDeactivateProfile()
-    await deactivateByAdmin({ db, school, user }, profileId)
+    await deleteProfile({ db, school, user, access }, profileId)
     res.status(204).send()
   }),
 )

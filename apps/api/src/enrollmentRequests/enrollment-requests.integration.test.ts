@@ -4,6 +4,8 @@ import { destroyTestWorld } from '../testing/cleanup'
 import {
   createBatch,
   createEnrollmentRequest,
+  createExam,
+  createExamResult,
   createProfile,
   createTestSchool,
   createTrack,
@@ -87,6 +89,71 @@ describe('request', () => {
     const student = await createProfile(world)
     const first = await request(world.schoolDb, batch.id, student.id)
     await reject({ db: world.schoolDb }, first.id, null)
+
+    const row = await request(world.schoolDb, batch.id, student.id)
+
+    expect(row.status).toBe('pending')
+  })
+
+  it('rejects with 403 when the student has no result on the track before this one', async () => {
+    world = await createTestSchool()
+    const track1 = await createTrack(world, { order: 1 })
+    const track2 = await createTrack(world, { order: 2 })
+    await createBatch(world, track1)
+    const batch2 = await createBatch(world, track2)
+    const student = await createProfile(world)
+
+    await expect(request(world.schoolDb, batch2.id, student.id)).rejects.toMatchObject({
+      statusCode: 403,
+      message: 'you need at least L1 in the previous track to join this batch',
+    })
+  })
+
+  it('rejects with 403 when the only result on the track before this one is a reappear', async () => {
+    world = await createTestSchool()
+    const track1 = await createTrack(world, { order: 1 })
+    const track2 = await createTrack(world, { order: 2 })
+    const batch1 = await createBatch(world, track1)
+    const batch2 = await createBatch(world, track2)
+    const student = await createProfile(world)
+    const evaluator = await createProfile(world, { name: 'Evaluator' })
+    const failedExam = await createExam(world, { student, track: track1, batch: batch1, status: 'completed' })
+    // Marks totalling 40 — below the 65 needed for `level1` — a `reappear` outcome.
+    await createExamResult(world, {
+      exam: failedExam,
+      evaluator,
+      marks: { aksharaShuddhi: 20, swaraShuddhi: 12, niyantranaAnargalata: 6, shraavyata: 1, pratishakyaGrammar: 1 },
+    })
+
+    await expect(request(world.schoolDb, batch2.id, student.id)).rejects.toMatchObject({ statusCode: 403 })
+  })
+
+  it('allows the request once the student holds at least L1 on the track before this one', async () => {
+    world = await createTestSchool()
+    const track1 = await createTrack(world, { order: 1 })
+    const track2 = await createTrack(world, { order: 2 })
+    const batch1 = await createBatch(world, track1)
+    const batch2 = await createBatch(world, track2)
+    const student = await createProfile(world)
+    const evaluator = await createProfile(world, { name: 'Evaluator' })
+    const passedExam = await createExam(world, { student, track: track1, batch: batch1, status: 'completed' })
+    // Marks totalling 70 (65-74 band) — a `level1` outcome, the minimum this gate requires.
+    await createExamResult(world, {
+      exam: passedExam,
+      evaluator,
+      marks: { aksharaShuddhi: 35, swaraShuddhi: 20, niyantranaAnargalata: 10, shraavyata: 3, pratishakyaGrammar: 2 },
+    })
+
+    const row = await request(world.schoolDb, batch2.id, student.id)
+
+    expect(row.status).toBe('pending')
+  })
+
+  it('does not gate the course\'s first track', async () => {
+    world = await createTestSchool()
+    const track = await createTrack(world, { order: 1 })
+    const batch = await createBatch(world, track)
+    const student = await createProfile(world)
 
     const row = await request(world.schoolDb, batch.id, student.id)
 

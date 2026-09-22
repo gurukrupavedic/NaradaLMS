@@ -1,6 +1,8 @@
 import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound, unprocessable } from '../error'
+import * as examRepository from '../exams/repository'
+import * as trackRepository from '../tracks/repository'
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
@@ -121,11 +123,31 @@ export async function updateBatch(
   })
 }
 
+/**
+ * `eligible` (does this student hold at least L1 on the track before each batch's own) is computed
+ * here rather than in `repository.findOpen`, which is single-domain and knows nothing of exams or
+ * track order — two whole-course queries (not one per batch) so this stays flat regardless of how
+ * many open batches there are. `enrollmentRequests/service.ts::request` re-checks this at request
+ * time; this is only what lets the UI grey the button out before someone tries.
+ */
 export async function findOpenBatches(
   context: BatchServiceContext,
   courseId: string,
+  studentId: string,
 ): Promise<OpenBatch[]> {
-  return repository.findOpen(context.db, courseId)
+  const [rows, previousTrackByTrackId, passedTrackIds] = await Promise.all([
+    repository.findOpen(context.db, courseId),
+    trackRepository.findPreviousTrackMap(context.db, courseId),
+    examRepository.findPassedTrackIds(context.db, studentId, courseId),
+  ])
+
+  return rows.map(row => {
+    const previousTrackId = previousTrackByTrackId.get(row.trackId)
+    return {
+      ...row,
+      eligible: previousTrackId === undefined || passedTrackIds.has(previousTrackId),
+    }
+  })
 }
 
 export async function setClassSlots(

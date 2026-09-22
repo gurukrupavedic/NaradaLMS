@@ -32,7 +32,16 @@ const db = {} as SchoolDbClient
 const context = { db }
 
 function member(profileId: string, role: 'instructor' | 'ta' | 'student') {
-  return { profileId, name: profileId, phone: null, city: null, role, joinedAt: null, status: 'active' as const }
+  return {
+    profileId,
+    name: profileId,
+    phone: null,
+    email: null,
+    city: null,
+    role,
+    joinedAt: null,
+    status: 'active' as const,
+  }
 }
 
 beforeEach(() => {

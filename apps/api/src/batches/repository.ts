@@ -141,7 +141,7 @@ export async function findAccessibleWithDetail(
       role: BatchWithRole['members'][number]['role']
       status: NonNullable<BatchWithRole['enrollmentStatus']>
       joinedAt: Date | null
-      profile: { name: string; phone: string | null; city: string | null }
+      profile: { name: string; phone: string | null; email: string | null; city: string | null }
     }[]
     classSlots: (typeof batchClassSlot.$inferSelect)[]
   } & Batch): BatchWithRole {
@@ -153,6 +153,7 @@ export async function findAccessibleWithDetail(
         profileId: e.profileId,
         name: e.profile.name,
         phone: e.profile.phone,
+        email: e.profile.email,
         city: e.profile.city,
         role: e.role,
         joinedAt: e.joinedAt,
@@ -231,9 +232,10 @@ export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Batch
 /**
  * Every batch a student can request to join: any batch not yet marked `completed` — no separate
  * "open" state to opt a batch into. No seat cap to check against — every joinable batch takes any
- * number of students.
+ * number of students. Doesn't set `eligible` — that's per-requesting-student and computed by
+ * `service.ts::findOpenBatches`, not this single-domain read.
  */
-export async function findOpen(db: SchoolDb, courseId: string): Promise<OpenBatch[]> {
+export async function findOpen(db: SchoolDb, courseId: string): Promise<Omit<OpenBatch, 'eligible'>[]> {
   const rows = await db.query.batch.findMany({
     where: (t, { and: andCols, eq: eqCol, ne }) =>
       andCols(ne(t.status, 'completed'), eqCol(t.courseId, courseId)),
@@ -269,6 +271,7 @@ export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<Bat
       profileId: e.profileId,
       name: e.profile.name,
       phone: e.profile.phone,
+      email: e.profile.email,
       city: e.profile.city,
       role: e.role,
       joinedAt: e.joinedAt,
@@ -342,6 +345,7 @@ export async function findAllMembershipsWithDetail(
         profileId: e.profileId,
         name: e.profile.name,
         phone: e.profile.phone,
+        email: e.profile.email,
         city: e.profile.city,
         role: e.role,
         joinedAt: e.joinedAt,

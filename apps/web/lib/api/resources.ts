@@ -81,13 +81,15 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
   return fetchApi<ApiProfileDetail>(`/profiles/${profileId}/detail`)
 }
 
-// PATCH /v1/profiles/:profileId — the student's own "edit my profile" form
-// (components/edit-profile-dialog.tsx). Server-side ownership check (`updateOwned`) means this
-// only ever succeeds against the caller's own profile. `phone` and `yearOfBirth` are deliberately
-// not part of this input — `phone` is the BetterAuth login credential, `yearOfBirth` is treated as
-// fixed once recorded — both excluded server-side too (`apps/api/src/profiles/schema.ts`'s
-// `UpdateProfileSchema`). `countryTimeZone` is excluded for a different reason: it's derived
-// server-side from `city`/`state`/`country` whenever any of those change, never set directly.
+// PATCH /v1/profiles/:profileId — the "edit profile" form (components/edit-profile-dialog.tsx),
+// used both by the profile's own owner and by a school admin correcting someone else's.
+// `apps/api/src/profiles/service.ts::updateProfile` decides which: a school admin's write carries
+// no ownership check, anyone else's only ever succeeds against their own profile. `phone` and
+// `yearOfBirth` are deliberately not part of this input, even for an admin — `phone` is the
+// BetterAuth login credential, `yearOfBirth` is treated as fixed once recorded — both excluded
+// server-side too (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`). `countryTimeZone`
+// is excluded for a different reason: it's derived server-side from `city`/`state`/`country`
+// whenever any of those change, never set directly.
 export type UpdateProfileInput = Partial<
   Pick<
     ApiProfile,
@@ -322,7 +324,10 @@ function toSittingRow(exam: ApiExam): SittingRow {
 export async function fetchExams(): Promise<ExamsPayload> {
   const [dashboard, examList] = await Promise.all([
     fetchStudentDashboard(),
-    fetchApi<{ items: ApiExam[] }>('/exams'),
+    // `mine=true` pins this to strictly the caller's own sittings (AccessPolicy.getOwnExamScope) —
+    // without it, a profile who's also a TA/instructor somewhere gets every student's sittings in
+    // batches they teach folded into what this screen presents as their own history.
+    fetchApi<{ items: ApiExam[] }>('/exams?mine=true'),
   ])
 
   const certifications = buildCertificationRows(dashboard)
@@ -404,6 +409,16 @@ export async function recordExamResult(
   input: RecordExamResultInput,
 ): Promise<ApiExam> {
   return mutateApi<ApiExam>(`/exams/${examId}/results`, 'POST', input)
+}
+
+// PATCH /v1/exams/:examId/results — school admin only. Overwrites an already-recorded result (a
+// data-entry mistake, not a second sitting) — same input shape and the same chapter-rewrite
+// behavior as the POST above, just against a sitting that already has one.
+export async function correctExamResult(
+  examId: string,
+  input: RecordExamResultInput,
+): Promise<ApiExam> {
+  return mutateApi<ApiExam>(`/exams/${examId}/results`, 'PATCH', input)
 }
 
 // GET /v1/profiles/:profileId/batches?withDetail=true (the signed-in profile — the real gap closed

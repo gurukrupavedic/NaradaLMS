@@ -76,6 +76,13 @@ function OpenBatchRow({ batch, pending }: { batch: ApiOpenBatch; pending: boolea
 
       {pending || enroll.isSuccess ? (
         <span className="label shrink-0 border border-rule px-4 py-2 text-ink-muted">Pending approval</span>
+      ) : !batch.eligible ? (
+        <span
+          className="label shrink-0 border border-rule px-4 py-2 text-ink-muted"
+          title="Requires at least L1 in the previous track"
+        >
+          Not yet eligible
+        </span>
       ) : (
         <button
           type="button"

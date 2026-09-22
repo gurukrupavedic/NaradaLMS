@@ -180,6 +180,7 @@ describe('findByIdWithMembers', () => {
           profileId: 'profile-1',
           name: 'Student One',
           phone: null,
+          email: null,
           city: null,
           role: 'student' as const,
           joinedAt: new Date(),

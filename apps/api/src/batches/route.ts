@@ -33,8 +33,8 @@ router.get(
 // is requestable, no school role required to see the list.
 router.get(
   '/open',
-  profileRoute(async ({ res, db, getCourse }) => {
-    const batches = await findOpenBatches({ db }, (await getCourse()).id)
+  profileRoute(async ({ res, db, getCourse, profile }) => {
+    const batches = await findOpenBatches({ db }, (await getCourse()).id, profile.id)
     res.status(200).json({ data: batches })
   }),
 )

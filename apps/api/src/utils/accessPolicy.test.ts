@@ -284,6 +284,42 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
     expect((visibility as { batchIds: string[] }).batchIds.sort()).toEqual(['batch-1', 'batch-3'])
   })
 
+  it('getOwnExamScope always returns "own", even for a profile that also manages a batch', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([
+        { batchId: 'batch-1', role: 'instructor' },
+        { batchId: 'batch-2', role: 'ta' },
+      ]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    // The point of this method (apps/web's "Sitting history" sends `mine=true` for it): a profile
+    // who is *also* a TA/instructor elsewhere must still get only their own sittings here, unlike
+    // getExamVisibility above, which would widen this same profile to 'manageable'.
+    expect(access.getOwnExamScope()).toEqual({ kind: 'own', profileId: 'profile-1' })
+  })
+
+  it('getOwnExamScope throws without an active profile, even for a school admin or super admin', async () => {
+    mockMembership('admin')
+    const admin = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+    })
+    expect(() => admin.getOwnExamScope()).toThrow()
+
+    mockMembership('member')
+    const superAdmin = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+    })
+    expect(() => superAdmin.getOwnExamScope()).toThrow()
+  })
+
   it("requireCanReadExam allows the exam's own student, an admin, or a manageable batch role", async () => {
     mockMembership('member')
     const access = await AccessPolicy.load({

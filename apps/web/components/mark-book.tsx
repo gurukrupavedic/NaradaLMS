@@ -116,9 +116,6 @@ export function MarkBook({
                 {code}
               </th>
             ))}
-            <th scope="col" className="label py-2 pr-4 pl-4 text-right text-ink-muted">
-              At
-            </th>
           </tr>
         </thead>
         <tbody>
@@ -216,14 +213,6 @@ export function MarkBook({
                     </td>
                   )
                 })}
-
-                <td className="py-1.5 pr-4 pl-4 text-right">
-                  {unevaluated ? (
-                    <span className="label whitespace-nowrap text-vermilion">not yet marked</span>
-                  ) : (
-                    <span className="font-mono text-[0.75rem]">{student.current}</span>
-                  )}
-                </td>
               </tr>
             )
           })}

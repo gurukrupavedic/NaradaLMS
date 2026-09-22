@@ -133,11 +133,16 @@ function buildGroups(
       subtitle: trackNameById.get(b.trackId) ?? null,
     }))
 
-  // Deduped by profileId — the same person can show up on more than one batch's roster.
+  // Deduped by profileId — the same person can show up on more than one batch's roster. Matches
+  // name, phone, or email — mirrors apps/api/src/profiles/repository.ts's `search` (the admin
+  // add-student drawer's own student search), which this palette's search had drifted from.
   const studentsById = new Map<string, SearchResult>()
   for (const batch of data.batches) {
     for (const member of batch.members) {
-      if (!studentsById.has(member.profileId) && matchesQuery(query, [member.name])) {
+      if (
+        !studentsById.has(member.profileId) &&
+        matchesQuery(query, [member.name, member.phone, member.email])
+      ) {
         studentsById.set(member.profileId, {
           kind: 'student',
           id: member.profileId,

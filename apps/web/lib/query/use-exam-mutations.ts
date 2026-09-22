@@ -2,7 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query'
 
-import { recordExamResult, type RecordExamResultInput } from '@/lib/api/resources'
+import { correctExamResult, recordExamResult, type RecordExamResultInput } from '@/lib/api/resources'
 import { keys } from '@/lib/query/options'
 import { useEditMutation } from '@/lib/query/use-edit-mutation'
 
@@ -27,5 +27,27 @@ export function useRecordExamResult(examId: string) {
       },
     },
     { success: 'Exam result recorded.', failure: "Couldn't record the exam result." },
+  )
+}
+
+/**
+ * Corrects an already-graded sitting (components/admin/record-exam-result-dialog.tsx, same form —
+ * see its own doc comment). Invalidates exactly what `useRecordExamResult` does: a correction
+ * rewrites chapter evaluations too, so every screen reading them goes stale the same way.
+ */
+export function useCorrectExamResult(examId: string) {
+  const queryClient = useQueryClient()
+
+  return useEditMutation(
+    {
+      mutationFn: (input: RecordExamResultInput) => correctExamResult(examId, input),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: keys.exams })
+        void queryClient.invalidateQueries({ queryKey: keys.dashboard })
+        void queryClient.invalidateQueries({ queryKey: keys.batches.all })
+        void queryClient.invalidateQueries({ queryKey: keys.profiles.detailAll })
+      },
+    },
+    { success: 'Exam result corrected.', failure: "Couldn't correct the exam result." },
   )
 }
