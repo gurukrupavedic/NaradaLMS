@@ -170,6 +170,42 @@ export async function updateOwned(
 }
 
 /**
+ * The by-id counterpart to {@link findOwnedLocationFields}, for `service.ts::updateByAdmin` — an
+ * admin correcting someone else's profile needs the same effective-location re-derivation as a
+ * self-edit, just without the `userId` predicate. The `deletedAt IS NULL` guard matches `findById`:
+ * a deactivated profile isn't editable, it's gone.
+ */
+export async function findLocationFields(
+  db: SchoolDb,
+  id: string,
+): Promise<{ city: string | null; state: string | null; country: string | null } | undefined> {
+  return db.query.profile.findFirst({
+    where: (t, { and, eq, isNull: isNullCol }) => and(eq(t.id, id), isNullCol(t.deletedAt)),
+    columns: { city: true, state: true, country: true },
+  })
+}
+
+/**
+ * Admin-edit (DD-011-adjacent — a school admin correcting a student's profile, not deactivating
+ * it): identical to `updateOwned` minus the `userId` predicate, since here the actor isn't the
+ * profile's owner. The `deletedAt IS NULL` guard matches `softDeleteById`'s own reasoning: a
+ * deactivated profile 404s the same as a missing one, not something an edit can revive.
+ */
+export async function updateById(
+  db: SchoolDb,
+  id: string,
+  data: UpdateProfileData & { countryTimeZone?: string | null },
+): Promise<Profile | undefined> {
+  const rows = await db
+    .update(profile)
+    .set(data)
+    .where(and(eq(profile.id, id), isNull(profile.deletedAt)))
+    .returning(profileColumns)
+
+  return rows.at(0)
+}
+
+/**
  * Deactivates an owned profile (DD-011): stamps `deletedAt` only. Every other column — name,
  * phone, city — and every `enrollment`/`exam`/`evaluation` row referencing this profile stay
  * exactly as they were, so historical queries ("which batches was this user in", "what did they

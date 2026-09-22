@@ -10,13 +10,15 @@ import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficienc
 import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 
 /**
- * The student's own "edit my profile" form, opened from `components/student-profile-screen.tsx`
- * only when the viewer is looking at their own profile. Every registration-derived field is
- * editable here except `phone` and `yearOfBirth` — `phone` is the BetterAuth login credential
- * (changing it needs its own re-verification flow, not this form), `yearOfBirth` is treated as
- * fixed once recorded. The server enforces the same boundary independently
- * (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`), this is just the matching
- * client-side surface.
+ * The "edit profile" form, opened from `components/student-profile-screen.tsx` either by the
+ * profile's own owner or by a school admin correcting someone else's — same fields, same dialog,
+ * only `updating` and `isSelf` differ between the two (the caller passes `useUpdateProfile` or
+ * `useUpdateProfileByAdmin`, see `lib/query/use-profile-mutations.ts`). Every registration-derived
+ * field is editable here except `phone` and `yearOfBirth` — `phone` is the BetterAuth login
+ * credential (changing it needs its own re-verification flow, not this form, even for an admin),
+ * `yearOfBirth` is treated as fixed once recorded. The server enforces the same boundary
+ * independently on both PATCH routes (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`),
+ * this is just the matching client-side surface.
  */
 
 // The subset of `useMutation`'s return value this dialog needs — see grade-dialog.tsx's identical
@@ -31,11 +33,14 @@ export function EditProfileDialog({
   onOpenChange,
   profile,
   updating,
+  isSelf = true,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   profile: ApiProfile
   updating: UpdateProfileMutation
+  /** False when a school admin is editing someone else's profile — only changes the copy (whose phone/year of birth this is), never the fields. */
+  isSelf?: boolean
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -47,6 +52,7 @@ export function EditProfileDialog({
               key={profile.updatedAt}
               profile={profile}
               updating={updating}
+              isSelf={isSelf}
               onCancel={() => onOpenChange(false)}
             />
           )}
@@ -59,10 +65,12 @@ export function EditProfileDialog({
 function EditProfileForm({
   profile,
   updating,
+  isSelf,
   onCancel,
 }: {
   profile: ApiProfile
   updating: UpdateProfileMutation
+  isSelf: boolean
   onCancel: () => void
 }) {
   const [name, setName] = useState(profile.name)
@@ -122,10 +130,13 @@ function EditProfileForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <Dialog.Title className="display text-[1.125rem]">Edit profile</Dialog.Title>
+        <Dialog.Title className="display text-[1.125rem]">
+          {isSelf ? 'Edit profile' : `Edit ${profile.name}'s profile`}
+        </Dialog.Title>
         <Dialog.Description className="mt-1 text-[0.8125rem] text-ink-muted">
-          Your phone number and year of birth can&apos;t be changed here — phone is used to sign
-          in.
+          {isSelf
+            ? "Your phone number and year of birth can't be changed here — phone is used to sign in."
+            : "Phone number and year of birth can't be changed here — phone is used to sign in."}
         </Dialog.Description>
       </div>
 
@@ -149,7 +160,8 @@ function EditProfileForm({
         />
       </div>
       <p className="-mt-3 text-[0.75rem] text-ink-muted">
-        Your time zone is figured out automatically from your city and state/country.
+        {isSelf ? 'Your' : 'Their'} time zone is figured out automatically from{' '}
+        {isSelf ? 'your' : 'their'} city and state/country.
       </p>
       <TextField
         label="Email"
@@ -172,13 +184,13 @@ function EditProfileForm({
         options={SELF_REPORTED_PROFICIENCY_OPTIONS}
       />
       <TagListField
-        label="Languages you speak"
+        label={isSelf ? 'Languages you speak' : 'Languages they speak'}
         values={spokenLanguages}
         onChange={setSpokenLanguages}
         placeholder="Telugu"
       />
       <TagListField
-        label="Languages you read"
+        label={isSelf ? 'Languages you read' : 'Languages they read'}
         values={readLanguages}
         onChange={setReadLanguages}
         placeholder="English"

@@ -19,7 +19,7 @@ import {
   defaultCourseId,
 } from '../testing/fixtures'
 import * as repository from './repository'
-import { findById, updateProfile } from './service'
+import { findById, updateByAdmin, updateProfile } from './service'
 
 let world: TestWorld | undefined
 
@@ -192,6 +192,57 @@ describe('updateProfile (student self-edit) — countryTimeZone re-derivation', 
     const updated = await updateProfile(context, profileRow.id, { city: 'Hyderabad' })
 
     expect(updated.countryTimeZone).toBe('Asia/Kolkata')
+  })
+})
+
+describe('updateByAdmin (school admin correcting another profile, DD-011-adjacent)', () => {
+  function actor(userId: string): User {
+    return { id: userId, isSuperAdmin: false } as User
+  }
+
+  it('edits a profile with no ownership check — the patch applies even though the actor is not its owner', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-owner', name: 'Original Name' })
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateByAdmin>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin') }
+
+    const updated = await updateByAdmin(context, profileRow.id, { name: 'Corrected Name' })
+
+    expect(updated.name).toBe('Corrected Name')
+  })
+
+  it('re-derives countryTimeZone from the effective location, same as the owner-edit path', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-owner-2', city: 'Cambridge' })
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateByAdmin>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin') }
+
+    const updated = await updateByAdmin(context, profileRow.id, { state: 'MA', country: 'US' })
+
+    expect(updated.countryTimeZone).toBe('America/New_York')
+    expect(updated.city).toBe('Cambridge')
+  })
+
+  it('404s for a deactivated profile — an edit cannot revive one', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-owner-3' })
+    await repository.softDeleteById(world.schoolDb, profileRow.id)
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateByAdmin>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin') }
+
+    await expect(updateByAdmin(context, profileRow.id, { name: 'New Name' })).rejects.toMatchObject({
+      statusCode: 404,
+    })
+  })
+
+  it('404s for a nonexistent profile id', async () => {
+    world = await createTestSchool()
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateByAdmin>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin') }
+
+    await expect(
+      updateByAdmin(context, crypto.randomUUID(), { name: 'New Name' }),
+    ).rejects.toMatchObject({ statusCode: 404 })
   })
 })
 

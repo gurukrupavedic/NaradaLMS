@@ -20,7 +20,7 @@ import {
   defaultCourseId,
 } from '../testing/fixtures'
 import { findById, findByIdWithDetail, findMany, findResultsForStudent } from './repository'
-import { recordExamResult } from './service'
+import { correctExamResult, recordExamResult } from './service'
 
 let world: TestWorld | undefined
 
@@ -397,6 +397,104 @@ describe('recordExamResult (real Postgres, end to end)', () => {
     ).rejects.toMatchObject({ statusCode: 409 })
 
     expect(await seed.w.schoolDb.query.evaluation.findMany()).toHaveLength(2)
+  })
+})
+
+describe('correctExamResult (real Postgres, end to end)', () => {
+  async function seedGradedTrackWithChapters(yearOfBirth: number | null = 1990) {
+    const w = await createTestSchool()
+    const trackRow = await createTrack(w)
+    const chapters = [
+      await createChapter(w, trackRow, { status: 'published' }),
+      await createChapter(w, trackRow, { status: 'published' }),
+    ]
+    const batchRow = await createBatch(w, trackRow)
+    const student = await createProfile(w, { name: 'Student', yearOfBirth })
+    await enroll(w, student, batchRow, 'student')
+    const admin = await createProfile(w, { name: 'Admin' })
+    const examRow = await createExam(w, {
+      student,
+      track: trackRow,
+      batch: batchRow,
+      scheduledAt: new Date('2026-06-15T10:00:00Z'),
+    })
+    await recordExamResult(
+      { db: w.schoolDb },
+      examRow.id,
+      admin.id,
+      { aksharaShuddhi: 45, swaraShuddhi: 27, niyantranaAnargalata: 18, shraavyata: 4, pratishakyaGrammar: 4 },
+    )
+    return { w, trackRow, chapters, batchRow, student, admin, examRow }
+  }
+
+  it('overwrites the marks and outcome in place, and rewrites every published chapter to the corrected level', async () => {
+    const seed = await seedGradedTrackWithChapters()
+    world = seed.w
+
+    // Originally 98 (Prathama Sreni / L4, see seedGradedTrackWithChapters) — correcting down to a
+    // typo-fixed 70 (L1).
+    const corrected = await correctExamResult(
+      { db: seed.w.schoolDb },
+      seed.examRow.id,
+      seed.admin.id,
+      { aksharaShuddhi: 32, swaraShuddhi: 18, niyantranaAnargalata: 12, shraavyata: 4, pratishakyaGrammar: 4 },
+    )
+
+    expect(corrected.status).toBe('completed')
+    expect(corrected.result).toMatchObject({ total: 70, outcome: 'level1', level: 'level1' })
+    // Still exactly one result row — an UPDATE, not a second INSERT.
+    expect(await seed.w.schoolDb.query.examResult.findMany()).toHaveLength(1)
+
+    const evaluations = await seed.w.schoolDb.query.evaluation.findMany({
+      where: (t, { eq: eqCol }) => eqCol(t.studentId, seed.student.id),
+      orderBy: (t, { desc }) => desc(t.evaluatedAt),
+    })
+    // One fresh evaluation per chapter from the correction (on top of the original recording's),
+    // and the latest one per chapter reflects the corrected level.
+    expect(evaluations.length).toBeGreaterThanOrEqual(seed.chapters.length)
+    for (const c of seed.chapters) {
+      const latest = evaluations.find(e => e.chapterId === c.id)
+      expect(latest?.level).toBe('level1')
+    }
+  })
+
+  it('a correction down to reappear leaves existing evaluations untouched', async () => {
+    const seed = await seedGradedTrackWithChapters()
+    world = seed.w
+
+    await correctExamResult(
+      { db: seed.w.schoolDb },
+      seed.examRow.id,
+      seed.admin.id,
+      { aksharaShuddhi: 20, swaraShuddhi: 15, niyantranaAnargalata: 10, shraavyata: 2, pratishakyaGrammar: 2 },
+    )
+
+    const evaluations = await seed.w.schoolDb.query.evaluation.findMany({
+      where: (t, { eq: eqCol }) => eqCol(t.studentId, seed.student.id),
+      orderBy: (t, { desc }) => desc(t.evaluatedAt),
+    })
+    // Only the original recording's evaluations — the reappear correction added none.
+    expect(evaluations).toHaveLength(seed.chapters.length)
+    expect(evaluations.every(e => e.level === 'level4')).toBe(true)
+  })
+
+  it('rejects with 409 when the exam has no result to correct yet', async () => {
+    const w = await createTestSchool()
+    const trackRow = await createTrack(w)
+    const batchRow = await createBatch(w, trackRow)
+    const student = await createProfile(w, { name: 'Student', yearOfBirth: 1990 })
+    const admin = await createProfile(w, { name: 'Admin' })
+    const examRow = await createExam(w, { student, track: trackRow, batch: batchRow })
+    world = w
+
+    await expect(
+      correctExamResult(
+        { db: w.schoolDb },
+        examRow.id,
+        admin.id,
+        { aksharaShuddhi: 45, swaraShuddhi: 27, niyantranaAnargalata: 18, shraavyata: 4, pratishakyaGrammar: 4 },
+      ),
+    ).rejects.toMatchObject({ statusCode: 409 })
   })
 })
 

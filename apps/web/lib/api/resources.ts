@@ -116,6 +116,17 @@ export async function updateProfile(
   return mutateApi<ApiProfile>(`/profiles/${profileId}`, 'PATCH', patch)
 }
 
+// PATCH /v1/profiles/:profileId/admin — a school admin correcting a student's profile (a
+// registration typo, a changed city), not a self-edit. Same field set and shape as the owner-only
+// PATCH above (`UpdateProfileInput`) — the split is authorization only (school-admin vs. owner,
+// `apps/api/src/utils/accessPolicy.ts::requireCanUpdateProfile`), never body shape.
+export async function updateProfileByAdmin(
+  profileId: string,
+  patch: UpdateProfileInput,
+): Promise<ApiProfile> {
+  return mutateApi<ApiProfile>(`/profiles/${profileId}/admin`, 'PATCH', patch)
+}
+
 // GET /v1/profiles/search — admin-only (AccessPolicy.requireCanSearchProfiles). Backs the "add a
 // student" search in components/admin/roster-editor.tsx; `excludeBatchId` filters out profiles who
 // already hold a live seat on that batch's roster at the query level (apps/api/src/profiles/
@@ -407,6 +418,16 @@ export async function recordExamResult(
   input: RecordExamResultInput,
 ): Promise<ApiExam> {
   return mutateApi<ApiExam>(`/exams/${examId}/results`, 'POST', input)
+}
+
+// PATCH /v1/exams/:examId/results — school admin only. Overwrites an already-recorded result (a
+// data-entry mistake, not a second sitting) — same input shape and the same chapter-rewrite
+// behavior as the POST above, just against a sitting that already has one.
+export async function correctExamResult(
+  examId: string,
+  input: RecordExamResultInput,
+): Promise<ApiExam> {
+  return mutateApi<ApiExam>(`/exams/${examId}/results`, 'PATCH', input)
 }
 
 // GET /v1/profiles/:profileId/batches?withDetail=true (the signed-in profile — the real gap closed

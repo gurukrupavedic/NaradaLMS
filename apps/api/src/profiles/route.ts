@@ -18,6 +18,7 @@ import {
   findById,
   findByUserId,
   searchProfiles,
+  updateByAdmin,
   updateProfile,
 } from './service'
 
@@ -106,6 +107,22 @@ router.delete(
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     await deleteById({ db, school, user }, profileId)
     res.status(204).send()
+  }),
+)
+
+// Admin-edit: a separate route from the owner-only PATCH above, since the authorization check
+// (school admin correcting someone else's profile) is a different question from "does the caller
+// own this profile" — same split as the admin-deactivation route below. optionalProfileRoute:
+// requireCanUpdateProfile is purely isSchoolAdmin(), so an admin correcting another student's
+// details shouldn't need an active profile of their own.
+router.patch(
+  '/:profileId/admin',
+  optionalProfileRoute(async ({ req, res, db, school, user, access }) => {
+    const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
+    access.requireCanUpdateProfile()
+    const data = await parse(UpdateProfileSchema, req.body)
+    const profile = await updateByAdmin({ db, school, user }, profileId, data)
+    res.status(200).json({ data: profile })
   }),
 )
 

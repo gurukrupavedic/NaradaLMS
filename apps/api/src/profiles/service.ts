@@ -105,6 +105,45 @@ export async function updateProfile(
 }
 
 /**
+ * A school admin correcting a student's profile details — a different actor and a different
+ * authorization story from `updateProfile` above (`access.requireCanUpdateProfile()` runs in the
+ * route, matching every other admin-gated write here), so this stays a separate function rather
+ * than a `userId`-optional branch inside `updateProfile`. Otherwise identical: `city`/`state`/
+ * `country` still re-derive `countryTimeZone` from the effective (patch-merged-onto-current)
+ * location, just read via the by-id `findLocationFields`/`updateById` instead of the owned
+ * variants.
+ */
+export async function updateByAdmin(
+  context: ProfileServiceContext,
+  id: string,
+  data: UpdateProfileData,
+): Promise<Profile> {
+  let patch: UpdateProfileData & { countryTimeZone?: string | null } = data
+  if (data.city !== undefined || data.state !== undefined || data.country !== undefined) {
+    const current = await repository.findLocationFields(context.db, id)
+    if (!current) {
+      throw notFound()
+    }
+
+    patch = {
+      ...data,
+      countryTimeZone: deriveTimeZone({
+        city: data.city !== undefined ? data.city : current.city,
+        state: data.state !== undefined ? data.state : current.state,
+        country: data.country !== undefined ? data.country : current.country,
+      }),
+    }
+  }
+
+  const row = await repository.updateById(context.db, id, patch)
+  if (!row) {
+    throw notFound()
+  }
+
+  return row
+}
+
+/**
  * Deactivates the caller's own profile (DD-011) instead of physically deleting it: only
  * `deletedAt` is set. Every other column, and every `enrollment`/`exam`/`evaluation` row
  * referencing this profile, is left exactly as it was, so historical queries keep working.

@@ -16,7 +16,7 @@ import {
   type ExamMarkKey,
 } from '@/lib/exam-grading'
 import { profileDetailQuery } from '@/lib/query/options'
-import { useRecordExamResult } from '@/lib/query/use-exam-mutations'
+import { useCorrectExamResult, useRecordExamResult } from '@/lib/query/use-exam-mutations'
 import { PROFICIENCY_LABEL } from '@/lib/proficiency'
 import { narrowLevel } from '@/lib/api/reshape'
 import { cn } from '@/lib/utils'
@@ -27,6 +27,12 @@ import { cn } from '@/lib/utils'
  * the children's bonus, total and outcome shown beside them are a live preview computed by
  * `lib/exam-grading.ts` (a mirror of the API's grading.ts), and the API re-derives all three on
  * save — nothing but the marks is ever sent, so the evaluator can't override the age-based bonus.
+ *
+ * Doubles as the *correction* form: when `sitting.result` is already set (a graded row from the
+ * admin screen's "Graded" section), the draft starts pre-filled from it instead of blank, submits
+ * through `useCorrectExamResult` (PATCH, overwrite in place) instead of `useRecordExamResult`
+ * (POST, first grade), and the copy says "correct" instead of "record" — same fields, same live
+ * preview, different endpoint underneath.
  */
 export function RecordExamResultDialog({
   open,
@@ -75,9 +81,16 @@ function parseMark(raw: string, max: number): number | null {
 }
 
 function ResultForm({ sitting, onCancel }: { sitting: AdminSittingRow; onCancel: () => void }) {
-  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT)
-  const [notes, setNotes] = useState('')
-  const recording = useRecordExamResult(sitting.id)
+  const isCorrection = sitting.result !== null
+  const [draft, setDraft] = useState<Draft>(() =>
+    sitting.result
+      ? Object.fromEntries(EXAM_MARKS.map(mark => [mark.key, String(sitting.result![mark.key])])) as Draft
+      : EMPTY_DRAFT,
+  )
+  const [notes, setNotes] = useState(sitting.result?.notes ?? '')
+  const recordResult = useRecordExamResult(sitting.id)
+  const correctResult = useCorrectExamResult(sitting.id)
+  const recording = isCorrection ? correctResult : recordResult
   const profile = useQuery(profileDetailQuery(sitting.studentId))
 
   const yearOfBirth = profile.data?.profile.yearOfBirth
@@ -107,7 +120,9 @@ function ResultForm({ sitting, onCancel }: { sitting: AdminSittingRow; onCancel:
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <Dialog.Title className="display text-[1.125rem]">Record exam result</Dialog.Title>
+        <Dialog.Title className="display text-[1.125rem]">
+          {isCorrection ? 'Correct exam result' : 'Record exam result'}
+        </Dialog.Title>
         <Dialog.Description className="mt-1 text-[0.8125rem] text-ink-muted">
           {sitting.studentName} — {sitting.track} · {sitting.batchCode}
         </Dialog.Description>
@@ -207,7 +222,7 @@ function ResultForm({ sitting, onCancel }: { sitting: AdminSittingRow; onCancel:
           className="label inline-flex items-center gap-2 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
         >
           {recording.isPending && <Spinner />}
-          {recording.isPending ? 'Saving…' : 'Save result'}
+          {recording.isPending ? 'Saving…' : isCorrection ? 'Save correction' : 'Save result'}
         </button>
       </div>
     </form>

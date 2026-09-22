@@ -118,6 +118,16 @@ export function AdminExamsScreen() {
                       ) : (
                         <span className="label mt-1 shrink-0 text-vermilion">reappear</span>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTarget(sitting)
+                          setOpen(true)
+                        }}
+                        className="label mt-1 shrink-0 border border-ink/25 px-3 py-1.5 text-ink transition-colors hover:border-vermilion hover:text-vermilion"
+                      >
+                        Correct
+                      </button>
                     </li>
                   )
                 })}

@@ -282,6 +282,21 @@ export async function insertResult(
   return rows.at(0)
 }
 
+/**
+ * Overwrites an already-recorded result in place — `service.ts::correctExamResult`'s admin
+ * correction, not a second sitting. `examId` is the table's own primary key, so this is a plain
+ * `UPDATE`, not an upsert; `undefined` (no matching row) means there was no result yet to correct,
+ * which the service treats as a 404 (record one first, via `insertResult`, not this).
+ */
+export async function updateResult(
+  db: SchoolDb,
+  examId: string,
+  values: Omit<typeof examResult.$inferInsert, 'examId'>,
+): Promise<ExamResultRow | undefined> {
+  const rows = await db.update(examResult).set(values).where(eq(examResult.examId, examId)).returning()
+  return rows.at(0)
+}
+
 /** One statement for the whole track — a track has dozens of chapters, so this must never loop. */
 export async function insertEvaluations(
   db: SchoolDb,

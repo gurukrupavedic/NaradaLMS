@@ -7,6 +7,8 @@ import { destroyTestWorld } from '../testing/cleanup'
 import {
   createBatch,
   createCourse,
+  createExam,
+  createExamResult,
   createProfile,
   createTestSchool,
   createTrack,
@@ -363,8 +365,19 @@ describe('asking to join a batch', () => {
   it('409s while the student holds an active seat in that course, but not in another course or on a break', async () => {
     const s = await seedTwoCourses()
     world = s.w
-    const student = await createProfile(world)
+    const student = await createProfile(world, { yearOfBirth: 1990 })
+    const evaluator = await createProfile(world, { name: 'Evaluator' })
     await seat(world, student, s.vedamBatch1, 'student')
+    // vedamTrack2 gates on vedamTrack1 (the L1-minimum prerequisite, enrollmentRequests/
+    // service.ts::request) — this test is about the one-seat-per-course conflict, not that gate,
+    // so clear it up front with a passing result.
+    const prereqExam = await createExam(world, {
+      student,
+      track: s.vedamTrack1,
+      batch: s.vedamBatch1,
+      status: 'completed',
+    })
+    await createExamResult(world, { exam: prereqExam, evaluator })
 
     await expect(requestToJoin(world.schoolDb, s.vedamBatch2.id, student.id)).rejects.toMatchObject(
       {

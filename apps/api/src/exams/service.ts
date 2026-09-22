@@ -194,32 +194,120 @@ export async function recordExamResult(
       throw internalError()
     }
 
-    if (level) {
-      const chapterIds = await repository.findGradableChapterIds(tx, existing.trackId)
-      await withConstraintMapping(
-        () =>
-          repository.insertEvaluations(
-            tx,
-            chapterIds.map(chapterId => ({
-              studentId: existing.studentId,
-              chapterId,
-              batchId: existing.batchId,
-              level,
-              notes,
-              evaluatorId,
-            })),
-          ),
-        {
-          [DbConstraint.evaluationStudentIdFk]: () =>
-            unprocessable('student, chapter, or evaluator no longer exists'),
-          [DbConstraint.evaluationChapterIdFk]: () =>
-            unprocessable('student, chapter, or evaluator no longer exists'),
-          [DbConstraint.evaluationEvaluatorIdFk]: () =>
-            unprocessable('student, chapter, or evaluator no longer exists'),
-        },
-      )
-    }
+    await writeChapterEvaluations(tx, existing, level, evaluatorId, notes)
   })
 
   return findByIdWithDetail(context, id)
+}
+
+/**
+ * A school admin correcting an already-graded sitting's marks (a data-entry mistake), not a
+ * second sitting — `access.requireCanRecordEvaluation` gates this route exactly like the original
+ * recording, since a correction can move the certification level just as much as the first grade
+ * did. Recomputes the bonus/total/outcome from the new marks the same way `recordExamResult` does,
+ * and overwrites the `examResult` row in place (`repository.updateResult`, a plain `UPDATE` on
+ * `examId`'s primary key — never a second row).
+ *
+ * Chapter evaluations are rewritten through the same {@link writeChapterEvaluations} helper as the
+ * original recording, so the two can't drift: a corrected passing outcome is just as much "the
+ * latest word on the whole syllabus" as the first one was, and a corrected `reappear` still leaves
+ * existing evaluations untouched (this only ever adds a fresh evaluation, never retracts one — see
+ * that function's own doc comment).
+ *
+ * No exam-status transition here (the exam is already `completed` and stays that way), so unlike
+ * `recordExamResult` there's no compare-and-set to lose a race on — the transaction only keeps the
+ * `examResult` overwrite and the evaluation rewrite atomic with each other.
+ */
+export async function correctExamResult(
+  context: ExamServiceContext,
+  id: string,
+  evaluatorId: string,
+  data: RecordExamResultData,
+): Promise<ExamWithDetail> {
+  const existing = await findById(context, id)
+  if (existing.status !== 'completed') {
+    throw conflict(
+      `cannot correct a result for an exam in '${existing.status}' status — none has been recorded yet`,
+    )
+  }
+
+  const yearOfBirth = await repository.findStudentYearOfBirth(context.db, existing.studentId)
+  if (yearOfBirth === undefined) {
+    throw unprocessable(
+      "the student's year of birth isn't on file, so the children's bonus can't be worked out",
+    )
+  }
+
+  const { notes, ...marks } = data
+  const graded = gradeExam(marks, yearOfBirth, existing.scheduledAt.getUTCFullYear())
+  const level = levelForOutcome(graded.outcome)
+
+  await context.db.transaction(async tx => {
+    const updated = await withConstraintMapping(
+      () =>
+        repository.updateResult(tx, id, {
+          ...marks,
+          ...graded,
+          notes,
+          evaluatorId,
+          evaluatedAt: new Date(),
+        }),
+      {
+        [DbConstraint.examResultEvaluatorIdFk]: () => unprocessable('evaluator no longer exists'),
+      },
+    )
+    if (!updated) {
+      // The precheck above ruled out "no result yet" — the only other way this matches zero rows
+      // is the exam having been deleted between that read and here.
+      throw notFound()
+    }
+
+    await writeChapterEvaluations(tx, existing, level, evaluatorId, notes)
+  })
+
+  return findByIdWithDetail(context, id)
+}
+
+/**
+ * A passing outcome (L1–L4) is written as a fresh evaluation on every published chapter of the
+ * track — deliberately allowed to lower a chapter's grade, since a result (original or corrected)
+ * is the latest word on the whole syllabus. `reappear` grants no level, so this only ever adds
+ * evaluations, never retracts the ones a since-corrected result implied. Shared by
+ * `recordExamResult` and `correctExamResult` so the two can't disagree about what a result implies
+ * for the chapters underneath it.
+ */
+async function writeChapterEvaluations(
+  db: SchoolDb,
+  exam: Exam,
+  level: ReturnType<typeof levelForOutcome>,
+  evaluatorId: string,
+  notes: string | undefined,
+): Promise<void> {
+  if (!level) {
+    return
+  }
+
+  const chapterIds = await repository.findGradableChapterIds(db, exam.trackId)
+  await withConstraintMapping(
+    () =>
+      repository.insertEvaluations(
+        db,
+        chapterIds.map(chapterId => ({
+          studentId: exam.studentId,
+          chapterId,
+          batchId: exam.batchId,
+          level,
+          notes,
+          evaluatorId,
+        })),
+      ),
+    {
+      [DbConstraint.evaluationStudentIdFk]: () =>
+        unprocessable('student, chapter, or evaluator no longer exists'),
+      [DbConstraint.evaluationChapterIdFk]: () =>
+        unprocessable('student, chapter, or evaluator no longer exists'),
+      [DbConstraint.evaluationEvaluatorIdFk]: () =>
+        unprocessable('student, chapter, or evaluator no longer exists'),
+    },
+  )
 }

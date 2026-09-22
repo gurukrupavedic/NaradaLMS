@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import { keys } from '@/lib/query/options'
 import { useEditMutation } from '@/lib/query/use-edit-mutation'
-import { updateProfile, type UpdateProfileInput } from '@/lib/api/resources'
+import { updateProfile, updateProfileByAdmin, type UpdateProfileInput } from '@/lib/api/resources'
 
 /**
  * The student's own "edit my profile" form (components/edit-profile-dialog.tsx). Only the target
@@ -22,5 +22,25 @@ export function useUpdateProfile(profileId: string) {
       },
     },
     { success: 'Profile saved.', failure: "Couldn't save your profile." },
+  )
+}
+
+/**
+ * A school admin's "edit this student's profile" form — same dialog, same field set
+ * (components/edit-profile-dialog.tsx), just posted through the admin-authorized PATCH
+ * (`updateProfileByAdmin`) instead of the owner-only one, for a profile the signed-in admin
+ * doesn't own themselves.
+ */
+export function useUpdateProfileByAdmin(profileId: string) {
+  const queryClient = useQueryClient()
+
+  return useEditMutation(
+    {
+      mutationFn: (patch: UpdateProfileInput) => updateProfileByAdmin(profileId, patch),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: keys.profiles.detail(profileId) })
+      },
+    },
+    { success: 'Profile saved.', failure: "Couldn't save the student's profile." },
   )
 }
