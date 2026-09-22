@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 
 import { ChevronDown } from 'lucide-react'
 
@@ -11,8 +12,10 @@ import { CommandPalette } from '@/components/command-palette'
 import { CourseAccess } from '@/components/course-access'
 import { CourseSwitcher } from '@/components/course-switcher'
 import { useSignOut } from '@/lib/auth/use-sign-out'
+import { useSwitchProfile } from '@/lib/auth/use-switch-profile'
 import { useCoursePath } from '@/lib/course'
 import { coursePath } from '@/lib/course-path'
+import { myProfilesQuery } from '@/lib/query/options'
 import {
   useHasAdminAccess,
   useSelectedProfileId,
@@ -106,6 +109,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const profileName = useSelectedProfileName()
   const hasAdminAccess = useHasAdminAccess()
   const selectedProfileId = useSelectedProfileId()
+  const switchProfile = useSwitchProfile()
+  // Only fetched to answer "is there anyone else to switch to" — a household sharing one phone
+  // number across several children's profiles (see use-switch-profile.ts's own doc comment) is a
+  // real case here, not a hypothetical, but most accounts hold exactly one profile, and the menu
+  // simply omits the switcher rows entirely rather than showing a single-item dead end.
+  const { data: myProfiles } = useQuery(myProfilesQuery())
+  const otherProfiles = (myProfiles ?? []).filter(profile => profile.id !== selectedProfileId)
   // Hidden until access resolves, not just when it's false — showing the link and then
   // yanking it away a moment later reads as more broken than a one-tick-later appearance.
   const nav = NAV.filter(item => item.path !== '/admin' || hasAdminAccess).map(item => ({
@@ -184,8 +194,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <DropdownMenuContent
                   align="end"
                   sideOffset={10}
-                  className="min-w-40 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
+                  className="min-w-48 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
                 >
+                  {/* A household sharing one phone number across several children's profiles
+                      (use-switch-profile.ts's own doc comment) — omitted entirely rather than a
+                      single dead-end row when this account only has the one profile. */}
+                  {otherProfiles.map(profile => (
+                    <MenuRow key={profile.id} onClick={() => switchProfile(profile)}>
+                      <span className="flex min-w-0 items-center gap-2.5">
+                        <span
+                          aria-hidden
+                          className="grid size-6 shrink-0 place-items-center border border-rule bg-card font-label text-[0.5625rem] text-ink-muted"
+                        >
+                          {profile.name.charAt(0)}
+                        </span>
+                        <span className="min-w-0 truncate">Switch to {profile.name}</span>
+                      </span>
+                    </MenuRow>
+                  ))}
                   {profileHref && <MenuRow render={<Link href={profileHref} />}>Profile</MenuRow>}
                   <MenuRow render={<Link href={cp('/settings')} />}>Settings</MenuRow>
                   <MenuRow onClick={handleSignOut}>Sign out</MenuRow>
