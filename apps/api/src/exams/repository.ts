@@ -1,7 +1,8 @@
-import { and, asc, desc, eq, getTableColumns, gt, inArray, ne, or, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns, gt, inArray, lt, ne, notInArray, or, type SQL } from 'drizzle-orm'
 
-import { chapter, evaluation, exam, examResult, track, type SchoolDb } from '@narada/db'
+import { chapter, evaluation, exam, examResult, profile, track, type SchoolDb } from '@narada/db'
 
+import { tokenMatch } from '../utils/search'
 import type { ExamReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
 import { levelForOutcome } from './grading'
@@ -18,10 +19,16 @@ import type {
 export type Evaluation = typeof evaluation.$inferSelect
 type ExamResultRow = typeof examResult.$inferSelect
 
-/** What a `GET /exams`-style read eager-loads: the track's name and the result (if any). */
+/**
+ * What a `GET /exams`-style read eager-loads: the track's name, the result (if any), and the
+ * sitting's student/batch — the admin exams screen renders these directly off each exam row
+ * rather than cross-referencing a separate (paginated, possibly-incomplete) batch roster fetch.
+ */
 const DETAIL = {
   track: { columns: { id: true, name: true } },
   result: true,
+  student: { columns: { id: true, name: true } },
+  batch: { columns: { id: true, code: true } },
 } as const
 
 // `level` is derived from `outcome` rather than stored (a `reappear` grants none), so a stored
@@ -47,7 +54,7 @@ function tracksOfCourse(db: SchoolDb, courseId: string) {
 
 export async function findMany(
   db: SchoolDb,
-  { status, cursor, limit }: FindExamsData,
+  { status, cursor, limit, query, graded, sort }: FindExamsData,
   scope: ExamReadScope,
   courseId: string,
 ): Promise<{ items: ExamWithDetail[]; nextCursor: string | null }> {
@@ -68,20 +75,41 @@ export async function findMany(
     conditions.push(eq(exam.status, status))
   }
 
+  if (graded !== undefined) {
+    const gradedExamIds = db.select({ examId: examResult.examId }).from(examResult)
+    conditions.push(
+      graded
+        ? inArray(exam.id, gradedExamIds)
+        : and(notInArray(exam.id, gradedExamIds), ne(exam.status, 'cancelled'))!,
+    )
+  }
+
+  if (query) {
+    const match = tokenMatch(query, [profile.name])
+    if (match) {
+      conditions.push(inArray(exam.studentId, db.select({ id: profile.id }).from(profile).where(match)))
+    }
+  }
+
   if (cursor) {
     // `or()` is only typed as possibly-undefined for a zero-argument call; both
     // branches here are always-defined `SQL`, so the result is never undefined.
     conditions.push(
       or(
-        gt(exam.scheduledAt, cursor.scheduledAt),
-        and(eq(exam.scheduledAt, cursor.scheduledAt), gt(exam.id, cursor.id)),
+        sort === 'desc' ? lt(exam.scheduledAt, cursor.scheduledAt) : gt(exam.scheduledAt, cursor.scheduledAt),
+        and(
+          eq(exam.scheduledAt, cursor.scheduledAt),
+          sort === 'desc' ? lt(exam.id, cursor.id) : gt(exam.id, cursor.id),
+        ),
       )!,
     )
   }
 
+  const orderCol = sort === 'desc' ? desc(exam.scheduledAt) : asc(exam.scheduledAt)
+  const orderId = sort === 'desc' ? desc(exam.id) : asc(exam.id)
   const rows = await db.query.exam.findMany({
     where: and(...conditions),
-    orderBy: [asc(exam.scheduledAt), asc(exam.id)],
+    orderBy: [orderCol, orderId],
     limit: limit + 1,
     with: DETAIL,
   })

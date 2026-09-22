@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { CreateExamSchema, RecordExamResultSchema, UpdateExamSchema } from './schema'
+import { CreateExamSchema, FindExamsSchema, RecordExamResultSchema, UpdateExamSchema } from './schema'
 
 // Explicit factory (rather than the real module) so importing `./schema` doesn't pull in
 // `@narada/db` at import time and trigger real env-var validation — never loads.
@@ -23,6 +23,11 @@ vi.mock('@narada/db', () => ({
   },
   chapterStatus: { enumValues: ['draft', 'published'] },
   script: { enumValues: ['te', 'sa', 'en'] },
+  // Pulled in transitively via `./schema`'s `ProfileSchema`/`BatchSchema` imports for
+  // `ExamWithDetailSchema`'s `student`/`batch` fields.
+  batchStatus: { enumValues: ['upcoming', 'active', 'completed'] },
+  enrollmentRole: { enumValues: ['instructor', 'ta', 'student'] },
+  enrollmentStatus: { enumValues: ['active', 'break', 'dropped', 'inactive'] },
 }))
 
 const studentId = crypto.randomUUID()
@@ -137,6 +142,32 @@ describe('RecordExamResultSchema', () => {
       expect(result.data).not.toHaveProperty('total')
       expect(result.data).not.toHaveProperty('outcome')
       expect(result.data).not.toHaveProperty('level')
+    }
+  })
+})
+
+describe('FindExamsSchema', () => {
+  it('parses graded=false to boolean false — z.stringbool(), unlike z.coerce.boolean(), handles this correctly', () => {
+    const result = FindExamsSchema.safeParse({ graded: 'false' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.graded).toBe(false)
+    }
+  })
+
+  it('parses graded=true to boolean true', () => {
+    const result = FindExamsSchema.safeParse({ graded: 'true' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.graded).toBe(true)
+    }
+  })
+
+  it('leaves graded undefined when omitted', () => {
+    const result = FindExamsSchema.safeParse({})
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.graded).toBeUndefined()
     }
   })
 })

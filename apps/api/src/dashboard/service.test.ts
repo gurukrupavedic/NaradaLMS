@@ -245,6 +245,8 @@ describe('getDashboardData', () => {
         status: 'scheduled' as const,
         track: { id: 'track-1', courseId: 'course-1', name: 'Track 1' },
         result: null,
+        student: { id: 'me', name: 'Me' },
+        batch: { id: 'batch-A', code: 'BATCH-A' },
       },
     ]
 

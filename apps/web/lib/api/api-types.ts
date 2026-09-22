@@ -212,7 +212,9 @@ export type ApiExamResult = {
   evaluatedAt: string
 }
 
-// A sitting is per track, not per chapter. `result` is null until it's graded.
+// A sitting is per track, not per chapter. `result` is null until it's graded. `student`/`batch`
+// are eager-loaded server-side (packages/db's `examRelations`) so the admin exams screen can
+// render a row without a separate, potentially-truncated batch-roster cross-reference.
 export type ApiExam = {
   id: string
   trackId: string
@@ -222,6 +224,8 @@ export type ApiExam = {
   status: 'scheduled' | 'inProgress' | 'completed' | 'cancelled'
   track: { id: string; name: string }
   result: ApiExamResult | null
+  student: { id: string; name: string }
+  batch: { id: string; code: string }
 }
 
 // One entry of the dashboard's `examResults` — a graded sitting, with the track it was on (the

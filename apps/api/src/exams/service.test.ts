@@ -164,6 +164,8 @@ describe('recordExamResult', () => {
     status: 'completed' as const,
     track: { id: 'track-1', name: 'Track 1' },
     result: null,
+    student: { id: 'student-1', name: 'Student One' },
+    batch: { id: 'batch-1', code: 'BATCH-1' },
   }
 
   beforeEach(() => {
@@ -384,6 +386,8 @@ describe('findByIdWithDetail', () => {
       status: 'scheduled' as const,
       track: { id: 'track-1', name: 'Track 1' },
       result: null,
+      student: { id: 'student-1', name: 'Student One' },
+      batch: { id: 'batch-1', code: 'BATCH-1' },
     }
     vi.mocked(repository.findByIdWithDetail).mockResolvedValue(detail)
 
