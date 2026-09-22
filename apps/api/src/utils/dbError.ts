@@ -79,6 +79,20 @@ function getPgErrorCode(error: unknown): string | undefined {
 }
 
 /**
+ * The real Postgres constraint name behind a thrown error, if any — for a caller that needs to
+ * branch on *which* known constraint fired rather than just translate it to a fixed `AppError`
+ * (`withConstraintMapping`'s job). `batches/service.ts::createBatch` is the one case today: a
+ * generated-code collision should retry with the next index, not surface as a 409, so it can't go
+ * through the ordinary mapping.
+ */
+export function constraintNameOf(error: unknown): DbConstraint | undefined {
+  const constraint = unwrapPgError(error)?.constraint
+  return constraint && (Object.values(DbConstraint) as string[]).includes(constraint)
+    ? (constraint as DbConstraint)
+    : undefined
+}
+
+/**
  * Drizzle wraps every query error in a `DrizzleQueryError` whose real pg error (with `.code` and
  * `.constraint`) is nested in `.cause`, not directly on the thrown value. This unwraps up to a
  * few levels of `.cause` to find the first object exposing a string `.code` or `.constraint`,

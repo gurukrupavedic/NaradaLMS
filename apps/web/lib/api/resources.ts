@@ -660,15 +660,28 @@ export async function moveEnrollmentToBatch(
 
 // POST /v1/batches — admin-only. Every batch not marked completed is immediately requestable
 // (GET /v1/batches/open), so there's nothing enrollment-related left for this call to configure.
+// `classifier`, not `code`: the code is generated server-side
+// (`apps/api/src/batches/service.ts::createBatch`) as `<COURSE>-<year>-<CLASSIFIER>-<track
+// order>-<index>` — the current calendar year, never client-supplied, and `index`
+// auto-increments per (course, year, classifier, track). See `fetchBatchClassifiers` below for
+// the classifier dropdown this pairs with.
 export type CreateBatchInput = {
   trackId: string
-  code: string
+  classifier: string
   startDate?: string | null
   meetingUrl?: string | null
 }
 
 export async function createBatch(input: CreateBatchInput): Promise<ApiBatch> {
   return mutateApi<ApiBatch>('/batches', 'POST', input)
+}
+
+// GET /v1/batches/classifiers — admin-only. Every classifier already in use in the current
+// course's batch codes (e.g. "CH", "TEACH", "REM"), for the create-batch form's dropdown —
+// alongside a free-text option to introduce a new one, since this list is only ever a seed, not a
+// closed set.
+export async function fetchBatchClassifiers(): Promise<string[]> {
+  return fetchApi<string[]>('/batches/classifiers')
 }
 
 // GET /v1/tracks — admin view, drafts included. Reads through the store (lib/api/store.ts), which

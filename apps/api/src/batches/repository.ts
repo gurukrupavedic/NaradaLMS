@@ -397,20 +397,75 @@ export async function findAllForProfiles(
   return map
 }
 
-/** The course a track belongs to — what a new batch must carry as its own `courseId`. `undefined` if there is no such track. */
-export async function findTrackCourseId(db: SchoolDb, trackId: string): Promise<string | undefined> {
-  const row = await db.query.track.findFirst({
+/**
+ * The course a track belongs to, and its position within that course — what a new batch must
+ * carry as its own `courseId`, and what `service.ts::createBatch` needs to generate the code's
+ * `<track order>` segment. `undefined` if there is no such track.
+ */
+export async function findTrackForBatch(
+  db: SchoolDb,
+  trackId: string,
+): Promise<{ courseId: string; order: number } | undefined> {
+  return db.query.track.findFirst({
     where: (t, { eq: eqCol }) => eqCol(t.id, trackId),
-    columns: { courseId: true },
+    columns: { courseId: true, order: true },
   })
-
-  return row?.courseId
 }
 
-/** `courseId` must be the track's own (composite foreign key `batch_trackId_courseId_fk`), so the service fills it from {@link findTrackCourseId}. */
+/**
+ * One past the highest `-<index>` already used among batches whose code starts with `codePrefix`
+ * (everything up to but not including that trailing index) — `service.ts::createBatch`'s next
+ * index. The *highest* index, not a count: a code can predate this feature or have been
+ * hand-edited (`UpdateBatchSchema` still allows that) to some index this table never generated in
+ * sequence, and counting rows would collide with (or reuse) one of those instead of moving past
+ * it. The candidate set — batches sharing the exact same course/year/classifier/track — is always
+ * small, so filtering in SQL by prefix and parsing the exact suffix in JS (rather than a Postgres
+ * regex capture) is simpler for the same result.
+ */
+export async function nextBatchIndex(db: SchoolDb, codePrefix: string): Promise<number> {
+  const rows = await db
+    .select({ code: batch.code })
+    .from(batch)
+    .where(sql`${batch.code} LIKE ${`${codePrefix}-%`}`)
+
+  const suffix = new RegExp(`^${codePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`)
+  let max = 0
+  for (const row of rows) {
+    const match = suffix.exec(row.code)
+    if (match) {
+      max = Math.max(max, Number(match[1]))
+    }
+  }
+
+  return max + 1
+}
+
+/**
+ * Every distinct classifier already in use in `courseId`'s batch codes — `route.ts`'s
+ * `GET /batches/classifiers`, backing the create-batch form's dropdown. Parsed from `code` itself
+ * (`<COURSE>-<year>-<CLASSIFIER>-<track order>-<index>`) rather than a dedicated column: codes
+ * predating this feature (including ones with no classifier segment at all, or the legacy
+ * `TEACH`/`REM` shapes `tools/src/parse/tracker.ts` produced) are still real batches, and this
+ * only has to be a reasonable seed list for the dropdown, not an authoritative source of truth.
+ */
+export async function findClassifiers(db: SchoolDb, courseId: string): Promise<string[]> {
+  const rows = await db.select({ code: batch.code }).from(batch).where(eq(batch.courseId, courseId))
+
+  const classifiers = new Set<string>()
+  for (const row of rows) {
+    const segment = row.code.split('-').at(2)
+    if (segment && !/^\d+$/.test(segment)) {
+      classifiers.add(segment.toUpperCase())
+    }
+  }
+
+  return [...classifiers].sort()
+}
+
+/** `courseId` must be the track's own (composite foreign key `batch_trackId_courseId_fk`), so the service fills it from {@link findTrackForBatch}. */
 export async function insert(
   db: SchoolDb,
-  data: CreateBatchData & { courseId: string },
+  data: Omit<CreateBatchData, 'classifier'> & { code: string; courseId: string },
 ): Promise<Batch | undefined> {
   const rows = await db.insert(batch).values(data).returning()
   return rows.at(0)

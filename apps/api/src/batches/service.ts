@@ -4,7 +4,7 @@ import { conflict, internalError, notFound, unprocessable } from '../error'
 import * as examRepository from '../exams/repository'
 import * as trackRepository from '../tracks/repository'
 import type { BatchReadScope } from '../utils/accessPolicy'
-import { DbConstraint, withConstraintMapping } from '../utils/dbError'
+import { constraintNameOf, DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
 import type {
   Batch,
@@ -61,30 +61,66 @@ export async function findByIdWithMembers(
   return row
 }
 
+// Retries beat asking the caller to resubmit for what's normally a same-request race (two admins
+// generating a batch for the same course/year/classifier/track within moments of each other) —
+// each attempt re-reads `nextBatchIndex`, so a retry moves past whatever just collided rather than
+// recomputing the same losing index. Five is generous for a collision that should be rare in
+// practice; a caller that exhausts it gets a real 409 rather than looping forever.
+const MAX_CODE_ATTEMPTS = 5
+
+/**
+ * The batch code is generated here, not accepted from the request (see `CreateBatchSchema`'s own
+ * doc comment): `<COURSE>-<year>-<CLASSIFIER>-<track order>-<index>`, the current calendar year
+ * and the next unused index for that exact combination. `courseSlug` comes from the request's own
+ * course context (`getCourse()` in the route) rather than a second lookup here — the route already
+ * resolved it to serve this endpoint at all.
+ */
 export async function createBatch(
   context: BatchServiceContext,
   data: CreateBatchData,
+  courseSlug: string,
 ): Promise<Batch> {
+  const { classifier, ...rest } = data
+
   // A batch's course is its track's course — copied down rather than accepted from the request, and
   // the composite foreign key refuses any other value.
-  const courseId = await repository.findTrackCourseId(context.db, data.trackId)
-  if (!courseId) {
+  const track = await repository.findTrackForBatch(context.db, data.trackId)
+  if (!track) {
     throw unprocessable('unknown or invalid track')
   }
 
-  const row = await withConstraintMapping(
-    () => repository.insert(context.db, { ...data, courseId }),
-    {
-      [DbConstraint.batchTrackIdFk]: () => unprocessable('unknown or invalid track'),
-      [DbConstraint.batchCodeUnique]: () => conflict('a batch with this code already exists'),
-    },
-  )
+  const year = new Date().getUTCFullYear()
+  const codePrefix = `${courseSlug.toUpperCase()}-${year}-${classifier}-${track.order}`
 
-  if (!row) {
-    throw internalError()
+  for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
+    const index = await repository.nextBatchIndex(context.db, codePrefix)
+    const code = `${codePrefix}-${index}`
+
+    try {
+      const row = await repository.insert(context.db, { ...rest, code, courseId: track.courseId })
+      if (!row) {
+        throw internalError()
+      }
+
+      return row
+    } catch (error) {
+      const constraint = constraintNameOf(error)
+      if (constraint === DbConstraint.batchTrackIdFk) {
+        throw unprocessable('unknown or invalid track')
+      }
+      if (constraint !== DbConstraint.batchCodeUnique) {
+        throw error
+      }
+      // A concurrent create landed this exact index first — loop and try the next one.
+    }
   }
 
-  return row
+  throw conflict('could not generate a unique batch code — try again')
+}
+
+/** Every classifier already in use in `courseId`'s batch codes, for the create-batch form's dropdown. */
+export async function findClassifiers(context: BatchServiceContext, courseId: string): Promise<string[]> {
+  return repository.findClassifiers(context.db, courseId)
 }
 
 /**

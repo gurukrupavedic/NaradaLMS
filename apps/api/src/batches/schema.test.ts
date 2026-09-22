@@ -16,7 +16,7 @@ describe('CreateBatchSchema', () => {
   it('accepts a valid body with startDate and meetingUrl', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
-      code: 'B1',
+      classifier: 'BR',
       startDate: '2024-01-01T00:00:00Z',
       meetingUrl: 'https://zoom.us/j/123',
     })
@@ -26,7 +26,7 @@ describe('CreateBatchSchema', () => {
   it('accepts null startDate and meetingUrl', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
-      code: 'B1',
+      classifier: 'BR',
       startDate: null,
       meetingUrl: null,
     })
@@ -34,14 +34,14 @@ describe('CreateBatchSchema', () => {
   })
 
   it('accepts omitted startDate and meetingUrl', () => {
-    const result = CreateBatchSchema.safeParse({ trackId, code: 'B1' })
+    const result = CreateBatchSchema.safeParse({ trackId, classifier: 'BR' })
     expect(result.success).toBe(true)
   })
 
   it('rejects a date-only startDate', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
-      code: 'B1',
+      classifier: 'BR',
       startDate: '2024-01-01',
     })
     expect(result.success).toBe(false)
@@ -50,7 +50,7 @@ describe('CreateBatchSchema', () => {
   it('rejects a plain http meetingUrl', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
-      code: 'B1',
+      classifier: 'BR',
       meetingUrl: 'http://zoom.us/j/123',
     })
     expect(result.success).toBe(false)
@@ -59,12 +59,32 @@ describe('CreateBatchSchema', () => {
   it('rejects a javascript: meetingUrl', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
-      code: 'B1',
+      classifier: 'BR',
       meetingUrl: 'javascript:alert(1)',
     })
     expect(result.success).toBe(false)
   })
 
+  it('uppercases a lowercase classifier', () => {
+    const result = CreateBatchSchema.safeParse({ trackId, classifier: 'teach' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.classifier).toBe('TEACH')
+    }
+  })
+
+  it('rejects an empty classifier', () => {
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: '' }).success).toBe(false)
+  })
+
+  it('rejects a classifier with spaces or punctuation', () => {
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'B R' }).success).toBe(false)
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'BR-1' }).success).toBe(false)
+  })
+
+  it('rejects a missing classifier', () => {
+    expect(CreateBatchSchema.safeParse({ trackId }).success).toBe(false)
+  })
 })
 
 describe('UpdateBatchSchema', () => {

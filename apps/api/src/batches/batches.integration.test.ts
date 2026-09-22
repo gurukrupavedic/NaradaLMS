@@ -9,6 +9,7 @@ import { pgErrorCode } from '../testing/concurrency'
 import {
   createBatch,
   createChapter,
+  createCourse,
   createProfile,
   createTestSchool,
   createTrack,
@@ -24,8 +25,13 @@ import {
   findByIdWithMembers,
   insertClassSlots,
 } from './repository'
-import { UpdateBatchSchema } from './schema'
-import { setClassSlots, updateBatch } from './service'
+import { CreateBatchSchema, UpdateBatchSchema } from './schema'
+import {
+  createBatch as createBatchViaService,
+  findClassifiers,
+  setClassSlots,
+  updateBatch,
+} from './service'
 
 let world: TestWorld | undefined
 
@@ -552,5 +558,101 @@ describe('updateBatch (real gap: PATCH /batches/:batchId must not accept trackId
 
     expect(updated.code).toBe('renamed')
     expect(updated.trackId).toBe(originalTrack.id)
+  })
+})
+
+describe('createBatch generates the code (real gap: manual code entry replaced)', () => {
+  const YEAR = new Date().getUTCFullYear()
+
+  // Mirrors exactly what the route does: parse the request body through the real schema (so the
+  // classifier's uppercase transform actually runs), then hand the result to the service — not a
+  // hand-constructed service call, same convention as the `updateBatch` test above.
+  async function create(db: TestWorld['schoolDb'], trackId: string, classifier: string, courseSlug: string) {
+    const data = await parse(CreateBatchSchema, { trackId, classifier })
+    return createBatchViaService({ db }, data, courseSlug)
+  }
+
+  it('builds <COURSE>-<year>-<CLASSIFIER>-<track order>-<index>, uppercasing the classifier', async () => {
+    world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved' })
+    const track = await createTrack(world, { course, order: 3 })
+
+    const batch = await create(world.schoolDb, track.id, 'br', course.slug)
+
+    expect(batch.code).toBe(`VED-${YEAR}-BR-3-1`)
+  })
+
+  it('auto-increments the index for a second batch with the same course/year/classifier/track', async () => {
+    world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved' })
+    const track = await createTrack(world, { course, order: 1 })
+
+    const first = await create(world.schoolDb, track.id, 'CH', course.slug)
+    const second = await create(world.schoolDb, track.id, 'CH', course.slug)
+
+    expect(first.code).toBe(`VED-${YEAR}-CH-1-1`)
+    expect(second.code).toBe(`VED-${YEAR}-CH-1-2`)
+  })
+
+  it('keeps a separate index sequence per classifier and per track', async () => {
+    world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved' })
+    const track1 = await createTrack(world, { course, order: 1 })
+    const track2 = await createTrack(world, { course, order: 2 })
+
+    const chOnTrack1 = await create(world.schoolDb, track1.id, 'CH', course.slug)
+    const remOnTrack1 = await create(world.schoolDb, track1.id, 'REM', course.slug)
+    const chOnTrack2 = await create(world.schoolDb, track2.id, 'CH', course.slug)
+
+    expect(chOnTrack1.code).toBe(`VED-${YEAR}-CH-1-1`)
+    expect(remOnTrack1.code).toBe(`VED-${YEAR}-REM-1-1`)
+    expect(chOnTrack2.code).toBe(`VED-${YEAR}-CH-2-1`)
+  })
+
+  it('generates a fresh, non-colliding index even when an earlier one was hand-edited to a higher number', async () => {
+    world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved' })
+    const track = await createTrack(world, { course, order: 1 })
+    const first = await create(world.schoolDb, track.id, 'CH', course.slug)
+    await updateBatch({ db: world.schoolDb }, first.id, { code: `VED-${YEAR}-CH-1-9` })
+
+    const second = await create(world.schoolDb, track.id, 'CH', course.slug)
+
+    expect(second.code).toBe(`VED-${YEAR}-CH-1-10`)
+  })
+
+  it('422s for a track that does not exist, without inserting a batch', async () => {
+    world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved' })
+
+    await expect(create(world.schoolDb, crypto.randomUUID(), 'CH', course.slug)).rejects.toMatchObject({
+      statusCode: 422,
+    })
+  })
+})
+
+describe('findClassifiers (real gap: create-batch form dropdown)', () => {
+  it('lists distinct classifiers already used in this course, excluding a bare track number', async () => {
+    world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved' })
+    const track = await createTrack(world, { course, order: 1 })
+    const data = (classifier: string) => parse(CreateBatchSchema, { trackId: track.id, classifier })
+    await createBatchViaService({ db: world.schoolDb }, await data('CH'), course.slug)
+    await createBatchViaService({ db: world.schoolDb }, await data('CH'), course.slug)
+    await createBatchViaService({ db: world.schoolDb }, await data('GR'), course.slug)
+    // A legacy-style code with no classifier segment at all (<COURSE>-<year>-<track>-<index>) —
+    // must not surface "1" (the track order) as if it were a real classifier.
+    await createBatch(world, track, { code: `VED-${new Date().getUTCFullYear()}-1-5` })
+
+    const classifiers = await findClassifiers({ db: world.schoolDb }, course.id)
+
+    expect(classifiers).toEqual(['CH', 'GR'])
+  })
+
+  it('returns an empty list for a course with no batches yet', async () => {
+    world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved' })
+
+    await expect(findClassifiers({ db: world.schoolDb }, course.id)).resolves.toEqual([])
   })
 })

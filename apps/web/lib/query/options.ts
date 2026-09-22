@@ -5,8 +5,10 @@ import {
   fetchAdminBatches,
   fetchAdminSittings,
   fetchAuthProfile,
+  fetchBatchClassifiers,
   fetchBatchesWithRoster,
   fetchCatalogTrack,
+  fetchProfiles,
   fetchCatalogTracks,
   fetchChapter,
   fetchChapterDetail,
@@ -70,6 +72,7 @@ export const keys = {
     // even though it hits the same endpoint, since it keeps the raw roster `all`'s own fetcher
     // discards after reshaping (see `fetchBatchesWithRoster`'s doc comment).
     withRoster: ['batches', 'withRoster'] as const,
+    classifiers: ['batches', 'classifiers'] as const,
   },
 
   catalog: {
@@ -103,6 +106,10 @@ export const keys = {
     searchAll: ['profiles', 'search'] as const,
     search: (query: string, excludeBatchId: string) =>
       ['profiles', 'search', query, excludeBatchId] as const,
+    // Every profile the signed-in *account* holds (app-shell.tsx's profile switcher) — the same
+    // GET /profiles the login page's own picker uses, scoped by session rather than by the
+    // currently active profile, so it works the same whichever profile is active when it's asked.
+    mine: ['profiles', 'mine'] as const,
   },
 } as const
 
@@ -207,10 +214,30 @@ export const openBatchesQuery = () =>
     staleTime: 30_000,
   })
 
+// The create-batch form's classifier dropdown — a short, rarely-changing list, so a generous
+// staleTime (matching catalogTracksQuery's own reasoning) avoids a refetch every time the form
+// opens.
+export const batchClassifiersQuery = () =>
+  queryOptions({
+    queryKey: keys.batches.classifiers,
+    queryFn: fetchBatchClassifiers,
+    staleTime: CATALOG_STALE_TIME,
+  })
+
 export const catalogTracksQuery = () =>
   queryOptions({
     queryKey: keys.catalog.list(),
     queryFn: fetchCatalogTracks,
+    staleTime: CATALOG_STALE_TIME,
+  })
+
+// app-shell.tsx's profile switcher: who else this account could switch to. A household's set of
+// profiles is effectively static within a session (nobody's adding a sibling mid-visit), so this
+// shares catalogTracksQuery's own generous staleTime rather than refetching on every dropdown open.
+export const myProfilesQuery = () =>
+  queryOptions({
+    queryKey: keys.profiles.mine,
+    queryFn: fetchProfiles,
     staleTime: CATALOG_STALE_TIME,
   })
 

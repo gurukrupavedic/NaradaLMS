@@ -410,7 +410,8 @@ describe('creating a batch', () => {
 
     const created = await createBatchViaService(
       { db: world.schoolDb },
-      { trackId: s.smartamTrack.id, code: 'SMA-1' },
+      { trackId: s.smartamTrack.id, classifier: 'BR' },
+      s.smartam.slug,
     )
 
     expect(created.courseId).toBe(s.smartam.id)
@@ -421,7 +422,11 @@ describe('creating a batch', () => {
     world = s.w
 
     await expect(
-      createBatchViaService({ db: world.schoolDb }, { trackId: crypto.randomUUID(), code: 'X' }),
+      createBatchViaService(
+        { db: world.schoolDb },
+        { trackId: crypto.randomUUID(), classifier: 'BR' },
+        s.smartam.slug,
+      ),
     ).rejects.toMatchObject({ statusCode: 422 })
   })
 })

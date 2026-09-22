@@ -44,8 +44,11 @@ export function useCreateBatch() {
       },
     },
     {
-      success: (_batch, { code }) => `Created batch ${code}.`,
-      failure: ({ code }) => `Couldn't create batch ${code}.`,
+      // The code is generated server-side, so the success toast reads it off the response, not
+      // the request — the failure toast has no response to read, so it falls back to the
+      // classifier the admin picked.
+      success: batch => `Created batch ${batch.code}.`,
+      failure: ({ classifier }) => `Couldn't create the ${classifier} batch.`,
     },
   )
 }

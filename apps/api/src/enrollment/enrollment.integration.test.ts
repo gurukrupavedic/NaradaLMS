@@ -45,6 +45,37 @@ describe('enroll', () => {
     })
   })
 
+  it('enrolls a profile as a ta, and the same profile can hold an active student seat in another batch at once', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const teachingBatch = await createBatch(world, trackRow)
+    const learningBatch = await createBatch(world, trackRow)
+    const profile = await createProfile(world)
+
+    const taEnrollment = await enroll(world.schoolDb, teachingBatch.id, {
+      profileId: profile.id,
+      role: 'ta',
+    })
+    expect(taEnrollment.role).toBe('ta')
+
+    // A ta seat doesn't count against the one-active-student-seat-per-course limit — the same
+    // profile can also hold a real student seat elsewhere in the same course.
+    const studentEnrollment = await enroll(world.schoolDb, learningBatch.id, {
+      profileId: profile.id,
+      role: 'student',
+    })
+    expect(studentEnrollment.role).toBe('student')
+
+    await expect(findEnrollment(world.schoolDb, profile.id, teachingBatch.id)).resolves.toEqual({
+      role: 'ta',
+      status: 'active',
+    })
+    await expect(findEnrollment(world.schoolDb, profile.id, learningBatch.id)).resolves.toEqual({
+      role: 'student',
+      status: 'active',
+    })
+  })
+
   it('rejects with 404 when the target profile does not exist', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)

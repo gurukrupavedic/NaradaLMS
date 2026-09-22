@@ -103,6 +103,34 @@ function buildChapterRows(
 }
 
 /**
+ * Which level each of a track's chapters should show: the track's graded exam result if it has
+ * one, otherwise the ordinary chapter-by-chapter mark-book history.
+ *
+ * `recordExamResult`/`correctExamResult` (apps/api/src/exams/service.ts) already write the exam's
+ * level as a fresh `evaluation` on every published chapter, but a *later* teacher mark-book entry
+ * can still bury it (`latestLevelByChapterId` picks whichever row has the newer `evaluatedAt`,
+ * with no notion that the exam's word should hold regardless of timestamp — see that function's
+ * own doc comment). Re-asserting the exam's level here at read time, unconditionally, is what
+ * makes the exam the track's actual final word instead of whichever one was entered more
+ * recently. `examResult.level` is null for a `reappear` (grants no level), so that case falls
+ * through to the ordinary chapter-by-chapter history unchanged. Shared by `buildLadderTrack`
+ * (every chapter of the track) and `buildChapterContent` (one chapter at a time) so the two
+ * screens can't disagree about which one wins.
+ */
+function chapterLevelsForTrack(
+  chapters: ApiChapter[],
+  evaluations: ApiEvaluation[],
+  examResult: ApiStudentExamResult | undefined,
+): Map<string, { level: ProficiencyLevel; evaluatedAt: string | null }> {
+  if (examResult?.level == null) {
+    return latestLevelByChapterId(evaluations)
+  }
+
+  const fromExam = { level: narrowLevel(examResult.level), evaluatedAt: examResult.evaluatedAt }
+  return new Map(chapters.map(chapter => [chapter.id, fromExam]))
+}
+
+/**
  * One learner's ladder for one track: the track's published chapters, each chapter's most recent
  * evaluation level, and the batch (if any) the student sits in for it.
  */
@@ -110,8 +138,12 @@ export function buildLadderTrack(
   track: ApiTrack,
   evaluations: ApiEvaluation[],
   membership: ApiBatchWithRole | undefined,
+  examResult?: ApiStudentExamResult,
 ): LadderTrack {
-  const chapters = buildChapterRows(track.chapters, latestLevelByChapterId(evaluations))
+  const chapters = buildChapterRows(
+    track.chapters,
+    chapterLevelsForTrack(track.chapters, evaluations, examResult),
+  )
   const levels = chapters.map(c => c.level)
 
   return {
@@ -139,9 +171,17 @@ export function buildLadderTrack(
  */
 export function buildLearningTracks(dashboard: ApiDashboard): LadderTrack[] {
   const membershipByTrackId = new Map(dashboard.memberships.map(m => [m.trackId, m]))
+  const examResultByTrackId = latestExamResultByTrackId(dashboard.examResults)
   return dashboard.tracks
     .filter(track => track.chapters.length > 0)
-    .map(track => buildLadderTrack(track, dashboard.studentEvaluations, membershipByTrackId.get(track.id)))
+    .map(track =>
+      buildLadderTrack(
+        track,
+        dashboard.studentEvaluations,
+        membershipByTrackId.get(track.id),
+        examResultByTrackId.get(track.id),
+      ),
+    )
 }
 
 /** Every one of a dashboard's tracks as a certification-record row — see `buildLearningTracks`'s doc comment on why this is shared rather than re-derived per caller. */
@@ -178,7 +218,8 @@ export function buildChapterContent(
   detail: ApiChapterDetail,
 ): ChapterContent {
   const track = dashboard.tracks.find(t => t.id === chapter.trackId)
-  const mark = latestLevelByChapterId(dashboard.studentEvaluations).get(chapter.id)
+  const examResult = latestExamResultByTrackId(dashboard.examResults).get(chapter.trackId)
+  const mark = chapterLevelsForTrack([chapter], dashboard.studentEvaluations, examResult).get(chapter.id)
 
   return {
     id: chapter.id,
