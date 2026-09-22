@@ -401,6 +401,20 @@ export class AccessPolicy {
       : { kind: 'own', profileId: this.profileId }
   }
 
+  /**
+   * The read scope for "list *my own* sittings" (the student dashboard's "Sitting history") — a
+   * *different* question from {@link getExamVisibility}'s "list exams I can see," which widens to
+   * 'manageable' (own + every student's in a batch this profile teaches) for anyone holding
+   * `exam:update` anywhere. That widening is correct for a grading queue, but a profile who is
+   * *also* a TA/instructor elsewhere would otherwise see their students' sittings mixed into what
+   * the UI presents as their own personal history. Mirrors `getProfileBatchListScope`'s own
+   * reasoning for the same shape of bug on batches: a personal-record lookup stays scoped to the
+   * caller's own profile regardless of what else they're permitted to manage.
+   */
+  public getOwnExamScope(): ExamReadScope {
+    return { kind: 'own', profileId: this.requireProfileId() }
+  }
+
   // -- Evaluations --------------------------------------------------------------
   // PARITY_PLAN.md §10.3/§10.4 phrase these as "school evaluation:read or actor batch
   // evaluation:<x>". There's no general hasSchoolPermission() yet (§6.4) — but under the current

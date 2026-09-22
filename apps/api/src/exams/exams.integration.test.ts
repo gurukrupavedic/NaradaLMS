@@ -449,7 +449,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
 
     const { items } = await findMany(
       world.schoolDb,
-      { limit: 20, status: undefined, cursor: undefined },
+      { limit: 20, status: undefined, cursor: undefined, mine: false },
       { kind: 'all' },
       await defaultCourseId(world),
     )
@@ -464,7 +464,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
 
     const { items: itemsAfter } = await findMany(
       world.schoolDb,
-      { limit: 20, status: undefined, cursor: undefined },
+      { limit: 20, status: undefined, cursor: undefined, mine: false },
       { kind: 'all' },
       await defaultCourseId(world),
     )
@@ -489,7 +489,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
 
     const { items } = await findMany(
       world.schoolDb,
-      { limit: 20, status: undefined, cursor: undefined },
+      { limit: 20, status: undefined, cursor: undefined, mine: false },
       { kind: 'own', profileId: me.id },
       await defaultCourseId(world),
     )
@@ -510,7 +510,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
 
     const { items } = await findMany(
       world.schoolDb,
-      { limit: 20, status: undefined, cursor: undefined },
+      { limit: 20, status: undefined, cursor: undefined, mine: false },
       { kind: 'manageable', profileId: instructorProfile.id, batchIds: [batchRow.id] },
       await defaultCourseId(world),
     )

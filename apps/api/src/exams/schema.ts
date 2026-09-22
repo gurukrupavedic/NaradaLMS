@@ -31,6 +31,11 @@ export const FindExamsSchema = ExamSchema.pick({
   .safeExtend({
     limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
     cursor: asCursor(z.object({ scheduledAt: z.coerce.date(), id: z.uuid() })),
+    // The student dashboard's "Sitting history" (apps/web's fetchExams) sends this to force
+    // `AccessPolicy.getOwnExamScope()` — strictly the caller's own sittings — instead of the
+    // default `getExamVisibility()`, which widens to a TA/instructor's students' sittings too
+    // (correct for a grading queue, wrong for what's presented as "my own" history).
+    mine: z.coerce.boolean().optional().default(false),
   })
 
 export type CreateExamData = z.infer<typeof CreateExamSchema>

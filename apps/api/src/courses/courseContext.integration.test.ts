@@ -258,7 +258,7 @@ describe('reads limited to a course', () => {
       batch: s.vedamBatch,
     })
     await createExam(world, { student: s.student, track: s.smartamTrack, batch: s.smartamBatch })
-    const page = { limit: 50, status: undefined, cursor: undefined }
+    const page = { limit: 50, status: undefined, cursor: undefined, mine: false }
 
     const scoped = await findExams(world.schoolDb, page, { kind: 'all' }, s.vedam.id)
     expect(ids(scoped.items)).toEqual([vedamExam.id])

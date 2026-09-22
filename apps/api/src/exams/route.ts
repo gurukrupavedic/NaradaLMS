@@ -17,7 +17,7 @@ router.get(
   '/',
   optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
     const query = await parse(FindExamsSchema, req.query)
-    const visibility = await access.getExamVisibility()
+    const visibility = query.mine ? access.getOwnExamScope() : access.getExamVisibility()
     const exams = await findExams({ db }, query, visibility, (await getCourse()).id)
     res.status(200).json({ data: exams })
   }),

@@ -322,7 +322,10 @@ function toSittingRow(exam: ApiExam): SittingRow {
 export async function fetchExams(): Promise<ExamsPayload> {
   const [dashboard, examList] = await Promise.all([
     fetchStudentDashboard(),
-    fetchApi<{ items: ApiExam[] }>('/exams'),
+    // `mine=true` pins this to strictly the caller's own sittings (AccessPolicy.getOwnExamScope) —
+    // without it, a profile who's also a TA/instructor somewhere gets every student's sittings in
+    // batches they teach folded into what this screen presents as their own history.
+    fetchApi<{ items: ApiExam[] }>('/exams?mine=true'),
   ])
 
   const certifications = buildCertificationRows(dashboard)
