@@ -361,34 +361,30 @@ export type AdminSittingsPayload = {
   graded: AdminSittingRow[]
 }
 
-// GET /v1/exams, school-wide — `AccessPolicy#getExamVisibility` only returns every student's
-// sitting to a school admin who supplies no profile (see `fetchApi`'s `schoolWide`), and student
-// names and batch codes come from the batch roster the admin already has (exams carry only ids).
-export async function fetchAdminSittings(): Promise<AdminSittingsPayload> {
-  const [exams, { items: batches }] = await Promise.all([
-    fetchAllPages<ApiExam>(cursor => `/exams?limit=100${cursor ? `&cursor=${cursor}` : ''}`, {
-      schoolWide: true,
-    }),
-    fetchAdminBatchesWithTracks(),
-  ])
+function toAdminSittingRow(exam: ApiExam): AdminSittingRow {
+  return {
+    id: exam.id,
+    studentId: exam.studentId,
+    studentName: exam.student.name,
+    batchCode: exam.batch.code,
+    track: exam.track.name,
+    when: exam.scheduledAt,
+    status: exam.status,
+    result: exam.result,
+  }
+}
 
-  const batchCodeById = new Map(batches.map(batch => [batch.id, batch.code]))
-  const studentNameById = new Map(
-    batches.flatMap(batch => batch.members.map(member => [member.profileId, member.name] as const)),
+// GET /v1/exams, school-wide — `AccessPolicy#getExamVisibility` only returns every student's
+// sitting to a school admin who supplies no profile (see `fetchApi`'s `schoolWide`). Used only for
+// the admin overview's "N awaiting a result" badge (components/admin/admin-overview.tsx) — the
+// grading screen itself (`fetchAdminSittingsPage` below) paginates instead of walking every page.
+export async function fetchAdminSittings(): Promise<AdminSittingsPayload> {
+  const exams = await fetchAllPages<ApiExam>(
+    cursor => `/exams?limit=100${cursor ? `&cursor=${cursor}` : ''}`,
+    { schoolWide: true },
   )
 
-  const rows = exams
-    .filter(exam => exam.status !== 'cancelled')
-    .map<AdminSittingRow>(exam => ({
-      id: exam.id,
-      studentId: exam.studentId,
-      studentName: studentNameById.get(exam.studentId) ?? 'Unknown student',
-      batchCode: batchCodeById.get(exam.batchId) ?? '—',
-      track: exam.track.name,
-      when: exam.scheduledAt,
-      status: exam.status,
-      result: exam.result,
-    }))
+  const rows = exams.filter(exam => exam.status !== 'cancelled').map(toAdminSittingRow)
 
   return {
     awaiting: rows.filter(row => row.result === null),
@@ -396,6 +392,39 @@ export async function fetchAdminSittings(): Promise<AdminSittingsPayload> {
       .filter(row => row.result !== null)
       .sort((a, b) => b.result!.evaluatedAt.localeCompare(a.result!.evaluatedAt)),
   }
+}
+
+export type AdminSittingsPage = { items: AdminSittingRow[]; nextCursor: string | null }
+
+// One page of GET /v1/exams for the admin exams screen itself (components/admin/admin-exams-screen.tsx),
+// which paginates with a "Load more" button instead of walking every page up front. `graded` picks
+// the awaiting/graded split server-side (and, for `graded: true`, newest-graded-first — see
+// apps/api's `FindExamsSchema`); `query` matches the sitting's student by name.
+export async function fetchAdminSittingsPage({
+  graded,
+  query,
+  cursor,
+  limit = 20,
+}: {
+  graded: boolean
+  query?: string
+  cursor?: string | null
+  limit?: number
+}): Promise<AdminSittingsPage> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    graded: String(graded),
+    sort: graded ? 'desc' : 'asc',
+  })
+  if (query) params.set('query', query)
+  if (cursor) params.set('cursor', cursor)
+
+  const page = await fetchApi<{ items: ApiExam[]; nextCursor: string | null }>(
+    `/exams?${params}`,
+    { schoolWide: true },
+  )
+
+  return { items: page.items.map(toAdminSittingRow), nextCursor: page.nextCursor }
 }
 
 // What an evaluator enters — the five marks and an optional note. The children's bonus, total and

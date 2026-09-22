@@ -1,9 +1,10 @@
-import { queryOptions } from '@tanstack/react-query'
+import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query'
 
 import {
   fetchAdminBatch,
   fetchAdminBatches,
   fetchAdminSittings,
+  fetchAdminSittingsPage,
   fetchAuthProfile,
   fetchBatchClassifiers,
   fetchBatchesWithRoster,
@@ -63,6 +64,11 @@ export const keys = {
   // Under the `exams` prefix so one invalidation of `exams` refreshes the student's own exams page and
   // the admin grading screen together (a result recorded changes both).
   adminExams: ['exams', 'admin'] as const,
+  // The admin exams screen's own paginated awaiting/graded lists — one cache entry (and one reset
+  // pagination run) per graded/query combination, the same keyed-on-query-text shape as
+  // `profiles.search` below.
+  adminExamsPage: (graded: boolean, query: string) =>
+    ['exams', 'admin', 'page', graded, query] as const,
 
   batches: {
     all: ['batches'] as const,
@@ -190,6 +196,18 @@ export const adminSittingsQuery = () =>
   queryOptions({
     queryKey: keys.adminExams,
     queryFn: fetchAdminSittings,
+  })
+
+// The admin exams screen's own "Awaiting"/"Graded" lists (components/admin/admin-exams-screen.tsx)
+// — a "Load more" button drives `fetchNextPage`, so pages accumulate instead of the screen walking
+// every page up front the way `adminSittingsQuery` above still does for the overview's badge count.
+export const adminSittingsPageQuery = (graded: boolean, query: string) =>
+  infiniteQueryOptions({
+    queryKey: keys.adminExamsPage(graded, query),
+    queryFn: ({ pageParam }) =>
+      fetchAdminSittingsPage({ graded, query: query.trim() || undefined, cursor: pageParam }),
+    initialPageParam: null as string | null,
+    getNextPageParam: lastPage => lastPage.nextCursor,
   })
 
 export const adminBatchesQuery = () =>

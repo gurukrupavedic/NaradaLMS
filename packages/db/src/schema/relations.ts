@@ -147,6 +147,11 @@ export const evaluationRelations = relations(evaluation, ({ one }) => ({
 export const examRelations = relations(exam, ({ one }) => ({
   track: one(track, { fields: [exam.trackId], references: [track.id] }),
   result: one(examResult),
+  // The admin exams screen's own name/batch-code columns — eager-loaded directly here rather
+  // than the caller cross-referencing a separate "every batch's roster" fetch (which is itself
+  // paginated and can be incomplete for a large school).
+  student: one(profile, { fields: [exam.studentId], references: [profile.id] }),
+  batch: one(batch, { fields: [exam.batchId], references: [batch.id] }),
 }))
 
 export const examResultRelations = relations(examResult, ({ one }) => ({

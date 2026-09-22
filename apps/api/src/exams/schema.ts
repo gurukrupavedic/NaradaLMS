@@ -6,6 +6,8 @@ import { asCursor } from '../utils/cursor'
 import { isoInstant, requireNonEmpty } from '../utils/validate'
 import { proficiencyLevelSchema } from '../evaluations/schema'
 import { TrackSchema } from '../tracks/schema'
+import { ProfileSchema } from '../profiles/schema'
+import { BatchSchema } from '../batches/schema'
 import { EXAM_MARK_MAX } from './grading'
 
 const PAGE_SIZE = 20
@@ -36,6 +38,18 @@ export const FindExamsSchema = ExamSchema.pick({
     // default `getExamVisibility()`, which widens to a TA/instructor's students' sittings too
     // (correct for a grading queue, wrong for what's presented as "my own" history).
     mine: z.coerce.boolean().optional().default(false),
+    // Admin exams screen (apps/web's fetchAdminSittings): matches the sitting's student by name,
+    // the same substring/multi-word matching `profiles/repository.ts::search` already does.
+    query: z.string().trim().min(1).optional(),
+    // Same screen's "Awaiting" vs "Graded" split: `true` restricts to exams with a recorded
+    // result, `false` to exams with none (and not cancelled — a cancelled sitting is neither).
+    // Omitted keeps today's behavior of returning both. `z.stringbool()`, not `z.coerce.boolean()`
+    // — the caller needs a real `false` here (unlike `mine` above, which is only ever sent as
+    // `true`), and `Boolean('false') === true` would make that impossible.
+    graded: z.stringbool().optional(),
+    // `scheduledAt` order, forward (soonest-first — the default, and what "Awaiting" wants) or
+    // reverse (most-recently-sat-first, what "Graded" wants for a history view).
+    sort: z.enum(['asc', 'desc']).optional().default('asc'),
   })
 
 export type CreateExamData = z.infer<typeof CreateExamSchema>
@@ -102,4 +116,8 @@ export type ExamWithDetail = z.infer<typeof ExamWithDetailSchema>
 export const ExamWithDetailSchema = ExamSchema.extend({
   track: TrackSchema.pick({ id: true, name: true }),
   result: ExamResultSchema.nullable(),
+  // The admin exams screen's student name / batch code columns — see examRelations in
+  // packages/db for why these are eager-loaded here instead of cross-referenced client-side.
+  student: ProfileSchema.pick({ id: true, name: true }),
+  batch: BatchSchema.pick({ id: true, code: true }),
 })

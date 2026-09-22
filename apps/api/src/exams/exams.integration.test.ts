@@ -547,7 +547,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
 
     const { items } = await findMany(
       world.schoolDb,
-      { limit: 20, status: undefined, cursor: undefined, mine: false },
+      { limit: 20, status: undefined, cursor: undefined, mine: false, sort: 'asc' as const },
       { kind: 'all' },
       await defaultCourseId(world),
     )
@@ -562,7 +562,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
 
     const { items: itemsAfter } = await findMany(
       world.schoolDb,
-      { limit: 20, status: undefined, cursor: undefined, mine: false },
+      { limit: 20, status: undefined, cursor: undefined, mine: false, sort: 'asc' as const },
       { kind: 'all' },
       await defaultCourseId(world),
     )
@@ -587,7 +587,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
 
     const { items } = await findMany(
       world.schoolDb,
-      { limit: 20, status: undefined, cursor: undefined, mine: false },
+      { limit: 20, status: undefined, cursor: undefined, mine: false, sort: 'asc' as const },
       { kind: 'own', profileId: me.id },
       await defaultCourseId(world),
     )
@@ -608,7 +608,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
 
     const { items } = await findMany(
       world.schoolDb,
-      { limit: 20, status: undefined, cursor: undefined, mine: false },
+      { limit: 20, status: undefined, cursor: undefined, mine: false, sort: 'asc' as const },
       { kind: 'manageable', profileId: instructorProfile.id, batchIds: [batchRow.id] },
       await defaultCourseId(world),
     )
@@ -696,5 +696,137 @@ describe('findResultsForStudent (a track certification is the student\'s latest 
     await createExamResult(world, { exam: second, evaluator })
 
     await expect(findResultsForStudent(world.schoolDb, student.id, await defaultCourseId(world))).resolves.toHaveLength(2)
+  })
+})
+
+describe('findMany — search, the awaiting/graded split, and sort (admin exams screen)', () => {
+  async function seedTwoSittings() {
+    const w = await createTestSchool()
+    const trackRow = await createTrack(w)
+    const batchRow = await createBatch(w, trackRow)
+    const admin = await createProfile(w, { name: 'Admin' })
+    const ravi = await createProfile(w, { name: 'Ravi Kumar' })
+    const priya = await createProfile(w, { name: 'Priya Rao' })
+    const scheduled = await createExam(w, {
+      student: ravi,
+      track: trackRow,
+      batch: batchRow,
+      scheduledAt: new Date('2026-01-10T10:00:00Z'),
+    })
+    const gradedExam = await createExam(w, {
+      student: priya,
+      track: trackRow,
+      batch: batchRow,
+      scheduledAt: new Date('2026-02-15T10:00:00Z'),
+      status: 'completed',
+    })
+    await createExamResult(w, { exam: gradedExam, evaluator: admin })
+    return { w, trackRow, batchRow, admin, ravi, priya, scheduled, gradedExam }
+  }
+
+  const page = { limit: 20, status: undefined, cursor: undefined, mine: false, sort: 'asc' as const }
+
+  it('query matches by the sitting student\'s name, not any other student\'s', async () => {
+    const seed = await seedTwoSittings()
+    world = seed.w
+
+    const { items } = await findMany(
+      world.schoolDb,
+      { ...page, query: 'ravi' },
+      { kind: 'all' },
+      await defaultCourseId(world),
+    )
+
+    expect(items.map(i => i.id)).toEqual([seed.scheduled.id])
+  })
+
+  it('query matches case-insensitively and by a partial word', async () => {
+    const seed = await seedTwoSittings()
+    world = seed.w
+
+    const { items } = await findMany(
+      world.schoolDb,
+      { ...page, query: 'PRI' },
+      { kind: 'all' },
+      await defaultCourseId(world),
+    )
+
+    expect(items.map(i => i.id)).toEqual([seed.gradedExam.id])
+  })
+
+  it('graded:false returns only sittings with no result (and excludes cancelled ones)', async () => {
+    const seed = await seedTwoSittings()
+    world = seed.w
+    const cancelled = await createExam(world, {
+      student: seed.ravi,
+      track: seed.trackRow,
+      batch: seed.batchRow,
+      scheduledAt: new Date('2026-01-05T10:00:00Z'),
+      status: 'cancelled',
+    })
+
+    const { items } = await findMany(
+      world.schoolDb,
+      { ...page, graded: false },
+      { kind: 'all' },
+      await defaultCourseId(world),
+    )
+
+    expect(items.map(i => i.id)).toEqual([seed.scheduled.id])
+    expect(items.map(i => i.id)).not.toContain(cancelled.id)
+  })
+
+  it('graded:true returns only sittings with a recorded result', async () => {
+    const seed = await seedTwoSittings()
+    world = seed.w
+
+    const { items } = await findMany(
+      world.schoolDb,
+      { ...page, graded: true },
+      { kind: 'all' },
+      await defaultCourseId(world),
+    )
+
+    expect(items.map(i => i.id)).toEqual([seed.gradedExam.id])
+    expect(items[0]?.result).not.toBeNull()
+  })
+
+  it('sort:desc reverses scheduledAt order (and the cursor keeps paging in that same direction)', async () => {
+    const seed = await seedTwoSittings()
+    world = seed.w
+
+    const desc = await findMany(
+      world.schoolDb,
+      { ...page, sort: 'desc' },
+      { kind: 'all' },
+      await defaultCourseId(world),
+    )
+    expect(desc.items.map(i => i.id)).toEqual([seed.gradedExam.id, seed.scheduled.id])
+
+    const firstPage = await findMany(
+      world.schoolDb,
+      { ...page, sort: 'desc', limit: 1 },
+      { kind: 'all' },
+      await defaultCourseId(world),
+    )
+    expect(firstPage.items.map(i => i.id)).toEqual([seed.gradedExam.id])
+    expect(firstPage.nextCursor).not.toBeNull()
+
+    // Built directly from the first page's own last item, same as `findAccessible`'s own
+    // pagination tests (batches.integration.test.ts) — what a real request sends is `nextCursor`
+    // itself (the encoded string, decoded by `utils/cursor.ts`'s `asCursor` Zod transform), but
+    // this calls the repository directly and skips that parse step.
+    const secondPage = await findMany(
+      world.schoolDb,
+      {
+        ...page,
+        sort: 'desc',
+        limit: 1,
+        cursor: { scheduledAt: seed.gradedExam.scheduledAt, id: seed.gradedExam.id },
+      },
+      { kind: 'all' },
+      await defaultCourseId(world),
+    )
+    expect(secondPage.items.map(i => i.id)).toEqual([seed.scheduled.id])
   })
 })
