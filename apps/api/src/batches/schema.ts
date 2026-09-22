@@ -32,6 +32,7 @@ export const BatchMemberSchema = z.object({
   profileId: z.uuid(),
   name: z.string(),
   phone: z.string().nullable(),
+  email: z.email().nullable(),
   city: z.string().nullable(),
   role: batchMemberRoleSchema,
   joinedAt: isoInstant.nullable(),

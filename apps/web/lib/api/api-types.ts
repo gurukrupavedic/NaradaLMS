@@ -126,6 +126,7 @@ export type ApiBatchMember = {
   profileId: string
   name: string
   phone: string | null
+  email: string | null
   city: string | null
   role: ApiEnrollmentRole
   joinedAt: string | null

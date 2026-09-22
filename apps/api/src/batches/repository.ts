@@ -141,7 +141,7 @@ export async function findAccessibleWithDetail(
       role: BatchWithRole['members'][number]['role']
       status: NonNullable<BatchWithRole['enrollmentStatus']>
       joinedAt: Date | null
-      profile: { name: string; phone: string | null; city: string | null }
+      profile: { name: string; phone: string | null; email: string | null; city: string | null }
     }[]
     classSlots: (typeof batchClassSlot.$inferSelect)[]
   } & Batch): BatchWithRole {
@@ -153,6 +153,7 @@ export async function findAccessibleWithDetail(
         profileId: e.profileId,
         name: e.profile.name,
         phone: e.profile.phone,
+        email: e.profile.email,
         city: e.profile.city,
         role: e.role,
         joinedAt: e.joinedAt,
@@ -270,6 +271,7 @@ export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<Bat
       profileId: e.profileId,
       name: e.profile.name,
       phone: e.profile.phone,
+      email: e.profile.email,
       city: e.profile.city,
       role: e.role,
       joinedAt: e.joinedAt,
@@ -343,6 +345,7 @@ export async function findAllMembershipsWithDetail(
         profileId: e.profileId,
         name: e.profile.name,
         phone: e.profile.phone,
+        email: e.profile.email,
         city: e.profile.city,
         role: e.role,
         joinedAt: e.joinedAt,

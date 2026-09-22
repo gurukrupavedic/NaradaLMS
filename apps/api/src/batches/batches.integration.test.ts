@@ -210,11 +210,15 @@ describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
 })
 
 describe('findByIdWithMembers (batch detail with roster)', () => {
-  it('returns the batch with every enrolled member, including name/phone/city/role/joinedAt', async () => {
+  it('returns the batch with every enrolled member, including name/phone/email/city/role/joinedAt', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
     const batchRow = await createBatch(world, trackRow)
-    const instructorProfile = await createProfile(world, { name: 'Ada Instructor', phone: '555-0100' })
+    const instructorProfile = await createProfile(world, {
+      name: 'Ada Instructor',
+      phone: '555-0100',
+      email: 'ada@example.org',
+    })
     const studentProfile = await createProfile(world, { name: 'Bea Student', city: 'Metropolis' })
     await enroll(world, instructorProfile, batchRow, 'instructor')
     await enroll(world, studentProfile, batchRow, 'student')
@@ -228,6 +232,7 @@ describe('findByIdWithMembers (batch detail with roster)', () => {
         profileId: instructorProfile.id,
         name: 'Ada Instructor',
         phone: '555-0100',
+        email: 'ada@example.org',
         city: null,
         role: 'instructor',
       }),
@@ -237,6 +242,7 @@ describe('findByIdWithMembers (batch detail with roster)', () => {
         profileId: studentProfile.id,
         name: 'Bea Student',
         phone: null,
+        email: null,
         city: 'Metropolis',
         role: 'student',
       }),
