@@ -9,6 +9,7 @@ import {
   createBatch,
   findAllAccessible,
   findByIdWithMembers,
+  findClassifiers,
   findOpenBatches,
   setClassSlots,
   updateBatch,
@@ -39,6 +40,18 @@ router.get(
   }),
 )
 
+// Mounted before `/:batchId` below for the same reason as `/open` above — Express never tries to
+// parse "classifiers" as a batch UUID. Gated on the same permission as creating a batch: this only
+// exists to back that form's dropdown.
+router.get(
+  '/classifiers',
+  optionalProfileRoute(async ({ res, db, access, getCourse }) => {
+    await access.requireCanCreateBatch()
+    const classifiers = await findClassifiers({ db }, (await getCourse()).id)
+    res.status(200).json({ data: classifiers })
+  }),
+)
+
 router.get(
   '/:batchId',
   optionalProfileRoute(async ({ req, res, db, access }) => {
@@ -51,10 +64,10 @@ router.get(
 
 router.post(
   '/',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
+  optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
     await access.requireCanCreateBatch()
     const data = await parse(CreateBatchSchema, req.body)
-    const batch = await createBatch({ db }, data)
+    const batch = await createBatch({ db }, data, (await getCourse()).slug)
     res.status(201).json({ data: batch })
   }),
 )

@@ -93,16 +93,31 @@ export const FindBatchesSchema = BatchSchema.pick({
     cursor: asCursor(z.object({ startDate: z.coerce.date().nullable(), id: z.uuid() })),
   })
 
+// `classifier` replaces `code` on create: the code is generated server-side
+// (`service.ts::createBatch`) as `<COURSE>-<year>-<CLASSIFIER>-<track order>-<index>` — the
+// current calendar year, never client-supplied, and `index` auto-increments per
+// (course, year, classifier, track). `classifier` itself is freeform (an admin can introduce a
+// new one, not just pick from what's already in use — `GET /batches/classifiers` lists those for
+// the dropdown) but always uppercased so "br" and "BR" land on the same generated code.
 export type CreateBatchData = z.infer<typeof CreateBatchSchema>
 export const CreateBatchSchema = BatchSchema.pick({
   trackId: true,
-  code: true,
-  startDate: true,
-  meetingUrl: true,
-}).partial({
   startDate: true,
   meetingUrl: true,
 })
+  .partial({
+    startDate: true,
+    meetingUrl: true,
+  })
+  .extend({
+    classifier: z
+      .string()
+      .trim()
+      .min(1)
+      .max(12)
+      .regex(/^[A-Za-z0-9]+$/, 'classifier must be letters/digits only, no spaces or punctuation')
+      .transform(value => value.toUpperCase()),
+  })
 
 // No `trackId` — a batch's track is set once at creation; the real API never allowed moving it
 // after the fact, and nothing downstream (schedule, enrollment, evaluations) expects it to move.

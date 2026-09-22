@@ -5,6 +5,7 @@ import {
   fetchAdminBatches,
   fetchAdminSittings,
   fetchAuthProfile,
+  fetchBatchClassifiers,
   fetchBatchesWithRoster,
   fetchCatalogTrack,
   fetchCatalogTracks,
@@ -70,6 +71,7 @@ export const keys = {
     // even though it hits the same endpoint, since it keeps the raw roster `all`'s own fetcher
     // discards after reshaping (see `fetchBatchesWithRoster`'s doc comment).
     withRoster: ['batches', 'withRoster'] as const,
+    classifiers: ['batches', 'classifiers'] as const,
   },
 
   catalog: {
@@ -205,6 +207,16 @@ export const openBatchesQuery = () =>
     queryKey: keys.batches.open,
     queryFn: fetchOpenBatches,
     staleTime: 30_000,
+  })
+
+// The create-batch form's classifier dropdown — a short, rarely-changing list, so a generous
+// staleTime (matching catalogTracksQuery's own reasoning) avoids a refetch every time the form
+// opens.
+export const batchClassifiersQuery = () =>
+  queryOptions({
+    queryKey: keys.batches.classifiers,
+    queryFn: fetchBatchClassifiers,
+    staleTime: CATALOG_STALE_TIME,
   })
 
 export const catalogTracksQuery = () =>

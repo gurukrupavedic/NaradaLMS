@@ -9,7 +9,9 @@ import * as repository from './repository'
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
 vi.mock('./repository', () => ({
-  findTrackCourseId: vi.fn(),
+  findTrackForBatch: vi.fn(),
+  nextBatchIndex: vi.fn(),
+  findClassifiers: vi.fn(),
   endActiveStudentSeats: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
@@ -21,38 +23,46 @@ vi.mock('./repository', () => ({
 
 const db = {} as SchoolDbClient
 const context = { db }
+const YEAR = new Date().getUTCFullYear()
+
+const batchRow = (overrides: Partial<Awaited<ReturnType<typeof repository.insert>>> = {}) => ({
+  id: 'batch-1',
+  trackId: 'track-1',
+  courseId: 'course-1',
+  code: `VED-${YEAR}-BR-2-3`,
+  status: 'upcoming' as const,
+  startDate: null,
+  meetingUrl: null,
+  ...overrides,
+})
 
 describe('createBatch', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(repository.findTrackCourseId).mockResolvedValue('course-1')
+    vi.mocked(repository.findTrackForBatch).mockResolvedValue({ courseId: 'course-1', order: 2 })
+    vi.mocked(repository.nextBatchIndex).mockResolvedValue(3)
   })
 
-  it("stores the track's course on the new batch rather than taking one from the request", async () => {
-    vi.mocked(repository.insert).mockResolvedValue({
-      id: 'batch-1',
-      trackId: 'track-1',
-      courseId: 'course-1',
-      code: 'B1',
-      status: 'upcoming',
-      startDate: null,
-      meetingUrl: null,
-    })
+  it("generates the code from the course slug, the current year, the classifier and the track's order, and stores the track's own course rather than one from the request", async () => {
+    vi.mocked(repository.insert).mockResolvedValue(batchRow())
 
-    await createBatch(context, { trackId: 'track-1', code: 'B1' })
+    await createBatch(context, { trackId: 'track-1', classifier: 'BR' }, 'ved')
 
-    expect(repository.findTrackCourseId).toHaveBeenCalledWith(db, 'track-1')
+    expect(repository.findTrackForBatch).toHaveBeenCalledWith(db, 'track-1')
+    expect(repository.nextBatchIndex).toHaveBeenCalledWith(db, `VED-${YEAR}-BR-2`)
     expect(repository.insert).toHaveBeenCalledWith(db, {
       trackId: 'track-1',
-      code: 'B1',
+      code: `VED-${YEAR}-BR-2-3`,
       courseId: 'course-1',
     })
   })
 
   it('422s for a track that does not exist, without inserting', async () => {
-    vi.mocked(repository.findTrackCourseId).mockResolvedValue(undefined)
+    vi.mocked(repository.findTrackForBatch).mockResolvedValue(undefined)
 
-    await expect(createBatch(context, { trackId: 'nope', code: 'B1' })).rejects.toMatchObject({
+    await expect(
+      createBatch(context, { trackId: 'nope', classifier: 'BR' }, 'ved'),
+    ).rejects.toMatchObject({
       statusCode: 422,
       message: 'unknown or invalid track',
     })
@@ -65,24 +75,34 @@ describe('createBatch', () => {
     })
 
     await expect(
-      createBatch(context, { trackId: 'missing-track', code: 'BATCH-1' }),
+      createBatch(context, { trackId: 'missing-track', classifier: 'BR' }, 'ved'),
     ).rejects.toMatchObject({
       statusCode: 422,
       message: 'unknown or invalid track',
     })
   })
 
-  it('maps batch_code_unique to a 409 with a duplicate-code message', async () => {
+  it('retries with the next index when the generated code collides, and succeeds', async () => {
+    vi.mocked(repository.nextBatchIndex).mockResolvedValueOnce(3).mockResolvedValueOnce(4)
+    vi.mocked(repository.insert)
+      .mockRejectedValueOnce({ cause: { code: '23505', constraint: DbConstraint.batchCodeUnique } })
+      .mockResolvedValueOnce(batchRow({ code: `VED-${YEAR}-BR-2-4` }))
+
+    const result = await createBatch(context, { trackId: 'track-1', classifier: 'BR' }, 'ved')
+
+    expect(result.code).toBe(`VED-${YEAR}-BR-2-4`)
+    expect(repository.nextBatchIndex).toHaveBeenCalledTimes(2)
+    expect(repository.insert).toHaveBeenCalledTimes(2)
+  })
+
+  it('gives up with a 409 after repeated code collisions rather than retrying forever', async () => {
     vi.mocked(repository.insert).mockRejectedValue({
       cause: { code: '23505', constraint: DbConstraint.batchCodeUnique },
     })
 
     await expect(
-      createBatch(context, { trackId: 'track-1', code: 'DUP' }),
-    ).rejects.toMatchObject({
-      statusCode: 409,
-      message: 'a batch with this code already exists',
-    })
+      createBatch(context, { trackId: 'track-1', classifier: 'BR' }, 'ved'),
+    ).rejects.toMatchObject({ statusCode: 409 })
   })
 
   it('rethrows an unrecognized constraint violation unchanged', async () => {
@@ -90,7 +110,7 @@ describe('createBatch', () => {
     vi.mocked(repository.insert).mockRejectedValue(original)
 
     await expect(
-      createBatch(context, { trackId: 'track-1', code: 'X' }),
+      createBatch(context, { trackId: 'track-1', classifier: 'BR' }, 'ved'),
     ).rejects.toBe(original)
   })
 })
