@@ -461,23 +461,6 @@ export class AccessPolicy {
 
   // -- Profiles ---------------------------------------------------------------
 
-  /** Admin-deactivation (DD-011 §9): only a school admin/owner (or super admin) may deactivate a profile other than their own. */
-  public requireCanDeactivateProfile(): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
-  }
-
-  /** A school admin correcting another student's profile details (a registration typo, a changed
-   * city) — the same "different question from ownership" split as `requireCanDeactivateProfile`
-   * above, kept off the owner-only `PATCH /:profileId` so the two authorization stories can't get
-   * conflated behind one route. */
-  public requireCanUpdateProfile(): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
-  }
-
   // Gated on the same permission as creating an enrollment (school enrollment:create) — the only
   // reason to search across every profile in the school is the admin "enroll a student" flow.
   // Under the current school ACL (packages/auth/src/permissions/school.ts), only owner/admin hold

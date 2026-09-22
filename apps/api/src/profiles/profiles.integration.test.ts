@@ -19,7 +19,13 @@ import {
   defaultCourseId,
 } from '../testing/fixtures'
 import * as repository from './repository'
-import { findById, updateByAdmin, updateProfile } from './service'
+import { findById, updateProfile } from './service'
+
+// `updateProfile`/`deleteProfile` only ever call `access.isSchoolAdmin()` — a minimal fake avoids
+// spinning up a real membership/AccessPolicy.load round trip in tests that don't otherwise need one.
+function access(isSchoolAdmin: boolean): AccessPolicy {
+  return { isSchoolAdmin: () => isSchoolAdmin } as unknown as AccessPolicy
+}
 
 let world: TestWorld | undefined
 
@@ -39,7 +45,7 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
       city: 'Springfield',
     })
 
-    const result = await repository.softDeleteOwned(world.schoolDb, profileRow.id, 'user-no-refs')
+    const result = await repository.softDelete(world.schoolDb, profileRow.id, 'user-no-refs')
     expect(result).toHaveLength(1)
 
     const found = await world.schoolDb.query.profile.findFirst({
@@ -71,7 +77,7 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
         evaluator: evaluatorProfile,
       })
 
-      const result = await repository.softDeleteOwned(
+      const result = await repository.softDelete(
         world.schoolDb,
         evaluatorProfile.id,
         'evaluator-user',
@@ -90,10 +96,10 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
     world = await createTestSchool()
     const profileRow = await createProfile(world, { userId: 'user-repeat' })
 
-    const first = await repository.softDeleteOwned(world.schoolDb, profileRow.id, 'user-repeat')
+    const first = await repository.softDelete(world.schoolDb, profileRow.id, 'user-repeat')
     expect(first).toHaveLength(1)
 
-    const second = await repository.softDeleteOwned(world.schoolDb, profileRow.id, 'user-repeat')
+    const second = await repository.softDelete(world.schoolDb, profileRow.id, 'user-repeat')
     expect(second).toHaveLength(0)
   })
 
@@ -104,7 +110,7 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
     const batchRow = await createBatch(world, trackRow)
     await enroll(world, profileRow, batchRow, 'student')
 
-    await repository.softDeleteOwned(world.schoolDb, profileRow.id, 'user-with-enrollment')
+    await repository.softDelete(world.schoolDb, profileRow.id, 'user-with-enrollment')
 
     const stillEnrolled = await world.schoolDb.query.enrollment.findFirst({
       where: (t, { eq }) => eq(t.profileId, profileRow.id),
@@ -123,7 +129,7 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
       const batchRow = await createBatch(world, trackRow)
       await enroll(world, studentProfile, batchRow, 'student')
 
-      await repository.softDeleteOwned(
+      await repository.softDelete(
         world.schoolDb,
         studentProfile.id,
         'user-deactivated-student',
@@ -157,7 +163,7 @@ describe('updateProfile (student self-edit) — countryTimeZone re-derivation', 
     const orgSchool = { id: world.orgId } as unknown as Parameters<
       typeof updateProfile
     >[0]['school']
-    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-1') }
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-1'), access: access(false) }
 
     const updated = await updateProfile(context, profileRow.id, { state: 'MA', country: 'US' })
 
@@ -171,7 +177,7 @@ describe('updateProfile (student self-edit) — countryTimeZone re-derivation', 
     const orgSchool = { id: world.orgId } as unknown as Parameters<
       typeof updateProfile
     >[0]['school']
-    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-2') }
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-2'), access: access(false) }
 
     await updateProfile(context, profileRow.id, { state: 'MA', country: 'US' })
     const updated = await updateProfile(context, profileRow.id, { name: 'Renamed' })
@@ -186,16 +192,27 @@ describe('updateProfile (student self-edit) — countryTimeZone re-derivation', 
     const orgSchool = { id: world.orgId } as unknown as Parameters<
       typeof updateProfile
     >[0]['school']
-    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-3') }
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-tz-3'), access: access(false) }
 
     await updateProfile(context, profileRow.id, { state: 'TG', country: 'IN' })
     const updated = await updateProfile(context, profileRow.id, { city: 'Hyderabad' })
 
     expect(updated.countryTimeZone).toBe('Asia/Kolkata')
   })
+
+  it('a non-admin editing a profile that is not theirs 404s, the same as a missing one', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-owner', name: 'Original Name' })
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('someone-else'), access: access(false) }
+
+    await expect(updateProfile(context, profileRow.id, { name: 'Hijacked' })).rejects.toMatchObject({
+      statusCode: 404,
+    })
+  })
 })
 
-describe('updateByAdmin (school admin correcting another profile, DD-011-adjacent)', () => {
+describe('updateProfile (school admin correcting another profile, DD-011-adjacent)', () => {
   function actor(userId: string): User {
     return { id: userId, isSuperAdmin: false } as User
   }
@@ -203,10 +220,10 @@ describe('updateByAdmin (school admin correcting another profile, DD-011-adjacen
   it('edits a profile with no ownership check — the patch applies even though the actor is not its owner', async () => {
     world = await createTestSchool()
     const profileRow = await createProfile(world, { userId: 'user-owner', name: 'Original Name' })
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateByAdmin>[0]['school']
-    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin') }
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin'), access: access(true) }
 
-    const updated = await updateByAdmin(context, profileRow.id, { name: 'Corrected Name' })
+    const updated = await updateProfile(context, profileRow.id, { name: 'Corrected Name' })
 
     expect(updated.name).toBe('Corrected Name')
   })
@@ -214,10 +231,10 @@ describe('updateByAdmin (school admin correcting another profile, DD-011-adjacen
   it('re-derives countryTimeZone from the effective location, same as the owner-edit path', async () => {
     world = await createTestSchool()
     const profileRow = await createProfile(world, { userId: 'user-owner-2', city: 'Cambridge' })
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateByAdmin>[0]['school']
-    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin') }
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin'), access: access(true) }
 
-    const updated = await updateByAdmin(context, profileRow.id, { state: 'MA', country: 'US' })
+    const updated = await updateProfile(context, profileRow.id, { state: 'MA', country: 'US' })
 
     expect(updated.countryTimeZone).toBe('America/New_York')
     expect(updated.city).toBe('Cambridge')
@@ -226,22 +243,22 @@ describe('updateByAdmin (school admin correcting another profile, DD-011-adjacen
   it('404s for a deactivated profile — an edit cannot revive one', async () => {
     world = await createTestSchool()
     const profileRow = await createProfile(world, { userId: 'user-owner-3' })
-    await repository.softDeleteById(world.schoolDb, profileRow.id)
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateByAdmin>[0]['school']
-    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin') }
+    await repository.softDelete(world.schoolDb, profileRow.id, null)
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin'), access: access(true) }
 
-    await expect(updateByAdmin(context, profileRow.id, { name: 'New Name' })).rejects.toMatchObject({
+    await expect(updateProfile(context, profileRow.id, { name: 'New Name' })).rejects.toMatchObject({
       statusCode: 404,
     })
   })
 
   it('404s for a nonexistent profile id', async () => {
     world = await createTestSchool()
-    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateByAdmin>[0]['school']
-    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin') }
+    const orgSchool = { id: world.orgId } as unknown as Parameters<typeof updateProfile>[0]['school']
+    const context = { db: world.schoolDb, school: orgSchool, user: actor('user-admin'), access: access(true) }
 
     await expect(
-      updateByAdmin(context, crypto.randomUUID(), { name: 'New Name' }),
+      updateProfile(context, crypto.randomUUID(), { name: 'New Name' }),
     ).rejects.toMatchObject({ statusCode: 404 })
   })
 })
@@ -258,7 +275,7 @@ describe('admin-deactivation (DD-011 §9)', () => {
     const batchRow = await createBatch(world, trackRow)
     await enroll(world, profileRow, batchRow, 'student')
 
-    const result = await repository.softDeleteById(world.schoolDb, profileRow.id)
+    const result = await repository.softDelete(world.schoolDb, profileRow.id, null)
     expect(result).toHaveLength(1)
 
     const found = await world.schoolDb.query.profile.findFirst({
@@ -278,17 +295,17 @@ describe('admin-deactivation (DD-011 §9)', () => {
     world = await createTestSchool()
     const profileRow = await createProfile(world, { userId: 'user-admin-target-2' })
 
-    const first = await repository.softDeleteById(world.schoolDb, profileRow.id)
+    const first = await repository.softDelete(world.schoolDb, profileRow.id, null)
     expect(first).toHaveLength(1)
 
-    const second = await repository.softDeleteById(world.schoolDb, profileRow.id)
+    const second = await repository.softDelete(world.schoolDb, profileRow.id, null)
     expect(second).toHaveLength(0)
   })
 
   it('a nonexistent profile id matches zero rows', async () => {
     world = await createTestSchool()
 
-    const result = await repository.softDeleteById(world.schoolDb, crypto.randomUUID())
+    const result = await repository.softDelete(world.schoolDb, crypto.randomUUID(), null)
     expect(result).toHaveLength(0)
   })
 })
@@ -351,7 +368,7 @@ describe('search (admin "enroll a student" support)', () => {
   it('never returns a deactivated profile', async () => {
     world = await createTestSchool()
     const deactivated = await createProfile(world, { name: 'Deactivated Person' })
-    await repository.softDeleteOwned(world.schoolDb, deactivated.id, deactivated.userId)
+    await repository.softDelete(world.schoolDb, deactivated.id, deactivated.userId)
 
     const results = await repository.search(world.schoolDb, { query: 'Deactivated' })
 

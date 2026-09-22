@@ -18,7 +18,7 @@ import { buildCertificationRows, buildLearningTracks } from '@/lib/api/reshape'
 import { isCertified } from '@/lib/proficiency'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
 import { useHasAdminAccess, useSelectedProfileId } from '@/lib/auth/profile-store'
-import { useUpdateProfile, useUpdateProfileByAdmin } from '@/lib/query/use-profile-mutations'
+import { useUpdateProfile } from '@/lib/query/use-profile-mutations'
 import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
 import type { ApiProfile } from '@/lib/api/api-types'
@@ -44,10 +44,8 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const isSelf = useSelectedProfileId() === profileId
   const [moveOpen, setMoveOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
-  const updateOwn = useUpdateProfile(profileId)
-  const updateAsAdmin = useUpdateProfileByAdmin(profileId)
   const canEdit = isSelf || isAdmin
-  const updating = isSelf ? updateOwn : updateAsAdmin
+  const updating = useUpdateProfile(profileId, isSelf)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />

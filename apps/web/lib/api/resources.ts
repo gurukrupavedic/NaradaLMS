@@ -81,13 +81,15 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
   return fetchApi<ApiProfileDetail>(`/profiles/${profileId}/detail`)
 }
 
-// PATCH /v1/profiles/:profileId — the student's own "edit my profile" form
-// (components/edit-profile-dialog.tsx). Server-side ownership check (`updateOwned`) means this
-// only ever succeeds against the caller's own profile. `phone` and `yearOfBirth` are deliberately
-// not part of this input — `phone` is the BetterAuth login credential, `yearOfBirth` is treated as
-// fixed once recorded — both excluded server-side too (`apps/api/src/profiles/schema.ts`'s
-// `UpdateProfileSchema`). `countryTimeZone` is excluded for a different reason: it's derived
-// server-side from `city`/`state`/`country` whenever any of those change, never set directly.
+// PATCH /v1/profiles/:profileId — the "edit profile" form (components/edit-profile-dialog.tsx),
+// used both by the profile's own owner and by a school admin correcting someone else's.
+// `apps/api/src/profiles/service.ts::updateProfile` decides which: a school admin's write carries
+// no ownership check, anyone else's only ever succeeds against their own profile. `phone` and
+// `yearOfBirth` are deliberately not part of this input, even for an admin — `phone` is the
+// BetterAuth login credential, `yearOfBirth` is treated as fixed once recorded — both excluded
+// server-side too (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`). `countryTimeZone`
+// is excluded for a different reason: it's derived server-side from `city`/`state`/`country`
+// whenever any of those change, never set directly.
 export type UpdateProfileInput = Partial<
   Pick<
     ApiProfile,
@@ -114,17 +116,6 @@ export async function updateProfile(
   patch: UpdateProfileInput,
 ): Promise<ApiProfile> {
   return mutateApi<ApiProfile>(`/profiles/${profileId}`, 'PATCH', patch)
-}
-
-// PATCH /v1/profiles/:profileId/admin — a school admin correcting a student's profile (a
-// registration typo, a changed city), not a self-edit. Same field set and shape as the owner-only
-// PATCH above (`UpdateProfileInput`) — the split is authorization only (school-admin vs. owner,
-// `apps/api/src/utils/accessPolicy.ts::requireCanUpdateProfile`), never body shape.
-export async function updateProfileByAdmin(
-  profileId: string,
-  patch: UpdateProfileInput,
-): Promise<ApiProfile> {
-  return mutateApi<ApiProfile>(`/profiles/${profileId}/admin`, 'PATCH', patch)
 }
 
 // GET /v1/profiles/search — admin-only (AccessPolicy.requireCanSearchProfiles). Backs the "add a

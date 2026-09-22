@@ -2,6 +2,7 @@ import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 
 import { forbidden, internalError, notFound } from '../error'
 import type { User } from '../session'
+import type { AccessPolicy } from '../utils/accessPolicy'
 import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
 import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
@@ -64,24 +65,29 @@ export async function createProfile(
 }
 
 /**
- * Ownership is enforced by `repository.updateOwned`'s SQL predicate; a foreign-owned profile 404s
- * the same as a missing one.
+ * Edits a profile's details — the caller's own, or (if they're a school admin) any profile in the
+ * school. `access.isSchoolAdmin()` decides which: an admin's write carries no ownership predicate
+ * at all (`ownerUserId: null`), while anyone else's only ever matches their own row — a non-admin
+ * patching someone else's profile 404s the same as a missing one, same as before this had an admin
+ * path at all.
  *
  * When the patch touches `city`, `state`, or `country`, `countryTimeZone` is re-derived
  * (`utils/timezone.ts::deriveTimeZone`) from the *effective* location — the patch merged onto
  * whatever isn't being changed — rather than just the fields present in this call. A patch that
  * only changes `city` still needs the profile's existing `state`/`country` to resolve correctly,
- * so this reads the current location first (via the same ownership-checked query `updateOwned`
+ * so this reads the current location first (via the same ownership-checked query the write below
  * uses) rather than guessing from partial input.
  */
 export async function updateProfile(
-  context: ProfileServiceContext,
+  context: ProfileServiceContext & { access: AccessPolicy },
   id: string,
   data: UpdateProfileData,
 ): Promise<Profile> {
+  const ownerUserId = context.access.isSchoolAdmin() ? null : context.user.id
+
   let patch: UpdateProfileData & { countryTimeZone?: string | null } = data
   if (data.city !== undefined || data.state !== undefined || data.country !== undefined) {
-    const current = await repository.findOwnedLocationFields(context.db, id, context.user.id)
+    const current = await repository.findLocationFields(context.db, id, ownerUserId)
     if (!current) {
       throw notFound()
     }
@@ -96,7 +102,7 @@ export async function updateProfile(
     }
   }
 
-  const row = await repository.updateOwned(context.db, id, context.user.id, patch)
+  const row = await repository.update(context.db, id, ownerUserId, patch)
   if (!row) {
     throw notFound()
   }
@@ -105,64 +111,17 @@ export async function updateProfile(
 }
 
 /**
- * A school admin correcting a student's profile details — a different actor and a different
- * authorization story from `updateProfile` above (`access.requireCanUpdateProfile()` runs in the
- * route, matching every other admin-gated write here), so this stays a separate function rather
- * than a `userId`-optional branch inside `updateProfile`. Otherwise identical: `city`/`state`/
- * `country` still re-derive `countryTimeZone` from the effective (patch-merged-onto-current)
- * location, just read via the by-id `findLocationFields`/`updateById` instead of the owned
- * variants.
+ * Deactivates a profile (DD-011) instead of physically deleting it: only `deletedAt` is set.
+ * Every other column, and every `enrollment`/`exam`/`evaluation` row referencing this profile, is
+ * left exactly as it was, so historical queries keep working. Same owner-vs-admin split as
+ * `updateProfile` above: a school admin deactivates any profile, anyone else only their own.
  */
-export async function updateByAdmin(
-  context: ProfileServiceContext,
+export async function deleteProfile(
+  context: ProfileServiceContext & { access: AccessPolicy },
   id: string,
-  data: UpdateProfileData,
-): Promise<Profile> {
-  let patch: UpdateProfileData & { countryTimeZone?: string | null } = data
-  if (data.city !== undefined || data.state !== undefined || data.country !== undefined) {
-    const current = await repository.findLocationFields(context.db, id)
-    if (!current) {
-      throw notFound()
-    }
-
-    patch = {
-      ...data,
-      countryTimeZone: deriveTimeZone({
-        city: data.city !== undefined ? data.city : current.city,
-        state: data.state !== undefined ? data.state : current.state,
-        country: data.country !== undefined ? data.country : current.country,
-      }),
-    }
-  }
-
-  const row = await repository.updateById(context.db, id, patch)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
-}
-
-/**
- * Deactivates the caller's own profile (DD-011) instead of physically deleting it: only
- * `deletedAt` is set. Every other column, and every `enrollment`/`exam`/`evaluation` row
- * referencing this profile, is left exactly as it was, so historical queries keep working.
- */
-export async function deleteById(context: ProfileServiceContext, id: string): Promise<void> {
-  const rows = await repository.softDeleteOwned(context.db, id, context.user.id)
-  if (rows.length === 0) {
-    throw notFound()
-  }
-}
-
-/**
- * Admin-deactivation (DD-011 §9): a school admin deactivating a profile other than their own.
- * Authorization (`access.requireCanDeactivateProfile()`) happens in the route, matching every
- * other admin-gated write in this codebase (see `batches/route.ts`) — this function assumes the
- * caller has already been checked.
- */
-export async function deactivateByAdmin(context: ProfileServiceContext, id: string): Promise<void> {
-  const rows = await repository.softDeleteById(context.db, id)
+): Promise<void> {
+  const ownerUserId = context.access.isSchoolAdmin() ? null : context.user.id
+  const rows = await repository.softDelete(context.db, id, ownerUserId)
   if (rows.length === 0) {
     throw notFound()
   }

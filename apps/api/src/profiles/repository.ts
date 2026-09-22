@@ -130,111 +130,67 @@ export async function insert(
 }
 
 /**
- * The current city/state/country for an owned profile, read before an update that touches any of
- * them — `service.ts::updateProfile` needs the *effective* (patch-merged-onto-current) location to
- * re-derive `countryTimeZone` even when a patch only changes one of the three fields. The `userId`
- * predicate enforces ownership on this read too, consistent with `updateOwned` below: a
- * foreign-owned profile matches zero rows rather than leaking its location to the caller.
- */
-export async function findOwnedLocationFields(
-  db: SchoolDb,
-  id: string,
-  userId: string,
-): Promise<{ city: string | null; state: string | null; country: string | null } | undefined> {
-  return db.query.profile.findFirst({
-    where: (t, { and, eq }) => and(eq(t.id, id), eq(t.userId, userId)),
-    columns: { city: true, state: true, country: true },
-  })
-}
-
-/**
- * The `userId` predicate enforces ownership in SQL; a foreign-owned profile matches zero rows
- * rather than being fetched and checked afterward. Accepts `countryTimeZone` on top of
- * `UpdateProfileData`'s own fields — that column is never client-writable (see
- * `UpdateProfileSchema`'s doc comment), but `service.ts::updateProfile` re-derives and includes it
- * server-side whenever the location changes.
- */
-export async function updateOwned(
-  db: SchoolDb,
-  id: string,
-  userId: string,
-  data: UpdateProfileData & { countryTimeZone?: string | null },
-): Promise<Profile | undefined> {
-  const rows = await db
-    .update(profile)
-    .set(data)
-    .where(and(eq(profile.id, id), eq(profile.userId, userId)))
-    .returning(profileColumns)
-
-  return rows.at(0)
-}
-
-/**
- * The by-id counterpart to {@link findOwnedLocationFields}, for `service.ts::updateByAdmin` — an
- * admin correcting someone else's profile needs the same effective-location re-derivation as a
- * self-edit, just without the `userId` predicate. The `deletedAt IS NULL` guard matches `findById`:
- * a deactivated profile isn't editable, it's gone.
+ * The current city/state/country for a profile, read before an update that touches any of them —
+ * `service.ts::updateProfile` needs the *effective* (patch-merged-onto-current) location to
+ * re-derive `countryTimeZone` even when a patch only changes one of the three fields.
+ * `ownerUserId` enforces ownership when the caller isn't a school admin (`null` for an admin, who
+ * may read any profile's location) — a foreign-owned profile matches zero rows for a non-admin
+ * caller rather than leaking its location to them. The `deletedAt IS NULL` guard matches
+ * `findById`: a deactivated profile isn't editable, it's gone, for admin and owner alike.
  */
 export async function findLocationFields(
   db: SchoolDb,
   id: string,
+  ownerUserId: string | null,
 ): Promise<{ city: string | null; state: string | null; country: string | null } | undefined> {
   return db.query.profile.findFirst({
-    where: (t, { and, eq, isNull: isNullCol }) => and(eq(t.id, id), isNullCol(t.deletedAt)),
+    where: (t, { and, eq, isNull: isNullCol }) =>
+      and(eq(t.id, id), isNullCol(t.deletedAt), ownerUserId ? eq(t.userId, ownerUserId) : undefined),
     columns: { city: true, state: true, country: true },
   })
 }
 
 /**
- * Admin-edit (DD-011-adjacent — a school admin correcting a student's profile, not deactivating
- * it): identical to `updateOwned` minus the `userId` predicate, since here the actor isn't the
- * profile's owner. The `deletedAt IS NULL` guard matches `softDeleteById`'s own reasoning: a
- * deactivated profile 404s the same as a missing one, not something an edit can revive.
+ * `ownerUserId` enforces ownership in SQL when the caller isn't a school admin (`null` for an
+ * admin — any profile in the school is fair game); a foreign-owned profile matches zero rows for a
+ * non-admin caller rather than being fetched and checked afterward. The `deletedAt IS NULL` guard
+ * keeps a deactivated profile un-editable by anyone, admin included — an edit can't revive one.
+ * Accepts `countryTimeZone` on top of `UpdateProfileData`'s own fields — that column is never
+ * client-writable (see `UpdateProfileSchema`'s doc comment), but `service.ts::updateProfile`
+ * re-derives and includes it server-side whenever the location changes.
  */
-export async function updateById(
+export async function update(
   db: SchoolDb,
   id: string,
+  ownerUserId: string | null,
   data: UpdateProfileData & { countryTimeZone?: string | null },
 ): Promise<Profile | undefined> {
   const rows = await db
     .update(profile)
     .set(data)
-    .where(and(eq(profile.id, id), isNull(profile.deletedAt)))
+    .where(and(eq(profile.id, id), isNull(profile.deletedAt), ownerUserId ? eq(profile.userId, ownerUserId) : undefined))
     .returning(profileColumns)
 
   return rows.at(0)
 }
 
 /**
- * Deactivates an owned profile (DD-011): stamps `deletedAt` only. Every other column — name,
- * phone, city — and every `enrollment`/`exam`/`evaluation` row referencing this profile stay
- * exactly as they were, so historical queries ("which batches was this user in", "what did they
- * score there") keep working after deactivation. The `deletedAt IS NULL` predicate makes a
- * repeat call match zero rows, so the service's 404 covers missing, foreign-owned, and
- * already-deactivated alike.
+ * Deactivates a profile (DD-011): stamps `deletedAt` only. Every other column — name, phone, city
+ * — and every `enrollment`/`exam`/`evaluation` row referencing this profile stay exactly as they
+ * were, so historical queries ("which batches was this user in", "what did they score there") keep
+ * working after deactivation. `ownerUserId` enforces ownership when the caller isn't a school
+ * admin (`null` for an admin deactivating someone else's profile). The `deletedAt IS NULL`
+ * predicate makes a repeat call match zero rows regardless of actor, so the service's 404 covers
+ * missing, foreign-owned (for a non-admin caller), and already-deactivated alike.
  */
-export async function softDeleteOwned(
+export async function softDelete(
   db: SchoolDb,
   id: string,
-  userId: string,
+  ownerUserId: string | null,
 ): Promise<{ id: string }[]> {
   return db
     .update(profile)
     .set({ deletedAt: new Date() })
-    .where(and(eq(profile.id, id), eq(profile.userId, userId), isNull(profile.deletedAt)))
-    .returning({ id: profile.id })
-}
-
-/**
- * Admin-deactivation (DD-011 §9): identical to `softDeleteOwned` minus the `userId` predicate,
- * since here the actor is a school admin acting on someone else's profile, not the owner. The
- * `deletedAt IS NULL` predicate keeps the same idempotent-safe contract — a repeat call or an
- * unknown id both match zero rows.
- */
-export async function softDeleteById(db: SchoolDb, id: string): Promise<{ id: string }[]> {
-  return db
-    .update(profile)
-    .set({ deletedAt: new Date() })
-    .where(and(eq(profile.id, id), isNull(profile.deletedAt)))
+    .where(and(eq(profile.id, id), isNull(profile.deletedAt), ownerUserId ? eq(profile.userId, ownerUserId) : undefined))
     .returning({ id: profile.id })
 }

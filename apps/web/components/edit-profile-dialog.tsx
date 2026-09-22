@@ -12,13 +12,13 @@ import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 /**
  * The "edit profile" form, opened from `components/student-profile-screen.tsx` either by the
  * profile's own owner or by a school admin correcting someone else's — same fields, same dialog,
- * only `updating` and `isSelf` differ between the two (the caller passes `useUpdateProfile` or
- * `useUpdateProfileByAdmin`, see `lib/query/use-profile-mutations.ts`). Every registration-derived
+ * same PATCH (`useUpdateProfile(profileId, isSelf)`, see `lib/query/use-profile-mutations.ts`);
+ * `isSelf` here only changes the copy, never which fields are editable. Every registration-derived
  * field is editable here except `phone` and `yearOfBirth` — `phone` is the BetterAuth login
  * credential (changing it needs its own re-verification flow, not this form, even for an admin),
  * `yearOfBirth` is treated as fixed once recorded. The server enforces the same boundary
- * independently on both PATCH routes (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`),
- * this is just the matching client-side surface.
+ * independently (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`), this is just the
+ * matching client-side surface.
  */
 
 // The subset of `useMutation`'s return value this dialog needs — see grade-dialog.tsx's identical

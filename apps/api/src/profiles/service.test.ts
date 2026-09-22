@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDbClient, organization } from '@narada/db'
 
-import { deactivateByAdmin, deleteById, findById, searchProfiles, updateProfile } from './service'
+import type { AccessPolicy } from '../utils/accessPolicy'
+import { deleteProfile, findById, searchProfiles, updateProfile } from './service'
 import * as repository from './repository'
 import type { Profile } from './schema'
 
@@ -13,9 +14,8 @@ vi.mock('./repository', () => ({
   findByUserId: vi.fn(),
   findMembership: vi.fn(),
   insert: vi.fn(),
-  updateOwned: vi.fn(),
-  softDeleteOwned: vi.fn(),
-  softDeleteById: vi.fn(),
+  update: vi.fn(),
+  softDelete: vi.fn(),
   search: vi.fn(),
 }))
 
@@ -31,9 +31,15 @@ type School = typeof organization.$inferSelect
 const db = {} as SchoolDbClient
 const school = {} as School
 const user = { id: 'user-1', isSuperAdmin: false } as unknown as Parameters<
-  typeof deleteById
+  typeof deleteProfile
 >[0]['user']
-const context = { db, school, user }
+
+function access(isSchoolAdmin: boolean): AccessPolicy {
+  return { isSchoolAdmin: () => isSchoolAdmin } as unknown as AccessPolicy
+}
+
+const ownContext = { db, school, user, access: access(false) }
+const adminContext = { db, school, user, access: access(true) }
 
 const baseProfile: Profile = {
   id: 'profile-1',
@@ -60,43 +66,37 @@ const baseProfile: Profile = {
   createdAt: new Date(),
 }
 
-describe('deleteById', () => {
+describe('deleteProfile', () => {
   beforeEach(() => {
     vi.resetAllMocks()
   })
 
-  it('soft-deletes the profile (pure soft-delete, DD-011: only deletedAt changes)', async () => {
-    vi.mocked(repository.softDeleteOwned).mockResolvedValue([{ id: 'profile-1' }])
+  it('soft-deletes the caller\'s own profile (pure soft-delete, DD-011: only deletedAt changes)', async () => {
+    vi.mocked(repository.softDelete).mockResolvedValue([{ id: 'profile-1' }])
 
-    await expect(deleteById(context, 'profile-1')).resolves.toBeUndefined()
+    await expect(deleteProfile(ownContext, 'profile-1')).resolves.toBeUndefined()
 
-    expect(repository.softDeleteOwned).toHaveBeenCalledWith(db, 'profile-1', 'user-1')
+    expect(repository.softDelete).toHaveBeenCalledWith(db, 'profile-1', 'user-1')
   })
 
-  it('404s a missing, foreign-owned, or already-deactivated profile', async () => {
-    vi.mocked(repository.softDeleteOwned).mockResolvedValue([])
+  it('404s a missing, foreign-owned, or already-deactivated profile for a non-admin', async () => {
+    vi.mocked(repository.softDelete).mockResolvedValue([])
 
-    await expect(deleteById(context, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
-  })
-})
-
-describe('deactivateByAdmin (DD-011 §9)', () => {
-  beforeEach(() => {
-    vi.resetAllMocks()
+    await expect(deleteProfile(ownContext, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
   })
 
-  it('soft-deletes the target profile without an owner check (authorization already done in the route)', async () => {
-    vi.mocked(repository.softDeleteById).mockResolvedValue([{ id: 'profile-1' }])
+  it('a school admin soft-deletes any profile, with no owner check (DD-011 §9)', async () => {
+    vi.mocked(repository.softDelete).mockResolvedValue([{ id: 'profile-1' }])
 
-    await expect(deactivateByAdmin(context, 'profile-1')).resolves.toBeUndefined()
+    await expect(deleteProfile(adminContext, 'profile-1')).resolves.toBeUndefined()
 
-    expect(repository.softDeleteById).toHaveBeenCalledWith(db, 'profile-1')
+    expect(repository.softDelete).toHaveBeenCalledWith(db, 'profile-1', null)
   })
 
-  it('404s a missing or already-deactivated profile', async () => {
-    vi.mocked(repository.softDeleteById).mockResolvedValue([])
+  it('404s a missing or already-deactivated profile for an admin too', async () => {
+    vi.mocked(repository.softDelete).mockResolvedValue([])
 
-    await expect(deactivateByAdmin(context, 'profile-1')).rejects.toMatchObject({
+    await expect(deleteProfile(adminContext, 'profile-1')).rejects.toMatchObject({
       statusCode: 404,
     })
   })
@@ -112,34 +112,54 @@ describe('searchProfiles', () => {
     vi.mocked(repository.search).mockResolvedValue(results)
 
     await expect(
-      searchProfiles(context, { query: 'ada', excludeBatchId: undefined }),
+      searchProfiles(ownContext, { query: 'ada', excludeBatchId: undefined }),
     ).resolves.toEqual(results)
     expect(repository.search).toHaveBeenCalledWith(db, { query: 'ada', excludeBatchId: undefined })
   })
 })
 
-describe('updateProfile (student self-edit)', () => {
+describe('updateProfile', () => {
   beforeEach(() => {
     vi.resetAllMocks()
   })
 
-  it('delegates to repository.updateOwned, scoped to the caller as owner', async () => {
+  it('delegates to repository.update, scoped to the caller as owner', async () => {
     const updated = { ...baseProfile, name: 'Ada Updated', email: 'ada@example.com' }
-    vi.mocked(repository.updateOwned).mockResolvedValue(updated)
+    vi.mocked(repository.update).mockResolvedValue(updated)
 
     await expect(
-      updateProfile(context, 'profile-1', { name: 'Ada Updated', email: 'ada@example.com' }),
+      updateProfile(ownContext, 'profile-1', { name: 'Ada Updated', email: 'ada@example.com' }),
     ).resolves.toEqual(updated)
-    expect(repository.updateOwned).toHaveBeenCalledWith(db, 'profile-1', 'user-1', {
+    expect(repository.update).toHaveBeenCalledWith(db, 'profile-1', 'user-1', {
       name: 'Ada Updated',
       email: 'ada@example.com',
     })
   })
 
-  it('404s a missing or foreign-owned profile', async () => {
-    vi.mocked(repository.updateOwned).mockResolvedValue(undefined)
+  it('404s a missing or foreign-owned profile for a non-admin', async () => {
+    vi.mocked(repository.update).mockResolvedValue(undefined)
 
-    await expect(updateProfile(context, 'profile-1', { name: 'X' })).rejects.toMatchObject({
+    await expect(updateProfile(ownContext, 'profile-1', { name: 'X' })).rejects.toMatchObject({
+      statusCode: 404,
+    })
+  })
+
+  it('a school admin edits any profile, with no owner check', async () => {
+    const updated = { ...baseProfile, name: 'Corrected Name' }
+    vi.mocked(repository.update).mockResolvedValue(updated)
+
+    await expect(
+      updateProfile(adminContext, 'profile-1', { name: 'Corrected Name' }),
+    ).resolves.toEqual(updated)
+    expect(repository.update).toHaveBeenCalledWith(db, 'profile-1', null, {
+      name: 'Corrected Name',
+    })
+  })
+
+  it('404s a missing profile for an admin too', async () => {
+    vi.mocked(repository.update).mockResolvedValue(undefined)
+
+    await expect(updateProfile(adminContext, 'profile-1', { name: 'X' })).rejects.toMatchObject({
       statusCode: 404,
     })
   })
@@ -158,13 +178,13 @@ describe('findById', () => {
     }
     vi.mocked(repository.findById).mockResolvedValue(withRegistrationFields)
 
-    await expect(findById(context, 'profile-1')).resolves.toEqual(withRegistrationFields)
+    await expect(findById(ownContext, 'profile-1')).resolves.toEqual(withRegistrationFields)
     expect(repository.findById).toHaveBeenCalledWith(db, 'profile-1')
   })
 
   it('404s a missing or soft-deleted profile', async () => {
     vi.mocked(repository.findById).mockResolvedValue(undefined)
 
-    await expect(findById(context, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
+    await expect(findById(ownContext, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
   })
 })
