@@ -52,18 +52,17 @@ export async function findByIdWithDetail(
 }
 
 /**
- * Validates the student/track assignment invariant before inserting; see
- * {@link assertValidExamAssignment}. Authorization runs *after* that resolution, not before it,
- * so `access.requireCanCreateExam` checks the actor's permission in the exact batch the new exam
- * will be stored against — a route-level check (before the qualifying batch is known) would risk
- * authorizing against a different batch than the one actually written.
+ * Booking a sitting is school-admin-only (`access.requireCanCreateExam`), independent of any
+ * batch role, so that check runs first — no need to resolve the qualifying batch just to reject an
+ * unauthorized caller. Only once authorized does this validate the student/track assignment
+ * invariant; see {@link assertValidExamAssignment}.
  */
 export async function createExam(
   context: ExamServiceContext & { access: AccessPolicy },
   data: CreateExamData,
 ): Promise<Exam> {
+  context.access.requireCanCreateExam()
   const batchId = await assertValidExamAssignment(context.db, data.studentId, data.trackId)
-  context.access.requireCanCreateExam(batchId)
 
   const row = await withConstraintMapping(
     () => repository.insert(context.db, { ...data, batchId }),

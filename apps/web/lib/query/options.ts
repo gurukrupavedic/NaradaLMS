@@ -18,14 +18,22 @@ import {
   fetchDashboard,
   fetchEnrollmentRequests,
   fetchExams,
+  fetchExamSlotRequests,
+  fetchExamSlots,
   fetchMyCourses,
+  fetchMyExamSlotRequests,
   fetchOpenBatches,
   fetchProfileDetail,
   fetchRegistration,
   fetchRegistrations,
   searchProfiles,
 } from '@/lib/api/resources'
-import type { ApiEnrollmentRequestStatus, ApiRegistrationStatus } from '@/lib/api/api-types'
+import type {
+  ApiEnrollmentRequestStatus,
+  ApiExamSlotRequestStatus,
+  ApiExamSlotStatus,
+  ApiRegistrationStatus,
+} from '@/lib/api/api-types'
 
 /**
  * Query keys, in one place.
@@ -69,6 +77,24 @@ export const keys = {
   // `profiles.search` below.
   adminExamsPage: (graded: boolean, query: string) =>
     ['exams', 'admin', 'page', graded, query] as const,
+
+  examSlots: {
+    // Prefix key — opening, cancelling, or approving/rejecting a request against a slot all
+    // change what this list shows, so a mutation invalidates the whole prefix rather than
+    // enumerating every trackId/status combination a screen happens to be filtered to.
+    all: ['examSlots'] as const,
+    list: (trackId?: string, status?: ApiExamSlotStatus) =>
+      ['examSlots', 'list', trackId ?? null, status ?? null] as const,
+  },
+
+  examSlotRequests: {
+    // Same prefix-key shape as `registrations`/`enrollmentRequests` above.
+    all: ['examSlotRequests'] as const,
+    list: (status: ApiExamSlotRequestStatus) => ['examSlotRequests', 'list', status] as const,
+    // The signed-in profile's own requests (exams-screen.tsx's "My requests") — a distinct cache
+    // entry from `list` above, which is always the school-wide admin view regardless of status.
+    mine: ['examSlotRequests', 'mine'] as const,
+  },
 
   batches: {
     all: ['batches'] as const,
@@ -196,6 +222,26 @@ export const adminSittingsQuery = () =>
   queryOptions({
     queryKey: keys.adminExams,
     queryFn: fetchAdminSittings,
+  })
+
+// Both the admin slots panel (no filter) and the student exams screen's "Available sittings"
+// (status: 'open') go through this one factory — see `fetchExamSlots`'s own doc comment.
+export const examSlotsQuery = (filter?: { trackId?: string; status?: ApiExamSlotStatus }) =>
+  queryOptions({
+    queryKey: keys.examSlots.list(filter?.trackId, filter?.status),
+    queryFn: () => fetchExamSlots(filter),
+  })
+
+export const examSlotRequestsQuery = (status: ApiExamSlotRequestStatus) =>
+  queryOptions({
+    queryKey: keys.examSlotRequests.list(status),
+    queryFn: () => fetchExamSlotRequests(status),
+  })
+
+export const myExamSlotRequestsQuery = () =>
+  queryOptions({
+    queryKey: keys.examSlotRequests.mine,
+    queryFn: fetchMyExamSlotRequests,
   })
 
 // The admin exams screen's own "Awaiting"/"Graded" lists (components/admin/admin-exams-screen.tsx)

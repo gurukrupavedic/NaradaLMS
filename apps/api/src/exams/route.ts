@@ -41,9 +41,8 @@ router.get(
   }),
 )
 
-// createExam itself calls access.requireCanCreateExam once it has resolved the qualifying batch
-// — see the doc comment on createExam for why that check can't happen here, before the body (and
-// therefore the student/chapter) is even parsed.
+// createExam itself calls access.requireCanCreateExam (school-admin only) before resolving the
+// qualifying batch — see its doc comment.
 router.post(
   '/',
   profileRoute(async ({ req, res, db, access }) => {

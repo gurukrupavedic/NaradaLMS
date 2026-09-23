@@ -118,6 +118,19 @@ export const examOutcome = pgEnum('examOutcome', [
   'prathamaSreni',
   'athiUttamam',
 ])
+// A slot's own lifecycle, independent of any exam it eventually produces. 'open' accepts requests;
+// a request moves it to 'requested' (single-seat, so it stops taking new ones) until that request
+// is approved (→ 'booked', and the real `exam` row now exists) or rejected (→ back to 'open', so
+// the slot isn't stuck). 'cancelled' is an admin withdrawing it outright — terminal, whether or not
+// it ever had a request.
+export const examSlotStatus = pgEnum('examSlotStatus', ['open', 'requested', 'booked', 'cancelled'])
+
+export const examSlotRequestStatus = pgEnum('examSlotRequestStatus', [
+  'pending',
+  'approved',
+  'rejected',
+])
+
 export const registrationStatus = pgEnum('registrationStatus', ['pending', 'approved', 'rejected'])
 
 // A school runs one or more courses (Vedam, Smartam, ...). A course owns its tracks, and through
@@ -517,6 +530,86 @@ export const examResult = pgTable(
       sql`${table.total} = ${table.aksharaShuddhi} + ${table.swaraShuddhi} + ${table.niyantranaAnargalata} + ${table.shraavyata} + ${table.pratishakyaGrammar} + ${table.childrenBonus}`,
     ),
     index('examResult_evaluatorId_idx').on(table.evaluatorId),
+  ],
+)
+
+// A school-admin-opened appointment a student can ask to sit a track's certification exam in —
+// single-seat, so booking it is a claim on the one seat, not a capacity decrement. Independent of
+// `batch`/`enrollment`: the qualifying batch is only resolved (same as direct exam creation,
+// `enrollment/service.ts::resolveQualifyingBatch`) once a request on this slot is approved and the
+// real `exam` row is written — a slot by itself doesn't know or care which batch its eventual
+// sitting will land in.
+export const examSlot = pgTable(
+  'examSlot',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    trackId: uuid('trackId')
+      .notNull()
+      .references(() => track.id),
+    scheduledAt: timestamp('scheduledAt').notNull(),
+    status: examSlotStatus('status').notNull().default('open'),
+    openedBy: uuid('openedBy')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'restrict' }),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [
+    // The core query for both "open slots a student can request" and an admin's slot list: a
+    // track's slots, filtered by status, soonest first.
+    index('examSlot_trackId_status_scheduledAt_idx').on(
+      table.trackId,
+      table.status,
+      table.scheduledAt,
+    ),
+    // Not a second uniqueness rule (`id` is already unique) — the target `examSlotRequest`'s
+    // composite foreign key needs, so its copy of `trackId` can never drift from the slot it's
+    // actually requesting (mirrors `track_id_courseId_uidx` doing the same for `batch`).
+    uniqueIndex('examSlot_id_trackId_uidx').on(table.id, table.trackId),
+  ],
+)
+
+// A student's request to claim an open `examSlot` — mirrors `enrollmentRequest`'s shape
+// (pending/approved/rejected + reviewedAt/reviewedBy) for the same reason: the request must exist,
+// and be visible to an admin, before the thing it asks for (a real `exam` row) does. `examId` is
+// filled in only on approval, the same way `registration.convertedProfileId` records what a
+// registration turned into without the target table needing to know it came from a request.
+export const examSlotRequest = pgTable(
+  'examSlotRequest',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    slotId: uuid('slotId')
+      .notNull()
+      .references(() => examSlot.id, { onDelete: 'cascade' }),
+    // Always the track of `slotId`'s slot — enforced by the composite foreign key below, copied
+    // here so "one pending request per student per track" (below) doesn't need to join through
+    // examSlot to check it.
+    trackId: uuid('trackId').notNull(),
+    studentId: uuid('studentId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'cascade' }),
+    status: examSlotRequestStatus('status').notNull().default('pending'),
+    reviewedAt: timestamp('reviewedAt'),
+    reviewedBy: uuid('reviewedBy').references(() => profile.id),
+    examId: uuid('examId').references(() => exam.id),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [
+    index('examSlotRequest_studentId_idx').on(table.studentId),
+    index('examSlotRequest_status_createdAt_idx').on(table.status, table.createdAt),
+    foreignKey({
+      name: 'examSlotRequest_slotId_trackId_fk',
+      columns: [table.slotId, table.trackId],
+      foreignColumns: [examSlot.id, examSlot.trackId],
+    }).onDelete('cascade'),
+    // Single-seat protection: at most one live claim on any one slot, regardless of student.
+    uniqueIndex('examSlotRequest_one_pending_per_slot_uidx')
+      .on(table.slotId)
+      .where(sql`${table.status} = 'pending'`),
+    // A student can't hold pending requests on two different slots of the same track at once —
+    // has to let one resolve (approved, rejected, or its slot cancelled) before trying another.
+    uniqueIndex('examSlotRequest_one_pending_per_student_track_uidx')
+      .on(table.studentId, table.trackId)
+      .where(sql`${table.status} = 'pending'`),
   ],
 )
 
