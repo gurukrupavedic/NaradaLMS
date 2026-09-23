@@ -134,6 +134,20 @@
       "when": 1789849285272,
       "tag": "0018_bizarre_cable",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790126355496,
+      "tag": "0019_orange_taskmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790126380519,
+      "tag": "0020_bumpy_logan",
+      "breakpoints": true
     }
   ]
 }

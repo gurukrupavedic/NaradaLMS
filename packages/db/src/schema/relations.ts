@@ -17,6 +17,8 @@ import {
   evaluation,
   exam,
   examResult,
+  examSlot,
+  examSlotRequest,
   profile,
 } from './school'
 
@@ -156,4 +158,26 @@ export const examRelations = relations(exam, ({ one }) => ({
 
 export const examResultRelations = relations(examResult, ({ one }) => ({
   exam: one(exam, { fields: [examResult.examId], references: [exam.id] }),
+}))
+
+export const examSlotRelations = relations(examSlot, ({ one, many }) => ({
+  track: one(track, { fields: [examSlot.trackId], references: [track.id] }),
+  openedByProfile: one(profile, { fields: [examSlot.openedBy], references: [profile.id] }),
+  requests: many(examSlotRequest),
+}))
+
+export const examSlotRequestRelations = relations(examSlotRequest, ({ one }) => ({
+  slot: one(examSlot, { fields: [examSlotRequest.slotId], references: [examSlot.id] }),
+  track: one(track, { fields: [examSlotRequest.trackId], references: [track.id] }),
+  student: one(profile, {
+    fields: [examSlotRequest.studentId],
+    references: [profile.id],
+    relationName: 'examSlotRequestStudent',
+  }),
+  reviewer: one(profile, {
+    fields: [examSlotRequest.reviewedBy],
+    references: [profile.id],
+    relationName: 'examSlotRequestReviewer',
+  }),
+  exam: one(exam, { fields: [examSlotRequest.examId], references: [exam.id] }),
 }))

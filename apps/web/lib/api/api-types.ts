@@ -233,6 +233,45 @@ export type ApiExam = {
 // track's certification is the latest of these for it.
 export type ApiStudentExamResult = ApiExamResult & { trackId: string }
 
+// GET/POST /v1/exam-slots — a school-admin-opened, single-seat appointment to sit a track's
+// certification exam. Independent of `ApiExam`: booking one only creates a real `ApiExam` row once
+// a student's request against it is approved (see `ApiExamSlotRequest` below).
+export type ApiExamSlotStatus = 'open' | 'requested' | 'booked' | 'cancelled'
+
+export type ApiExamSlot = {
+  id: string
+  trackId: string
+  scheduledAt: string
+  status: ApiExamSlotStatus
+  openedBy: string
+  createdAt: string
+}
+
+export type ApiExamSlotWithDetail = ApiExamSlot & { trackName: string }
+
+// A student's request to claim an open `ApiExamSlot` — pending until a school admin approves it
+// (which produces the real `ApiExam`, linked back here via `examId`) or rejects it (which frees the
+// slot for someone else).
+export type ApiExamSlotRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export type ApiExamSlotRequest = {
+  id: string
+  slotId: string
+  trackId: string
+  studentId: string
+  status: ApiExamSlotRequestStatus
+  reviewedAt: string | null
+  reviewedBy: string | null
+  examId: string | null
+  createdAt: string
+}
+
+export type ApiExamSlotRequestWithDetail = ApiExamSlotRequest & {
+  trackName: string
+  studentName: string
+  slotScheduledAt: string
+}
+
 // GET/POST /v1/registrations — a prospective student's application, filed before they have any
 // account (see apps/api/src/registrations/schema.ts). `currentProficiency` reuses
 // `ApiProficiencyLevel`, but a self-reported starting point never has a real reason to be

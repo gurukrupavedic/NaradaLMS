@@ -12,6 +12,8 @@ import {
   evaluation,
   exam,
   examResult,
+  examSlot,
+  examSlotRequest,
   getSchoolDb,
   member,
   organization,
@@ -51,6 +53,8 @@ export type EnrollmentRequestRow = typeof enrollmentRequest.$inferSelect
 export type EvaluationRow = typeof evaluation.$inferSelect
 export type ExamRow = typeof exam.$inferSelect
 export type ExamResultRow = typeof examResult.$inferSelect
+export type ExamSlotRow = typeof examSlot.$inferSelect
+export type ExamSlotRequestRow = typeof examSlotRequest.$inferSelect
 export type RegistrationRow = typeof registration.$inferSelect
 
 export type TestWorld = {
@@ -622,6 +626,55 @@ export async function createExam(
 
   const row = rows.at(0)
   if (!row) throw new Error('createExam: insert returned no row')
+  return row
+}
+
+export async function createExamSlot(
+  world: TestWorld,
+  o: {
+    track: TrackRow
+    openedBy: ProfileRow
+    scheduledAt?: Date
+    status?: ExamSlotRow['status']
+  },
+): Promise<ExamSlotRow> {
+  const rows = await world.schoolDb
+    .insert(examSlot)
+    .values({
+      trackId: o.track.id,
+      openedBy: o.openedBy.id,
+      scheduledAt: o.scheduledAt ?? new Date(),
+      status: o.status ?? 'open',
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createExamSlot: insert returned no row')
+  return row
+}
+
+export async function createExamSlotRequest(
+  world: TestWorld,
+  o: {
+    slot: ExamSlotRow
+    student: ProfileRow
+    status?: ExamSlotRequestRow['status']
+    examId?: string
+  },
+): Promise<ExamSlotRequestRow> {
+  const rows = await world.schoolDb
+    .insert(examSlotRequest)
+    .values({
+      slotId: o.slot.id,
+      trackId: o.slot.trackId,
+      studentId: o.student.id,
+      status: o.status ?? 'pending',
+      examId: o.examId,
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createExamSlotRequest: insert returned no row')
   return row
 }
 

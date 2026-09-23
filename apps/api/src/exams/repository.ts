@@ -223,6 +223,47 @@ export async function findPassedTrackIds(
   return new Set(rows.map(row => row.trackId))
 }
 
+/**
+ * Whether `studentId` has reached L3 (isCertified — level3 or level4) on every gradable chapter of
+ * `trackId`, right now — the eligibility gate for requesting a certification-exam slot on this
+ * track (`examSlots/service.ts::request`). Not the same question as {@link hasPassedTrack}, which
+ * checks a *previous exam result* on this track — this is chapter-level standing, the thing that
+ * makes a first sitting requestable in the first place. A track with no gradable chapters is never
+ * eligible (vacuously true would let a student "pass" a track that isn't ready to certify at all).
+ *
+ * Reduces each chapter's evaluation history to its current level — last write (by `evaluatedAt`)
+ * wins, the same reduction the dashboard does client-side over a student's whole course — but
+ * scoped to one track, so the row count stays small enough to fold in JS rather than needing a
+ * real `DISTINCT ON` (`SchoolDb` doesn't expose one; see `findPassedTrackIds`'s own note on this).
+ */
+export async function isCertifiedAcrossTrack(
+  db: SchoolDb,
+  studentId: string,
+  trackId: string,
+): Promise<boolean> {
+  const chapterIds = await findGradableChapterIds(db, trackId)
+  if (chapterIds.length === 0) {
+    return false
+  }
+
+  const rows = await db.query.evaluation.findMany({
+    where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
+      andCols(eqCol(t.studentId, studentId), inArrayCol(t.chapterId, chapterIds)),
+    orderBy: (t, { asc: ascCol }) => ascCol(t.evaluatedAt),
+    columns: { chapterId: true, level: true },
+  })
+
+  const currentLevelByChapter = new Map<string, Evaluation['level']>()
+  for (const row of rows) {
+    currentLevelByChapter.set(row.chapterId, row.level)
+  }
+
+  return chapterIds.every(id => {
+    const level = currentLevelByChapter.get(id)
+    return level === 'level3' || level === 'level4'
+  })
+}
+
 export async function findTrackById(
   db: SchoolDb,
   trackId: string,

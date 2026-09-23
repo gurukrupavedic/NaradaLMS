@@ -15,6 +15,7 @@ import { isProfilePartOfCourse } from '../courses/repository'
 import { forbidden } from '../error'
 import { hasSharedInstructorEnrollment } from '../enrollment/service'
 import type { Exam } from '../exams/schema'
+import type { ExamSlotRequest } from '../examSlots/schema'
 import type { User } from '../session'
 
 type School = typeof organization.$inferSelect
@@ -33,6 +34,9 @@ export type ExamReadScope =
   | { kind: 'all' }
   | { kind: 'own'; profileId: string }
   | { kind: 'manageable'; profileId: string; batchIds: string[] }
+// Simpler than `ExamReadScope`: an exam-slot request isn't attached to any batch at all, so there's
+// no 'manageable' widening to account for — an admin sees every request, everyone else only theirs.
+export type ExamSlotRequestReadScope = { kind: 'all' } | { kind: 'own'; profileId: string }
 // Every school member can read published content; a caller who can also author it (content:update
 // — owner/admin) additionally sees drafts. No profile involved — this is a school-membership
 // question, not a per-batch one.
@@ -54,7 +58,6 @@ type AccessPolicySource = {
 const BATCH_READ_PERMISSION: BatchPermissions = { enrollment: ['read'] }
 const ENROLLMENT_CREATE_PERMISSION: BatchPermissions = { enrollment: ['create'] }
 const ENROLLMENT_REMOVE_PERMISSION: BatchPermissions = { enrollment: ['remove'] }
-const EXAM_CREATE_PERMISSION: BatchPermissions = { exam: ['create'] }
 const EXAM_UPDATE_PERMISSION: BatchPermissions = { exam: ['update'] }
 const EVALUATION_READ_PERMISSION: BatchPermissions = { evaluation: ['read'] }
 const EVALUATION_CREATE_PERMISSION: BatchPermissions = { evaluation: ['create'] }
@@ -310,6 +313,10 @@ export class AccessPolicy {
   // creation, by `enrollment/service.ts::resolveQualifyingBatch` (DD-012); every check below
   // reuses that stored value rather than re-resolving it.
   //
+  // Booking a sitting (requireCanCreateExam) is the one exception: it was originally a batch-role
+  // check like the others, but exam bookings are now a school-admin (or super-admin) decision, so
+  // it no longer touches `batchId`/`hasBatchPermission` at all — see its own doc comment.
+  //
   // The "can see every exam in this batch" checks below deliberately test EXAM_UPDATE_PERMISSION,
   // not EXAM_READ_PERMISSION: the batch ACL grants `exam:read` to students too (so they can read
   // their OWN exam — already covered by the studentId check), but only instructor/ta hold
@@ -334,25 +341,23 @@ export class AccessPolicy {
   }
 
   /**
-   * Unlike the other exam checks, this one runs *before* the exam row (and thus its `batchId`)
-   * exists — the caller (`exams/service.ts::createExam`) resolves the qualifying batch via
-   * `resolveQualifyingBatch` first and passes it here, so authorization and the batch stored on
-   * the new row are always the exact same resolution, never two independent ones.
-   *
-   * No school-admin fallback (PARITY_PLAN.md §11.4): a plain owner/admin who isn't also enrolled
-   * as instructor/TA in the qualifying batch cannot create an exam here. Verified directly against
-   * `apps/api/src/routes/exams.ts`: only `isSuperAdmin` bypasses `canManageExam`, which is itself
-   * a pure batch-role check with no school-permission path at all.
+   * Booking a sitting is a school-admin (or super-admin) decision, not a batch role — revises the
+   * exam-booking feature's prior "instructor/TA with exam:create in the qualifying batch" rule.
+   * `exam:create` no longer exists as a batch permission at all (packages/auth/src/permissions/
+   * batch.ts), so this doesn't need the exam's batchId the way requireCanUpdateExam still does; it
+   * runs first in `exams/service.ts::createExam`, before the qualifying batch is even resolved.
+   * Matches `requireCanRecordEvaluation`'s shape for the same reason: booking and grading a
+   * certification sitting are both school-level decisions, unlike rescheduling one.
    */
-  public requireCanCreateExam(batchId: string): void {
-    if (this.isSuperAdmin || this.hasBatchPermission(batchId, EXAM_CREATE_PERMISSION)) {
-      return
+  public requireCanCreateExam(): void {
+    if (!this.isSchoolAdmin()) {
+      throw forbidden()
     }
-
-    throw forbidden()
   }
 
-  // Same "no school-admin fallback" rule as requireCanCreateExam — see its doc comment.
+  // No school-admin fallback (PARITY_PLAN.md §11.4): a plain owner/admin who isn't also enrolled
+  // as instructor/TA in the exam's batch cannot update it here — unlike requireCanCreateExam
+  // above, rescheduling/cancelling stays a batch-role decision.
   public requireCanUpdateExam(exam: Exam): void {
     if (
       this.isSuperAdmin ||
@@ -373,6 +378,37 @@ export class AccessPolicy {
     if (!this.isSchoolAdmin()) {
       throw forbidden()
     }
+  }
+
+  // -- Exam slots ---------------------------------------------------------------
+  // Opening a slot, approving a request, and rejecting one are all school-admin (or super-admin)
+  // decisions — each goes through `requireCanCreateExam` above directly (examSlots/service.ts),
+  // rather than a dedicated method here, since the question ("can this actor make an
+  // exam-booking decision") is exactly the same one. Requesting a slot has no permission check at
+  // all (any active profile may attempt it for themselves; the service's own L3-across-the-track
+  // eligibility check is the real gate) — so the one method this section actually needs is read
+  // access to a *request*, which (unlike a bare slot) carries a student.
+
+  // No batch-manageable branch, unlike `requireCanReadExam`: a request isn't scoped to any batch,
+  // just to the student who filed it.
+  public requireCanReadExamSlotRequest(request: ExamSlotRequest): void {
+    if (this.isSchoolAdmin() || request.studentId === this.profileId) {
+      return
+    }
+
+    throw forbidden()
+  }
+
+  // "List every exam-slot request I can see" — the `findMany` counterpart to the single-request
+  // check above. An admin sees every request school-wide; anyone else only their own — never
+  // widened by a batch role, because (unlike `getExamVisibility`) there's no batch dimension here
+  // to widen through.
+  public getExamSlotRequestVisibility(): ExamSlotRequestReadScope {
+    if (this.isSchoolAdmin()) {
+      return { kind: 'all' }
+    }
+
+    return { kind: 'own', profileId: this.requireProfileId() }
   }
 
   /**

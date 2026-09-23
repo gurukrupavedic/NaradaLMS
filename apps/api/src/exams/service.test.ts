@@ -73,24 +73,25 @@ describe('createExam', () => {
     expect(repository.insert).toHaveBeenCalledWith(db, { ...data, batchId: 'batch-1' })
   })
 
-  it('authorizes against the resolved batchId, after resolution and before inserting', async () => {
+  it('authorizes before resolving the qualifying batch', async () => {
     vi.mocked(repository.insert).mockResolvedValue(created)
 
     await createExam(context, data)
 
-    expect(requireCanCreateExam).toHaveBeenCalledWith('batch-1')
+    expect(requireCanCreateExam).toHaveBeenCalledWith()
     expect(requireCanCreateExam.mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(repository.insert).mock.invocationCallOrder[0]!,
+      vi.mocked(enrollmentService.resolveQualifyingBatch).mock.invocationCallOrder[0]!,
     )
   })
 
-  it('propagates a rejection from access.requireCanCreateExam without inserting', async () => {
+  it('propagates a rejection from access.requireCanCreateExam without resolving a batch or inserting', async () => {
     requireCanCreateExam.mockImplementation(() => {
       throw new Error('forbidden')
     })
 
     await expect(createExam(context, data)).rejects.toThrow('forbidden')
 
+    expect(enrollmentService.resolveQualifyingBatch).not.toHaveBeenCalled()
     expect(repository.insert).not.toHaveBeenCalled()
   })
 

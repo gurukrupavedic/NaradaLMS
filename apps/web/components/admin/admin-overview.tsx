@@ -15,6 +15,7 @@ import {
   catalogTrackQuery,
   catalogTracksQuery,
   enrollmentRequestsQuery,
+  examSlotRequestsQuery,
   registrationsQuery,
 } from '@/lib/query/options'
 import { summariseTrack, type CatalogTrack } from '@/lib/mock-catalog'
@@ -37,6 +38,7 @@ export function AdminOverview() {
   const { data: pendingEnrollmentRequests } = useQuery(enrollmentRequestsQuery('pending'))
   // Same count-only treatment: the grading screen (components/admin/admin-exams-screen.tsx) owns the list.
   const { data: sittings } = useQuery(adminSittingsQuery())
+  const { data: pendingSlotRequests } = useQuery(examSlotRequestsQuery('pending'))
   const profileName = useSelectedProfileName()
 
   // No hooks below this point, so the early return is safe.
@@ -108,7 +110,7 @@ export function AdminOverview() {
 
         <Section title="Exams" count={`${sittings?.awaiting.length ?? 0} awaiting`}>
           <ol className="sheet">
-            <li>
+            <li className="border-b border-rule-soft last:border-0">
               <Link
                 href={cp('/admin/exams')}
                 className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
@@ -119,6 +121,28 @@ export function AdminOverview() {
                 ) : (
                   <span className="label text-ink-muted">Nothing awaiting →</span>
                 )}
+              </Link>
+            </li>
+            <li className="border-b border-rule-soft last:border-0">
+              <Link
+                href={cp('/admin/exam-slots?view=requests')}
+                className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
+              >
+                <span className="text-[0.9375rem]">Review sitting requests</span>
+                {(pendingSlotRequests?.length ?? 0) > 0 ? (
+                  <span className="label text-vermilion">{pendingSlotRequests!.length} awaiting review →</span>
+                ) : (
+                  <span className="label text-ink-muted">Nothing pending →</span>
+                )}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href={cp('/admin/exam-slots')}
+                className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
+              >
+                <span className="text-[0.9375rem]">Open a sitting slot</span>
+                <span className="label text-ink-muted">→</span>
               </Link>
             </li>
           </ol>
