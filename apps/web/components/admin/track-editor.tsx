@@ -22,6 +22,7 @@ import {
 } from '@/lib/query/use-catalog-mutations'
 import { isReady, type CatalogChapter, type CatalogTrack } from '@/lib/models/catalog'
 import { useCoursePath } from '@/lib/course'
+import { pluralize } from '@/lib/pluralize'
 
 /**
  * Admin catalog and editor for one track.
@@ -137,7 +138,7 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
       <Standing
         eyebrow="Administration · track catalog"
         headline={track.name}
-        meta={`${track.subtitle ? `${track.subtitle} · ` : ''}${summary.total} chapters · taught in ${track.batchCodes.length} batches`}
+        meta={`${track.subtitle ? `${track.subtitle} · ` : ''}${pluralize(summary.total, 'chapter')} · taught in ${pluralize(track.batchCodes.length, 'batch', 'batches')}`}
         stats={[
           { value: `${summary.published}/${summary.total}`, label: 'Published' },
           { value: `${summary.ready}/${summary.total}`, label: 'Ready' },

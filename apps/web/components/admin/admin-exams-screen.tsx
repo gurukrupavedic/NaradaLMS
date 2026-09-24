@@ -17,6 +17,7 @@ import { narrowLevel } from '@/lib/api/reshape'
 import { EXAM_MAX_TOTAL, EXAM_OUTCOME_LABEL } from '@/lib/exam-grading'
 import { adminSittingsPageQuery } from '@/lib/query/options'
 import { useDebouncedValue } from '@/lib/use-debounced-value'
+import { pluralize } from '@/lib/pluralize'
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -80,7 +81,7 @@ export function AdminExamsScreen() {
 
       <div className="mx-auto max-w-5xl space-y-12 px-5 py-9">
         <Reveal>
-          <Section title="Awaiting a result" count={`${awaitingCount} sittings`}>
+          <Section title="Awaiting a result" count={awaiting.hasNextPage ? `${awaitingCount} sittings` : pluralize(awaiting.rows.length, 'sitting')}>
             <input
               value={awaiting.query}
               onChange={e => awaiting.setQuery(e.target.value)}
@@ -135,7 +136,7 @@ export function AdminExamsScreen() {
         </Reveal>
 
         <Reveal delay={60}>
-          <Section title="Graded" count={`${gradedCount} sittings`}>
+          <Section title="Graded" count={graded.hasNextPage ? `${gradedCount} sittings` : pluralize(graded.rows.length, 'sitting')}>
             <input
               value={graded.query}
               onChange={e => graded.setQuery(e.target.value)}

@@ -19,6 +19,7 @@ import { isCertified } from '@/lib/proficiency'
 import { useSelectedProfileName } from '@/lib/auth/profile-store'
 import { Spinner } from '@/components/spinner'
 import type { ExamSlotRequestRow, ExamSlotRow } from '@/lib/api/resources'
+import { pluralize } from '@/lib/pluralize'
 
 export function ExamsScreen() {
   const { data, error } = useQuery(examsQuery())
@@ -58,9 +59,9 @@ export function ExamsScreen() {
             ? 'No certifications yet'
             : certified === total
               ? 'Every track certified'
-              : `Certified in ${certified} of ${total} tracks`
+              : `Certified in ${certified} of ${pluralize(total, 'track')}`
         }
-        meta={`${total - certified} tracks remaining · ${scheduled.length} sitting booked`}
+        meta={`${pluralize(total - certified, 'track')} remaining · ${pluralize(scheduled.length, 'sitting')} booked`}
         stats={[
           { value: `${certified}/${total}`, label: 'Certified' },
           { value: String(past.length), label: 'Sittings' },
@@ -73,7 +74,7 @@ export function ExamsScreen() {
             omitted entirely rather than rendered as a "nothing here" panel. */}
         {scheduled.length > 0 && (
           <Reveal>
-            <Section title="Booked" count={`${scheduled.length} sitting`}>
+            <Section title="Booked" count={pluralize(scheduled.length, 'sitting')}>
               <ol className="sheet">
                 {scheduled.map(sitting => (
                   <li
@@ -128,14 +129,14 @@ export function ExamsScreen() {
         )}
 
         <Reveal delay={120}>
-          <Section title="Certification record" count={`${certified}/${total} tracks`}>
+          <Section title="Certification record" count={`${certified}/${pluralize(total, 'track')}`}>
             <CertificationRecord rows={certifications} />
           </Section>
         </Reveal>
 
         {past.length > 0 && (
           <Reveal delay={160}>
-            <Section title="Sitting history" count={`${past.length} sittings`}>
+            <Section title="Sitting history" count={pluralize(past.length, 'sitting')}>
               <ol className="sheet">
                 {past.map(sitting => {
                   const result = sitting.result!

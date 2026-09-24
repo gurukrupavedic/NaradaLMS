@@ -41,7 +41,7 @@ import {
 // Paths within the course — `useCoursePath()` puts the course in front (`/dashboard` → `/vedam/dashboard`).
 const NAV = [
   { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Learning', path: '/practice' },
+  { label: 'Practice', path: '/practice' },
   { label: 'Exams', path: '/exams' },
   { label: 'Admin', path: '/admin' },
 ]

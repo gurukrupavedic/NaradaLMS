@@ -13,14 +13,12 @@ import { Notice } from '@/components/notice'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
 import { dashboardQuery } from '@/lib/query/options'
+import { pluralize } from '@/lib/pluralize'
 
 /**
- * Status, plus the ladder: what's next and what needs attention up top, then the same track ×
- * chapter picture `/practice` (`components/practice-screen.tsx`) shows — denser here (the
- * collapsible `TrackLadder`, not `/practice`'s always-flat `TrackChapterList`), on the theory that
- * a reader landing on their own dashboard usually wants *their* active track expanded and
- * everything else out of the way, where a reader who's gone looking for a specific chapter on
- * `/practice` wants nothing collapsed to begin with.
+ * Status, plus the ladder: what's next and what needs attention up top, then the same collapsible
+ * track × chapter `TrackLadder` `/practice` (`components/practice-screen.tsx`) shows, with the
+ * focus track expanded and everything else out of the way.
  */
 export function DashboardScreen() {
   const { data, error } = useQuery(dashboardQuery())
@@ -42,6 +40,7 @@ export function DashboardScreen() {
   } = data
 
   const focus = learningTracks[0]
+  const activeTeachingCount = teachingBatches.filter(b => b.status === 'active').length
   const resume = focus?.chapters.find(c => c.id === resumeChapterId)
   // Real progress already on record (even with no *current* live seat) is what tells a returning
   // break/graduated-cohort student apart from someone freshly approved with no history at all —
@@ -121,7 +120,7 @@ export function DashboardScreen() {
             progress, by contrast, is worth keeping visible alongside it. */}
         {(hasActiveBatch || returning) && (
           <Reveal delay={60}>
-            <Section title="Your practice" count={`${learningTracks.length} tracks`}>
+            <Section title="Your practice" count={pluralize(learningTracks.length, 'track')}>
               <div className="space-y-4">
                 {learningTracks.map(track => (
                   <TrackLadder
@@ -134,7 +133,7 @@ export function DashboardScreen() {
               </div>
 
               {archivedLearningTracks.length > 0 && (
-                <Archive label={`${archivedLearningTracks.length} completed track`}>
+                <Archive label={pluralize(archivedLearningTracks.length, 'completed track')}>
                   <div className="space-y-4">
                     {archivedLearningTracks.map(track => (
                       <TrackLadder key={track.id} track={track} defaultOpen={false} />
@@ -148,7 +147,7 @@ export function DashboardScreen() {
 
         {teachingBatches.length > 0 && (
           <Reveal delay={120}>
-            <Section title="Your teaching" count={`${teachingBatches.length} active batches`}>
+            <Section title="Your teaching" count={pluralize(activeTeachingCount, 'active batch', 'active batches')}>
               <TeachingList batches={teachingBatches} />
             </Section>
           </Reveal>

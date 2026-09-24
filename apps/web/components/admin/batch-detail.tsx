@@ -17,6 +17,7 @@ import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-
 import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/models/dashboard'
 import { useCoursePath } from '@/lib/course'
+import { pluralize } from '@/lib/pluralize'
 
 const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Completed' } as const
 
@@ -162,7 +163,7 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
                 </span>
                 {summary.unmarked > 0 && (
                   <span className="label mt-1.5 block text-vermilion">
-                    {summary.unmarked} students not yet marked
+                    {pluralize(summary.unmarked, 'student')} not yet marked
                   </span>
                 )}
               </dd>
@@ -188,7 +189,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
   const [addOpen, setAddOpen] = useState(false)
 
   return (
-    <Section title="Roster" count={`${batch.roster.length} enrolled · ${batch.chapterCodes.length} chapters`}>
+    <Section title="Roster" count={`${batch.roster.length} enrolled · ${pluralize(batch.chapterCodes.length, 'chapter')}`}>
       <div className="flex justify-end">
         <button
           type="button"

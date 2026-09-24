@@ -22,6 +22,7 @@ import { summariseTrack, type CatalogTrack } from '@/lib/models/catalog'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useSelectedProfileName } from '@/lib/auth/profile-store'
 import { useCoursePath } from '@/lib/course'
+import { pluralize } from '@/lib/pluralize'
 
 export function AdminOverview() {
   const cp = useCoursePath()
@@ -52,8 +53,8 @@ export function AdminOverview() {
     <>
       <Standing
         eyebrow={`${profileName ?? ''} · administration`}
-        headline={`${batches.summary.active} active batches`}
-        meta={`${batches.summary.total} total · ${batches.summary.students} students · ${batches.summary.tracks} tracks`}
+        headline={pluralize(batches.summary.active, 'active batch', 'active batches')}
+        meta={`${batches.summary.total} total · ${pluralize(batches.summary.students, 'student')} · ${pluralize(batches.summary.tracks, 'track')}`}
         stats={[
           { value: String(batches.summary.active), label: 'Active' },
           { value: String(batches.summary.students), label: 'Students' },
@@ -150,7 +151,7 @@ export function AdminOverview() {
 
         <Section
           title="Active"
-          count={`${batches.active.length} batches`}
+          count={pluralize(batches.active.length, 'batch', 'batches')}
           action={
             <Link
               href={cp('/admin/batches/new')}
@@ -164,7 +165,7 @@ export function AdminOverview() {
         </Section>
 
         {batches.upcoming.length > 0 && (
-          <Section title="Upcoming" count={`${batches.upcoming.length} batch`}>
+          <Section title="Upcoming" count={pluralize(batches.upcoming.length, 'batch', 'batches')}>
             <BatchTable rows={batches.upcoming} />
           </Section>
         )}
@@ -172,7 +173,7 @@ export function AdminOverview() {
         {/* Content lives beside the batches that teach it. Without this the
             catalog is only reachable by opening a batch first, which is a
             strange way in when the thing you want to edit is the syllabus. */}
-        <Section title="Content" count={`${tracks.length} tracks`}>
+        <Section title="Content" count={pluralize(tracks.length, 'track')}>
           <ol className="sheet">
             {tracks.map(track => (
               <CatalogRow key={track.id} track={track} />
@@ -180,7 +181,7 @@ export function AdminOverview() {
           </ol>
         </Section>
 
-        <Archive label={`${batches.archived.length} completed batches`}>
+        <Archive label={pluralize(batches.archived.length, 'completed batch', 'completed batches')}>
           <BatchTable rows={batches.archived} />
         </Archive>
       </div>

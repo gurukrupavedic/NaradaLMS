@@ -22,6 +22,7 @@ import { useUpdateProfile } from '@/lib/query/use-profile-mutations'
 import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
 import type { ApiProfile } from '@/lib/api/api-types'
+import { pluralize } from '@/lib/pluralize'
 
 const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
   { key: 'dressCodeAgreed', label: 'Dress code' },
@@ -180,7 +181,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
 
         {learningTracks.length > 0 && (
           <Reveal delay={80}>
-            <Section title="Learning" count={`${learningTracks.length} tracks`}>
+            <Section title="Practice" count={pluralize(learningTracks.length, 'track')}>
               <div className="space-y-4">
                 {learningTracks.map(track => (
                   <TrackLadder key={track.id} track={track} defaultOpen={false} />
@@ -192,7 +193,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
 
         {certifications.length > 0 && (
           <Reveal delay={120}>
-            <Section title="Certification record" count={`${certifiedCount}/${certifications.length} tracks`}>
+            <Section title="Certification record" count={`${certifiedCount}/${pluralize(certifications.length, 'track')}`}>
               <CertificationRecord rows={certifications} />
             </Section>
           </Reveal>
