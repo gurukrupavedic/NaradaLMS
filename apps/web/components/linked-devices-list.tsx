@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
 
 import {
   getAuthSession,
@@ -10,6 +9,7 @@ import {
   type AuthSessionListItem,
 } from '@/lib/auth/client'
 import { summarizeUserAgent } from '@/lib/user-agent'
+import { formatAgo } from '@/lib/format-date'
 
 /**
  * Every device currently holding a year-long session on this account, with a revoke button per
@@ -72,7 +72,7 @@ export function LinkedDevicesList() {
                 {isCurrent && <span className="label ml-2 text-vermilion">This device</span>}
               </p>
               <p className="mt-0.5 text-[0.8125rem] text-ink-muted">
-                Signed in {formatDistanceToNow(new Date(session.createdAt), { addSuffix: true })}
+                Signed in {formatAgo(session.createdAt)}
               </p>
             </div>
 

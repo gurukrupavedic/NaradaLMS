@@ -10,11 +10,11 @@ import { authProfileQuery } from '@/lib/query/options'
  * case: a household can share one phone number across several children's profiles (see
  * `app/login/page.tsx`'s own doc comment), so a session alone doesn't say who's practising.
  *
- * The id lives in a plain (non-httpOnly) cookie, not just `localStorage`: `middleware.ts` needs to
+ * The id lives in a plain (non-httpOnly) cookie, not just `localStorage`: `proxy.ts` needs to
  * read it at the edge, before any page renders, to redirect a session with no profile chosen yet
  * back to `/login`. Nothing about `x-profile-id` is a secret worth hiding from client JS either —
- * api-next validates it against the caller's own session on every request
- * (`resolveOptionalProfile` in the api-next checkout's `naradaRoute.ts` rejects any id that
+ * apps/api validates it against the caller's own session on every request
+ * (`resolveOptionalProfile`'s `naradaRoute.ts` rejects any id that
  * isn't the authenticated user's own), so a client that lied about it would just get a 403, not
  * someone else's data.
  *
@@ -94,7 +94,7 @@ export function useSelectedProfileId(): string | null {
  * has admin-level access anywhere it matters here: global super-admin, or owner/admin of this
  * school specifically. Mirrors apps/web's own `hasSchoolWideAccess` (`lib/session.ts` there).
  *
- * `undefined` means "not resolved yet" — the api-next authorization check
+ * `undefined` means "not resolved yet" — the apps/api authorization check
  * (`isSchoolAdmin`/`AccessPolicy`) is the actual gate on every admin request; a caller who treated
  * `undefined` as `false` would flash the "not an admin" state for every admin on every load.
  */

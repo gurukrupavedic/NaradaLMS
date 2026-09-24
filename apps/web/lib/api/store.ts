@@ -2,16 +2,16 @@ import { fetchApi } from '@/lib/api/client'
 import { buildCatalogTrack } from '@/lib/api/reshape'
 import { getSelectedProfileId } from '@/lib/auth/profile-store'
 import type { ApiBatch, ApiTrack } from '@/lib/api/api-types'
-import type { CatalogTrack } from '@/lib/mock-catalog'
+import type { CatalogTrack } from '@/lib/models/catalog'
 
 /**
  * A writable stand-in for the database — now only for what still has no real backend:
  * `track.name`/`subtitle` (`saveTrack`/`writeTrack`) and `chapter.isCertification`, neither of
- * which has a real column (`subtitle` and `isCertification` are mock-only — see `mock-catalog.ts`
+ * which has a real column (`subtitle` and `isCertification` are mock-only — see `models/catalog.ts`
  * and `reshape.ts::buildCatalogTrack`, which hardcodes `isCertification: false` for real data).
- * Chapter title/order/status/delete write for real now (`lib/api/resources.ts`'s four mutations go
- * through `mutateApi`, calling `resetCatalogCache` below afterward) — see PARITY_PLAN.md §17 in
- * the api-next checkout for what's still mocked.
+ * Chapter title/order/status/delete write for real now (`lib/api/resources`'s four mutations go
+ * through `mutateApi`, calling `resetCatalogCache` below afterward) — see apps/api/PARITY_PLAN.md §17
+ * for what's still mocked.
  *
  * Without this the catalog reads were read-only, and that quietly broke the whole
  * optimistic-mutation story: the edit applied instantly, then `onSettled`
@@ -22,8 +22,7 @@ import type { CatalogTrack } from '@/lib/mock-catalog'
  * That is exactly the failure an optimistic UI is supposed to surface, and it
  * only shows up if writes and reads go through the same place. So they do —
  * seeded from a real `GET /v1/tracks` snapshot the first time either is called,
- * rather than the static fixture this module used before `web-next` had
- * real auth to fetch with.
+ * rather than a static fixture.
  *
  * The seed is a fresh array from `buildCatalogTrack`, not a reference into
  * anything cached elsewhere: mutating a shared object would leak edits into
@@ -77,7 +76,7 @@ export async function readTrack(id: string): Promise<CatalogTrack | undefined> {
 
 function updateTrack(id: string, update: (track: CatalogTrack) => CatalogTrack) {
   // A write can only follow a read that already seeded the store — every write's own call site
-  // (lib/api/resources.ts's mutations) is reached from a screen that has already rendered the
+  // (lib/api/resources's mutations) is reached from a screen that has already rendered the
   // track it's editing. `tracks` being null here would mean a write raced ahead of any read,
   // which is a caller bug, not a state this function should paper over.
   if (!tracks) return
@@ -92,7 +91,7 @@ export function writeTrack(
 }
 
 /**
- * Chapter title/order/status/delete now write for real (`lib/api/resources.ts`'s four mutations
+ * Chapter title/order/status/delete now write for real (`lib/api/resources`'s four mutations
  * go through `mutateApi`, not this store) — a caller calls this right after one of those succeeds
  * so the *next* read re-seeds from a fresh `GET /tracks` instead of `seed()`'s normal
  * memoize-forever behavior. This also wipes any still-mock-only edit to `track.subtitle` or

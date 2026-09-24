@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
-import type { AdminBatchRow } from '@/lib/mock-dashboard'
+import type { AdminBatchRow } from '@/lib/models/dashboard'
 import { useCoursePath } from '@/lib/course'
 
 const STATUS_LABEL: Record<AdminBatchRow['status'], string> = {

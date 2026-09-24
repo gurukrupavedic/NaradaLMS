@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { formatDistanceToNow } from 'date-fns'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
@@ -17,6 +16,7 @@ import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
 import type { ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
 import { useCoursePath } from '@/lib/course'
+import { formatAgo } from '@/lib/format-date'
 
 const STATUS_LABEL: Record<ApiRegistrationStatus, string> = {
   pending: 'Pending review',
@@ -63,7 +63,7 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
       <Standing
         eyebrow={`Administration · ${STATUS_LABEL[registration.status]}`}
         headline={`${registration.firstName} ${registration.lastName}`}
-        meta={`Filed ${formatDistanceToNow(new Date(registration.createdAt), { addSuffix: true })}`}
+        meta={`Filed ${formatAgo(registration.createdAt)}`}
       />
 
       <div className="mx-auto max-w-5xl space-y-11 px-5 py-9">
@@ -184,7 +184,7 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
           registration.reviewedAt && (
             <p className="label text-ink-muted">
               {STATUS_LABEL[registration.status]}{' '}
-              {formatDistanceToNow(new Date(registration.reviewedAt), { addSuffix: true })}
+              {formatAgo(registration.reviewedAt)}
             </p>
           )
         )}

@@ -3,12 +3,10 @@ import type { ProficiencyLevel } from '@/lib/proficiency'
 /**
  * The practice room's content types and pure helpers.
  *
- * Despite the filename, there's no fixture data left here (see `lib/mock-catalog.ts` for the same
- * move, made the same way, for the same reason). `lib/api/reshape.ts`'s `buildChapterContent`
- * builds this from real data — real chapter, real track, real proficiency, real scripts/audio when
+ * `lib/api/reshape.ts`'s `buildChapterContent` builds this from real data — real chapter, real track, real proficiency, real scripts/audio when
  * a chapter has them. Today no chapter in the imported syllabus actually has any (text, segments or
  * audio), so `scripts`/`audio` come back empty in practice — but the capability is real:
- * api-next's chapters domain persists all three and `components/admin/*` writes them for real.
+ * apps/api's chapters domain persists all three and `components/admin/*` writes them for real.
  * `components/practice-room.tsx` renders an honest empty state for the no-content case rather than
  * pretending otherwise.
  *

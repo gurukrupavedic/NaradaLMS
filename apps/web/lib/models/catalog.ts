@@ -1,7 +1,7 @@
 /**
  * The admin content catalog's types and pure helpers.
  *
- * Deliberately a different shape from `lib/mock-dashboard.ts`'s `LadderTrack`,
+ * Deliberately a different shape from `lib/models/dashboard.ts`'s `LadderTrack`,
  * because it answers a different question. A student's track view is *their*
  * record — their marks, their next chapter, published chapters only. An admin
  * opening the same track is not looking at anybody's progress: they want the
@@ -13,13 +13,10 @@
  * sees a syllabus of titles with nothing behind them. Nothing else in the app
  * surfaces that; the catalog puts it in the primary column.
  *
- * Despite the filename, there's no fixture data left here — `lib/api/store.ts`
- * seeds real `CatalogTrack`s from `GET /v1/tracks` (via `lib/api/reshape.ts`'s
- * `buildCatalogTrack`) rather than a static array. What's left is the shape
- * every real and locally-edited track shares, plus the derivations
- * (`pipelineOf`/`isReady`/`summariseTrack`) that read it — kept under this name
- * rather than renamed, so the diff that made the data real didn't also have to
- * touch every file that imports these types.
+ * `lib/api/store.ts` seeds real `CatalogTrack`s from `GET /v1/tracks` (via
+ * `lib/api/reshape.ts`'s `buildCatalogTrack`). This module is the shape every
+ * real and locally-edited track shares, plus the derivations
+ * (`pipelineOf`/`isReady`/`summariseTrack`) that read it.
  */
 
 export type ScriptCode = 'te' | 'sa' | 'en'
@@ -57,7 +54,7 @@ export type CatalogTrack = {
 
 // Every real chapter's content state, since none of `hasText`/`segments`/`audioCount`/`mapped`
 // exist on `ApiChapter` — the rewrite deliberately never took on staged uploads/segments/audio
-// mapping (PARITY_PLAN.md §17 in the api-next checkout). Exported so `lib/api/reshape.ts`'s
+// mapping (apps/api/PARITY_PLAN.md §17). Exported so `lib/api/reshape.ts`'s
 // `buildCatalogTrack` can give every real chapter this exact state — honestly, not a placeholder:
 // the live database's chapters are all genuinely in it (see this file's header comment).
 export const EMPTY: ChapterContentState = {

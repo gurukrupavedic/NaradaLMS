@@ -6,7 +6,7 @@ import { MoreHorizontal } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { PROFICIENCY_LABEL, PROFICIENCY_SHORT, type ProficiencyLevel } from '@/lib/proficiency'
-import type { RosterStudent } from '@/lib/mock-dashboard'
+import type { RosterStudent } from '@/lib/models/dashboard'
 import { GradeDialog, type GradeDialogTarget, type GradeMutation } from '@/components/grade-dialog'
 import { Spinner } from '@/components/spinner'
 import type { SetLevelInput } from '@/lib/query/use-evaluation-mutations'

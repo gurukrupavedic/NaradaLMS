@@ -15,7 +15,7 @@ import { adminBatchQuery, catalogTrackQuery, keys } from '@/lib/query/options'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
 import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
-import { summariseRoster, type AdminBatchDetail } from '@/lib/mock-dashboard'
+import { summariseRoster, type AdminBatchDetail } from '@/lib/models/dashboard'
 import { useCoursePath } from '@/lib/course'
 
 const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Completed' } as const

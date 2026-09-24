@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
+import { PHONE_REGEX } from '@/lib/phone-countries'
 import { submitRegistration, type SubmitRegistrationInput } from '@/lib/api/resources'
 import { ApiError } from '@/lib/api/client'
 import type { ApiCourse, ApiProficiencyLevel } from '@/lib/api/api-types'
@@ -11,6 +12,13 @@ import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficienc
 import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 import { Wordmark } from '@/components/app-shell'
 import { PhoneInput } from '@/components/phone-input'
+import {
+  CheckboxField,
+  SelectField,
+  TagListField,
+  TextAreaField,
+  TextField,
+} from '@/components/form-fields'
 
 /**
  * A prospective student's application — the same data a paper registration form used to collect
@@ -23,8 +31,6 @@ import { PhoneInput } from '@/components/phone-input'
  * shapes of state, which isn't the case here.
  */
 
-// Matches apps/api's e164Phone validator exactly (apps/api/src/utils/validate.ts).
-const PHONE_REGEX = /^\+[1-9]\d{7,14}$/
 const CURRENT_YEAR = new Date().getFullYear()
 
 const STEPS = ['About you', 'Learning', 'Agreements'] as const
@@ -223,13 +229,13 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
         {step === 0 && (
           <div className="space-y-1">
             <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-              <Field
+              <TextField
                 label="First name"
                 value={form.firstName}
                 onChange={v => patch({ firstName: v })}
                 placeholder="Anjali"
               />
-              <Field
+              <TextField
                 label="Last name"
                 value={form.lastName}
                 onChange={v => patch({ lastName: v })}
@@ -238,7 +244,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
             </div>
             <PhoneInput label="Phone number" value={form.phone} onChange={v => patch({ phone: v })} />
             <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-              <Field
+              <TextField
                 label="Email"
                 hint="Optional"
                 value={form.email}
@@ -246,7 +252,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
                 placeholder="anjali@example.com"
                 type="email"
               />
-              <Field
+              <TextField
                 label="Year of birth"
                 value={form.yearOfBirth}
                 onChange={v => patch({ yearOfBirth: v.replace(/\D/g, '').slice(0, 4) })}
@@ -255,7 +261,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
               />
             </div>
             <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-              <Field
+              <TextField
                 label="City"
                 hint="Optional"
                 value={form.city}
@@ -295,7 +301,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
               label="Current proficiency"
               hint="Optional"
               value={form.currentProficiency}
-              onChange={v => patch({ currentProficiency: v as ApiProficiencyLevel | '' })}
+              onChange={v => patch({ currentProficiency: v })}
               options={SELF_REPORTED_PROFICIENCY_OPTIONS}
             />
             <TagListField
@@ -392,188 +398,5 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
         </div>
       </form>
     </div>
-  )
-}
-
-function FieldLabel({ label, hint }: { label: string; hint?: string }) {
-  return (
-    <span className="label flex items-baseline justify-between text-ink-muted">
-      {label}
-      {hint && <span className="text-ink-muted/60 normal-case">{hint}</span>}
-    </span>
-  )
-}
-
-function Field({
-  label,
-  hint,
-  value,
-  onChange,
-  placeholder,
-  type = 'text',
-}: {
-  label: string
-  hint?: string
-  value: string
-  onChange: (value: string) => void
-  placeholder: string
-  type?: string
-}) {
-  return (
-    <label className="mt-7 block">
-      <FieldLabel label={label} hint={hint} />
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="mt-2.5 w-full border-b border-ink/25 bg-transparent py-2.5 text-[1rem] transition-colors placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
-      />
-    </label>
-  )
-}
-
-function TextAreaField({
-  label,
-  hint,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string
-  hint?: string
-  value: string
-  onChange: (value: string) => void
-  placeholder: string
-}) {
-  return (
-    <label className="mt-7 block">
-      <FieldLabel label={label} hint={hint} />
-      <textarea
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={3}
-        className="mt-2.5 w-full resize-none border-b border-ink/25 bg-transparent py-2.5 text-[0.9375rem] leading-relaxed transition-colors placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
-      />
-    </label>
-  )
-}
-
-function SelectField({
-  label,
-  hint,
-  value,
-  onChange,
-  options,
-}: {
-  label: string
-  hint?: string
-  value: string
-  onChange: (value: string) => void
-  options: { value: string; label: string }[]
-}) {
-  return (
-    <label className="mt-7 block">
-      <FieldLabel label={label} hint={hint} />
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="mt-2.5 w-full border-b border-ink/25 bg-transparent py-2.5 text-[0.9375rem] text-ink transition-colors focus:border-vermilion focus:outline-none"
-      >
-        <option value="">Prefer not to say</option>
-        {options.map(option => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-}
-
-function TagListField({
-  label,
-  hint,
-  values,
-  onChange,
-  placeholder,
-}: {
-  label: string
-  hint?: string
-  values: string[]
-  onChange: (values: string[]) => void
-  placeholder: string
-}) {
-  const [draft, setDraft] = useState('')
-
-  function commit() {
-    const trimmed = draft.trim()
-    if (trimmed && !values.includes(trimmed)) {
-      onChange([...values, trimmed])
-    }
-    setDraft('')
-  }
-
-  return (
-    <div className="mt-7">
-      <FieldLabel label={label} hint={hint} />
-      <input
-        type="text"
-        value={draft}
-        onChange={e => setDraft(e.target.value)}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault()
-            commit()
-          }
-        }}
-        onBlur={commit}
-        placeholder={placeholder}
-        className="mt-2.5 w-full border-b border-ink/25 bg-transparent py-2.5 text-[0.9375rem] transition-colors placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
-      />
-      {values.length > 0 && (
-        <ul className="mt-2.5 flex flex-wrap gap-2">
-          {values.map(value => (
-            <li
-              key={value}
-              className="flex items-center gap-1.5 border border-rule px-2.5 py-1 text-[0.8125rem]"
-            >
-              {value}
-              <button
-                type="button"
-                onClick={() => onChange(values.filter(v => v !== value))}
-                aria-label={`Remove ${value}`}
-                className="text-ink-muted transition-colors hover:text-vermilion"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
-
-function CheckboxField({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string
-  checked: boolean
-  onChange: (checked: boolean) => void
-}) {
-  return (
-    <label className="flex items-start gap-3">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={e => onChange(e.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-vermilion"
-      />
-      <span className="text-[0.875rem] leading-relaxed text-ink">{label}</span>
-    </label>
   )
 }
