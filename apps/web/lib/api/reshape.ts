@@ -170,7 +170,13 @@ export function buildLadderTrack(
  * once, for every caller.
  */
 export function buildLearningTracks(dashboard: ApiDashboard): LadderTrack[] {
-  const membershipByTrackId = new Map(dashboard.memberships.map(m => [m.trackId, m]))
+  // `dashboard.memberships` holds every batch this profile is in, in any role — a long-serving
+  // guru/TA can hold one for the same track every year. Keying the map by trackId alone let a
+  // teaching assignment's batch (and its status) overwrite the learner's own row for that track,
+  // making an already-mastered track look "in progress" because the person is currently teaching
+  // it. Only a `student` membership reflects this profile's own progress through the track.
+  const studentMemberships = dashboard.memberships.filter(m => m.role === 'student')
+  const membershipByTrackId = new Map(studentMemberships.map(m => [m.trackId, m]))
   const examResultByTrackId = latestExamResultByTrackId(dashboard.examResults)
   return dashboard.tracks
     .filter(track => track.chapters.length > 0)
