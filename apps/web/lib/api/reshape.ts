@@ -318,6 +318,22 @@ export function buildCatalogTrack(track: ApiTrack, batchCodes: string[]): Catalo
  * which chapter they were most recently evaluated on (`current`; null means never evaluated —
  * `apps/web`'s "unevaluated" signal, see `components/mark-book.tsx`).
  */
+/**
+ * Whether `member` is one of the students shown on `batchStatus`'s roster: an active student, plus
+ * — once the batch is completed — one on a break, who is then part of the record of who was in the
+ * cohort rather than a seat to hide. Shared by `buildRoster` and the admin batch counts so a
+ * batch's student count is always the number of rows its roster shows.
+ */
+export function isRosterStudent(
+  member: ApiBatchWithRole['members'][number],
+  batchStatus: ApiBatchWithRole['status'],
+): boolean {
+  return (
+    member.role === 'student' &&
+    (member.status === 'active' || (batchStatus === 'completed' && member.status === 'break'))
+  )
+}
+
 export function buildRoster(
   membership: ApiBatchWithRole,
   trackChapters: ApiChapter[],
@@ -332,12 +348,7 @@ export function buildRoster(
   // The exception is a completed batch: nobody is being taught in it, so a break is just part of
   // the record of who was in the cohort (and the imported `-0` batches are all-break — see
   // seed-data/source-data-issues.md) rather than a live seat to hide.
-  const showBreaks = membership.status === 'completed'
-  const students = membership.members.filter(
-    member =>
-      member.role === 'student' &&
-      (member.status === 'active' || (showBreaks && member.status === 'break')),
-  )
+  const students = membership.members.filter(member => isRosterStudent(member, membership.status))
 
   return students.map(student => {
     const byChapter = latestLevelByChapterId(

@@ -2,7 +2,7 @@ import { fetchAllPages, fetchApi, mutateApi, notFound } from '@/lib/api/client'
 import type { AdminBatchDetail, AdminBatchRow } from '@/lib/models/dashboard'
 import { getSelectedProfileId } from '@/lib/auth/profile-store'
 import type { ApiBatch, ApiBatchWithRole, ApiEvaluation, ApiProficiencyLevel, ApiTrack } from '@/lib/api/api-types'
-import { buildRoster } from '@/lib/api/reshape'
+import { buildRoster, isRosterStudent } from '@/lib/api/reshape'
 
 // GET /v1/profiles/:profileId/batches?withDetail=true (the signed-in profile — the real gap closed
 // in apps/api specifically because this page needed it, see PARITY_PLAN.md).
@@ -20,7 +20,7 @@ function toAdminBatchRow(batch: ApiBatchWithRole, trackName: string): AdminBatch
     code: batch.code,
     track: trackName,
     status: batch.status,
-    students: batch.members.filter(m => m.role === 'student').length,
+    students: batch.members.filter(m => isRosterStudent(m, batch.status)).length,
     // apps/web's live admin table abbreviates to "R. Venkatesh"; keeping the real full name here
     // rather than replicating that formatting heuristic for a dev-only wiring pass.
     staff: staffMember?.name ?? '—',
@@ -57,7 +57,9 @@ export async function fetchAdminBatches(): Promise<AdminBatchesPayload> {
     summary: {
       active: rows.filter(r => r.status === 'active').length,
       total: rows.length,
-      students: rows.reduce((n, r) => n + r.students, 0),
+      // Students currently in a seat — not those on a break, dropped or inactive, and not a
+      // completed batch's cohort, which the per-batch count above keeps for the record.
+      students: items.reduce((n, b) => n + b.members.filter(m => m.role === 'student' && m.status === 'active').length, 0),
       tracks: tracksById.size,
     },
   }
