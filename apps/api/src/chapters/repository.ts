@@ -1,4 +1,4 @@
-import { and, eq, inArray, max, min, ne } from 'drizzle-orm'
+import { and, eq, inArray, max, min, ne, sql } from 'drizzle-orm'
 import {
   audioAsset,
   audioMapping,
@@ -282,6 +282,19 @@ export async function findChapterRowById(db: SchoolDb, id: string) {
   return db.query.chapter.findFirst({ where: (t, { eq }) => eq(t.id, id) })
 }
 
+/** `chapterId -> trackId` for whichever of `chapterIds` exist (absent ids simply aren't in the map). */
+export async function findTrackIdsByChapterId(db: SchoolDb, chapterIds: string[]): Promise<Map<string, string>> {
+  if (chapterIds.length === 0) {
+    return new Map()
+  }
+
+  const rows = await db
+    .select({ id: chapter.id, trackId: chapter.trackId })
+    .from(chapter)
+    .where(inArray(chapter.id, chapterIds))
+  return new Map(rows.map(row => [row.id, row.trackId]))
+}
+
 export async function findActiveChapterIds(db: SchoolDb, trackId: string): Promise<string[]> {
   const rows = await db
     .select({ id: chapter.id })
@@ -300,10 +313,20 @@ export async function findActiveChapterIds(db: SchoolDb, trackId: string): Promi
  * (`nextArchivedOrder` above), could ever reach.
  */
 export async function reorderChapters(db: SchoolDb, orderedIds: string[]): Promise<void> {
-  for (const [index, id] of orderedIds.entries()) {
-    await db.update(chapter).set({ order: 1_000_000 + index }).where(eq(chapter.id, id))
+  if (orderedIds.length === 0) {
+    return
   }
-  for (const [index, id] of orderedIds.entries()) {
-    await db.update(chapter).set({ order: index }).where(eq(chapter.id, id))
+
+  // Each phase is one UPDATE, safe against the unique index because its targets are disjoint from
+  // every order the rows hold going into it: phase 1 moves into the temp range, phase 2 out of it.
+  for (const offset of [1_000_000, 0]) {
+    const cases = sql.join(
+      orderedIds.map((id, index) => sql`when ${id}::uuid then ${offset + index}::int`),
+      sql` `,
+    )
+    await db
+      .update(chapter)
+      .set({ order: sql`case ${chapter.id} ${cases} end` })
+      .where(inArray(chapter.id, orderedIds))
   }
 }

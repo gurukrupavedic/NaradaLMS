@@ -1,6 +1,6 @@
 import type { PublicDb } from '@narada/db'
 
-import { conflict, notFound } from '../error'
+import { conflict, orNotFound } from '../error'
 import * as repository from './repository'
 import type { School, UpdateSchoolData } from './schema'
 
@@ -21,10 +21,7 @@ export async function updateSchool(
   id: string,
   data: UpdateSchoolData,
 ): Promise<School> {
-  const existing = await repository.findById(context.db, id)
-  if (!existing) {
-    throw notFound()
-  }
+  const existing = orNotFound(await repository.findById(context.db, id))
 
   if (data.slug && data.slug !== existing.slug) {
     const taken = await repository.findBySlug(context.db, data.slug)
@@ -33,10 +30,5 @@ export async function updateSchool(
     }
   }
 
-  const row = await repository.update(context.db, id, data)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.update(context.db, id, data))
 }

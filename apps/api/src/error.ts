@@ -53,3 +53,21 @@ export function unprocessable(message?: string) {
 export function internalError(message?: string) {
   return new AppError(500, ErrorCode.INTERNAL_ERROR, message)
 }
+
+/** Narrows a lookup that came back empty to a 404: `const row = orNotFound(await repository.findById(...))`. */
+export function orNotFound<T>(value: T | null | undefined | false): T {
+  if (!value) {
+    throw notFound()
+  }
+
+  return value
+}
+
+/** For a write that `.returning()` should always have produced a row for — empty means a bug, not a bad request. */
+export function orInternalError<T>(value: T | null | undefined | false): T {
+  if (!value) {
+    throw internalError()
+  }
+
+  return value
+}

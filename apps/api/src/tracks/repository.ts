@@ -23,6 +23,11 @@ export async function findAll(
   })
 }
 
+export async function exists(db: SchoolDb, id: string): Promise<boolean> {
+  const row = await db.query.track.findFirst({ where: (t, { eq }) => eq(t.id, id), columns: { id: true } })
+  return row !== undefined
+}
+
 export async function findById(
   db: SchoolDb,
   id: string,

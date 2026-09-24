@@ -1,9 +1,10 @@
-import { and, asc, desc, eq, gt, inArray, lt, or, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, type SQL } from 'drizzle-orm'
 
 import { examSlot, examSlotRequest, track, type SchoolDb } from '@narada/db'
 
 import type { ExamSlotRequestReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
+import { keysetAfter } from '../utils/keyset'
 import type {
   ExamSlot,
   ExamSlotRequest,
@@ -73,10 +74,12 @@ export async function findManySlots(
 
   if (cursor) {
     conditions.push(
-      or(
-        gt(examSlot.scheduledAt, cursor.scheduledAt),
-        and(eq(examSlot.scheduledAt, cursor.scheduledAt), gt(examSlot.id, cursor.id)),
-      )!,
+      keysetAfter(
+        examSlot.scheduledAt,
+        examSlot.id,
+        { sortValue: cursor.scheduledAt, id: cursor.id },
+        { sort: 'asc', id: 'asc' },
+      ),
     )
   }
 
@@ -131,10 +134,12 @@ export async function findManyRequests(
 
   if (cursor) {
     conditions.push(
-      or(
-        lt(examSlotRequest.createdAt, cursor.createdAt),
-        and(eq(examSlotRequest.createdAt, cursor.createdAt), gt(examSlotRequest.id, cursor.id)),
-      )!,
+      keysetAfter(
+        examSlotRequest.createdAt,
+        examSlotRequest.id,
+        { sortValue: cursor.createdAt, id: cursor.id },
+        { sort: 'desc', id: 'asc' },
+      ),
     )
   }
 

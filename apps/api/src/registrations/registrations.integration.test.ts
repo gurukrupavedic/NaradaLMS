@@ -271,6 +271,27 @@ describe('approve', () => {
       approve({ db: world.schoolDb, school: { id: world.orgId } }, alreadyApproved.id, null),
     ).rejects.toMatchObject({ statusCode: 409 })
   })
+
+  it('provisions exactly one profile when the same registration is approved twice at once', async () => {
+    world = await createTestSchool()
+    const pending = await createRegistration(world, { phone: '+15556660010' })
+    const context = { db: world.schoolDb, school: { id: world.orgId } }
+
+    const results = await Promise.allSettled([
+      approve(context, pending.id, null),
+      approve(context, pending.id, null),
+    ])
+    await trackProvisionedUser(world, '+15556660010')
+
+    expect(results.filter(r => r.status === 'fulfilled')).toHaveLength(1)
+    expect(results.find(r => r.status === 'rejected')).toMatchObject({
+      reason: { statusCode: 409 },
+    })
+    const profiles = await world.schoolDb.query.profile.findMany({
+      where: (t, { eq }) => eq(t.phone, '+15556660010'),
+    })
+    expect(profiles).toHaveLength(1)
+  })
 })
 
 describe('reject', () => {

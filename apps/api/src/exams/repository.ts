@@ -1,10 +1,11 @@
-import { and, asc, desc, eq, getTableColumns, gt, inArray, lt, ne, notInArray, or, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns, inArray, ne, notInArray, or, type SQL } from 'drizzle-orm'
 
 import { chapter, evaluation, exam, examResult, profile, track, type SchoolDb } from '@narada/db'
 
 import { tokenMatch } from '../utils/search'
 import type { ExamReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
+import { keysetAfter } from '../utils/keyset'
 import { levelForOutcome } from './grading'
 import type {
   CreateExamData,
@@ -92,16 +93,8 @@ export async function findMany(
   }
 
   if (cursor) {
-    // `or()` is only typed as possibly-undefined for a zero-argument call; both
-    // branches here are always-defined `SQL`, so the result is never undefined.
     conditions.push(
-      or(
-        sort === 'desc' ? lt(exam.scheduledAt, cursor.scheduledAt) : gt(exam.scheduledAt, cursor.scheduledAt),
-        and(
-          eq(exam.scheduledAt, cursor.scheduledAt),
-          sort === 'desc' ? lt(exam.id, cursor.id) : gt(exam.id, cursor.id),
-        ),
-      )!,
+      keysetAfter(exam.scheduledAt, exam.id, { sortValue: cursor.scheduledAt, id: cursor.id }, { sort, id: sort }),
     )
   }
 
@@ -261,16 +254,6 @@ export async function isCertifiedAcrossTrack(
   return chapterIds.every(id => {
     const level = currentLevelByChapter.get(id)
     return level === 'level3' || level === 'level4'
-  })
-}
-
-export async function findTrackById(
-  db: SchoolDb,
-  trackId: string,
-): Promise<{ id: string } | undefined> {
-  return db.query.track.findFirst({
-    where: (t, { eq }) => eq(t.id, trackId),
-    columns: { id: true },
   })
 }
 

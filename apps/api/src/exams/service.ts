@@ -1,11 +1,12 @@
 import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
-import { conflict, internalError, notFound, unprocessable } from '../error'
+import { conflict, internalError, notFound, orNotFound, unprocessable } from '../error'
 import { resolveQualifyingBatch } from '../enrollment/service'
 import type { AccessPolicy, ExamReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import { gradeExam, levelForOutcome } from './grading'
 import * as repository from './repository'
+import { exists as trackExists } from '../tracks/repository'
 import type {
   CreateExamData,
   Exam,
@@ -31,24 +32,14 @@ export async function findExams(
 
 /** Bare exam row — internal use only (authorization checks, transition guards); see `findByIdWithDetail` for the read path. */
 export async function findById(context: ExamServiceContext, id: string): Promise<Exam> {
-  const row = await repository.findById(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findById(context.db, id))
 }
 
 export async function findByIdWithDetail(
   context: ExamServiceContext,
   id: string,
 ): Promise<ExamWithDetail> {
-  const row = await repository.findByIdWithDetail(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findByIdWithDetail(context.db, id))
 }
 
 /**
@@ -90,7 +81,7 @@ async function assertValidExamAssignment(
   studentId: string,
   trackId: string,
 ): Promise<string> {
-  if (!(await repository.findTrackById(db, trackId))) {
+  if (!(await trackExists(db, trackId))) {
     throw unprocessable('track not found')
   }
 
@@ -169,8 +160,7 @@ export async function recordExamResult(
   await context.db.transaction(async tx => {
     const completed = await repository.complete(tx, id, existing.status)
     if (!completed) {
-      const current = await repository.findById(tx, id)
-      if (!current) throw notFound()
+      const current = orNotFound(await repository.findById(tx, id))
       if (current.status === 'completed')
         throw conflict('a result was already recorded for this exam')
       throw conflict('exam status changed concurrently')

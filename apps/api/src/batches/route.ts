@@ -46,7 +46,7 @@ router.get(
 router.get(
   '/classifiers',
   optionalProfileRoute(async ({ res, db, access, getCourse }) => {
-    await access.requireCanCreateBatch()
+    access.requireCanCreateBatch()
     const classifiers = await findClassifiers({ db }, (await getCourse()).id)
     res.status(200).json({ data: classifiers })
   }),
@@ -56,7 +56,7 @@ router.get(
   '/:batchId',
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    await access.requireCanReadBatch(batchId)
+    access.requireCanReadBatch(batchId)
     const batch = await findByIdWithMembers({ db }, batchId)
     res.status(200).json({ data: batch })
   }),
@@ -65,7 +65,7 @@ router.get(
 router.post(
   '/',
   optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
-    await access.requireCanCreateBatch()
+    access.requireCanCreateBatch()
     const data = await parse(CreateBatchSchema, req.body)
     const batch = await createBatch({ db }, data, (await getCourse()).slug)
     res.status(201).json({ data: batch })
@@ -76,7 +76,7 @@ router.patch(
   '/:batchId',
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    await access.requireCanUpdateBatch(batchId)
+    access.requireCanUpdateBatch()
     const data = await parse(UpdateBatchSchema, req.body)
     const batch = await updateBatch({ db }, batchId, data)
     res.status(200).json({ data: batch })
@@ -103,7 +103,7 @@ router.put(
   '/:batchId/schedule',
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    await access.requireCanUpdateBatch(batchId)
+    access.requireCanUpdateBatch()
     const data = await parse(SetClassSlotsSchema, req.body)
     const classSlots = await setClassSlots({ db }, batchId, data)
     res.status(200).json({ data: classSlots })

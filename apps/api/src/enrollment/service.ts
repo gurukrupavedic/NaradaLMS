@@ -1,12 +1,12 @@
 import type { SchoolDb, SchoolDbClient } from '@narada/db'
 
-import { conflict, internalError, notFound, unprocessable } from '../error'
+import { conflict, internalError, notFound, orInternalError, orNotFound, unprocessable } from '../error'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
 import type { CreateEnrollmentData } from './schema'
 import type { Enrollment } from './repository'
 
-export { hasSharedInstructorEnrollment } from './repository'
+export { findStudentIdsInBatch, hasSharedInstructorEnrollment } from './repository'
 
 // A student can only be examined on a chapter belonging to a track they're enrolled in as a
 // student, and that enrollment must be unambiguous — used when the batch itself is *not* yet
@@ -35,20 +35,6 @@ export async function resolveQualifyingBatch(
   }
 
   return only.batchId
-}
-
-// The evaluation-creation counterpart to `resolveQualifyingBatch`: the batch is already known
-// (from the URL, PARITY_PLAN.md §10.5), so this validates the student holds a `student`
-// enrollment in *that specific batch* rather than searching for one across a track.
-export async function assertStudentEnrolledInBatch(
-  db: SchoolDb,
-  studentId: string,
-  batchId: string,
-): Promise<void> {
-  const enrollment = await repository.findEnrollment(db, studentId, batchId)
-  if (!enrollment || enrollment.role !== 'student') {
-    throw unprocessable('student is not enrolled in this batch')
-  }
 }
 
 // A student holds at most one `active` batch seat per course. The partial unique index
@@ -83,10 +69,7 @@ export async function enroll(
     throw notFound()
   }
 
-  const courseId = await repository.findBatchCourseId(db, batchId)
-  if (!courseId) {
-    throw notFound()
-  }
+  const courseId = orNotFound(await repository.findBatchCourseId(db, batchId))
 
   const existing = await repository.findEnrollment(db, data.profileId, batchId)
   if (existing) {
@@ -118,10 +101,7 @@ export async function enroll(
 
 /** Removes a profile from a batch's roster. 404 if no such enrollment exists. */
 export async function unenroll(db: SchoolDb, batchId: string, profileId: string): Promise<void> {
-  const removed = await repository.deleteEnrollment(db, batchId, profileId)
-  if (!removed) {
-    throw notFound()
-  }
+  orNotFound(await repository.deleteEnrollment(db, batchId, profileId))
 }
 
 /**
@@ -133,10 +113,7 @@ export async function unenroll(db: SchoolDb, batchId: string, profileId: string)
  * re-enrolling from scratch. 404 if no such enrollment exists.
  */
 export async function putOnBreak(db: SchoolDb, batchId: string, profileId: string): Promise<void> {
-  const updated = await repository.updateEnrollmentStatus(db, batchId, profileId, 'break')
-  if (!updated) {
-    throw notFound()
-  }
+  orNotFound(await repository.updateEnrollmentStatus(db, batchId, profileId, 'break'))
 }
 
 /**
@@ -154,26 +131,17 @@ export async function moveEnrollment(
   profileId: string,
 ): Promise<Enrollment> {
   return db.transaction(async tx => {
-    const current = await repository.findEnrollment(tx, profileId, fromBatchId)
-    if (!current) {
-      throw notFound()
-    }
+    const current = orNotFound(await repository.findEnrollment(tx, profileId, fromBatchId))
 
     if (await repository.findEnrollment(tx, profileId, toBatchId)) {
       throw conflict('profile is already enrolled in the destination batch')
     }
 
-    const toCourseId = await repository.findBatchCourseId(tx, toBatchId)
-    if (!toCourseId) {
-      throw notFound()
-    }
+    const toCourseId = orNotFound(await repository.findBatchCourseId(tx, toBatchId))
 
     // The old seat is released before the new one is taken, inside the one transaction — moving
     // within a course must never trip the one-active-seat index against the seat being left.
-    const removed = await repository.deleteEnrollment(tx, fromBatchId, profileId)
-    if (!removed) {
-      throw internalError()
-    }
+    orInternalError(await repository.deleteEnrollment(tx, fromBatchId, profileId))
 
     const row = await withConstraintMapping(
       () => repository.insertEnrollment(tx, toBatchId, toCourseId, { profileId, role: current.role }),

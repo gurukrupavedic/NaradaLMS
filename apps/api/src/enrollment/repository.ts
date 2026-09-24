@@ -45,6 +45,29 @@ export async function findEnrollment(
   })
 }
 
+/** Which of `profileIds` hold a `student` enrollment in `batchId`. */
+export async function findStudentIdsInBatch(
+  db: SchoolDb,
+  profileIds: string[],
+  batchId: string,
+): Promise<Set<string>> {
+  if (profileIds.length === 0) {
+    return new Set()
+  }
+
+  const rows = await db
+    .select({ profileId: enrollment.profileId })
+    .from(enrollment)
+    .where(
+      and(
+        eq(enrollment.batchId, batchId),
+        eq(enrollment.role, 'student'),
+        inArray(enrollment.profileId, profileIds),
+      ),
+    )
+  return new Set(rows.map(row => row.profileId))
+}
+
 export async function profileExists(db: SchoolDb, profileId: string): Promise<boolean> {
   const row = await db.query.profile.findFirst({
     where: (t, { eq }) => eq(t.id, profileId),

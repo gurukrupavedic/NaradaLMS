@@ -19,5 +19,10 @@ export function tokenMatch(query: string, columns: Column[]): SQL | undefined {
     return undefined
   }
 
-  return and(...tokens.map(token => or(...columns.map(column => ilike(column, `%${token}%`)))))
+  return and(...tokens.map(token => or(...columns.map(column => ilike(column, `%${escapeLike(token)}%`)))))
+}
+
+/** Escapes `\`, `%` and `_` so a user's search text is matched literally rather than as `LIKE` wildcards. */
+export function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, '\\$&')
 }
