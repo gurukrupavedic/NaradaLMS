@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ApiBatchWithRole, ApiDashboard, ApiEvaluation, ApiTrack } from '@/lib/api/api-types'
-import { buildLearningTracks } from './reshape'
+import { buildLearningTracks, isArchivedTrack } from './reshape'
 
 const chapter = (id: string, trackId: string, order: number) => ({
   id,
@@ -34,17 +34,18 @@ const membership = (
   trackId: string,
   role: ApiBatchWithRole['role'],
   status: ApiBatchWithRole['status'],
+  enrollmentStatus: ApiBatchWithRole['enrollmentStatus'] = 'active',
 ): ApiBatchWithRole => ({
-  id: `batch-${trackId}-${role}-${status}`,
+  id: `batch-${trackId}-${role}-${status}-${enrollmentStatus}`,
   trackId,
-  code: `CODE-${trackId}-${role}`,
+  code: `CODE-${trackId}-${role}-${enrollmentStatus}`,
   status,
   startDate: null,
   meetingUrl: null,
   members: [],
   classSlots: [],
   role,
-  enrollmentStatus: 'active',
+  enrollmentStatus,
 })
 
 const baseDashboard = (overrides: Partial<ApiDashboard>): ApiDashboard => ({
@@ -94,6 +95,80 @@ describe('buildLearningTracks', () => {
     const [ladder] = buildLearningTracks(dashboard)
 
     expect(ladder.batchStatus).toBe('active')
-    expect(ladder.batchCode).toBe('CODE-track-1-student')
+    expect(ladder.batchCode).toBe('CODE-track-1-student-active')
+  })
+})
+
+describe('a student seat that is not live', () => {
+  const mastered = () => {
+    const t1 = track('track-1', 1, 2)
+    return { t1, evaluations: t1.chapters.map(c => evaluation(c.id)) }
+  }
+
+  it.each(['break', 'dropped', 'inactive'] as const)(
+    'archives a fully-worked track whose seat in a running batch is %s, but still names the batch',
+    enrollmentStatus => {
+      const { t1, evaluations } = mastered()
+      const [ladder] = buildLearningTracks(
+        baseDashboard({
+          tracks: [t1],
+          studentEvaluations: evaluations,
+          memberships: [membership('track-1', 'student', 'active', enrollmentStatus)],
+        }),
+      )
+
+      expect(ladder.batchCode).toBe(`CODE-track-1-student-${enrollmentStatus}`)
+      expect(isArchivedTrack(ladder)).toBe(true)
+    },
+  )
+
+  it('keeps a fully-worked track in progress while the seat is live in a running batch', () => {
+    const { t1, evaluations } = mastered()
+    const [ladder] = buildLearningTracks(
+      baseDashboard({
+        tracks: [t1],
+        studentEvaluations: evaluations,
+        memberships: [membership('track-1', 'student', 'active', 'active')],
+      }),
+    )
+
+    expect(isArchivedTrack(ladder)).toBe(false)
+  })
+
+  it('archives a fully-worked track once its batch has completed, even with a live seat', () => {
+    const { t1, evaluations } = mastered()
+    const [ladder] = buildLearningTracks(
+      baseDashboard({
+        tracks: [t1],
+        studentEvaluations: evaluations,
+        memberships: [membership('track-1', 'student', 'completed', 'active')],
+      }),
+    )
+
+    expect(isArchivedTrack(ladder)).toBe(true)
+  })
+
+  it('never archives a track that is not fully worked', () => {
+    const t1 = track('track-1', 1, 2)
+    const [ladder] = buildLearningTracks(
+      baseDashboard({
+        tracks: [t1],
+        studentEvaluations: [evaluation(t1.chapters[0].id)],
+        memberships: [membership('track-1', 'student', 'active', 'break')],
+      }),
+    )
+
+    expect(isArchivedTrack(ladder)).toBe(false)
+  })
+
+  it('prefers a live seat over a past one for the same track, whatever order they arrive in', () => {
+    const t1 = track('track-1', 1, 2)
+    const past = membership('track-1', 'student', 'completed', 'inactive')
+    const live = membership('track-1', 'student', 'active', 'active')
+
+    for (const memberships of [[past, live], [live, past]]) {
+      const [ladder] = buildLearningTracks(baseDashboard({ tracks: [t1], memberships }))
+      expect(ladder.batchCode).toBe('CODE-track-1-student-active')
+    }
   })
 })

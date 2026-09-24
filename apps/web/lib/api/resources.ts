@@ -48,6 +48,7 @@ import {
   buildTeachingBatch,
   findNextClass,
   findResumeChapterId,
+  isArchivedTrack,
 } from '@/lib/api/reshape'
 
 /**
@@ -233,16 +234,8 @@ export async function fetchDashboard(): Promise<DashboardPayload> {
   const data = await fetchStudentDashboard()
 
   const ladders = buildLearningTracks(data)
-  // A track is archived once the student has been through everything in it AND isn't sitting in
-  // a still-running batch for it — matches apps/web/lib/dashboard-view.ts::isLiveTrack +
-  // hasUnfinishedWork: `status: 'completed'` means the cohort's run ended, not that the student
-  // finished the material, so a track only archives once both are true.
-  const archivedLearningTracks = ladders.filter(
-    track =>
-      track.started >= track.total &&
-      track.batchStatus !== 'active' &&
-      track.batchStatus !== 'upcoming',
-  )
+  // See `isArchivedTrack`: finished by the student AND no live seat in a still-running batch.
+  const archivedLearningTracks = ladders.filter(isArchivedTrack)
   // The component always treats `learningTracks[0]` as "what to focus on" (its own `resume`
   // lookup and the header both key off it), so this list is sorted for that rather than left in
   // whatever order `tracks` happened to come back in — a running batch first, then furthest
