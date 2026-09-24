@@ -61,7 +61,11 @@ export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Regis
  */
 export async function insert(
   db: SchoolDb,
-  data: CreateRegistrationData & { courseId: string; countryTimeZone: string | null },
+  data: CreateRegistrationData & {
+    courseId: string
+    countryTimeZone: string | null
+    details: NonNullable<CreateRegistrationData['details']>
+  },
 ): Promise<Registration | undefined> {
   const rows = await db.insert(registration).values(data).returning()
   return rows.at(0)

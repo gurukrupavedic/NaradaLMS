@@ -3,6 +3,7 @@ import * as z from 'zod'
 import { proficiencyLevel, registrationStatus } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
+import { DetailsSchema } from '../utils/details'
 import { e164Phone, isoInstant } from '../utils/validate'
 
 const PAGE_SIZE = 20
@@ -43,6 +44,9 @@ export const RegistrationSchema = z.object({
   noAlcoholAgreed: z.boolean(),
   noSmokingAgreed: z.boolean(),
   comments: z.string().trim().min(1).nullable(),
+  // The school-specific answers (`@narada/profile-fields`). On the way in only the shape is checked
+  // here; `service.ts::submit` validates it against the school's own field definitions.
+  details: DetailsSchema,
 
   reviewedAt: isoInstant.nullable(),
   reviewedBy: z.uuid().nullable(),
@@ -72,6 +76,7 @@ export const CreateRegistrationSchema = RegistrationSchema.pick({
   noAlcoholAgreed: true,
   noSmokingAgreed: true,
   comments: true,
+  details: true,
 }).partial({
   email: true,
   city: true,
@@ -87,6 +92,7 @@ export const CreateRegistrationSchema = RegistrationSchema.pick({
   noAlcoholAgreed: true,
   noSmokingAgreed: true,
   comments: true,
+  details: true,
 })
 
 export type FindRegistrationsData = z.infer<typeof FindRegistrationsSchema>

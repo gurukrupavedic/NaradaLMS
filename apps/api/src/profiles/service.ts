@@ -3,6 +3,7 @@ import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 import { forbidden, internalError, notFound, orNotFound } from '../error'
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
+import { mergeDetailsPatch } from '../utils/details'
 import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
 import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
@@ -72,6 +73,10 @@ export async function createProfile(
  * only changes `city` still needs the profile's existing `state`/`country` to resolve correctly,
  * so this reads the current location first (via the same ownership-checked query the write below
  * uses) rather than guessing from partial input.
+ *
+ * A `details` patch is merged onto the stored details and re-validated against this school's field
+ * definitions (`utils/details.ts::mergeDetailsPatch`) — inside a transaction that first locks the
+ * row, since it is a read-merge-write and two edits must not both merge onto the same stale copy.
  */
 export async function updateProfile(
   context: ProfileServiceContext & { access: AccessPolicy },
@@ -79,13 +84,14 @@ export async function updateProfile(
   data: UpdateProfileData,
 ): Promise<Profile> {
   const ownerUserId = context.access.isSchoolAdmin() ? null : context.user.id
+  const { details: detailsPatch, ...columns } = data
 
-  let patch: UpdateProfileData & { countryTimeZone?: string | null } = data
+  let patch: Omit<UpdateProfileData, 'details'> & { countryTimeZone?: string | null } = columns
   if (data.city !== undefined || data.state !== undefined || data.country !== undefined) {
     const current = orNotFound(await repository.findLocationFields(context.db, id, ownerUserId))
 
     patch = {
-      ...data,
+      ...columns,
       countryTimeZone: deriveTimeZone({
         city: data.city !== undefined ? data.city : current.city,
         state: data.state !== undefined ? data.state : current.state,
@@ -94,7 +100,15 @@ export async function updateProfile(
     }
   }
 
-  return orNotFound(await repository.update(context.db, id, ownerUserId, patch))
+  if (detailsPatch === undefined) {
+    return orNotFound(await repository.update(context.db, id, ownerUserId, patch))
+  }
+
+  return context.db.transaction(async tx => {
+    const current = orNotFound(await repository.findDetailsForUpdate(tx, id, ownerUserId))
+    const details = mergeDetailsPatch(context.school.slug, current, detailsPatch)
+    return orNotFound(await repository.update(tx, id, ownerUserId, { ...patch, details }))
+  })
 }
 
 /**

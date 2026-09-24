@@ -43,7 +43,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb },
+      { db: world.schoolDb, school: { slug: 'test' } },
       {
         firstName: 'Anjali',
         lastName: 'Rao',
@@ -67,7 +67,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb },
+      { db: world.schoolDb, school: { slug: 'test' } },
       { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15551234567' },
       (await createCourse(world)).id,
     )
@@ -83,7 +83,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb },
+      { db: world.schoolDb, school: { slug: 'test' } },
       {
         firstName: 'Anjali',
         lastName: 'Rao',
@@ -103,12 +103,63 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb },
+      { db: world.schoolDb, school: { slug: 'test' } },
       { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15556660098' },
       (await createCourse(world)).id,
     )
 
     expect(row.countryTimeZone).toBeNull()
+  })
+
+  // Only `school.slug` matters to `submit`'s details validation — the definitions come from
+  // `@narada/profile-fields`, keyed by it — so the world's own (random-slugged) school is reused.
+  const applicant = { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15556660096' }
+
+  it('stores the details a school collects, dropping any its conditions hide', async () => {
+    world = await createTestSchool()
+
+    const row = await submit(
+      { db: world.schoolDb, school: { slug: 'slmts' } },
+      {
+        ...applicant,
+        details: { gothram: 'Bharadwaja', married: false, gothramSpouse: 'stale', gothramMother: 'Vasishta' },
+      },
+      (await createCourse(world)).id,
+    )
+
+    expect(row.details).toEqual({ gothram: 'Bharadwaja', married: false, gothramMother: 'Vasishta' })
+  })
+
+  it("rejects a registration missing a field its school requires", async () => {
+    world = await createTestSchool()
+
+    await expect(
+      submit({ db: world.schoolDb, school: { slug: 'rr' } }, applicant, (await createCourse(world)).id),
+    ).rejects.toMatchObject({ statusCode: 400, message: 'details.gothram: is required' })
+  })
+
+  it('requires the spouse gothram once married is ticked', async () => {
+    world = await createTestSchool()
+
+    await expect(
+      submit(
+        { db: world.schoolDb, school: { slug: 'slmts' } },
+        { ...applicant, details: { gothram: 'A', married: true, gothramMother: 'B' } },
+        (await createCourse(world)).id,
+      ),
+    ).rejects.toMatchObject({ statusCode: 400, message: 'details.gothramSpouse: is required' })
+  })
+
+  it('rejects a key the school does not collect, and stores {} for a school that collects nothing', async () => {
+    world = await createTestSchool()
+    const courseId = (await createCourse(world)).id
+
+    await expect(
+      submit({ db: world.schoolDb, school: { slug: 'rr' } }, { ...applicant, details: { gothram: 'A', gothramMother: 'B' } }, courseId),
+    ).rejects.toMatchObject({ statusCode: 400, message: 'details.gothramMother: is not a field for this school' })
+
+    const row = await submit({ db: world.schoolDb, school: { slug: 'test' } }, applicant, courseId)
+    expect(row.details).toEqual({})
   })
 })
 
@@ -195,7 +246,7 @@ describe('approve', () => {
   it('copies state, country, and the derived countryTimeZone onto the provisioned profile', async () => {
     world = await createTestSchool()
     const pending = await submit(
-      { db: world.schoolDb },
+      { db: world.schoolDb, school: { slug: 'test' } },
       {
         firstName: 'Anjali',
         lastName: 'Rao',
@@ -219,6 +270,29 @@ describe('approve', () => {
       country: 'IN',
       countryTimeZone: 'Asia/Kolkata',
     })
+  })
+
+  it('copies the details onto the provisioned profile unchanged', async () => {
+    world = await createTestSchool()
+    const pending = await submit(
+      { db: world.schoolDb, school: { slug: 'slmts' } },
+      {
+        firstName: 'Anjali',
+        lastName: 'Rao',
+        yearOfBirth: 2005,
+        phone: '+15556660095',
+        details: { gothram: 'Bharadwaja', married: true, gothramSpouse: 'Kashyapa', gothramMother: 'Vasishta' },
+      },
+      (await createCourse(world)).id,
+    )
+
+    const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    await trackProvisionedUser(world, '+15556660095')
+
+    const profileRow = await world.schoolDb.query.profile.findFirst({
+      where: (t, { eq }) => eq(t.id, row.convertedProfileId!),
+    })
+    expect(profileRow?.details).toEqual(pending.details)
   })
 
   it('uses a synthetic email when the registration gave none', async () => {

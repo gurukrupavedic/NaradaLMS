@@ -212,6 +212,94 @@ describe('updateProfile (student self-edit) — countryTimeZone re-derivation', 
   })
 })
 
+describe('updateProfile details (school-specific fields)', () => {
+  // Only `school.slug` matters to the details rules (the definitions are keyed by it), so the
+  // world's own random-slugged school is stood in for by an SLMTS-shaped one.
+  const slmts = (w: TestWorld) =>
+    ({ id: w.orgId, slug: 'slmts' }) as unknown as Parameters<typeof updateProfile>[0]['school']
+  const owner = { id: 'user-details', isSuperAdmin: false } as User
+  const stored = { gothram: 'Bharadwaja', married: false, gothramMother: 'Vasishta' }
+
+  it('merges a patch onto the stored details and persists it', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-details', details: stored })
+    const context = { db: world.schoolDb, school: slmts(world), user: owner, access: access(false) }
+
+    const updated = await updateProfile(context, profileRow.id, { details: { gothramMother: 'Kashyapa' } })
+
+    expect(updated.details).toEqual({ gothram: 'Bharadwaja', married: false, gothramMother: 'Kashyapa' })
+    expect((await findById({ db: world.schoolDb, school: slmts(world), user: owner }, profileRow.id)).details).toEqual(
+      updated.details,
+    )
+  })
+
+  it('a rejected patch changes nothing, columns included', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-details', name: 'Before', details: stored })
+    const context = { db: world.schoolDb, school: slmts(world), user: owner, access: access(false) }
+
+    // Ticking married without the spouse's gothram is refused, and the name in the same patch must
+    // not be written either — the edit is all or nothing.
+    await expect(
+      updateProfile(context, profileRow.id, { name: 'After', details: { married: true } }),
+    ).rejects.toMatchObject({ statusCode: 400, message: 'details.gothramSpouse: is required' })
+
+    const after = await findById({ db: world.schoolDb, school: slmts(world), user: owner }, profileRow.id)
+    expect(after.name).toBe('Before')
+    expect(after.details).toEqual(stored)
+  })
+
+  it('serialises concurrent edits, so neither undoes the other', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-details', details: stored })
+    const context = { db: world.schoolDb, school: slmts(world), user: owner, access: access(false) }
+
+    // Forced interleaving (two racing calls would just happen to run back to back): a transaction
+    // takes the row lock and only writes its change once the edit under test has had time to
+    // start. Without the lock, that edit reads the *old* details in the meantime and its write
+    // later overwrites this one's `gothram`.
+    let lockTaken!: () => void
+    const taken = new Promise<void>(resolve => (lockTaken = resolve))
+    let letGo!: () => void
+    const goAhead = new Promise<void>(resolve => (letGo = resolve))
+    const holder = world.schoolDb.transaction(async tx => {
+      await repository.findDetailsForUpdate(tx, profileRow.id, null)
+      lockTaken()
+      await goAhead
+      await repository.update(tx, profileRow.id, null, { details: { ...stored, gothram: 'Atreya' } })
+    })
+
+    await taken
+    const edit = updateProfile(context, profileRow.id, { details: { gothramMother: 'Kashyapa' } })
+    await new Promise(resolve => setTimeout(resolve, 150))
+    letGo()
+    await Promise.all([holder, edit])
+
+    const after = await findById({ db: world.schoolDb, school: slmts(world), user: owner }, profileRow.id)
+    expect(after.details).toEqual({ gothram: 'Atreya', married: false, gothramMother: 'Kashyapa' })
+  })
+
+  it("404s another user's profile without touching it", async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'someone-else', details: stored })
+    const context = { db: world.schoolDb, school: slmts(world), user: owner, access: access(false) }
+
+    await expect(
+      updateProfile(context, profileRow.id, { details: { gothram: 'Hijacked' } }),
+    ).rejects.toMatchObject({ statusCode: 404 })
+  })
+
+  it('lets a school admin edit anyone’s details', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'someone-else', details: stored })
+    const context = { db: world.schoolDb, school: slmts(world), user: owner, access: access(true) }
+
+    const updated = await updateProfile(context, profileRow.id, { details: { gothram: 'Atreya' } })
+
+    expect(updated.details).toMatchObject({ gothram: 'Atreya' })
+  })
+})
+
 describe('updateProfile (school admin correcting another profile, DD-011-adjacent)', () => {
   function actor(userId: string): User {
     return { id: userId, isSuperAdmin: false } as User
