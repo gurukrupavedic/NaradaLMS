@@ -63,7 +63,7 @@ export function useRequestExamSlot() {
         void queryClient.invalidateQueries({ queryKey: keys.examSlotRequests.mine })
       },
     },
-    { success: 'Sitting requested.', failure: "Couldn't request this sitting." },
+    { success: 'Attempt requested.', failure: "Couldn't request this attempt." },
   )
 }
 
@@ -95,7 +95,7 @@ function useReviewExamSlotRequestMutation(
 
 export function useApproveExamSlotRequest() {
   return useReviewExamSlotRequestMutation(approveExamSlotRequest, {
-    success: 'Request approved — the sitting is booked.',
+    success: 'Request approved — the attempt is booked.',
     failure: "Couldn't approve the request.",
   })
 }

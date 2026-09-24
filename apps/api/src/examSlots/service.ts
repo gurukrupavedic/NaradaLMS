@@ -115,7 +115,7 @@ export async function request(
   const slot = await findSlotById(context, slotId)
 
   if (!(await examRepository.isCertifiedAcrossTrack(context.db, studentId, slot.trackId))) {
-    throw forbidden('you need L3 on every chapter of this track before requesting a sitting')
+    throw forbidden('you need L3 on every chapter of this track before requesting an attempt')
   }
 
   if (await repository.findPendingRequestForStudentTrack(context.db, studentId, slot.trackId)) {
