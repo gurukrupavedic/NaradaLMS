@@ -16,6 +16,7 @@ import {
   type TestWorld,
 } from '../testing/fixtures'
 import { findForBatch, findForStudentInBatch } from './repository'
+import { createEvaluations } from './service'
 
 let world: TestWorld | undefined
 
@@ -155,5 +156,39 @@ describe('findForBatch / findForStudentInBatch pagination (§10.2 compound curso
 
     expect(page.items).toEqual([])
     expect(page.nextCursor).toBeNull()
+  })
+})
+
+describe('a class TA is one of the class\'s learners', () => {
+  it('can be graded in their own batch, like a student', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow, { status: 'published' })
+    const batchRow = await createBatch(world, trackRow)
+    const teacher = await createProfile(world)
+    const ta = await createProfile(world)
+    await enroll(world, teacher, batchRow, 'instructor')
+    await enroll(world, ta, batchRow, 'ta')
+
+    const created = await createEvaluations({ db: world.schoolDb }, batchRow.id, teacher.id, [
+      { studentId: ta.id, chapterId: chapterRow.id, level: 'level2' },
+    ])
+
+    expect(created).toMatchObject([{ studentId: ta.id, chapterId: chapterRow.id, level: 'level2' }])
+  })
+
+  it('still refuses to grade a teacher, who is not a learner in the class', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow, { status: 'published' })
+    const batchRow = await createBatch(world, trackRow)
+    const teacher = await createProfile(world)
+    await enroll(world, teacher, batchRow, 'instructor')
+
+    await expect(
+      createEvaluations({ db: world.schoolDb }, batchRow.id, teacher.id, [
+        { studentId: teacher.id, chapterId: chapterRow.id, level: 'level2' },
+      ]),
+    ).rejects.toMatchObject({ statusCode: 422 })
   })
 })

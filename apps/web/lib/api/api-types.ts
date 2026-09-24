@@ -221,7 +221,7 @@ export type ApiExam = {
   studentId: string
   scheduledAt: string
   status: 'scheduled' | 'inProgress' | 'completed' | 'cancelled'
-  track: { id: string; name: string }
+  track: { id: string; name: string; order: number }
   result: ApiExamResult | null
   student: { id: string; name: string }
 }

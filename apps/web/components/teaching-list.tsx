@@ -32,7 +32,7 @@ export function TeachingList({ batches }: { batches: TeachingBatch[] }) {
       {completed.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-baseline gap-4">
-            <span className="label shrink-0 text-ink-muted">Completed</span>
+            <span className="label shrink-0 text-ink-muted">Closed</span>
             <span className="h-px flex-1 bg-rule" />
             <span className="label shrink-0 text-ink-muted">{pluralize(completed.length, 'batch', 'batches')}</span>
           </div>

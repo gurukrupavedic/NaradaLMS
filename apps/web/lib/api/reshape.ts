@@ -321,15 +321,16 @@ export function buildCatalogTrack(track: ApiTrack, batchCodes: string[]): Catalo
 /**
  * Whether `member` is one of the students shown on `batchStatus`'s roster: an active student, plus
  * — once the batch is completed — one on a break, who is then part of the record of who was in the
- * cohort rather than a seat to hide. Shared by `buildRoster` and the admin batch counts so a
- * batch's student count is always the number of rows its roster shows.
+ * cohort rather than a seat to hide. A class TA is a student of that class who also assists, so a
+ * TA is on the roster like anyone else; only the teachers are not. Shared by `buildRoster` and the
+ * admin batch counts so a batch's student count is always the number of rows its roster shows.
  */
 export function isRosterStudent(
   member: ApiBatchWithRole['members'][number],
   batchStatus: ApiBatchWithRole['status'],
 ): boolean {
   return (
-    member.role === 'student' &&
+    member.role !== 'instructor' &&
     (member.status === 'active' || (batchStatus === 'completed' && member.status === 'break'))
   )
 }

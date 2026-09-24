@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, getTableColumns, inArray, ne, notInArray, or, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns, inArray, ne, notInArray, or, sql, type SQL } from 'drizzle-orm'
 
 import { chapter, enrollment, evaluation, exam, examResult, profile, track, type SchoolDb } from '@narada/db'
 
@@ -6,6 +6,7 @@ import { tokenMatch } from '../utils/search'
 import type { ExamReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
 import { keysetAfter } from '../utils/keyset'
+import { unprocessable } from '../error'
 import { levelForOutcome } from './grading'
 import type {
   CreateExamData,
@@ -26,7 +27,7 @@ type ExamResultRow = typeof examResult.$inferSelect
  * than cross-referencing a separate (paginated, possibly-incomplete) roster fetch.
  */
 const DETAIL = {
-  track: { columns: { id: true, name: true } },
+  track: { columns: { id: true, name: true, order: true } },
   result: true,
   student: { columns: { id: true, name: true } },
 } as const
@@ -88,28 +89,54 @@ export async function findMany(
   }
 
   if (query) {
-    const match = tokenMatch(query, [profile.name])
+    // Phones are stored with a leading "+" that a typed query rarely has, so it is ignored.
+    const match = tokenMatch(query.replace(/\+/g, ''), [profile.name, profile.email, profile.phone])
     if (match) {
       conditions.push(inArray(exam.studentId, db.select({ id: profile.id }).from(profile).where(match)))
     }
   }
 
+  // `sort=track`: the track's own order, then the student's name, then the exam id. Both leading
+  // keys live on other tables, so they are correlated subqueries rather than columns. Written as
+  // literal SQL because inside a relational query Drizzle renders every column reference against
+  // the root table's alias ("exam"), which would break a subquery over another table.
+  const trackOrder = sql`(select t."order" from "track" t where t."id" = "exam"."trackId")`
+  const studentName = sql`(select p."name" from "profile" p where p."id" = "exam"."studentId")`
+
   if (cursor) {
-    conditions.push(
-      keysetAfter(exam.scheduledAt, exam.id, { sortValue: cursor.scheduledAt, id: cursor.id }, { sort, id: sort }),
-    )
+    if (sort === 'track') {
+      if (cursor.trackOrder === undefined || cursor.studentName === undefined) {
+        throw unprocessable('cursor does not match this sort')
+      }
+      conditions.push(
+        sql`(${trackOrder}, ${studentName}, ${exam.id}) > (${cursor.trackOrder}::int, ${cursor.studentName}::text, ${cursor.id}::uuid)`,
+      )
+    } else {
+      if (cursor.scheduledAt === undefined) {
+        throw unprocessable('cursor does not match this sort')
+      }
+      conditions.push(
+        keysetAfter(exam.scheduledAt, exam.id, { sortValue: cursor.scheduledAt, id: cursor.id }, { sort, id: sort }),
+      )
+    }
   }
 
-  const orderCol = sort === 'desc' ? desc(exam.scheduledAt) : asc(exam.scheduledAt)
-  const orderId = sort === 'desc' ? desc(exam.id) : asc(exam.id)
+  const orderBy =
+    sort === 'track'
+      ? [asc(trackOrder), asc(studentName), asc(exam.id)]
+      : [sort === 'desc' ? desc(exam.scheduledAt) : asc(exam.scheduledAt), sort === 'desc' ? desc(exam.id) : asc(exam.id)]
   const rows = await db.query.exam.findMany({
     where: and(...conditions),
-    orderBy: [orderCol, orderId],
+    orderBy,
     limit: limit + 1,
     with: DETAIL,
   })
 
-  const page = paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
+  const page = paginateResponse(rows, limit, item =>
+    sort === 'track'
+      ? { trackOrder: item.track.order, studentName: item.student.name, id: item.id }
+      : { scheduledAt: item.scheduledAt, id: item.id },
+  )
   return { items: page.items.map(toDetail), nextCursor: page.nextCursor }
 }
 

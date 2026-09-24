@@ -47,7 +47,7 @@ export async function getDashboardData(
   const teachingStudentIds = [
     ...new Set(
       teachingMemberships.flatMap(m =>
-        m.members.filter(member => member.role === 'student').map(member => member.profileId),
+        m.members.filter(member => member.role !== 'instructor').map(member => member.profileId),
       ),
     ),
   ]
@@ -71,7 +71,7 @@ export async function getDashboardData(
   const teaching: TeachingSummary[] = teachingMemberships.map(membership => {
     const chapterIds = new Set(chapterIdsForTrack(membership.trackId))
     const studentIds = new Set(
-      membership.members.filter(member => member.role === 'student').map(member => member.profileId),
+      membership.members.filter(member => member.role !== 'instructor').map(member => member.profileId),
     )
     return {
       batchId: membership.id,

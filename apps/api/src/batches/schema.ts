@@ -110,6 +110,12 @@ export const CreateBatchSchema = BatchSchema.pick({
     meetingUrl: true,
   })
   .extend({
+    // A batch is never created without someone to teach it: at least one instructor, seated in the
+    // same transaction as the batch itself.
+    instructorIds: z
+      .array(z.uuid())
+      .min(1, 'assign at least one teacher')
+      .transform(ids => [...new Set(ids)]),
     classifier: z
       .string()
       .trim()

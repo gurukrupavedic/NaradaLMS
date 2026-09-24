@@ -1,6 +1,6 @@
-import { and, eq, inArray, sql, type SQL } from 'drizzle-orm'
+import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm'
 
-import { batch, batchClassSlot, enrollment, type SchoolDb } from '@narada/db'
+import { batch, batchClassSlot, enrollment, profile, type SchoolDb } from '@narada/db'
 
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
@@ -17,6 +17,12 @@ import type {
   SetClassSlotsData,
   UpdateBatchData,
 } from './schema'
+
+// Teachers first, then TAs, then students — every consumer of a roster lists staff before learners.
+const ROLE_RANK: Record<BatchDetail['members'][number]['role'], number> = { instructor: 0, ta: 1, student: 2 }
+function byRoleThenName(a: BatchDetail['members'][number], b: BatchDetail['members'][number]): number {
+  return ROLE_RANK[a.role] - ROLE_RANK[b.role] || a.name.localeCompare(b.name)
+}
 
 function toClassSlot(row: typeof batchClassSlot.$inferSelect): ClassSlot {
   return { dayOfWeek: row.dayOfWeek, time: row.time, durationMinutes: row.durationMinutes }
@@ -39,16 +45,18 @@ function toBatchDetail(row: Batch & BatchRelations): BatchDetail {
   const { enrollments, classSlots, ...batchRow } = row
   return {
     ...batchRow,
-    members: enrollments.map(e => ({
-      profileId: e.profileId,
-      name: e.profile.name,
-      phone: e.profile.phone,
-      email: e.profile.email,
-      city: e.profile.city,
-      role: e.role,
-      joinedAt: e.joinedAt,
-      status: e.status,
-    })),
+    members: enrollments
+      .map(e => ({
+        profileId: e.profileId,
+        name: e.profile.name,
+        phone: e.profile.phone,
+        email: e.profile.email,
+        city: e.profile.city,
+        role: e.role,
+        joinedAt: e.joinedAt,
+        status: e.status,
+      }))
+      .sort(byRoleThenName),
     classSlots: classSlots.map(toClassSlot),
   }
 }
@@ -362,10 +370,31 @@ export async function findClassifiers(db: SchoolDb, courseId: string): Promise<s
 /** `courseId` must be the track's own (composite foreign key `batch_trackId_courseId_fk`), so the service fills it from {@link findTrackForBatch}. */
 export async function insert(
   db: SchoolDb,
-  data: Omit<CreateBatchData, 'classifier'> & { code: string; courseId: string },
+  data: Omit<CreateBatchData, 'classifier' | 'instructorIds'> & { code: string; courseId: string },
 ): Promise<Batch | undefined> {
   const rows = await db.insert(batch).values(data).returning()
   return rows.at(0)
+}
+
+/** Which of `profileIds` are live (not deleted) profiles — how many came back says whether any was unknown. */
+export async function findExistingProfileIds(db: SchoolDb, profileIds: string[]): Promise<string[]> {
+  const rows = await db
+    .select({ id: profile.id })
+    .from(profile)
+    .where(and(inArray(profile.id, profileIds), isNull(profile.deletedAt)))
+  return rows.map(row => row.id)
+}
+
+/** Seats each of `profileIds` as an `instructor` of the batch just created. */
+export async function insertInstructors(
+  db: SchoolDb,
+  batchId: string,
+  courseId: string,
+  profileIds: string[],
+): Promise<void> {
+  await db
+    .insert(enrollment)
+    .values(profileIds.map(profileId => ({ batchId, courseId, profileId, role: 'instructor' as const })))
 }
 
 /**

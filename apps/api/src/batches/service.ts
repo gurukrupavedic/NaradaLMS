@@ -63,20 +63,26 @@ const MAX_CODE_ATTEMPTS = 5
  * doc comment): `<COURSE>-<year>-<CLASSIFIER>-<track order>-<index>`, the current calendar year
  * and the next unused index for that exact combination. `courseSlug` comes from the request's own
  * course context (`getCourse()` in the route) rather than a second lookup here — the route already
- * resolved it to serve this endpoint at all.
+ * resolved it to serve this endpoint at all. The request must name at least one teacher
+ * (`instructorIds`), who is seated as an instructor in the same transaction.
  */
 export async function createBatch(
   context: BatchServiceContext,
   data: CreateBatchData,
   courseSlug: string,
 ): Promise<Batch> {
-  const { classifier, ...rest } = data
+  const { classifier, instructorIds, ...rest } = data
 
   // A batch's course is its track's course — copied down rather than accepted from the request, and
   // the composite foreign key refuses any other value.
   const track = await repository.findTrackForBatch(context.db, data.trackId)
   if (!track) {
     throw unprocessable('unknown or invalid track')
+  }
+
+  const existing = await repository.findExistingProfileIds(context.db, instructorIds)
+  if (existing.length !== instructorIds.length) {
+    throw unprocessable('unknown teacher')
   }
 
   const year = new Date().getUTCFullYear()
@@ -87,7 +93,13 @@ export async function createBatch(
     const code = `${codePrefix}-${index}`
 
     try {
-      return orInternalError(await repository.insert(context.db, { ...rest, code, courseId: track.courseId }))
+      // The batch and its teachers commit together, so a batch never exists without one. A code
+      // collision aborts the transaction, so the retry starts a fresh one.
+      return await context.db.transaction(async tx => {
+        const created = orInternalError(await repository.insert(tx, { ...rest, code, courseId: track.courseId }))
+        await repository.insertInstructors(tx, created.id, track.courseId, instructorIds)
+        return created
+      })
     } catch (error) {
       const constraint = constraintNameOf(error)
       if (constraint === DbConstraint.batchTrackIdFk) {

@@ -250,6 +250,34 @@ describe('findByIdWithMembers (batch detail with roster)', () => {
     )
   })
 
+  it('lists teachers first, then TAs, then students, each alphabetically', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const batchRow = await createBatch(world, trackRow)
+    const people = [
+      ['Zed Student', 'student'],
+      ['Yara TA', 'ta'],
+      ['Xavi Instructor', 'instructor'],
+      ['Ann Student', 'student'],
+      ['Bo TA', 'ta'],
+      ['Cy Instructor', 'instructor'],
+    ] as const
+    for (const [name, role] of people) {
+      await enroll(world, await createProfile(world, { name }), batchRow, role)
+    }
+
+    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+
+    expect(detail?.members.map(m => m.name)).toEqual([
+      'Cy Instructor',
+      'Xavi Instructor',
+      'Bo TA',
+      'Yara TA',
+      'Ann Student',
+      'Zed Student',
+    ])
+  })
+
   it('returns an empty roster, not an error, for a batch with no members', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
@@ -562,9 +590,10 @@ describe('createBatch generates the code (real gap: manual code entry replaced)'
   // Mirrors exactly what the route does: parse the request body through the real schema (so the
   // classifier's uppercase transform actually runs), then hand the result to the service — not a
   // hand-constructed service call, same convention as the `updateBatch` test above.
-  async function create(db: TestWorld['schoolDb'], trackId: string, classifier: string, courseSlug: string) {
-    const data = await parse(CreateBatchSchema, { trackId, classifier })
-    return createBatchViaService({ db }, data, courseSlug)
+  async function create(w: TestWorld, trackId: string, classifier: string, courseSlug: string) {
+    const teacher = await createProfile(w)
+    const data = await parse(CreateBatchSchema, { trackId, classifier, instructorIds: [teacher.id] })
+    return createBatchViaService({ db: w.schoolDb }, data, courseSlug)
   }
 
   it('builds <COURSE>-<year>-<CLASSIFIER>-<track order>-<index>, uppercasing the classifier', async () => {
@@ -572,9 +601,30 @@ describe('createBatch generates the code (real gap: manual code entry replaced)'
     const course = await createCourse(world, { slug: 'ved' })
     const track = await createTrack(world, { course, order: 3 })
 
-    const batch = await create(world.schoolDb, track.id, 'br', course.slug)
+    const batch = await create(world, track.id, 'br', course.slug)
 
     expect(batch.code).toBe(`VED-${YEAR}-BR-3-1`)
+  })
+
+  it('seats the named teachers as instructors of the new batch, and creates nothing when one is unknown', async () => {
+    world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved' })
+    const track = await createTrack(world, { course, order: 1 })
+    const ada = await createProfile(world, { name: 'Ada' })
+    const bea = await createProfile(world, { name: 'Bea' })
+
+    const data = await parse(CreateBatchSchema, { trackId: track.id, classifier: 'CH', instructorIds: [ada.id, bea.id] })
+    const batch = await createBatchViaService({ db: world.schoolDb }, data, course.slug)
+
+    const seats = await world.schoolDb.query.enrollment.findMany({ where: (t, { eq }) => eq(t.batchId, batch.id) })
+    expect(seats.map(s => [s.profileId, s.role]).sort()).toEqual(
+      [[ada.id, 'instructor'], [bea.id, 'instructor']].sort(),
+    )
+
+    const unknown = await parse(CreateBatchSchema, { trackId: track.id, classifier: 'GR', instructorIds: [crypto.randomUUID()] })
+    await expect(createBatchViaService({ db: world.schoolDb }, unknown, course.slug)).rejects.toMatchObject({ statusCode: 422 })
+    const all = await world.schoolDb.query.batch.findMany()
+    expect(all).toHaveLength(1)
   })
 
   it('auto-increments the index for a second batch with the same course/year/classifier/track', async () => {
@@ -582,8 +632,8 @@ describe('createBatch generates the code (real gap: manual code entry replaced)'
     const course = await createCourse(world, { slug: 'ved' })
     const track = await createTrack(world, { course, order: 1 })
 
-    const first = await create(world.schoolDb, track.id, 'CH', course.slug)
-    const second = await create(world.schoolDb, track.id, 'CH', course.slug)
+    const first = await create(world, track.id, 'CH', course.slug)
+    const second = await create(world, track.id, 'CH', course.slug)
 
     expect(first.code).toBe(`VED-${YEAR}-CH-1-1`)
     expect(second.code).toBe(`VED-${YEAR}-CH-1-2`)
@@ -595,9 +645,9 @@ describe('createBatch generates the code (real gap: manual code entry replaced)'
     const track1 = await createTrack(world, { course, order: 1 })
     const track2 = await createTrack(world, { course, order: 2 })
 
-    const chOnTrack1 = await create(world.schoolDb, track1.id, 'CH', course.slug)
-    const remOnTrack1 = await create(world.schoolDb, track1.id, 'REM', course.slug)
-    const chOnTrack2 = await create(world.schoolDb, track2.id, 'CH', course.slug)
+    const chOnTrack1 = await create(world, track1.id, 'CH', course.slug)
+    const remOnTrack1 = await create(world, track1.id, 'REM', course.slug)
+    const chOnTrack2 = await create(world, track2.id, 'CH', course.slug)
 
     expect(chOnTrack1.code).toBe(`VED-${YEAR}-CH-1-1`)
     expect(remOnTrack1.code).toBe(`VED-${YEAR}-REM-1-1`)
@@ -608,10 +658,10 @@ describe('createBatch generates the code (real gap: manual code entry replaced)'
     world = await createTestSchool()
     const course = await createCourse(world, { slug: 'ved' })
     const track = await createTrack(world, { course, order: 1 })
-    const first = await create(world.schoolDb, track.id, 'CH', course.slug)
+    const first = await create(world, track.id, 'CH', course.slug)
     await updateBatch({ db: world.schoolDb }, first.id, { code: `VED-${YEAR}-CH-1-9` })
 
-    const second = await create(world.schoolDb, track.id, 'CH', course.slug)
+    const second = await create(world, track.id, 'CH', course.slug)
 
     expect(second.code).toBe(`VED-${YEAR}-CH-1-10`)
   })
@@ -620,7 +670,7 @@ describe('createBatch generates the code (real gap: manual code entry replaced)'
     world = await createTestSchool()
     const course = await createCourse(world, { slug: 'ved' })
 
-    await expect(create(world.schoolDb, crypto.randomUUID(), 'CH', course.slug)).rejects.toMatchObject({
+    await expect(create(world, crypto.randomUUID(), 'CH', course.slug)).rejects.toMatchObject({
       statusCode: 422,
     })
   })
@@ -631,7 +681,9 @@ describe('findClassifiers (real gap: create-batch form dropdown)', () => {
     world = await createTestSchool()
     const course = await createCourse(world, { slug: 'ved' })
     const track = await createTrack(world, { course, order: 1 })
-    const data = (classifier: string) => parse(CreateBatchSchema, { trackId: track.id, classifier })
+    const teacher = await createProfile(world)
+    const data = (classifier: string) =>
+      parse(CreateBatchSchema, { trackId: track.id, classifier, instructorIds: [teacher.id] })
     await createBatchViaService({ db: world.schoolDb }, await data('CH'), course.slug)
     await createBatchViaService({ db: world.schoolDb }, await data('CH'), course.slug)
     await createBatchViaService({ db: world.schoolDb }, await data('GR'), course.slug)

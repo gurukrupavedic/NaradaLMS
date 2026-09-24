@@ -65,8 +65,9 @@ export async function updateProfile(
 // already hold a live seat on that batch's roster at the query level (apps/api/src/profiles/
 // repository.ts::search), so results are always someone actually addable — a profile on a break
 // there is deliberately left in, since adding them back reactivates that same enrollment.
-export async function searchProfiles(query: string, excludeBatchId: string): Promise<ApiProfile[]> {
-  const params = new URLSearchParams({ excludeBatchId })
+export async function searchProfiles(query: string, excludeBatchId?: string): Promise<ApiProfile[]> {
+  const params = new URLSearchParams()
+  if (excludeBatchId) params.set('excludeBatchId', excludeBatchId)
   if (query.trim()) params.set('query', query.trim())
   return fetchApi<ApiProfile[]>(`/profiles/search?${params.toString()}`)
 }
