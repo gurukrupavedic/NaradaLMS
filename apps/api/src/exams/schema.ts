@@ -7,7 +7,6 @@ import { isoInstant, requireNonEmpty } from '../utils/validate'
 import { proficiencyLevelSchema } from '../evaluations/schema'
 import { TrackSchema } from '../tracks/schema'
 import { ProfileSchema } from '../profiles/schema'
-import { BatchSchema } from '../batches/schema'
 import { EXAM_MARK_MAX } from './grading'
 
 const PAGE_SIZE = 20
@@ -20,7 +19,6 @@ export const ExamSchema = z.object({
   id: z.uuid(),
   trackId: z.uuid(),
   studentId: z.uuid(),
-  batchId: z.uuid(),
   scheduledAt: isoInstant,
   status: examStatusSchema,
 })
@@ -116,8 +114,7 @@ export type ExamWithDetail = z.infer<typeof ExamWithDetailSchema>
 export const ExamWithDetailSchema = ExamSchema.extend({
   track: TrackSchema.pick({ id: true, name: true }),
   result: ExamResultSchema.nullable(),
-  // The admin exams screen's student name / batch code columns — see examRelations in
-  // packages/db for why these are eager-loaded here instead of cross-referenced client-side.
+  // The admin exams screen's student name column — see examRelations in packages/db for why
+  // this is eager-loaded here instead of cross-referenced client-side.
   student: ProfileSchema.pick({ id: true, name: true }),
-  batch: BatchSchema.pick({ id: true, code: true }),
 })

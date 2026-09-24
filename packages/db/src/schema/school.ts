@@ -461,9 +461,10 @@ export const evaluation = pgTable(
   ],
 )
 
-// A certification exam sitting: one student, one track, booked into the batch they're enrolled in
-// for it (`batchId` is resolved once at creation and kept as immutable assessment context — see
-// exams/service.ts). The sitting is per track, not per chapter: it certifies the whole syllabus.
+// A certification exam sitting: one student, one track. It belongs to no batch — imported history
+// has no record of which batch a student sat an older track in, and teachers see a sitting through
+// the student (a batch they share), not through a batch stored on it. The sitting is per track, not
+// per chapter: it certifies the whole syllabus.
 // What it scored lives in `examResult`, written in the same transaction that completes the exam.
 export const exam = pgTable(
   'exam',
@@ -475,16 +476,12 @@ export const exam = pgTable(
     studentId: uuid('studentId')
       .notNull()
       .references(() => profile.id, { onDelete: 'cascade' }),
-    batchId: uuid('batchId')
-      .notNull()
-      .references(() => batch.id),
     scheduledAt: timestamp('scheduledAt').notNull(),
     status: examStatus('status').notNull().default('scheduled'),
   },
   table => [
     index('exam_trackId_idx').on(table.trackId),
     index('exam_studentId_idx').on(table.studentId),
-    index('exam_batchId_studentId_idx').on(table.batchId, table.studentId),
   ],
 )
 

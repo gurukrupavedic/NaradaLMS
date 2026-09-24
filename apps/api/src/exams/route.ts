@@ -36,13 +36,13 @@ router.get(
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
     const exam = await findByIdWithDetail({ db }, examId)
-    access.requireCanReadExam(exam)
+    await access.requireCanReadExam(exam)
     res.status(200).json({ data: exam })
   }),
 )
 
-// createExam itself calls access.requireCanCreateExam (school-admin only) before resolving the
-// qualifying batch — see its doc comment.
+// createExam itself calls access.requireCanCreateExam (school-admin only) before checking the
+// student's enrollment — see its doc comment.
 router.post(
   '/',
   profileRoute(async ({ req, res, db, access }) => {
@@ -57,7 +57,7 @@ router.patch(
   profileRoute(async ({ req, res, db, access }) => {
     const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
     const existing = await findById({ db }, examId)
-    access.requireCanUpdateExam(existing)
+    await access.requireCanUpdateExam(existing)
     const data = await parse(UpdateExamSchema, req.body)
     const exam = await updateExam({ db }, examId, data)
     res.status(200).json({ data: exam })

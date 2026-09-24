@@ -78,8 +78,7 @@ describe('findOpenBatches', () => {
     const before = await findOpenBatches({ db: world.schoolDb }, await defaultCourseId(world), student.id)
     expect(before.find(item => item.id === batch2.id)?.eligible).toBe(false)
 
-    const batch1 = await createBatch(world, track1, { status: 'active' })
-    const exam = await createExam(world, { student, track: track1, batch: batch1, status: 'completed' })
+    const exam = await createExam(world, { student, track: track1, status: 'completed' })
     // Marks totalling 70 (65-74 band) — a `level1` outcome, the minimum this gate requires.
     await createExamResult(world, {
       exam,

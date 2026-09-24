@@ -374,7 +374,6 @@ describe('asking to join a batch', () => {
     const prereqExam = await createExam(world, {
       student,
       track: s.vedamTrack1,
-      batch: s.vedamBatch1,
       status: 'completed',
     })
     await createExamResult(world, { exam: prereqExam, evaluator })

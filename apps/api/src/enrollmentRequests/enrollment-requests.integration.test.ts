@@ -113,11 +113,10 @@ describe('request', () => {
     world = await createTestSchool()
     const track1 = await createTrack(world, { order: 1 })
     const track2 = await createTrack(world, { order: 2 })
-    const batch1 = await createBatch(world, track1)
     const batch2 = await createBatch(world, track2)
     const student = await createProfile(world)
     const evaluator = await createProfile(world, { name: 'Evaluator' })
-    const failedExam = await createExam(world, { student, track: track1, batch: batch1, status: 'completed' })
+    const failedExam = await createExam(world, { student, track: track1, status: 'completed' })
     // Marks totalling 40 — below the 65 needed for `level1` — a `reappear` outcome.
     await createExamResult(world, {
       exam: failedExam,
@@ -132,11 +131,10 @@ describe('request', () => {
     world = await createTestSchool()
     const track1 = await createTrack(world, { order: 1 })
     const track2 = await createTrack(world, { order: 2 })
-    const batch1 = await createBatch(world, track1)
     const batch2 = await createBatch(world, track2)
     const student = await createProfile(world)
     const evaluator = await createProfile(world, { name: 'Evaluator' })
-    const passedExam = await createExam(world, { student, track: track1, batch: batch1, status: 'completed' })
+    const passedExam = await createExam(world, { student, track: track1, status: 'completed' })
     // Marks totalling 70 (65-74 band) — a `level1` outcome, the minimum this gate requires.
     await createExamResult(world, {
       exam: passedExam,

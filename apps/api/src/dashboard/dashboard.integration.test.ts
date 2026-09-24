@@ -49,14 +49,13 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     // My own evaluation + upcoming exam, as a student.
     const myEvaluator = await createProfile(world, { name: 'Evaluator' })
     await createEvaluation(world, { student: me, chapter: chapterLearning, evaluator: myEvaluator })
-    await createExam(world, { student: me, track: trackLearning, batch: studentBatch, status: 'scheduled' })
+    await createExam(world, { student: me, track: trackLearning, status: 'scheduled' })
 
     // My own graded exam on the learning track — the track's certification is the latest of these,
     // decoupled from any chapter (a track exam, not a mark on one chapter).
     const sat = await createExam(world, {
       student: me,
       track: trackLearning,
-      batch: studentBatch,
       status: 'completed',
     })
     await createExamResult(world, { exam: sat, evaluator: myEvaluator })

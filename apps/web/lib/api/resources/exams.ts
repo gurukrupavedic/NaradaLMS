@@ -42,7 +42,6 @@ export type AdminSittingRow = {
   id: string
   studentId: string
   studentName: string
-  batchCode: string
   track: string
   when: string
   status: ApiExam['status']
@@ -61,7 +60,6 @@ function toAdminSittingRow(exam: ApiExam): AdminSittingRow {
     id: exam.id,
     studentId: exam.studentId,
     studentName: exam.student.name,
-    batchCode: exam.batch.code,
     track: exam.track.name,
     when: exam.scheduledAt,
     status: exam.status,

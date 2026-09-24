@@ -1,7 +1,7 @@
 import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound, orNotFound, unprocessable } from '../error'
-import { resolveQualifyingBatch } from '../enrollment/service'
+import { assertEnrolledInTrack } from '../enrollment/service'
 import type { AccessPolicy, ExamReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import { gradeExam, levelForOutcome } from './grading'
@@ -44,7 +44,7 @@ export async function findByIdWithDetail(
 
 /**
  * Booking a sitting is school-admin-only (`access.requireCanCreateExam`), independent of any
- * batch role, so that check runs first — no need to resolve the qualifying batch just to reject an
+ * batch role, so that check runs first — no need to look up enrollments just to reject an
  * unauthorized caller. Only once authorized does this validate the student/track assignment
  * invariant; see {@link assertValidExamAssignment}.
  */
@@ -53,10 +53,10 @@ export async function createExam(
   data: CreateExamData,
 ): Promise<Exam> {
   context.access.requireCanCreateExam()
-  const batchId = await assertValidExamAssignment(context.db, data.studentId, data.trackId)
+  await assertValidExamAssignment(context.db, data.studentId, data.trackId)
 
   const row = await withConstraintMapping(
-    () => repository.insert(context.db, { ...data, batchId }),
+    () => repository.insert(context.db, data),
     {
       [DbConstraint.examStudentIdFk]: () => unprocessable('student or track no longer exists'),
       [DbConstraint.examTrackIdFk]: () => unprocessable('student or track no longer exists'),
@@ -70,22 +70,19 @@ export async function createExam(
   return row
 }
 
-// A student can only sit a track they're enrolled in as a student, and that enrollment must be
-// unambiguous — the resolved batch is stored on the exam as immutable assessment context
-// (DD-012). The enrollment-ambiguity check itself lives in the enrollment domain
-// (`resolveQualifyingBatch`) so it can't drift from the same check on direct evaluation creation
-// (PARITY_PLAN.md §10.5); this function only adds the track lookup, which is exam-specific, not
-// an enrollment concern.
+// A student can only sit a track they're enrolled in as a student. The enrollment check lives in
+// the enrollment domain (`assertEnrolledInTrack`); this function only adds the track lookup,
+// which is exam-specific, not an enrollment concern.
 async function assertValidExamAssignment(
   db: SchoolDb,
   studentId: string,
   trackId: string,
-): Promise<string> {
+): Promise<void> {
   if (!(await trackExists(db, trackId))) {
     throw unprocessable('track not found')
   }
 
-  return resolveQualifyingBatch(db, studentId, trackId)
+  await assertEnrolledInTrack(db, studentId, trackId)
 }
 
 /**
@@ -292,7 +289,6 @@ async function writeChapterEvaluations(
         chapterIds.map(chapterId => ({
           studentId: exam.studentId,
           chapterId,
-          batchId: exam.batchId,
           level,
           notes,
           evaluatorId,

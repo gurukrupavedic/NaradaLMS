@@ -2,13 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDb, SchoolDbClient } from '@narada/db'
 
-import {
-  enroll,
-  moveEnrollment,
-  putOnBreak,
-  resolveQualifyingBatch,
-  unenroll,
-} from './service'
+import { assertEnrolledInTrack, enroll, moveEnrollment, putOnBreak, unenroll } from './service'
 import * as repository from './repository'
 import { DbConstraint } from '../utils/dbError'
 
@@ -25,38 +19,35 @@ vi.mock('./repository', () => ({
   updateEnrollmentStatus: vi.fn(),
 }))
 
-describe('resolveQualifyingBatch', () => {
+describe('assertEnrolledInTrack', () => {
   const db = {} as SchoolDb
 
   beforeEach(() => {
     vi.resetAllMocks()
   })
 
-  it('returns the batchId when exactly one batch qualifies', async () => {
+  it('passes when the student is enrolled in one batch on the track', async () => {
     vi.mocked(repository.findQualifyingBatches).mockResolvedValue([{ batchId: 'batch-1' }])
 
-    await expect(resolveQualifyingBatch(db, 'student-1', 'track-1')).resolves.toBe('batch-1')
+    await expect(assertEnrolledInTrack(db, 'student-1', 'track-1')).resolves.toBeUndefined()
     expect(repository.findQualifyingBatches).toHaveBeenCalledWith(db, 'student-1', 'track-1')
   })
 
-  it('rejects with a 422 when no batch qualifies', async () => {
-    vi.mocked(repository.findQualifyingBatches).mockResolvedValue([])
-
-    await expect(resolveQualifyingBatch(db, 'student-1', 'track-1')).rejects.toMatchObject({
-      statusCode: 422,
-      message: 'student is not enrolled in a batch for this chapter',
-    })
-  })
-
-  it('rejects with a 422 when more than one batch qualifies, rather than silently picking one', async () => {
+  it('passes when the student is enrolled in several batches on the track', async () => {
     vi.mocked(repository.findQualifyingBatches).mockResolvedValue([
       { batchId: 'batch-1' },
       { batchId: 'batch-2' },
     ])
 
-    await expect(resolveQualifyingBatch(db, 'student-1', 'track-1')).rejects.toMatchObject({
+    await expect(assertEnrolledInTrack(db, 'student-1', 'track-1')).resolves.toBeUndefined()
+  })
+
+  it('rejects with a 422 when the student has no batch on the track', async () => {
+    vi.mocked(repository.findQualifyingBatches).mockResolvedValue([])
+
+    await expect(assertEnrolledInTrack(db, 'student-1', 'track-1')).rejects.toMatchObject({
       statusCode: 422,
-      message: "student is enrolled in multiple batches for this chapter's track",
+      message: 'student is not enrolled in a batch for this track',
     })
   })
 })

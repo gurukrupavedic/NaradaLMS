@@ -389,7 +389,6 @@ const dataCmd = defineCommand({
               id: x.id,
               trackId: x.trackId,
               studentId: x.studentId,
-              batchId: x.batchId,
               scheduledAt: importedAt,
               status: 'scheduled' as const,
             })

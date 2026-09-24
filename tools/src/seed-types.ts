@@ -107,7 +107,6 @@ export type ExamRow = {
   id: string
   trackId: string
   studentId: string
-  batchId: string
   marks: {
     aksharaShuddhi: number
     swaraShuddhi: number

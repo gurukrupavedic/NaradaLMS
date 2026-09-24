@@ -68,7 +68,6 @@ async function seedScheduledExam() {
   const examRow = await createExam(w, {
     student: studentProfile,
     track: trackRow,
-    batch: batchRow,
     status: 'scheduled',
   })
 
@@ -248,7 +247,6 @@ describe('recordExamResult (real Postgres, end to end)', () => {
     const examRow = await createExam(w, {
       student,
       track: trackRow,
-      batch: batchRow,
       scheduledAt: new Date('2026-06-15T10:00:00Z'),
     })
     return { w, trackRow, chapters, draft, archived, batchRow, student, admin, examRow }
@@ -289,7 +287,7 @@ describe('recordExamResult (real Postgres, end to end)', () => {
     })
     // The two published chapters — not the draft, not the archived one.
     expect(evaluations.map(e => e.chapterId).sort()).toEqual(seed.chapters.map(c => c.id).sort())
-    expect(evaluations.every(e => e.level === 'level4' && e.batchId === seed.batchRow.id)).toBe(true)
+    expect(evaluations.every(e => e.level === 'level4' && e.batchId === null)).toBe(true)
   })
 
   it("adds the children's bonus from the year of birth, taken from the sitting's own year", async () => {
@@ -340,7 +338,6 @@ describe('recordExamResult (real Postgres, end to end)', () => {
     const second = await createExam(seed.w, {
       student: seed.student,
       track: seed.trackRow,
-      batch: seed.batchRow,
       scheduledAt: new Date('2026-09-01T10:00:00Z'),
     })
     await recordExamResult(
@@ -415,7 +412,6 @@ describe('correctExamResult (real Postgres, end to end)', () => {
     const examRow = await createExam(w, {
       student,
       track: trackRow,
-      batch: batchRow,
       scheduledAt: new Date('2026-06-15T10:00:00Z'),
     })
     await recordExamResult(
@@ -481,10 +477,9 @@ describe('correctExamResult (real Postgres, end to end)', () => {
   it('rejects with 409 when the exam has no result to correct yet', async () => {
     const w = await createTestSchool()
     const trackRow = await createTrack(w)
-    const batchRow = await createBatch(w, trackRow)
     const student = await createProfile(w, { name: 'Student', yearOfBirth: 1990 })
     const admin = await createProfile(w, { name: 'Admin' })
-    const examRow = await createExam(w, { student, track: trackRow, batch: batchRow })
+    const examRow = await createExam(w, { student, track: trackRow })
     world = w
 
     await expect(
@@ -579,11 +574,10 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
   it("findMany's 'own' scope still returns the detail projection, not just visibility-filtered bare rows", async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
-    const batchRow = await createBatch(world, trackRow)
     const me = await createProfile(world)
     const someoneElse = await createProfile(world)
-    const myExam = await createExam(world, { student: me, track: trackRow, batch: batchRow })
-    await createExam(world, { student: someoneElse, track: trackRow, batch: batchRow })
+    const myExam = await createExam(world, { student: me, track: trackRow })
+    await createExam(world, { student: someoneElse, track: trackRow })
 
     const { items } = await findMany(
       world.schoolDb,
@@ -604,7 +598,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
     const batchRow = await createBatch(world, trackRow)
     await enroll(world, instructorProfile, batchRow, 'instructor')
     await enroll(world, studentProfile, batchRow, 'student')
-    const studentExam = await createExam(world, { student: studentProfile, track: trackRow, batch: batchRow })
+    const studentExam = await createExam(world, { student: studentProfile, track: trackRow })
 
     const { items } = await findMany(
       world.schoolDb,
@@ -617,12 +611,41 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
     expect(found?.track.id).toBe(trackRow.id)
   })
 
+  it("findMany's 'manageable' scope shows a teacher every sitting of their students, on any track, and none of other batches' students", async () => {
+    world = await createTestSchool()
+    const currentTrack = await createTrack(world)
+    const olderTrack = await createTrack(world)
+    const teacher = await createProfile(world)
+    const myStudent = await createProfile(world)
+    const otherStudent = await createProfile(world)
+    const myBatch = await createBatch(world, currentTrack)
+    const otherBatch = await createBatch(world, currentTrack)
+    await enroll(world, teacher, myBatch, 'instructor')
+    await enroll(world, myStudent, myBatch, 'student')
+    await enroll(world, otherStudent, otherBatch, 'student')
+    // A sitting on a track the student is no longer in a batch for — still theirs to see.
+    const olderSitting = await createExam(world, { student: myStudent, track: olderTrack, status: 'completed' })
+    const currentSitting = await createExam(world, { student: myStudent, track: currentTrack })
+    const othersSitting = await createExam(world, { student: otherStudent, track: currentTrack })
+
+    const { items } = await findMany(
+      world.schoolDb,
+      { limit: 20, status: undefined, cursor: undefined, mine: false, sort: 'asc' as const },
+      { kind: 'manageable', profileId: teacher.id, batchIds: [myBatch.id] },
+      await defaultCourseId(world),
+    )
+
+    const ids = items.map(i => i.id)
+    expect(ids).toContain(olderSitting.id)
+    expect(ids).toContain(currentSitting.id)
+    expect(ids).not.toContain(othersSitting.id)
+  })
+
   it('findByIdWithDetail returns the same track/result projection as the list (list-detail equivalence, §11.3/DD-004)', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
-    const batchRow = await createBatch(world, trackRow)
     const studentProfile = await createProfile(world)
-    const examRow = await createExam(world, { student: studentProfile, track: trackRow, batch: batchRow })
+    const examRow = await createExam(world, { student: studentProfile, track: trackRow })
 
     const detail = await findByIdWithDetail(world.schoolDb, examRow.id)
 
@@ -644,12 +667,10 @@ describe('findResultsForStudent (a track certification is the student\'s latest 
     world = await createTestSchool()
     const trackA = await createTrack(world)
     const trackB = await createTrack(world)
-    const batchA = await createBatch(world, trackA)
-    const batchB = await createBatch(world, trackB)
     const student = await createProfile(world, { name: 'Student' })
     const evaluator = await createProfile(world, { name: 'Evaluator' })
-    const examA = await createExam(world, { student, track: trackA, batch: batchA, status: 'completed' })
-    const examB = await createExam(world, { student, track: trackB, batch: batchB, status: 'completed' })
+    const examA = await createExam(world, { student, track: trackA, status: 'completed' })
+    const examB = await createExam(world, { student, track: trackB, status: 'completed' })
     await createExamResult(world, { exam: examA, evaluator, evaluatedAt: new Date('2026-01-01T00:00:00Z') })
     await createExamResult(world, {
       exam: examB,
@@ -667,11 +688,10 @@ describe('findResultsForStudent (a track certification is the student\'s latest 
   it("never returns another student's results", async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
-    const batchRow = await createBatch(world, trackRow)
     const student = await createProfile(world)
     const otherStudent = await createProfile(world)
     const evaluator = await createProfile(world)
-    const theirs = await createExam(world, { student: otherStudent, track: trackRow, batch: batchRow, status: 'completed' })
+    const theirs = await createExam(world, { student: otherStudent, track: trackRow, status: 'completed' })
     await createExamResult(world, { exam: theirs, evaluator })
 
     await expect(findResultsForStudent(world.schoolDb, student.id, await defaultCourseId(world))).resolves.toEqual([])
@@ -687,11 +707,10 @@ describe('findResultsForStudent (a track certification is the student\'s latest 
   it('a re-sit on the same track keeps both results — history, not a single current row', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
-    const batchRow = await createBatch(world, trackRow)
     const student = await createProfile(world)
     const evaluator = await createProfile(world)
-    const first = await createExam(world, { student, track: trackRow, batch: batchRow, status: 'completed' })
-    const second = await createExam(world, { student, track: trackRow, batch: batchRow, status: 'completed' })
+    const first = await createExam(world, { student, track: trackRow, status: 'completed' })
+    const second = await createExam(world, { student, track: trackRow, status: 'completed' })
     await createExamResult(world, { exam: first, evaluator })
     await createExamResult(world, { exam: second, evaluator })
 
@@ -710,13 +729,11 @@ describe('findMany — search, the awaiting/graded split, and sort (admin exams 
     const scheduled = await createExam(w, {
       student: ravi,
       track: trackRow,
-      batch: batchRow,
       scheduledAt: new Date('2026-01-10T10:00:00Z'),
     })
     const gradedExam = await createExam(w, {
       student: priya,
       track: trackRow,
-      batch: batchRow,
       scheduledAt: new Date('2026-02-15T10:00:00Z'),
       status: 'completed',
     })
@@ -760,7 +777,6 @@ describe('findMany — search, the awaiting/graded split, and sort (admin exams 
     const cancelled = await createExam(world, {
       student: seed.ravi,
       track: seed.trackRow,
-      batch: seed.batchRow,
       scheduledAt: new Date('2026-01-05T10:00:00Z'),
       status: 'cancelled',
     })
