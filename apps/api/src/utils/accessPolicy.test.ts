@@ -406,8 +406,7 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
       profile,
     })
 
-    expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).toThrow()
-    expect(() => access.requireCanRecordEvaluation(examIn('batch-2'))).toThrow()
+    expect(() => access.requireCanRecordEvaluation()).toThrow()
   })
 
   it.each(['owner', 'admin'] as const)(
@@ -421,7 +420,7 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
         profile,
       })
 
-      expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).not.toThrow()
+      expect(() => access.requireCanRecordEvaluation()).not.toThrow()
     },
   )
 
@@ -433,7 +432,7 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
       user: user({ isSuperAdmin: true }),
     })
 
-    expect(() => access.requireCanRecordEvaluation(examIn('batch-1'))).not.toThrow()
+    expect(() => access.requireCanRecordEvaluation()).not.toThrow()
   })
 })
 

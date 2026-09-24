@@ -7,7 +7,7 @@ import { registration } from '@narada/db'
 import { env } from '@narada/env'
 
 import { createServer } from '../server'
-import { SessionService, User } from '../session'
+import { SessionService, type User } from '../session'
 import { destroyTestWorld } from '../testing/cleanup'
 import {
   createBatch,
@@ -59,7 +59,7 @@ async function seed() {
     const userRow = await createUser(w)
     await createMembership(w, userRow.id, { role })
     const profile = await createProfile(w, { userId: userRow.id, name })
-    const user = new User(userRow.id, name, userRow.email, true, false, new Date(), new Date())
+    const user = { ...userRow, name, isSuperAdmin: false } as User
     return { user, profile }
   }
 

@@ -7,11 +7,11 @@ import type { AccessPolicy } from '../utils/accessPolicy'
 import { createExam, findByIdWithDetail, recordExamResult } from './service'
 import * as repository from './repository'
 import * as enrollmentService from '../enrollment/service'
+import * as trackRepository from '../tracks/repository'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
 vi.mock('./repository', () => ({
-  findTrackById: vi.fn(),
   findStudentYearOfBirth: vi.fn(),
   findGradableChapterIds: vi.fn(),
   insert: vi.fn(),
@@ -25,6 +25,10 @@ vi.mock('./repository', () => ({
 // The enrollment-ambiguity check itself is owned and tested by the enrollment domain
 // (`enrollment/service.test.ts`) — these tests only prove createExam calls it correctly and
 // propagates its result/errors, not the ambiguity logic itself.
+vi.mock('../tracks/repository', () => ({
+  exists: vi.fn(),
+}))
+
 vi.mock('../enrollment/service', () => ({
   resolveQualifyingBatch: vi.fn(),
 }))
@@ -47,7 +51,7 @@ describe('createExam', () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(repository.findTrackById).mockResolvedValue({ id: 'track-1' })
+    vi.mocked(trackRepository.exists).mockResolvedValue(true)
     vi.mocked(enrollmentService.resolveQualifyingBatch).mockResolvedValue('batch-1')
   })
 
@@ -96,7 +100,7 @@ describe('createExam', () => {
   })
 
   it('rejects a track that does not exist with a 422, before resolving any batch', async () => {
-    vi.mocked(repository.findTrackById).mockResolvedValue(undefined)
+    vi.mocked(trackRepository.exists).mockResolvedValue(false)
 
     await expect(createExam(context, data)).rejects.toMatchObject({
       statusCode: 422,

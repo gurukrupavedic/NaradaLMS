@@ -1,6 +1,6 @@
 import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 
-import { forbidden, internalError, notFound } from '../error'
+import { forbidden, internalError, notFound, orNotFound } from '../error'
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
 import { deriveTimeZone } from '../utils/timezone'
@@ -26,12 +26,7 @@ export async function searchProfiles(
 }
 
 export async function findById(context: ProfileServiceContext, id: string): Promise<Profile> {
-  const row = await repository.findById(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findById(context.db, id))
 }
 
 /**
@@ -87,10 +82,7 @@ export async function updateProfile(
 
   let patch: UpdateProfileData & { countryTimeZone?: string | null } = data
   if (data.city !== undefined || data.state !== undefined || data.country !== undefined) {
-    const current = await repository.findLocationFields(context.db, id, ownerUserId)
-    if (!current) {
-      throw notFound()
-    }
+    const current = orNotFound(await repository.findLocationFields(context.db, id, ownerUserId))
 
     patch = {
       ...data,
@@ -102,12 +94,7 @@ export async function updateProfile(
     }
   }
 
-  const row = await repository.update(context.db, id, ownerUserId, patch)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.update(context.db, id, ownerUserId, patch))
 }
 
 /**

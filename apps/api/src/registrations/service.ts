@@ -1,6 +1,6 @@
-import { publicDb, type SchoolDbClient } from '@narada/db'
+import { publicDb, type SchoolDb, type SchoolDbClient } from '@narada/db'
 
-import { conflict, internalError, notFound } from '../error'
+import { conflict, internalError, orInternalError, orNotFound } from '../error'
 import { insert as insertProfile } from '../profiles/repository'
 import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
@@ -18,12 +18,7 @@ export async function findAll(
 }
 
 export async function findById(context: RegistrationServiceContext, id: string): Promise<Registration> {
-  const row = await repository.findById(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findById(context.db, id))
 }
 
 export async function submit(
@@ -46,20 +41,17 @@ export async function submit(
 /**
  * Provisions the real account an approved applicant needs: a `user` (public schema, found by
  * phone or created), school membership (also public schema — every school-scoped endpoint's
- * `AccessPolicy.load` requires one), and a `profile` (this school's schema) for them to actually
- * appear on rosters under.
+ * `AccessPolicy.load` requires one), and a `profile` (this school's schema, written through `db` so
+ * it lands in `review`'s transaction) for them to actually appear on rosters under.
  *
- * Ordered *before* the registration's own status flips to 'approved' (`review` below), on purpose:
- * `findOrCreateApplicantUser`/`ensureSchoolMembership` are idempotent, so if this throws partway
- * (the profile insert is the one non-idempotent step — see its own repository doc comment) the
- * registration is untouched and still `pending`, and simply clicking Approve again picks up
- * exactly where it left off. The tradeoff that accepts is a genuine *concurrent* double-approve of
- * the same registration racing here before either has flipped its status — accepted rather than
- * engineered around, since this is a human clicking a button the UI already disables once clicked,
- * not a high-concurrency path.
+ * The `user`/`member` writes go through the public-schema pool, a different connection than the
+ * school one, so they can't join that transaction — but both are find-or-create, so if a later
+ * step throws the registration is still `pending` and clicking Approve again picks up where it left
+ * off. (The profile insert, the one non-idempotent step, rolls back with the transaction.)
  */
 async function provisionApprovedApplicant(
-  context: ReviewContext,
+  db: SchoolDb,
+  school: { id: string },
   registration: Registration,
 ): Promise<string> {
   const fullName = `${registration.firstName} ${registration.lastName}`
@@ -69,33 +61,31 @@ async function provisionApprovedApplicant(
     email: registration.email,
   })
 
-  const [, profile] = await Promise.all([
-    repository.ensureSchoolMembership(publicDb, context.school.id, applicantUser.id),
-    insertProfile(context.db, {
-      userId: applicantUser.id,
-      name: fullName,
-      phone: registration.phone,
-      city: registration.city,
-      // `profile` mirrors the rest of `registration`'s own columns exactly (see its schema's doc
-      // comment) so the application's full detail survives onto the living record, not just
-      // name/phone/city — straight field-for-field, since the names already match.
-      email: registration.email,
-      yearOfBirth: registration.yearOfBirth,
-      state: registration.state,
-      country: registration.country,
-      countryTimeZone: registration.countryTimeZone,
-      learningGoal: registration.learningGoal,
-      currentProficiency: registration.currentProficiency,
-      spokenLanguages: registration.spokenLanguages,
-      readLanguages: registration.readLanguages,
-      parentNames: registration.parentNames,
-      dressCodeAgreed: registration.dressCodeAgreed,
-      noMeatAgreed: registration.noMeatAgreed,
-      noAlcoholAgreed: registration.noAlcoholAgreed,
-      noSmokingAgreed: registration.noSmokingAgreed,
-      comments: registration.comments,
-    }),
-  ])
+  await repository.ensureSchoolMembership(publicDb, school.id, applicantUser.id)
+  const profile = await insertProfile(db, {
+    userId: applicantUser.id,
+    name: fullName,
+    phone: registration.phone,
+    city: registration.city,
+    // `profile` mirrors the rest of `registration`'s own columns exactly (see its schema's doc
+    // comment) so the application's full detail survives onto the living record, not just
+    // name/phone/city — straight field-for-field, since the names already match.
+    email: registration.email,
+    yearOfBirth: registration.yearOfBirth,
+    state: registration.state,
+    country: registration.country,
+    countryTimeZone: registration.countryTimeZone,
+    learningGoal: registration.learningGoal,
+    currentProficiency: registration.currentProficiency,
+    spokenLanguages: registration.spokenLanguages,
+    readLanguages: registration.readLanguages,
+    parentNames: registration.parentNames,
+    dressCodeAgreed: registration.dressCodeAgreed,
+    noMeatAgreed: registration.noMeatAgreed,
+    noAlcoholAgreed: registration.noAlcoholAgreed,
+    noSmokingAgreed: registration.noSmokingAgreed,
+    comments: registration.comments,
+  })
   if (!profile) {
     throw internalError()
   }
@@ -103,28 +93,29 @@ async function provisionApprovedApplicant(
   return profile.id
 }
 
+/**
+ * Runs in one transaction that first locks the registration row, so two reviewers (or a double
+ * click) can't both provision a profile for it: the loser waits, then finds it already reviewed
+ * and gets the 409 without provisioning anything.
+ */
 async function review(
   context: ReviewContext,
   id: string,
   status: 'approved' | 'rejected',
   reviewedBy: string | null,
 ): Promise<Registration> {
-  const existing = await repository.findById(context.db, id)
-  if (!existing) {
-    throw notFound()
-  }
+  return context.db.transaction(async tx => {
+    const existing = orNotFound(await repository.findByIdForUpdate(tx, id))
 
-  const convertedProfileId =
-    status === 'approved' ? await provisionApprovedApplicant(context, existing) : null
+    if (existing.status !== 'pending') {
+      throw conflict('registration has already been reviewed')
+    }
 
-  const row = await repository.transitionStatus(context.db, id, status, reviewedBy, convertedProfileId)
-  if (!row) {
-    // The precheck above ruled out "no such registration" — the only other way transitionStatus
-    // updates 0 rows is a registration that's already been reviewed (its `pending` guard failed).
-    throw conflict('registration has already been reviewed')
-  }
+    const convertedProfileId =
+      status === 'approved' ? await provisionApprovedApplicant(tx, context.school, existing) : null
 
-  return row
+    return orInternalError(await repository.transitionStatus(tx, id, status, reviewedBy, convertedProfileId))
+  })
 }
 
 export async function approve(

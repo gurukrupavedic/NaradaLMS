@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, gt, lt, or, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, type SQL } from 'drizzle-orm'
 
 import { member, registration, user, uuidv7, type PublicDb, type SchoolDb } from '@narada/db'
 
 import { paginateResponse } from '../utils/cursor'
+import { keysetAfter } from '../utils/keyset'
 import type { CreateRegistrationData, FindRegistrationsData, Registration } from './schema'
 
 /** `createdAt` is never null (unlike `batch.startDate`/`evaluation.evaluatedAt`), so this needs
@@ -21,10 +22,12 @@ export async function findAll(
 
   if (cursor) {
     conditions.push(
-      or(
-        lt(registration.createdAt, cursor.createdAt),
-        and(eq(registration.createdAt, cursor.createdAt), gt(registration.id, cursor.id)),
-      )!,
+      keysetAfter(
+        registration.createdAt,
+        registration.id,
+        { sortValue: cursor.createdAt, id: cursor.id },
+        { sort: 'desc', id: 'asc' },
+      ),
     )
   }
 
@@ -41,6 +44,14 @@ export async function findById(db: SchoolDb, id: string): Promise<Registration |
   return db.query.registration.findFirst({
     where: (t, { eq: eqCol }) => eqCol(t.id, id),
   })
+}
+
+/** Row-locking read for `service.ts::review`'s transaction — a concurrent review of the same registration
+ * blocks here until this one commits, then sees it's no longer `pending`. The relational query API has
+ * no `FOR UPDATE`, so this drops to the plain query builder. */
+export async function findByIdForUpdate(db: SchoolDb, id: string): Promise<Registration | undefined> {
+  const rows = await db.select().from(registration).where(eq(registration.id, id)).for('update')
+  return rows.at(0)
 }
 
 /**

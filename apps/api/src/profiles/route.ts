@@ -47,7 +47,7 @@ router.get(
 // roster/schedule/the target's own role in the same query — added once a real consumer showed up
 // (apps/web's admin overview, scoped while migrating apps/web onto this contract): without it,
 // showing "every batch in the school with its roster" would cost one request per batch, the same
-// fan-out shape [[project_batch_n1_incident]] already broke once.
+// fan-out shape that already exhausted the DB pool once.
 router.get(
   '/:profileId/batches',
   optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {

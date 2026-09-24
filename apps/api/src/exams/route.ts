@@ -36,7 +36,7 @@ router.get(
   optionalProfileRoute(async ({ req, res, db, access }) => {
     const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
     const exam = await findByIdWithDetail({ db }, examId)
-    await access.requireCanReadExam(exam)
+    access.requireCanReadExam(exam)
     res.status(200).json({ data: exam })
   }),
 )
@@ -57,7 +57,7 @@ router.patch(
   profileRoute(async ({ req, res, db, access }) => {
     const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
     const existing = await findById({ db }, examId)
-    await access.requireCanUpdateExam(existing)
+    access.requireCanUpdateExam(existing)
     const data = await parse(UpdateExamSchema, req.body)
     const exam = await updateExam({ db }, examId, data)
     res.status(200).json({ data: exam })
@@ -68,8 +68,7 @@ router.post(
   '/:examId/results',
   profileRoute(async ({ req, res, db, access, profile }) => {
     const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
-    const existing = await findById({ db }, examId)
-    await access.requireCanRecordEvaluation(existing)
+    access.requireCanRecordEvaluation()
     const data = await parse(RecordExamResultSchema, req.body)
     const exam = await recordExamResult({ db }, examId, profile.id, data)
     res.status(200).json({ data: exam })
@@ -83,8 +82,7 @@ router.patch(
   '/:examId/results',
   profileRoute(async ({ req, res, db, access, profile }) => {
     const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
-    const existing = await findById({ db }, examId)
-    await access.requireCanRecordEvaluation(existing)
+    access.requireCanRecordEvaluation()
     const data = await parse(RecordExamResultSchema, req.body)
     const exam = await correctExamResult({ db }, examId, profile.id, data)
     res.status(200).json({ data: exam })

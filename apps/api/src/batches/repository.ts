@@ -1,9 +1,11 @@
-import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql, type SQL } from 'drizzle-orm'
+import { and, eq, inArray, sql, type SQL } from 'drizzle-orm'
 
 import { batch, batchClassSlot, enrollment, type SchoolDb } from '@narada/db'
 
 import type { BatchReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
+import { findNullsLastPage } from '../utils/keyset'
+import { escapeLike } from '../utils/search'
 import type {
   Batch,
   BatchDetail,
@@ -20,32 +22,61 @@ function toClassSlot(row: typeof batchClassSlot.$inferSelect): ClassSlot {
   return { dayOfWeek: row.dayOfWeek, time: row.time, durationMinutes: row.durationMinutes }
 }
 
-/**
- * Lists batches visible under `scope`, ordered `(startDate desc nulls last, id asc)` with a
- * matching compound cursor (PARITY_PLAN.md §3.4/§9.1) — a direct port of
- * `apps/api/src/services/batch.ts::findBatches`'s null-aware two-phase query, in the same shape
- * as `evaluations/repository.ts::findEvaluations`. The tie-break direction differs between the
- * two domains (id ascending here, descending there) because that's what the reference
- * implementations for each actually do — not a typo, verified against both.
- */
-export async function findAccessible(
+type BatchRelations = {
+  enrollments: {
+    profileId: string
+    role: BatchDetail['members'][number]['role']
+    status: NonNullable<BatchWithRole['enrollmentStatus']>
+    joinedAt: Date | null
+    profile: { name: string; phone: string | null; email: string | null; city: string | null }
+  }[]
+  classSlots: (typeof batchClassSlot.$inferSelect)[]
+}
+
+const WITH_DETAIL = { enrollments: { with: { profile: true } }, classSlots: true } as const
+
+function toBatchDetail(row: Batch & BatchRelations): BatchDetail {
+  const { enrollments, classSlots, ...batchRow } = row
+  return {
+    ...batchRow,
+    members: enrollments.map(e => ({
+      profileId: e.profileId,
+      name: e.profile.name,
+      phone: e.profile.phone,
+      email: e.profile.email,
+      city: e.profile.city,
+      role: e.role,
+      joinedAt: e.joinedAt,
+      status: e.status,
+    })),
+    classSlots: classSlots.map(toClassSlot),
+  }
+}
+
+/** {@link toBatchDetail} plus `profileId`'s own role and status in the batch (null when not enrolled). */
+function toBatchWithRole(row: Batch & BatchRelations, profileId: string): BatchWithRole {
+  const own = row.enrollments.find(e => e.profileId === profileId)
+  return { ...toBatchDetail(row), role: own?.role ?? null, enrollmentStatus: own?.status ?? null }
+}
+
+function batchListConditions(
   db: SchoolDb,
-  { status, limit, cursor }: FindBatchesData,
+  { status }: FindBatchesData,
   scope: BatchReadScope,
   courseId: string,
-): Promise<{ items: Batch[]; nextCursor: string | null }> {
-  const baseConditions: SQL[] = []
+): SQL[] {
+  const conditions: SQL[] = []
   if (status) {
-    baseConditions.push(eq(batch.status, status))
+    conditions.push(eq(batch.status, status))
   }
 
-  // Every list below is the request's course's batches only.
-  baseConditions.push(eq(batch.courseId, courseId))
+  // Every list is the request's course's batches only.
+  conditions.push(eq(batch.courseId, courseId))
 
   if (scope.kind === 'enrolled') {
     // Restrict to batches the caller's profile is enrolled in, rather than every batch in the
     // school — the caller has no school-admin visibility, only per-enrollment visibility.
-    baseConditions.push(
+    conditions.push(
       inArray(
         batch.id,
         db
@@ -56,43 +87,31 @@ export async function findAccessible(
     )
   }
 
-  if (cursor?.startDate === null) {
-    const rows = await db.query.batch.findMany({
-      where: and(...baseConditions, isNull(batch.startDate), gt(batch.id, cursor.id)),
-      orderBy: asc(batch.id),
-      limit: limit + 1,
-    })
+  return conditions
+}
 
-    return paginateResponse(rows, limit, item => ({ startDate: item.startDate, id: item.id }))
-  }
-
-  const nonNullConditions = [...baseConditions, isNotNull(batch.startDate)]
-  if (cursor) {
-    // `or()` is only typed as possibly-undefined for a zero-argument call; both branches here are
-    // always-defined `SQL`, so the result is never undefined.
-    nonNullConditions.push(
-      or(
-        lt(batch.startDate, cursor.startDate),
-        and(eq(batch.startDate, cursor.startDate), gt(batch.id, cursor.id)),
-      )!,
-    )
-  }
-
-  const rows = await db.query.batch.findMany({
-    where: and(...nonNullConditions),
-    orderBy: [sql`${batch.startDate} desc nulls last`, asc(batch.id)],
-    limit: limit + 1,
+/**
+ * Lists batches visible under `scope`, ordered `(startDate desc nulls last, id asc)` with a
+ * matching compound cursor (PARITY_PLAN.md §3.4/§9.1) — see `utils/keyset.ts::findNullsLastPage`.
+ * The tie-break direction differs from `evaluations/repository.ts` (id ascending here, descending
+ * there) because that's what the reference implementations for each actually do — not a typo.
+ */
+export async function findAccessible(
+  db: SchoolDb,
+  query: FindBatchesData,
+  scope: BatchReadScope,
+  courseId: string,
+): Promise<{ items: Batch[]; nextCursor: string | null }> {
+  const { limit, cursor } = query
+  const rows = await findNullsLastPage({
+    sortColumn: batch.startDate,
+    idColumn: batch.id,
+    idOrder: 'asc',
+    conditions: batchListConditions(db, query, scope, courseId),
+    cursor: cursor && { sortValue: cursor.startDate, id: cursor.id },
+    limit,
+    fetch: q => db.query.batch.findMany(q),
   })
-
-  if (rows.length <= limit) {
-    const nullRows = await db.query.batch.findMany({
-      where: and(...baseConditions, isNull(batch.startDate)),
-      orderBy: asc(batch.id),
-      limit: limit + 1 - rows.length,
-    })
-
-    rows.push(...nullRows)
-  }
 
   return paginateResponse(rows, limit, item => ({ startDate: item.startDate, id: item.id }))
 }
@@ -102,115 +121,34 @@ export async function findAccessible(
  * schedule, and `roleForProfileId`'s own role in one query — for `GET /profiles/:profileId/
  * batches?withDetail=true` (real gap, found migrating apps/web: `admin/page.tsx` calls this for
  * the admin's own profile to render every school batch with roster/schedule in one paginated
- * query, avoiding a per-batch fetch — the exact fan-out shape [[project_batch_n1_incident]]
- * already broke once). A direct port of `apps/api/src/services/batch.ts::findBatchesWithDetail`.
- * `role` is null when `roleForProfileId` has no enrollment in that batch — real for the `all`
- * scope (a school-wide admin/owner sees batches they don't personally teach); always non-null for
- * the `enrolled` scope, since every returned batch is, by construction, one `roleForProfileId` is
- * enrolled in.
+ * query, avoiding a per-batch fetch: that fan-out shape already exhausted the DB pool once).
+ * `role` is null when `roleForProfileId` has no enrollment in that batch — real for the `all` scope (a school-wide admin/owner sees batches they don't personally teach);
+ * always non-null for the `enrolled` scope, since every returned batch is, by construction, one
+ * `roleForProfileId` is enrolled in.
  */
 export async function findAccessibleWithDetail(
   db: SchoolDb,
-  { status, limit, cursor }: FindBatchesData,
+  query: FindBatchesData,
   scope: BatchReadScope,
   roleForProfileId: string,
   courseId: string,
 ): Promise<{ items: BatchWithRole[]; nextCursor: string | null }> {
-  const baseConditions: SQL[] = []
-  if (status) {
-    baseConditions.push(eq(batch.status, status))
-  }
-
-  baseConditions.push(eq(batch.courseId, courseId))
-
-  if (scope.kind === 'enrolled') {
-    baseConditions.push(
-      inArray(
-        batch.id,
-        db
-          .select({ batchId: enrollment.batchId })
-          .from(enrollment)
-          .where(eq(enrollment.profileId, scope.profileId)),
-      ),
-    )
-  }
-
-  function toBatchWithRole(row: {
-    enrollments: {
-      profileId: string
-      role: BatchWithRole['members'][number]['role']
-      status: NonNullable<BatchWithRole['enrollmentStatus']>
-      joinedAt: Date | null
-      profile: { name: string; phone: string | null; email: string | null; city: string | null }
-    }[]
-    classSlots: (typeof batchClassSlot.$inferSelect)[]
-  } & Batch): BatchWithRole {
-    const { enrollments, classSlots, ...batchRow } = row
-    const own = enrollments.find(e => e.profileId === roleForProfileId)
-    return {
-      ...batchRow,
-      members: enrollments.map(e => ({
-        profileId: e.profileId,
-        name: e.profile.name,
-        phone: e.profile.phone,
-        email: e.profile.email,
-        city: e.profile.city,
-        role: e.role,
-        joinedAt: e.joinedAt,
-        status: e.status,
-      })),
-      classSlots: classSlots.map(toClassSlot),
-      role: own?.role ?? null,
-      enrollmentStatus: own?.status ?? null,
-    }
-  }
-
-  if (cursor?.startDate === null) {
-    const rows = await db.query.batch.findMany({
-      where: and(...baseConditions, isNull(batch.startDate), gt(batch.id, cursor.id)),
-      orderBy: asc(batch.id),
-      limit: limit + 1,
-      with: { enrollments: { with: { profile: true } }, classSlots: true },
-    })
-
-    return paginateResponse(rows.map(toBatchWithRole), limit, item => ({
-      startDate: item.startDate,
-      id: item.id,
-    }))
-  }
-
-  const nonNullConditions = [...baseConditions, isNotNull(batch.startDate)]
-  if (cursor) {
-    nonNullConditions.push(
-      or(
-        lt(batch.startDate, cursor.startDate),
-        and(eq(batch.startDate, cursor.startDate), gt(batch.id, cursor.id)),
-      )!,
-    )
-  }
-
-  const rows = await db.query.batch.findMany({
-    where: and(...nonNullConditions),
-    orderBy: [sql`${batch.startDate} desc nulls last`, asc(batch.id)],
-    limit: limit + 1,
-    with: { enrollments: { with: { profile: true } }, classSlots: true },
+  const { limit, cursor } = query
+  const rows = await findNullsLastPage({
+    sortColumn: batch.startDate,
+    idColumn: batch.id,
+    idOrder: 'asc',
+    conditions: batchListConditions(db, query, scope, courseId),
+    cursor: cursor && { sortValue: cursor.startDate, id: cursor.id },
+    limit,
+    fetch: q => db.query.batch.findMany({ ...q, with: WITH_DETAIL }),
   })
 
-  if (rows.length <= limit) {
-    const nullRows = await db.query.batch.findMany({
-      where: and(...baseConditions, isNull(batch.startDate)),
-      orderBy: asc(batch.id),
-      limit: limit + 1 - rows.length,
-      with: { enrollments: { with: { profile: true } }, classSlots: true },
-    })
-
-    rows.push(...nullRows)
-  }
-
-  return paginateResponse(rows.map(toBatchWithRole), limit, item => ({
-    startDate: item.startDate,
-    id: item.id,
-  }))
+  return paginateResponse(
+    rows.map(row => toBatchWithRole(row, roleForProfileId)),
+    limit,
+    item => ({ startDate: item.startDate, id: item.id }),
+  )
 }
 
 export async function findById(db: SchoolDb, id: string): Promise<Batch | undefined> {
@@ -257,28 +195,10 @@ export async function findOpen(db: SchoolDb, courseId: string): Promise<Omit<Ope
 export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<BatchDetail | undefined> {
   const row = await db.query.batch.findFirst({
     where: (t, { eq }) => eq(t.id, id),
-    with: { enrollments: { with: { profile: true } }, classSlots: true },
+    with: WITH_DETAIL,
   })
 
-  if (!row) {
-    return undefined
-  }
-
-  const { enrollments, classSlots, ...batchRow } = row
-  return {
-    ...batchRow,
-    members: enrollments.map(e => ({
-      profileId: e.profileId,
-      name: e.profile.name,
-      phone: e.profile.phone,
-      email: e.profile.email,
-      city: e.profile.city,
-      role: e.role,
-      joinedAt: e.joinedAt,
-      status: e.status,
-    })),
-    classSlots: classSlots.map(toClassSlot),
-  }
+  return row && toBatchDetail(row)
 }
 
 /**
@@ -313,7 +233,7 @@ export async function insertClassSlots(
  * — backs the dashboard's "my batches" list. Unlike `findAccessible`'s paginated `enrolled`
  * scope, this always returns everything in one query: a single profile's own enrollment count is
  * naturally small and bounded, so there's no real pagination need here, only the N+1 the old
- * per-batch dashboard fan-out caused (see [[project_batch_n1_incident]]) to avoid.
+ * per-batch dashboard fan-out caused to avoid.
  */
 export async function findAllMembershipsWithDetail(
   db: SchoolDb,
@@ -329,33 +249,10 @@ export async function findAllMembershipsWithDetail(
         ),
         eqCol(t.courseId, courseId),
       ),
-    with: { enrollments: { with: { profile: true } }, classSlots: true },
+    with: WITH_DETAIL,
   })
 
-  return rows.map(row => {
-    const { enrollments, classSlots, ...batchRow } = row
-    // The outer `where` only selects batches with a real enrollment row for `profileId`, so
-    // `?? null` here is unreachable in practice — kept only because `BatchWithRole.role` is
-    // nullable in general (the `all`-scope case in `findAccessibleWithDetail` genuinely needs
-    // that), not because this function can ever actually produce it.
-    const own = enrollments.find(e => e.profileId === profileId)
-    return {
-      ...batchRow,
-      members: enrollments.map(e => ({
-        profileId: e.profileId,
-        name: e.profile.name,
-        phone: e.profile.phone,
-        email: e.profile.email,
-        city: e.profile.city,
-        role: e.role,
-        joinedAt: e.joinedAt,
-        status: e.status,
-      })),
-      classSlots: classSlots.map(toClassSlot),
-      role: own?.role ?? null,
-      enrollmentStatus: own?.status ?? null,
-    }
-  })
+  return rows.map(row => toBatchWithRole(row, profileId))
 }
 
 /**
@@ -426,7 +323,7 @@ export async function nextBatchIndex(db: SchoolDb, codePrefix: string): Promise<
   const rows = await db
     .select({ code: batch.code })
     .from(batch)
-    .where(sql`${batch.code} LIKE ${`${codePrefix}-%`}`)
+    .where(sql`${batch.code} LIKE ${`${escapeLike(codePrefix)}-%`}`)
 
   const suffix = new RegExp(`^${codePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`)
   let max = 0

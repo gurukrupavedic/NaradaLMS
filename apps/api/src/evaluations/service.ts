@@ -1,7 +1,8 @@
 import type { SchoolDbClient } from '@narada/db'
 
-import { conflict, notFound, unprocessable } from '../error'
-import { assertStudentEnrolledInBatch } from '../enrollment/service'
+import { conflict, notFound, orNotFound, unprocessable } from '../error'
+import { findTrackIdsByChapterId } from '../chapters/repository'
+import { findStudentIdsInBatch } from '../enrollment/service'
 import { findById as findBatchById } from '../batches/repository'
 import * as repository from './repository'
 import type { CreateEvaluationData, Evaluation, FindEvaluationsData } from './schema'
@@ -13,10 +14,7 @@ export async function findByBatch(
   batchId: string,
   query: FindEvaluationsData,
 ): Promise<{ items: Evaluation[]; nextCursor: string | null }> {
-  const batchRow = await findBatchById(context.db, batchId)
-  if (!batchRow) {
-    throw notFound()
-  }
+  const batchRow = orNotFound(await findBatchById(context.db, batchId))
 
   return repository.findForBatch(context.db, batchId, batchRow.trackId, query)
 }
@@ -27,10 +25,7 @@ export async function findByStudent(
   studentId: string,
   query: FindEvaluationsData,
 ): Promise<{ items: Evaluation[]; nextCursor: string | null }> {
-  const batchRow = await findBatchById(context.db, batchId)
-  if (!batchRow) {
-    throw notFound()
-  }
+  const batchRow = orNotFound(await findBatchById(context.db, batchId))
 
   return repository.findForStudentInBatch(context.db, batchId, batchRow.trackId, studentId, query)
 }
@@ -62,26 +57,33 @@ export async function createEvaluations(
   evaluatorId: string,
   items: CreateEvaluationData[],
 ): Promise<Evaluation[]> {
-  const batchRow = await findBatchById(context.db, batchId)
-  if (!batchRow) {
-    throw notFound()
-  }
+  const batchRow = orNotFound(await findBatchById(context.db, batchId))
+
+  const chapterIds = [...new Set(items.map(item => item.chapterId))]
+  const studentIds = [...new Set(items.map(item => item.studentId))]
+
+  // One lookup each for the whole request — a bulk promote carries an item per chapter, so
+  // checking item by item would be a couple of round trips per row.
+  const [enrolledStudentIds, trackIdByChapterId] = await Promise.all([
+    findStudentIdsInBatch(context.db, studentIds, batchId),
+    findTrackIdsByChapterId(context.db, chapterIds),
+  ])
 
   for (const data of items) {
-    await assertStudentEnrolledInBatch(context.db, data.studentId, batchId)
+    if (!enrolledStudentIds.has(data.studentId)) {
+      throw unprocessable('student is not enrolled in this batch')
+    }
 
-    const chapterRow = await repository.findChapterTrackId(context.db, data.chapterId)
-    if (!chapterRow) {
+    const chapterTrackId = trackIdByChapterId.get(data.chapterId)
+    if (chapterTrackId === undefined) {
       throw notFound()
     }
 
-    if (chapterRow.trackId !== batchRow.trackId) {
+    if (chapterTrackId !== batchRow.trackId) {
       throw unprocessable('chapter does not belong to this batch track')
     }
   }
 
-  const chapterIds = [...new Set(items.map(item => item.chapterId))]
-  const studentIds = [...new Set(items.map(item => item.studentId))]
   const existing = await repository.findForChaptersAndStudents(context.db, chapterIds, studentIds)
   const latestByKey = latestEvaluationByKey(existing)
 

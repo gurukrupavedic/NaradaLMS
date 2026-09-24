@@ -7,6 +7,7 @@ import type { AccessPolicy } from '../utils/accessPolicy'
 import { approve, cancelSlot, openSlot, reject, request } from './service'
 import * as repository from './repository'
 import * as examRepository from '../exams/repository'
+import * as trackRepository from '../tracks/repository'
 import { createExam } from '../exams/service'
 
 // Explicit factories (rather than vitest's auto-mock) so the real modules — which pull in
@@ -23,8 +24,11 @@ vi.mock('./repository', () => ({
 }))
 
 vi.mock('../exams/repository', () => ({
-  findTrackById: vi.fn(),
   isCertifiedAcrossTrack: vi.fn(),
+}))
+
+vi.mock('../tracks/repository', () => ({
+  exists: vi.fn(),
 }))
 
 vi.mock('../exams/service', () => ({
@@ -49,7 +53,7 @@ describe('openSlot', () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(examRepository.findTrackById).mockResolvedValue({ id: 'track-1' })
+    vi.mocked(trackRepository.exists).mockResolvedValue(true)
   })
 
   it('checks school-admin authorization before anything else', async () => {
@@ -59,12 +63,12 @@ describe('openSlot', () => {
 
     await expect(openSlot(context, data, 'admin-1')).rejects.toThrow('forbidden')
 
-    expect(examRepository.findTrackById).not.toHaveBeenCalled()
+    expect(trackRepository.exists).not.toHaveBeenCalled()
     expect(repository.insertSlot).not.toHaveBeenCalled()
   })
 
   it('422s when the track does not exist', async () => {
-    vi.mocked(examRepository.findTrackById).mockResolvedValue(undefined)
+    vi.mocked(trackRepository.exists).mockResolvedValue(false)
 
     await expect(openSlot(context, data, 'admin-1')).rejects.toMatchObject({ statusCode: 422 })
 

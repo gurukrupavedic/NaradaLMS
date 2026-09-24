@@ -6,10 +6,10 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('@narada/auth', () => ({ auth: {} }))
 vi.mock('better-auth/node', () => ({ fromNodeHeaders: vi.fn() }))
 
-import { requireSuperAdmin, User } from './session'
+import { requireSuperAdmin, type User } from './session'
 
 function userWith(isSuperAdmin: boolean): User {
-  return new User('user-1', 'Name', 'name@example.com', true, isSuperAdmin, new Date(), new Date())
+  return { id: 'user-1', name: 'Name', email: 'name@example.com', isSuperAdmin } as User
 }
 
 describe('requireSuperAdmin', () => {

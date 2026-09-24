@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 
 import type { SchoolDbClient } from '@narada/db'
 
-import { conflict, internalError, notFound, unprocessable } from '../error'
+import { conflict, internalError, notFound, orInternalError, orNotFound, unprocessable } from '../error'
 import { getLogger } from '../requestContext'
 import { readAudioDuration } from '../utils/audioMetadata'
 import {
@@ -59,10 +59,7 @@ export async function findById(
   id: string,
   view: ContentReadView,
 ): Promise<ChapterDetail> {
-  const row = await repository.findById(context.db, id, view)
-  if (!row) {
-    throw notFound()
-  }
+  const row = orNotFound(await repository.findById(context.db, id, view))
 
   return {
     id: row.id,
@@ -87,20 +84,7 @@ export async function findById(
     })),
     // Signed in parallel, not one at a time — a chapter with several takes shouldn't pay for N
     // sequential round trips to R2.
-    audio: await Promise.all(
-      row.audioAssets.map(async a => ({
-        id: a.id,
-        label: a.label,
-        reciter: a.reciter,
-        duration: a.duration,
-        url: await signedDownloadUrl(a.objectKey),
-        mappings: a.audioMappings.map(m => ({
-          segmentId: m.segmentId,
-          audioStart: m.audioStart,
-          audioEnd: m.audioEnd,
-        })),
-      })),
-    ),
+    audio: await Promise.all(row.audioAssets.map(toAudioAssetResponse)),
   }
 }
 
@@ -144,8 +128,7 @@ export async function upsertScript(
   data: UpsertScriptData,
 ): Promise<ChapterDetail> {
   await context.db.transaction(async tx => {
-    const chapterRow = await repository.findById(tx, chapterId, { kind: 'authoring' })
-    if (!chapterRow) throw notFound()
+    const chapterRow = orNotFound(await repository.findById(tx, chapterId, { kind: 'authoring' }))
 
     const existingSegments = await repository.findSegmentsForChapter(tx, chapterId)
     const existingScript = chapterRow.scripts.find(s => s.script === scriptKey)
@@ -204,8 +187,7 @@ export async function resegmentChapter(
   data: ResegmentData,
 ): Promise<ChapterDetail> {
   await context.db.transaction(async tx => {
-    const chapterRow = await repository.findById(tx, chapterId, { kind: 'authoring' })
-    if (!chapterRow) throw notFound()
+    const chapterRow = orNotFound(await repository.findById(tx, chapterId, { kind: 'authoring' }))
 
     const existingKeys: string[] = chapterRow.scripts.map(s => s.script).sort()
     const submittedKeys = Object.keys(data.scripts).sort()
@@ -294,8 +276,7 @@ export async function updateChapter(
   const row = await withConstraintMapping(
     () =>
       context.db.transaction(async tx => {
-        const existing = await repository.findChapterRowById(tx, chapterId)
-        if (!existing) throw notFound()
+        const existing = orNotFound(await repository.findChapterRowById(tx, chapterId))
 
         let order: number | undefined
         if (data.archived === true && !existing.archived) {
@@ -322,8 +303,7 @@ export async function createAudioUpload(
   schoolSlug: string,
   data: CreateAudioUploadData,
 ): Promise<{ uploadId: string; uploadUrl: string; expiresAt: string }> {
-  const chapterRow = await repository.findById(context.db, chapterId, { kind: 'authoring' })
-  if (!chapterRow) throw notFound()
+  orNotFound(await repository.findById(context.db, chapterId, { kind: 'authoring' }))
 
   const uploadId = randomUUID()
   const objectKey = audioObjectKey({ schoolSlug, chapterId, uploadId, contentType: data.contentType })
@@ -351,13 +331,11 @@ export async function createAudioAsset(
   data: CreateAudioAssetData,
 ): Promise<AudioAsset> {
   return context.db.transaction(async tx => {
-    const staged = await repository.findStagedUpload(tx, data.uploadId, chapterId, 'audio')
-    if (!staged) throw notFound()
+    const staged = orNotFound(await repository.findStagedUpload(tx, data.uploadId, chapterId, 'audio'))
 
     if (staged.status === 'completed') {
       // Idempotent retry: a confirm call that already succeeded once just returns the same asset.
-      const existing = await repository.findAudioAssetByObjectKey(tx, chapterId, staged.objectKey)
-      if (!existing) throw internalError()
+      const existing = orInternalError(await repository.findAudioAssetByObjectKey(tx, chapterId, staged.objectKey))
       return toAudioAssetResponse(existing)
     }
     if (staged.status !== 'pending') {
@@ -397,8 +375,7 @@ export async function createAudioAsset(
     // Re-fetched rather than trusting the insert's own `.returning()` (which is empty on the
     // `onConflictDoNothing` no-op path a racing retry can hit) — this way both paths return the
     // same shape through the same code.
-    const row = await repository.findAudioAssetByObjectKey(tx, chapterId, staged.objectKey)
-    if (!row) throw internalError()
+    const row = orInternalError(await repository.findAudioAssetByObjectKey(tx, chapterId, staged.objectKey))
     return toAudioAssetResponse(row)
   })
 }
@@ -410,8 +387,7 @@ export async function setAudioMappings(
   data: SetAudioMappingsData,
 ): Promise<AudioAsset> {
   return context.db.transaction(async tx => {
-    const asset = await repository.findAudioAssetById(tx, audioId, chapterId)
-    if (!asset) throw notFound()
+    const asset = orNotFound(await repository.findAudioAssetById(tx, audioId, chapterId))
 
     const segmentIds = [...new Set(data.mappings.map(m => m.segmentId))]
     const belongingCount = await repository.countSegmentsBelongingToChapter(tx, chapterId, segmentIds)
@@ -421,8 +397,7 @@ export async function setAudioMappings(
 
     await repository.replaceAudioMappings(tx, audioId, data.mappings)
 
-    const row = await repository.findAudioAssetByObjectKey(tx, chapterId, asset.objectKey)
-    if (!row) throw internalError()
+    const row = orInternalError(await repository.findAudioAssetByObjectKey(tx, chapterId, asset.objectKey))
     return toAudioAssetResponse(row)
   })
 }
@@ -432,8 +407,7 @@ export async function deleteAudioAsset(
   chapterId: string,
   audioId: string,
 ): Promise<void> {
-  const asset = await repository.findAudioAssetById(context.db, audioId, chapterId)
-  if (!asset) throw notFound()
+  const asset = orNotFound(await repository.findAudioAssetById(context.db, audioId, chapterId))
 
   await repository.deleteAudioAssetRow(context.db, audioId)
 

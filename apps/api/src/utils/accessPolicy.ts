@@ -115,14 +115,6 @@ export class AccessPolicy {
     )
   }
 
-  public requireSchoolMember(): void {
-    if (this.isSuperAdmin || this.schoolRole) {
-      return
-    }
-
-    throw forbidden()
-  }
-
   public isSchoolAdmin(): boolean {
     return this.isSuperAdmin || this.schoolRole === 'owner' || this.schoolRole === 'admin'
   }
@@ -157,15 +149,11 @@ export class AccessPolicy {
   }
 
   public requireCanCreateBatch(): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
+    this.requireSchoolAdmin()
   }
 
-  public requireCanUpdateBatch(_batchId: string): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
+  public requireCanUpdateBatch(): void {
+    this.requireSchoolAdmin()
   }
 
   public getCourseVisibility(): CourseReadScope {
@@ -251,7 +239,6 @@ export class AccessPolicy {
   // checks `content:read` for the base requirement and `content:update` for the authoring
   // upgrade, not any per-batch role).
   public getContentReadView(): ContentReadView {
-    this.requireSchoolMember()
     return this.isSchoolAdmin() ? { kind: 'authoring' } : { kind: 'learnerPreview' }
   }
 
@@ -259,9 +246,7 @@ export class AccessPolicy {
   // `getContentReadView` already checks to decide authoring vs learnerPreview — school-membership
   // only, no per-chapter or per-batch dimension.
   public requireCanUpdateContent(): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
+    this.requireSchoolAdmin()
   }
 
   // -- Enrollment (batch roster) ----------------------------------------------
@@ -350,9 +335,7 @@ export class AccessPolicy {
    * certification sitting are both school-level decisions, unlike rescheduling one.
    */
   public requireCanCreateExam(): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
+    this.requireSchoolAdmin()
   }
 
   // No school-admin fallback (PARITY_PLAN.md §11.4): a plain owner/admin who isn't also enrolled
@@ -374,10 +357,8 @@ export class AccessPolicy {
   // L1–L3 across the whole track), so it's gated on school-admin status alone, independent of any
   // batch role. See evaluations/schema.ts's teacherGradableLevelSchema for the other half of
   // that split.
-  public requireCanRecordEvaluation(_exam: Exam): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
+  public requireCanRecordEvaluation(): void {
+    this.requireSchoolAdmin()
   }
 
   // -- Exam slots ---------------------------------------------------------------
@@ -504,9 +485,7 @@ export class AccessPolicy {
   // shortcut already used for requireCanReadBatchEvaluations; see its comment if the school ACL
   // ever changes.
   public requireCanSearchProfiles(): void {
-    if (!this.isSchoolAdmin()) {
-      throw forbidden()
-    }
+    this.requireSchoolAdmin()
   }
 
   /**
@@ -535,6 +514,11 @@ export class AccessPolicy {
   /** Reviewing a registration (list/read/approve/reject) is a school-admin action — a prospective
    * student's application is never visible to ordinary members. */
   public requireCanReviewRegistrations(): void {
+    this.requireSchoolAdmin()
+  }
+
+  /** Owner/admin (or super admin) only — the check every admin-only `requireCan*` method below reduces to. */
+  private requireSchoolAdmin(): void {
     if (!this.isSchoolAdmin()) {
       throw forbidden()
     }
@@ -551,8 +535,8 @@ export class AccessPolicy {
 
 // DD-010 (approved 2026-08-28): a *missing* membership row is not this function's concern — it's
 // already rejected in `load()` before this runs, except for a super admin, for whom the return
-// value here is never actually consulted (isSchoolAdmin()/requireSchoolMember() both short-circuit
-// on isSuperAdmin first). A *present* role value outside owner/admin/member fails closed instead
+// value here is never actually consulted (isSchoolAdmin() short-circuits on
+// isSuperAdmin first). A *present* role value outside owner/admin/member fails closed instead
 // of being silently downgraded to `member` — the old backend already fails closed here
 // structurally (BetterAuth's hasPermission has no matching statement for an unrecognized role),
 // so this matches parity rather than deviating from it.

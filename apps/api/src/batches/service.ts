@@ -1,6 +1,6 @@
 import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
-import { conflict, internalError, notFound, unprocessable } from '../error'
+import { conflict, orInternalError, orNotFound, unprocessable } from '../error'
 import * as examRepository from '../exams/repository'
 import * as trackRepository from '../tracks/repository'
 import type { BatchReadScope } from '../utils/accessPolicy'
@@ -41,24 +41,14 @@ export async function findAllAccessibleWithDetail(
 }
 
 export async function findById(context: BatchServiceContext, id: string): Promise<Batch> {
-  const row = await repository.findById(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findById(context.db, id))
 }
 
 export async function findByIdWithMembers(
   context: BatchServiceContext,
   id: string,
 ): Promise<BatchDetail> {
-  const row = await repository.findByIdWithMembers(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findByIdWithMembers(context.db, id))
 }
 
 // Retries beat asking the caller to resubmit for what's normally a same-request race (two admins
@@ -97,12 +87,7 @@ export async function createBatch(
     const code = `${codePrefix}-${index}`
 
     try {
-      const row = await repository.insert(context.db, { ...rest, code, courseId: track.courseId })
-      if (!row) {
-        throw internalError()
-      }
-
-      return row
+      return orInternalError(await repository.insert(context.db, { ...rest, code, courseId: track.courseId }))
     } catch (error) {
       const constraint = constraintNameOf(error)
       if (constraint === DbConstraint.batchTrackIdFk) {
@@ -140,19 +125,11 @@ export async function updateBatch(
     })
 
   if (data.status !== 'completed') {
-    const row = await write(context.db)
-    if (!row) {
-      throw notFound()
-    }
-
-    return row
+    return orNotFound(await write(context.db))
   }
 
   return context.db.transaction(async tx => {
-    const row = await write(tx)
-    if (!row) {
-      throw notFound()
-    }
+    const row = orNotFound(await write(tx))
 
     await repository.endActiveStudentSeats(tx, id)
     return row
@@ -191,10 +168,7 @@ export async function setClassSlots(
   id: string,
   data: SetClassSlotsData,
 ): Promise<ClassSlot[]> {
-  const existing = await repository.findById(context.db, id)
-  if (!existing) {
-    throw notFound()
-  }
+  orNotFound(await repository.findById(context.db, id))
 
   return context.db.transaction(async tx => {
     await repository.deleteClassSlots(tx, id)

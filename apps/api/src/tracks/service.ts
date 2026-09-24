@@ -1,6 +1,6 @@
 import type { SchoolDbClient } from '@narada/db'
 
-import { notFound, unprocessable } from '../error'
+import { notFound, orNotFound, unprocessable } from '../error'
 import * as chapterRepository from '../chapters/repository'
 import type { AccessPolicy, ContentReadView } from '../utils/accessPolicy'
 import * as repository from './repository'
@@ -24,12 +24,7 @@ export async function findById(
   id: string,
   view: ContentReadView,
 ): Promise<TrackWithChapters> {
-  const row = await repository.findById(context.db, id, view)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findById(context.db, id, view))
 }
 
 /**
@@ -66,8 +61,7 @@ export async function reorderChapters(
   chapterIds: string[],
 ): Promise<TrackWithChapters> {
   await context.db.transaction(async tx => {
-    const track = await repository.findById(tx, trackId, { kind: 'authoring' })
-    if (!track) throw notFound()
+    orNotFound(await repository.findById(tx, trackId, { kind: 'authoring' }))
 
     const activeIds = (await chapterRepository.findActiveChapterIds(tx, trackId)).sort()
     const submittedIds = [...chapterIds].sort()

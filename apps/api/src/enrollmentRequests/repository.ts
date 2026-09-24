@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, gt, inArray, lt, or, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, type SQL } from 'drizzle-orm'
 
 import { batch, enrollmentRequest, type SchoolDb } from '@narada/db'
 
 import { paginateResponse } from '../utils/cursor'
+import { keysetAfter } from '../utils/keyset'
 import type { EnrollmentRequest, FindEnrollmentRequestsData } from './schema'
 
 const WITH_DISPLAY_FIELDS = {
@@ -66,10 +67,12 @@ export async function findAll(
 
   if (cursor) {
     conditions.push(
-      or(
-        lt(enrollmentRequest.createdAt, cursor.createdAt),
-        and(eq(enrollmentRequest.createdAt, cursor.createdAt), gt(enrollmentRequest.id, cursor.id)),
-      )!,
+      keysetAfter(
+        enrollmentRequest.createdAt,
+        enrollmentRequest.id,
+        { sortValue: cursor.createdAt, id: cursor.id },
+        { sort: 'desc', id: 'asc' },
+      ),
     )
   }
 
@@ -110,7 +113,7 @@ export async function findPending(
 }
 
 /** Every batch this profile has a live request pending on — `dashboard/service.ts` folds this into
- * its own fixed-query-count fetch ([[project_batch_n1_incident]]) rather than the dashboard screen
+ * its own fixed-query-count fetch rather than the dashboard screen
  * making a second round-trip per open batch. */
 export async function findPendingBatchIdsForProfile(
   db: SchoolDb,

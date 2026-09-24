@@ -1,7 +1,7 @@
 import type { SchoolDbClient } from '@narada/db'
 
 import * as batchesRepository from '../batches/repository'
-import { conflict, forbidden, internalError, notFound } from '../error'
+import { conflict, forbidden, orInternalError, orNotFound } from '../error'
 import * as enrollmentRepository from '../enrollment/repository'
 import { enroll } from '../enrollment/service'
 import * as examRepository from '../exams/repository'
@@ -21,12 +21,7 @@ export async function findAll(
 }
 
 export async function findById(context: EnrollmentRequestServiceContext, id: string): Promise<EnrollmentRequest> {
-  const row = await repository.findById(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findById(context.db, id))
 }
 
 /**
@@ -40,10 +35,7 @@ export async function findById(context: EnrollmentRequestServiceContext, id: str
  */
 export async function request(db: SchoolDbClient, batchId: string, profileId: string): Promise<EnrollmentRequest> {
   return db.transaction(async tx => {
-    const batchRow = await batchesRepository.findByIdForUpdate(tx, batchId)
-    if (!batchRow) {
-      throw notFound()
-    }
+    const batchRow = orNotFound(await batchesRepository.findByIdForUpdate(tx, batchId))
 
     if (batchRow.status === 'completed') {
       throw conflict('batch has already completed')
@@ -73,17 +65,9 @@ export async function request(db: SchoolDbClient, batchId: string, profileId: st
       throw forbidden('you need at least L1 in the previous track to join this batch')
     }
 
-    const inserted = await repository.insert(tx, batchId, profileId)
-    if (!inserted) {
-      throw internalError()
-    }
+    const inserted = orInternalError(await repository.insert(tx, batchId, profileId))
 
-    const created = await repository.findById(tx, inserted.id)
-    if (!created) {
-      throw internalError()
-    }
-
-    return created
+    return orInternalError(await repository.findById(tx, inserted.id))
   })
 }
 
@@ -101,10 +85,7 @@ async function review(
   status: 'approved' | 'rejected',
   reviewedBy: string | null,
 ): Promise<EnrollmentRequest> {
-  const existing = await repository.findById(context.db, id)
-  if (!existing) {
-    throw notFound()
-  }
+  const existing = orNotFound(await repository.findById(context.db, id))
 
   if (status === 'approved') {
     await enroll(context.db, existing.batchId, { profileId: existing.profileId, role: 'student' })
@@ -117,12 +98,7 @@ async function review(
     throw conflict('enrollment request has already been reviewed')
   }
 
-  const updated = await repository.findById(context.db, id)
-  if (!updated) {
-    throw internalError()
-  }
-
-  return updated
+  return orInternalError(await repository.findById(context.db, id))
 }
 
 export async function approve(

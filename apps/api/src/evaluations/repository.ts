@@ -1,22 +1,10 @@
-import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql, type SQL } from 'drizzle-orm'
+import { eq, inArray, type SQL } from 'drizzle-orm'
 
 import { chapter, enrollment, evaluation, track, type SchoolDb } from '@narada/db'
 
 import { paginateResponse } from '../utils/cursor'
+import { findNullsLastPage } from '../utils/keyset'
 import type { CreateEvaluationData, Evaluation, FindEvaluationsData } from './schema'
-
-// Duplicated from exams/repository.ts's identical helper — both are placeholders for a real
-// `chapters` domain (PARITY_PLAN.md §12/§4.1, not yet built). Delete both copies in favor of one
-// real one once that domain exists; not worth a shared-utils abstraction for a 6-line query today.
-export async function findChapterTrackId(
-  db: SchoolDb,
-  chapterId: string,
-): Promise<{ trackId: string } | undefined> {
-  return db.query.chapter.findFirst({
-    where: (t, { eq }) => eq(t.id, chapterId),
-    columns: { trackId: true },
-  })
-}
 
 function enrolledProfileIdsInBatch(db: SchoolDb, batchId: string) {
   return db.select({ profileId: enrollment.profileId }).from(enrollment).where(eq(enrollment.batchId, batchId))
@@ -38,43 +26,15 @@ async function findEvaluations(
   baseConditions: SQL[],
   { cursor, limit }: FindEvaluationsData,
 ): Promise<{ items: Evaluation[]; nextCursor: string | null }> {
-  if (cursor?.evaluatedAt === null) {
-    const rows = await db.query.evaluation.findMany({
-      where: and(...baseConditions, isNull(evaluation.evaluatedAt), lt(evaluation.id, cursor.id)),
-      orderBy: desc(evaluation.id),
-      limit: limit + 1,
-    })
-
-    return paginateResponse(rows, limit, item => ({ evaluatedAt: item.evaluatedAt, id: item.id }))
-  }
-
-  const nonNullConditions = [...baseConditions, isNotNull(evaluation.evaluatedAt)]
-  if (cursor) {
-    // `or()` is only typed as possibly-undefined for a zero-argument call; both branches here are
-    // always-defined `SQL`, so the result is never undefined.
-    nonNullConditions.push(
-      or(
-        lt(evaluation.evaluatedAt, cursor.evaluatedAt),
-        and(eq(evaluation.evaluatedAt, cursor.evaluatedAt), lt(evaluation.id, cursor.id)),
-      )!,
-    )
-  }
-
-  const rows = await db.query.evaluation.findMany({
-    where: and(...nonNullConditions),
-    orderBy: [sql`${evaluation.evaluatedAt} desc nulls last`, desc(evaluation.id)],
-    limit: limit + 1,
+  const rows = await findNullsLastPage({
+    sortColumn: evaluation.evaluatedAt,
+    idColumn: evaluation.id,
+    idOrder: 'desc',
+    conditions: baseConditions,
+    cursor: cursor && { sortValue: cursor.evaluatedAt, id: cursor.id },
+    limit,
+    fetch: q => db.query.evaluation.findMany(q),
   })
-
-  if (rows.length <= limit) {
-    const nullRows = await db.query.evaluation.findMany({
-      where: and(...baseConditions, isNull(evaluation.evaluatedAt)),
-      orderBy: desc(evaluation.id),
-      limit: limit + 1 - rows.length,
-    })
-
-    rows.push(...nullRows)
-  }
 
   return paginateResponse(rows, limit, item => ({ evaluatedAt: item.evaluatedAt, id: item.id }))
 }

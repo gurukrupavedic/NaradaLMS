@@ -6,11 +6,11 @@ import { createEvaluations, findByBatch, findByStudent } from './service'
 import * as repository from './repository'
 import * as enrollmentService from '../enrollment/service'
 import * as batchRepository from '../batches/repository'
+import * as chapterRepository from '../chapters/repository'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
 vi.mock('./repository', () => ({
-  findChapterTrackId: vi.fn(),
   findForBatch: vi.fn(),
   findForStudentInBatch: vi.fn(),
   findForChaptersAndStudents: vi.fn(),
@@ -18,7 +18,11 @@ vi.mock('./repository', () => ({
 }))
 
 vi.mock('../enrollment/service', () => ({
-  assertStudentEnrolledInBatch: vi.fn(),
+  findStudentIdsInBatch: vi.fn(),
+}))
+
+vi.mock('../chapters/repository', () => ({
+  findTrackIdsByChapterId: vi.fn(),
 }))
 
 vi.mock('../batches/repository', () => ({
@@ -104,8 +108,13 @@ describe('createEvaluations', () => {
   }
 
   beforeEach(() => {
-    vi.mocked(enrollmentService.assertStudentEnrolledInBatch).mockResolvedValue(undefined)
-    vi.mocked(repository.findChapterTrackId).mockResolvedValue({ trackId: 'track-1' })
+    vi.mocked(enrollmentService.findStudentIdsInBatch).mockResolvedValue(new Set(['student-1']))
+    vi.mocked(chapterRepository.findTrackIdsByChapterId).mockResolvedValue(
+      new Map([
+        ['chapter-1', 'track-1'],
+        ['chapter-2', 'track-1'],
+      ]),
+    )
     vi.mocked(batchRepository.findById).mockResolvedValue({ trackId: 'track-1' } as never)
     vi.mocked(repository.findForChaptersAndStudents).mockResolvedValue([])
     vi.mocked(repository.insertMany).mockImplementation(async (_db, rows) =>
@@ -113,33 +122,28 @@ describe('createEvaluations', () => {
     )
   })
 
-  it('validates enrollment before anything else, then chapter, then batch/track match, then inserts', async () => {
+  it('validates enrollment first, then chapter, then batch/track match, then inserts', async () => {
     await createEvaluations(context, 'batch-1', 'evaluator-1', [item])
 
-    expect(enrollmentService.assertStudentEnrolledInBatch).toHaveBeenCalledWith(
-      db,
-      'student-1',
-      'batch-1',
-    )
+    expect(enrollmentService.findStudentIdsInBatch).toHaveBeenCalledWith(db, ['student-1'], 'batch-1')
+    expect(chapterRepository.findTrackIdsByChapterId).toHaveBeenCalledWith(db, ['chapter-1'])
     expect(repository.insertMany).toHaveBeenCalledWith(db, [
       { ...item, batchId: 'batch-1', evaluatorId: 'evaluator-1' },
     ])
   })
 
-  it('propagates the 422 from assertStudentEnrolledInBatch without looking up the chapter', async () => {
-    vi.mocked(enrollmentService.assertStudentEnrolledInBatch).mockRejectedValue(
-      Object.assign(new Error('student is not enrolled in this batch'), { statusCode: 422 }),
-    )
+  it('throws 422 for a student who is not enrolled, even when the chapter is also missing', async () => {
+    vi.mocked(enrollmentService.findStudentIdsInBatch).mockResolvedValue(new Set())
+    vi.mocked(chapterRepository.findTrackIdsByChapterId).mockResolvedValue(new Map())
 
     await expect(
       createEvaluations(context, 'batch-1', 'evaluator-1', [item]),
-    ).rejects.toMatchObject({ statusCode: 422 })
-    expect(repository.findChapterTrackId).not.toHaveBeenCalled()
+    ).rejects.toMatchObject({ statusCode: 422, message: 'student is not enrolled in this batch' })
     expect(repository.insertMany).not.toHaveBeenCalled()
   })
 
   it('throws 404 when a chapter does not exist', async () => {
-    vi.mocked(repository.findChapterTrackId).mockResolvedValue(undefined)
+    vi.mocked(chapterRepository.findTrackIdsByChapterId).mockResolvedValue(new Map())
 
     await expect(
       createEvaluations(context, 'batch-1', 'evaluator-1', [item]),
@@ -154,11 +158,10 @@ describe('createEvaluations', () => {
       createEvaluations(context, 'batch-1', 'evaluator-1', [item]),
     ).rejects.toMatchObject({ statusCode: 404 })
     expect(repository.insertMany).not.toHaveBeenCalled()
-    expect(enrollmentService.assertStudentEnrolledInBatch).not.toHaveBeenCalled()
+    expect(enrollmentService.findStudentIdsInBatch).not.toHaveBeenCalled()
   })
 
   it('throws 422 when a chapter does not belong to the batch track', async () => {
-    vi.mocked(repository.findChapterTrackId).mockResolvedValue({ trackId: 'track-1' })
     vi.mocked(batchRepository.findById).mockResolvedValue({ trackId: 'track-2' } as never)
 
     await expect(
@@ -171,9 +174,6 @@ describe('createEvaluations', () => {
   })
 
   it('validates every item before inserting any of them', async () => {
-    vi.mocked(repository.findChapterTrackId).mockImplementation(async (_db, chapterId) =>
-      chapterId === 'chapter-bad' ? undefined : { trackId: 'track-1' },
-    )
 
     await expect(
       createEvaluations(context, 'batch-1', 'evaluator-1', [

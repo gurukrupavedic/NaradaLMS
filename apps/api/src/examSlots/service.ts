@@ -1,9 +1,10 @@
 import type { SchoolDbClient } from '@narada/db'
 
-import { conflict, forbidden, internalError, notFound, unprocessable } from '../error'
+import { conflict, forbidden, internalError, orInternalError, orNotFound, unprocessable } from '../error'
 import type { AccessPolicy, ExamSlotRequestReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as examRepository from '../exams/repository'
+import { exists as trackExists } from '../tracks/repository'
 import { createExam } from '../exams/service'
 import * as repository from './repository'
 import type {
@@ -27,12 +28,7 @@ export async function findManySlots(
 }
 
 export async function findSlotById(context: ExamSlotServiceContext, id: string): Promise<ExamSlot> {
-  const row = await repository.findSlotById(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findSlotById(context.db, id))
 }
 
 /** The `GET /exam-slots/:examSlotId` read path — see `repository.ts::findSlotByIdWithDetail`'s own doc comment. */
@@ -40,12 +36,7 @@ export async function findSlotByIdWithDetail(
   context: ExamSlotServiceContext,
   id: string,
 ): Promise<ExamSlotWithDetail> {
-  const row = await repository.findSlotByIdWithDetail(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findSlotByIdWithDetail(context.db, id))
 }
 
 export async function findManyRequests(
@@ -58,12 +49,7 @@ export async function findManyRequests(
 }
 
 export async function findRequestById(context: ExamSlotServiceContext, id: string): Promise<ExamSlotRequest> {
-  const row = await repository.findRequestById(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findRequestById(context.db, id))
 }
 
 /** The `GET /exam-slots/requests/:examSlotRequestId` read path — see `repository.ts::findRequestByIdWithDetail`'s own doc comment. */
@@ -71,12 +57,7 @@ export async function findRequestByIdWithDetail(
   context: ExamSlotServiceContext,
   id: string,
 ): Promise<ExamSlotRequestWithDetail> {
-  const row = await repository.findRequestByIdWithDetail(context.db, id)
-  if (!row) {
-    throw notFound()
-  }
-
-  return row
+  return orNotFound(await repository.findRequestByIdWithDetail(context.db, id))
 }
 
 /**
@@ -92,16 +73,11 @@ export async function openSlot(
 ): Promise<ExamSlot> {
   context.access.requireCanCreateExam()
 
-  if (!(await examRepository.findTrackById(context.db, data.trackId))) {
+  if (!(await trackExists(context.db, data.trackId))) {
     throw unprocessable('track not found')
   }
 
-  const row = await repository.insertSlot(context.db, { ...data, openedBy })
-  if (!row) {
-    throw internalError()
-  }
-
-  return row
+  return orInternalError(await repository.insertSlot(context.db, { ...data, openedBy }))
 }
 
 /**
@@ -209,10 +185,7 @@ export async function reject(
     throw conflict('this request has already been reviewed')
   }
 
-  const released = await repository.updateSlotStatusGuarded(context.db, existing.slotId, 'open', 'requested')
-  if (!released) {
-    throw internalError()
-  }
+  orInternalError(await repository.updateSlotStatusGuarded(context.db, existing.slotId, 'open', 'requested'))
 
   const reviewed = await repository.transitionRequestStatus(context.db, id, 'rejected', reviewedBy, null)
   if (!reviewed) {

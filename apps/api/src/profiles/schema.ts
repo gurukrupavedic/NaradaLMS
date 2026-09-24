@@ -86,7 +86,7 @@ export const SearchProfilesQuerySchema = z.object({
 
 // `withDetail=true` eager-loads each batch's roster, schedule, and the target profile's own role
 // in the same query — for a caller (apps/web's admin overview) that needs every batch's detail
-// anyway, avoiding an N+1 fan-out of GET /batches/:id per item (see [[project_batch_n1_incident]]).
+// anyway, avoiding an N+1 fan-out of GET /batches/:id per item.
 export type ProfileBatchesQuery = z.infer<typeof ProfileBatchesQuerySchema>
 export const ProfileBatchesQuerySchema = FindBatchesSchema.safeExtend({
   withDetail: z.coerce.boolean().optional().default(false),

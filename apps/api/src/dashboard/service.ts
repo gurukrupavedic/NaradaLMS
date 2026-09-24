@@ -14,7 +14,7 @@ type DashboardServiceContext = { db: SchoolDbClient }
  * queries — regardless of how many batches they're in or how many students they teach. Every
  * piece here used to be its own HTTP round-trip from the Next.js server, looped once per batch or
  * once per taught student — the exact fan-out shape that already exhausted the DB connection pool
- * once (see [[project_batch_n1_incident]]). Ported from apps/api/src/services/dashboard.ts's
+ * once. Ported from apps/api/src/services/dashboard.ts's
  * logic, adapted to this codebase's domain split (repository functions from each domain, not one
  * flat set of queries).
  */
