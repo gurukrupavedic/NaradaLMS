@@ -34,6 +34,9 @@ export type LadderTrack = {
   batchId: string | null
   batchCode: string | null
   batchStatus: 'upcoming' | 'active' | 'completed' | null
+  // The learner's own seat in `batchId` (distinct from the batch's status): a seat on a break, or
+  // dropped/inactive, is a batch they belong to but are not currently sitting in.
+  enrollmentStatus: 'active' | 'break' | 'dropped' | 'inactive' | null
   started: number
   mastered: number
   total: number

@@ -153,6 +153,7 @@ export function buildLadderTrack(
     batchId: membership?.id ?? null,
     batchCode: membership?.code ?? null,
     batchStatus: membership?.status ?? null,
+    enrollmentStatus: membership?.enrollmentStatus ?? null,
     chapters,
     started: countStarted(levels),
     mastered: countMastered(levels),
@@ -160,6 +161,20 @@ export function buildLadderTrack(
     progress: getProficiencyProgress(levels),
     masteredProgress: getMasteredProgress(levels),
   }
+}
+
+/**
+ * Whether a track drops out of the "in progress" list: the learner has been through everything in
+ * it AND holds no live seat in a still-running batch for it. A batch's `completed` status means
+ * the cohort's run ended, not that this student finished, and a seat that is on `break`, `dropped`
+ * or `inactive` is not one they are sitting in — so neither a finished cohort nor a paused seat in
+ * a running batch keeps a fully-worked track "in progress".
+ */
+export function isArchivedTrack(track: LadderTrack): boolean {
+  const sittingInRunningBatch =
+    track.enrollmentStatus === 'active' &&
+    (track.batchStatus === 'active' || track.batchStatus === 'upcoming')
+  return track.started >= track.total && !sittingInRunningBatch
 }
 
 /**
@@ -175,8 +190,15 @@ export function buildLearningTracks(dashboard: ApiDashboard): LadderTrack[] {
   // teaching assignment's batch (and its status) overwrite the learner's own row for that track,
   // making an already-mastered track look "in progress" because the person is currently teaching
   // it. Only a `student` membership reflects this profile's own progress through the track.
-  const studentMemberships = dashboard.memberships.filter(m => m.role === 'student')
-  const membershipByTrackId = new Map(studentMemberships.map(m => [m.trackId, m]))
+  //
+  // A profile can hold several student rows for one track (a past batch plus a later one), so a
+  // live seat wins over a past one rather than whichever the query returned last.
+  const membershipByTrackId = new Map<string, ApiBatchWithRole>()
+  for (const m of dashboard.memberships) {
+    if (m.role !== 'student') continue
+    const existing = membershipByTrackId.get(m.trackId)
+    if (!existing || existing.enrollmentStatus !== 'active') membershipByTrackId.set(m.trackId, m)
+  }
   const examResultByTrackId = latestExamResultByTrackId(dashboard.examResults)
   return dashboard.tracks
     .filter(track => track.chapters.length > 0)
