@@ -132,12 +132,18 @@ export async function updateExam(
  * is gone, 409 "already recorded" if it is now completed, 409 "status changed concurrently"
  * otherwise. Failing the whole request (not just skipping the chapter writes) on any error keeps
  * a result from ever existing without the evaluations it implies.
+ *
+ * `evaluatedAt` stamps the result and the chapter evaluations it writes; it defaults to the
+ * database's clock. The bulk school importer passes it so a result is strictly later than the
+ * spreadsheet marks it was imported alongside — a transaction's `now()` is one instant for every
+ * row, and "the latest evaluation wins" cannot break a tie.
  */
 export async function recordExamResult(
   context: ExamServiceContext,
   id: string,
   evaluatorId: string,
   data: RecordExamResultData,
+  options: { evaluatedAt?: Date } = {},
 ): Promise<ExamWithDetail> {
   const existing = await findById(context, id)
   if (!RECORDABLE_STATUSES.includes(existing.status)) {
@@ -174,6 +180,7 @@ export async function recordExamResult(
           ...graded,
           notes,
           evaluatorId,
+          evaluatedAt: options.evaluatedAt,
         }),
       {
         [DbConstraint.examResultEvaluatorIdFk]: () => unprocessable('evaluator no longer exists'),
@@ -183,7 +190,7 @@ export async function recordExamResult(
       throw internalError()
     }
 
-    await writeChapterEvaluations(tx, existing, level, evaluatorId, notes)
+    await writeChapterEvaluations(tx, existing, level, evaluatorId, notes, options.evaluatedAt)
   })
 
   return findByIdWithDetail(context, id)
@@ -271,6 +278,7 @@ async function writeChapterEvaluations(
   level: ReturnType<typeof levelForOutcome>,
   evaluatorId: string,
   notes: string | undefined,
+  evaluatedAt?: Date,
 ): Promise<void> {
   if (!level) {
     return
@@ -288,6 +296,7 @@ async function writeChapterEvaluations(
           level,
           notes,
           evaluatorId,
+          evaluatedAt,
         })),
       ),
     {

@@ -238,6 +238,21 @@ describe('recordExamResult', () => {
     ])
   })
 
+  it('stamps the result and its chapter evaluations with a supplied evaluatedAt', async () => {
+    const evaluatedAt = new Date('2026-09-24T00:00:00Z')
+
+    await recordExamResult(context, 'exam-1', 'evaluator-1', marks, { evaluatedAt })
+
+    expect(repository.insertResult).toHaveBeenCalledWith({}, expect.objectContaining({ evaluatedAt }))
+    expect(repository.insertEvaluations).toHaveBeenCalledWith(
+      {},
+      [
+        expect.objectContaining({ chapterId: 'chapter-1', evaluatedAt }),
+        expect.objectContaining({ chapterId: 'chapter-2', evaluatedAt }),
+      ],
+    )
+  })
+
   it('a reappear stores the result but touches no chapter', async () => {
     await recordExamResult(context, 'exam-1', 'evaluator-1', {
       aksharaShuddhi: 20,

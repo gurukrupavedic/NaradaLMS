@@ -17,6 +17,7 @@ import {
   publicDb,
   registration,
   shutdownPools,
+  type SchoolDbClient,
   track,
   user as userTable,
 } from '@narada/db'
@@ -27,7 +28,9 @@ import {
   CreateEvaluationSchema,
   proficiencyLevelSchema,
 } from '@narada/api/src/evaluations/schema'
-import { outcomeForTotal } from '@narada/api/src/exams/grading'
+import { gradeExam } from '@narada/api/src/exams/grading'
+import { recordExamResult } from '@narada/api/src/exams/service'
+import { RecordExamResultSchema } from '@narada/api/src/exams/schema'
 import { CreateRegistrationSchema } from '@narada/api/src/registrations/schema'
 import type { Dataset } from './seed-types'
 import { addOrgMembers, assertCourseSlug, upsertSchool } from './school-helpers'
@@ -64,7 +67,7 @@ const createEvaluationSchema = CreateEvaluationSchema.extend({ level: proficienc
  * Everything about the spreadsheet itself — keys, marks, batch codes — the parser has already checked
  * and reported with Excel row numbers, so it is not checked twice.
  */
-function validate(data: Dataset): string[] {
+function validate(data: Dataset, importedAt: Date): string[] {
   const errors: string[] = []
   const problems = (label: string, result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) => {
     if (!result.success) errors.push(`${label}: ${result.error!.issues.map(i => `${i.path.join('.')} ${i.message}`.trim()).join('; ')}`)
@@ -80,6 +83,28 @@ function validate(data: Dataset): string[] {
   for (const e of data.enrollments) problems(`enrollment ${e.profileId}/${e.batchId}`, enrollSchema.safeParse(e))
   for (const r of data.registrations) problems(`registration ${r.sourceKey}`, CreateRegistrationSchema.safeParse(r))
   for (const ev of data.evaluations) problems(`evaluation ${ev.id}`, createEvaluationSchema.safeParse(ev))
+
+  // Exams are recorded through the API's own `recordExamResult`, which derives the children's bonus,
+  // total and outcome itself rather than taking the sheet's. The sheet's exam has no date, so the
+  // sitting is dated the import — its year decides the bonus. Grade each exam here the same way and
+  // name every one whose result would differ from what the sheet certified, before anything is
+  // written: a bonus lost to the sitting date moving would silently change a certification.
+  const yearOfBirth = new Map(data.profiles.map(p => [p.id, p.yearOfBirth]))
+  for (const x of data.exams) {
+    problems(`exam ${x.id}`, RecordExamResultSchema.safeParse(x.marks))
+    const born = yearOfBirth.get(x.studentId)
+    if (born === undefined) {
+      errors.push(`exam ${x.id}: student ${x.studentId} has no profile in this import, so the children's bonus can't be worked out`)
+      continue
+    }
+    const graded = gradeExam(x.marks, born, importedAt.getUTCFullYear())
+    if (graded.total !== x.total || graded.childrenBonus !== x.childrenBonus) {
+      errors.push(
+        `exam ${x.id}: the sheet has children's bonus ${x.childrenBonus} / total ${x.total}, but the app grades it ` +
+          `bonus ${graded.childrenBonus} / total ${graded.total} for a sitting in ${importedAt.getUTCFullYear()} (born ${born})`,
+      )
+    }
+  }
 
   // A student holds at most one active seat per course. The database refuses a violation with one
   // opaque error midway through the transaction, so name every offender up front.
@@ -129,6 +154,10 @@ const dataCmd = defineCommand({
   },
   async run({ args }) {
     const dataDir = args.dataDir ?? path.join(SEED_DATA_ROOT, args.slug)
+    // The workbooks carry no dates, so everything imported is stamped with the import itself. A
+    // sitting's result is stamped a millisecond after the marks it was imported with (see the
+    // exams block below).
+    const importedAt = new Date()
 
     try {
       const data: Dataset = {
@@ -152,7 +181,7 @@ const dataCmd = defineCommand({
           `${evaluations.length} evaluations, ${exams.length} exams from ${dataDir}`,
       )
 
-      const errors = validate(data)
+      const errors = validate(data, importedAt)
       // Findings the parser could not load around — a row with an impossible mark, a guru who is
       // nobody, … — are the spreadsheet's to fix, not this importer's to skip.
       const report = readJson<{ blocking: { sheet: string; row?: number; key?: string; message: string }[] }>(dataDir, '_report.json')
@@ -330,38 +359,46 @@ const dataCmd = defineCommand({
 
         n = 0
         for (const rows of chunk(evaluations, CHUNK_SIZE)) {
-          n += (await tx.insert(evaluation).values(rows).onConflictDoNothing().returning({ id: evaluation.id })).length
+          const values = rows.map(r => ({ ...r, evaluatedAt: importedAt }))
+          n += (await tx.insert(evaluation).values(values).onConflictDoNothing().returning({ id: evaluation.id })).length
         }
         record('evaluation', evaluations.length, n)
 
-        // A completed sitting and its marks, from the sheets' certification mark sheets. The
-        // outcome is the API's own grading of the total, so a later change to the thresholds
-        // can't disagree with what the importer wrote (the row is a snapshot, as in the app).
+        // A completed sitting per exam sheet row, recorded through the API's own
+        // `recordExamResult` so the business rules apply exactly as when a result is entered in the
+        // app: the children's bonus, total and outcome are derived (validate() already checked they
+        // match the sheet), and a passing result is written as the level on every published chapter
+        // of the track — which is what makes the student eligible for later steps that read chapter
+        // marks (e.g. requesting a sitting). Each exam is inserted `scheduled` and then recorded.
+        //
         // The workbooks record no exam date, and `scheduledAt` is NOT NULL, so every imported exam
-        // is dated the moment of import — the true date is unknown, not the import's to invent.
-        const importedAt = new Date()
+        // is dated the moment of import — the true date is unknown, not the import's to invent. The
+        // result is stamped a millisecond after the tracker marks (same explicit clock as those, not
+        // the database's `now()`, which is a single instant for the whole transaction) so the exam
+        // is the latest word on each chapter, as it is in the app.
+        // `tx` stands in for the pool-level client the services are typed against: a transaction has
+        // no `$client`, but the services only use its query methods and a nested `transaction`
+        // (a savepoint), so the whole import still commits or rolls back as one.
+        const resultAt = new Date(importedAt.getTime() + 1)
         n = 0
         let results = 0
-        for (const rows of chunk(exams, CHUNK_SIZE)) {
-          const examValues = rows.map(x => ({
-            id: x.id,
-            trackId: x.trackId,
-            studentId: x.studentId,
-            batchId: x.batchId,
-            scheduledAt: importedAt,
-            status: 'completed' as const,
-          }))
-          n += (await tx.insert(exam).values(examValues).onConflictDoNothing().returning({ id: exam.id })).length
-          const resultValues = rows.map(x => ({
-            examId: x.id,
-            ...x.marks,
-            childrenBonus: x.childrenBonus,
-            total: x.total,
-            outcome: outcomeForTotal(x.total),
-            evaluatorId: x.evaluatorId,
-            evaluatedAt: importedAt,
-          }))
-          results += (await tx.insert(examResult).values(resultValues).onConflictDoNothing().returning({ examId: examResult.examId })).length
+        for (const x of exams) {
+          const insertedExam = await tx
+            .insert(exam)
+            .values({
+              id: x.id,
+              trackId: x.trackId,
+              studentId: x.studentId,
+              batchId: x.batchId,
+              scheduledAt: importedAt,
+              status: 'scheduled' as const,
+            })
+            .onConflictDoNothing()
+            .returning({ id: exam.id })
+          if (insertedExam.length === 0) continue // already imported; its result is already recorded
+          n += 1
+          await recordExamResult({ db: tx as unknown as SchoolDbClient }, x.id, x.evaluatorId, x.marks, { evaluatedAt: resultAt })
+          results += 1
         }
         record('exam', exams.length, n)
         record('examResult', exams.length, results)

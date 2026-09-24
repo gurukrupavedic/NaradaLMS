@@ -99,7 +99,9 @@ export type EvaluationRow = {
 
 /**
  * A completed certification sitting: one student, one track. The workbooks carry no exam date, so
- * there is none here; the importer stamps the time of import.
+ * there is none here; the importer stamps the time of import. `childrenBonus` and `total` are what
+ * the sheet certified — the importer records the exam through the API, which derives its own, and
+ * refuses to write if the two differ.
  */
 export type ExamRow = {
   id: string
