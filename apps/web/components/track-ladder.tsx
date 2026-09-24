@@ -25,11 +25,9 @@ export type LadderTrack = {
   name: string
   subtitle?: string
   // The syllabus's own real ordering (`ApiTrack.order` in lib/api/api-types.ts) — not this
-  // student's own priority. `/practice` (`components/practice-screen.tsx`) sorts by this so
-  // completed and in-progress tracks interleave by curriculum order instead of by the
-  // "focus track first" priority `fetchDashboard` sorts `learningTracks` itself by, which is
-  // right for the dashboard's own "what's next" framing but not for a page whose whole point
-  // is a plain, findable list.
+  // student's own priority. `/practice` (`components/practice-screen.tsx`) sorts by this within
+  // each of its in-progress and completed groups, instead of by the "focus track first" priority
+  // `fetchDashboard` sorts `learningTracks` itself by.
   order: number
   batchId: string | null
   batchCode: string | null

@@ -8,6 +8,7 @@ import { keys } from '@/lib/query/options'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
 import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
 import type { TeachingBatch } from '@/lib/models/dashboard'
+import { pluralize } from '@/lib/pluralize'
 
 const ROLE_LABEL: Record<TeachingBatch['role'], string> = { instructor: 'Teacher', ta: 'TA' }
 
@@ -15,12 +16,33 @@ export function TeachingList({ batches }: { batches: TeachingBatch[] }) {
   // The role badge was on all 24 rows even when every one of them read
   // "Teacher". It earns its place only when it distinguishes something.
   const showRole = new Set(batches.map(b => b.role)).size > 1
+  const active = batches.filter(b => b.status === 'active')
+  const completed = batches.filter(b => b.status === 'completed')
 
   return (
-    <div className="sheet divide-y divide-rule-soft">
-      {batches.map((batch, i) => (
-        <TeachingRow key={batch.batchId} batch={batch} showRole={showRole} defaultOpen={i === 0} />
-      ))}
+    <div className="space-y-8">
+      {active.length > 0 && (
+        <div className="sheet divide-y divide-rule-soft">
+          {active.map((batch, i) => (
+            <TeachingRow key={batch.batchId} batch={batch} showRole={showRole} defaultOpen={i === 0} />
+          ))}
+        </div>
+      )}
+
+      {completed.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-baseline gap-4">
+            <span className="label shrink-0 text-ink-muted">Completed</span>
+            <span className="h-px flex-1 bg-rule" />
+            <span className="label shrink-0 text-ink-muted">{pluralize(completed.length, 'batch', 'batches')}</span>
+          </div>
+          <div className="sheet divide-y divide-rule-soft">
+            {completed.map(batch => (
+              <TeachingRow key={batch.batchId} batch={batch} showRole={showRole} defaultOpen={false} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -63,7 +85,7 @@ function TeachingRow({
             {showRole && <span className="label text-ink-muted">{ROLE_LABEL[batch.role]}</span>}
           </span>
           <span className="mt-0.5 block truncate text-[0.75rem] text-ink-muted">
-            {batch.track} · {batch.students.length} students
+            {batch.track} · {pluralize(batch.students.length, 'student')}
           </span>
         </span>
 

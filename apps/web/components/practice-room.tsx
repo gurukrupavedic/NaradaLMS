@@ -52,7 +52,7 @@ export function PracticeRoom({ chapterId }: { chapterId: string }) {
   // The transport hooks below all key off the chapter's audio, so the loading
   // branch has to come first — split rather than early-returned so the rules of
   // hooks hold and the view never has to handle a missing chapter.
-  if (error) return <ScreenError error={error} backHref={cp('/practice')} backLabel="← Learning" />
+  if (error) return <ScreenError error={error} backHref={cp('/practice')} backLabel="← Practice" />
   if (!chapter) return <ScreenSkeleton rows={8} />
 
   // Same reasoning again, one level down: `PracticeRoomView` assumes at least one script and one
@@ -76,7 +76,7 @@ function EmptyPracticeRoom({ chapter }: { chapter: ChapterContent }) {
             href={cp('/practice')}
             className="label text-ink-muted transition-colors hover:text-ink"
           >
-            ← Learning
+            ← Practice
           </Link>
         </div>
       </header>
@@ -215,7 +215,7 @@ function PracticeRoomView({ chapter }: { chapter: ChapterContent }) {
             href={cp('/practice')}
             className="label text-ink-muted transition-colors hover:text-ink"
           >
-            ← Learning
+            ← Practice
           </Link>
 
           <div className="ml-auto flex items-center gap-px border border-rule">

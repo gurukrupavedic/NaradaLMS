@@ -8,10 +8,8 @@ import type { ChapterRow } from '@/components/track-ladder'
 import { useCoursePath } from '@/lib/course'
 
 /**
- * One chapter row, opening straight into the practice room. Shared between `TrackLadder` (the
- * accordion on `/dashboard`) and `TrackChapterList` (the flat, always-expanded listing on
- * `/practice`) — both show every chapter in the track and let this component decide, per row,
- * whether it's clickable.
+ * One chapter row, opening straight into the practice room. `TrackLadder` shows every chapter in
+ * the track and lets this component decide, per row, whether it's clickable.
  *
  * `dateColumn` toggles whether the evaluation-date column exists at all — currently both callers
  * show it, but it stays a separate prop from `showLevel` since a future list may want one column
