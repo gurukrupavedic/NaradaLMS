@@ -4,25 +4,31 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 
-import { batchClassifiersQuery, catalogTracksQuery } from '@/lib/query/options'
+import { batchClassifiersQuery, catalogTracksQuery, profileSearchQuery } from '@/lib/query/options'
 import { useCreateBatch } from '@/lib/query/use-batch-mutations'
 import { Spinner } from '@/components/spinner'
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { useCoursePath } from '@/lib/course'
+import { useDebouncedValue } from '@/lib/use-debounced-value'
 
 // A classifier is letters/digits only — the same shape the server enforces
 // (`apps/api/src/batches/schema.ts`'s `CreateBatchSchema`) — checked here too so a typo shows up
 // before the request round-trips.
 const CLASSIFIER_PATTERN = /^[A-Za-z0-9]+$/
 const NEW_CLASSIFIER = '__new__'
+const SEARCH_DEBOUNCE_MS = 300
+const MAX_SHOWN_RESULTS = 6
 
 /**
  * Create a batch.
  *
  * Every batch that isn't marked completed is requestable by a student immediately — there's no
  * separate "open it up" step, so this form has nothing to ask about enrollment at all.
+ *
+ * A batch always starts with at least one teacher, picked here by searching profiles; the server
+ * seats them as instructors in the same transaction that creates the batch.
  *
  * The code isn't typed in — it's generated server-side from the track, the current year, and the
  * classifier picked here (`apps/api/src/batches/service.ts::createBatch`), so this form only
@@ -42,6 +48,12 @@ export function CreateBatchForm() {
   const [newClassifier, setNewClassifier] = useState('')
   const [startDate, setStartDate] = useState('')
   const [meetingUrl, setMeetingUrl] = useState('')
+  const [teachers, setTeachers] = useState<{ id: string; name: string }[]>([])
+  const [teacherQuery, setTeacherQuery] = useState('')
+  const debouncedTeacherQuery = useDebouncedValue(teacherQuery, SEARCH_DEBOUNCE_MS)
+  const { data: teacherResults, isFetching: searchingTeachers } = useQuery(
+    profileSearchQuery(debouncedTeacherQuery),
+  )
 
   if (tracksError) return <ScreenError error={tracksError} backHref={cp('/admin')} backLabel="← All batches" />
   if (!tracks) return <ScreenSkeleton rows={4} />
@@ -52,12 +64,13 @@ export function CreateBatchForm() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!trackId || !classifierValid) return
+    if (!trackId || !classifierValid || teachers.length === 0) return
 
     create.mutate(
       {
         trackId,
         classifier: effectiveClassifier,
+        instructorIds: teachers.map(t => t.id),
         startDate: startDate ? new Date(startDate).toISOString() : null,
         meetingUrl: meetingUrl.trim() ? meetingUrl.trim() : null,
       },
@@ -125,6 +138,73 @@ export function CreateBatchForm() {
             </span>
           </label>
 
+          <div>
+            <span className="label block text-ink-muted">Teachers</span>
+            {teachers.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {teachers.map(teacher => (
+                  <li
+                    key={teacher.id}
+                    className="flex items-center gap-2 border border-rule px-2.5 py-1 text-[0.8125rem]"
+                  >
+                    {teacher.name}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${teacher.name}`}
+                      onClick={() => setTeachers(current => current.filter(t => t.id !== teacher.id))}
+                      className="text-ink-muted transition-colors hover:text-vermilion"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <input
+              value={teacherQuery}
+              onChange={e => setTeacherQuery(e.target.value)}
+              placeholder="Search by name, email or phone…"
+              aria-label="Search for a teacher"
+              className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.9375rem] placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
+            />
+            {debouncedTeacherQuery.trim() && (
+              <ul className="mt-2 divide-y divide-rule">
+                {searchingTeachers && !teacherResults ? (
+                  <li className="py-2.5 text-[0.8125rem] text-ink-muted">Searching…</li>
+                ) : (
+                  (teacherResults ?? [])
+                    .filter(candidate => !teachers.some(t => t.id === candidate.id))
+                    .slice(0, MAX_SHOWN_RESULTS)
+                    .map(candidate => (
+                      <li key={candidate.id} className="flex items-center justify-between gap-3 py-2.5">
+                        <span className="min-w-0">
+                          <span className="block truncate text-[0.875rem]">{candidate.name}</span>
+                          <span className="mt-0.5 flex flex-wrap gap-x-3 text-[0.75rem] text-ink-muted">
+                            {candidate.email && <span className="break-all">{candidate.email}</span>}
+                            {candidate.phone && <span className="font-mono">{candidate.phone}</span>}
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTeachers(current => [...current, { id: candidate.id, name: candidate.name }])
+                            setTeacherQuery('')
+                          }}
+                          className="label shrink-0 border border-ink/25 px-3 py-1 transition-colors hover:border-vermilion hover:text-vermilion"
+                        >
+                          Add
+                        </button>
+                      </li>
+                    ))
+                )}
+              </ul>
+            )}
+            <span className="mt-2 block text-[0.75rem] text-ink-muted">
+              At least one teacher is required. They are seated as instructors when the batch is
+              created.
+            </span>
+          </div>
+
           <label className="block">
             <span className="label block text-ink-muted">Start date</span>
             <input
@@ -149,7 +229,7 @@ export function CreateBatchForm() {
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              disabled={create.isPending || !trackId || !classifierValid}
+              disabled={create.isPending || !trackId || !classifierValid || teachers.length === 0}
               aria-busy={create.isPending}
               className="label inline-flex items-center gap-2 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
             >

@@ -30,14 +30,23 @@ export const FindExamsSchema = ExamSchema.pick({
   .partial()
   .safeExtend({
     limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
-    cursor: asCursor(z.object({ scheduledAt: z.coerce.date(), id: z.uuid() })),
+    // `scheduledAt` for the by-time sorts; `trackOrder` + `studentName` for `sort=track`.
+    cursor: asCursor(
+      z.object({
+        scheduledAt: z.coerce.date().optional(),
+        trackOrder: z.number().int().optional(),
+        studentName: z.string().optional(),
+        id: z.uuid(),
+      }),
+    ),
     // The student dashboard's "Sitting history" (apps/web's fetchExams) sends this to force
     // `AccessPolicy.getOwnExamScope()` — strictly the caller's own sittings — instead of the
     // default `getExamVisibility()`, which widens to a TA/instructor's students' sittings too
     // (correct for a grading queue, wrong for what's presented as "my own" history).
     mine: z.coerce.boolean().optional().default(false),
     // Admin exams screen (apps/web's fetchAdminSittings): matches the sitting's student by name,
-    // the same substring/multi-word matching `profiles/repository.ts::search` already does.
+    // email or phone, the same substring/multi-word matching `profiles/repository.ts::search`
+    // already does.
     query: z.string().trim().min(1).optional(),
     // Same screen's "Awaiting" vs "Graded" split: `true` restricts to exams with a recorded
     // result, `false` to exams with none (and not cancelled — a cancelled sitting is neither).
@@ -45,9 +54,10 @@ export const FindExamsSchema = ExamSchema.pick({
     // — the caller needs a real `false` here (unlike `mine` above, which is only ever sent as
     // `true`), and `Boolean('false') === true` would make that impossible.
     graded: z.stringbool().optional(),
-    // `scheduledAt` order, forward (soonest-first — the default, and what "Awaiting" wants) or
-    // reverse (most-recently-sat-first, what "Graded" wants for a history view).
-    sort: z.enum(['asc', 'desc']).optional().default('asc'),
+    // `scheduledAt` order, forward (soonest-first — the default) or reverse (most-recently-sat-first),
+    // or `track`: by the track's own order, then the student's name — what the admin grading
+    // screen groups its sections by. Ties fall through to the exam id.
+    sort: z.enum(['asc', 'desc', 'track']).optional().default('asc'),
   })
 
 export type CreateExamData = z.infer<typeof CreateExamSchema>
@@ -112,7 +122,7 @@ export type StudentExamResult = ExamResult & { trackId: string }
 // result. `result` is null until the sitting is completed.
 export type ExamWithDetail = z.infer<typeof ExamWithDetailSchema>
 export const ExamWithDetailSchema = ExamSchema.extend({
-  track: TrackSchema.pick({ id: true, name: true }),
+  track: TrackSchema.pick({ id: true, name: true, order: true }),
   result: ExamResultSchema.nullable(),
   // The admin exams screen's student name column — see examRelations in packages/db for why
   // this is eager-loaded here instead of cross-referenced client-side.

@@ -181,7 +181,7 @@ export function AdminOverview() {
           </ol>
         </Section>
 
-        <Archive label={pluralize(batches.archived.length, 'completed batch', 'completed batches')}>
+        <Archive label={pluralize(batches.archived.length, 'closed batch', 'closed batches')}>
           <BatchTable rows={batches.archived} />
         </Archive>
       </div>

@@ -5,6 +5,7 @@ import type { SchoolDbClient } from '@narada/db'
 import { DbConstraint } from '../utils/dbError'
 import { createBatch, findByIdWithMembers, setClassSlots, updateBatch } from './service'
 import * as repository from './repository'
+import { CreateBatchSchema } from './schema'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
@@ -19,6 +20,8 @@ vi.mock('./repository', () => ({
   findByIdWithMembers: vi.fn(),
   deleteClassSlots: vi.fn(),
   insertClassSlots: vi.fn(),
+  findExistingProfileIds: vi.fn(),
+  insertInstructors: vi.fn(),
 }))
 
 const db = {} as SchoolDbClient
@@ -37,16 +40,22 @@ const batchRow = (overrides: Partial<Awaited<ReturnType<typeof repository.insert
 })
 
 describe('createBatch', () => {
+  // The batch and its teachers are written inside one transaction; the callback runs against this
+  // same stand-in so the repository calls can still be asserted against it.
+  const db = { transaction: async (callback: (tx: unknown) => unknown) => callback(db) } as unknown as SchoolDbClient
+  const context = { db }
+
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(repository.findTrackForBatch).mockResolvedValue({ courseId: 'course-1', order: 2 })
     vi.mocked(repository.nextBatchIndex).mockResolvedValue(3)
+    vi.mocked(repository.findExistingProfileIds).mockResolvedValue(['teacher-1'])
   })
 
   it("generates the code from the course slug, the current year, the classifier and the track's order, and stores the track's own course rather than one from the request", async () => {
     vi.mocked(repository.insert).mockResolvedValue(batchRow())
 
-    await createBatch(context, { trackId: 'track-1', classifier: 'BR' }, 'ved')
+    await createBatch(context, { trackId: 'track-1', classifier: 'BR', instructorIds: ['teacher-1'] }, 'ved')
 
     expect(repository.findTrackForBatch).toHaveBeenCalledWith(db, 'track-1')
     expect(repository.nextBatchIndex).toHaveBeenCalledWith(db, `VED-${YEAR}-BR-2`)
@@ -57,11 +66,39 @@ describe('createBatch', () => {
     })
   })
 
+  it('seats every given teacher as an instructor of the new batch, in the same transaction', async () => {
+    vi.mocked(repository.findExistingProfileIds).mockResolvedValue(['teacher-1', 'teacher-2'])
+    vi.mocked(repository.insert).mockResolvedValue(batchRow())
+
+    await createBatch(
+      context,
+      { trackId: 'track-1', classifier: 'BR', instructorIds: ['teacher-1', 'teacher-2'] },
+      'ved',
+    )
+
+    expect(repository.insertInstructors).toHaveBeenCalledWith(db, 'batch-1', 'course-1', ['teacher-1', 'teacher-2'])
+  })
+
+  it('422s for a teacher that does not exist, without creating the batch', async () => {
+    vi.mocked(repository.findExistingProfileIds).mockResolvedValue([])
+
+    await expect(
+      createBatch(context, { trackId: 'track-1', classifier: 'BR', instructorIds: ['ghost'] }, 'ved'),
+    ).rejects.toMatchObject({ statusCode: 422, message: 'unknown teacher' })
+    expect(repository.insert).not.toHaveBeenCalled()
+    expect(repository.insertInstructors).not.toHaveBeenCalled()
+  })
+
+  it('refuses a request that names no teacher', () => {
+    expect(CreateBatchSchema.safeParse({ trackId: crypto.randomUUID(), classifier: 'BR', instructorIds: [] }).success).toBe(false)
+    expect(CreateBatchSchema.safeParse({ trackId: crypto.randomUUID(), classifier: 'BR' }).success).toBe(false)
+  })
+
   it('422s for a track that does not exist, without inserting', async () => {
     vi.mocked(repository.findTrackForBatch).mockResolvedValue(undefined)
 
     await expect(
-      createBatch(context, { trackId: 'nope', classifier: 'BR' }, 'ved'),
+      createBatch(context, { trackId: 'nope', classifier: 'BR', instructorIds: ['teacher-1'] }, 'ved'),
     ).rejects.toMatchObject({
       statusCode: 422,
       message: 'unknown or invalid track',
@@ -75,7 +112,7 @@ describe('createBatch', () => {
     })
 
     await expect(
-      createBatch(context, { trackId: 'missing-track', classifier: 'BR' }, 'ved'),
+      createBatch(context, { trackId: 'missing-track', classifier: 'BR', instructorIds: ['teacher-1'] }, 'ved'),
     ).rejects.toMatchObject({
       statusCode: 422,
       message: 'unknown or invalid track',
@@ -88,7 +125,7 @@ describe('createBatch', () => {
       .mockRejectedValueOnce({ cause: { code: '23505', constraint: DbConstraint.batchCodeUnique } })
       .mockResolvedValueOnce(batchRow({ code: `VED-${YEAR}-BR-2-4` }))
 
-    const result = await createBatch(context, { trackId: 'track-1', classifier: 'BR' }, 'ved')
+    const result = await createBatch(context, { trackId: 'track-1', classifier: 'BR', instructorIds: ['teacher-1'] }, 'ved')
 
     expect(result.code).toBe(`VED-${YEAR}-BR-2-4`)
     expect(repository.nextBatchIndex).toHaveBeenCalledTimes(2)
@@ -101,7 +138,7 @@ describe('createBatch', () => {
     })
 
     await expect(
-      createBatch(context, { trackId: 'track-1', classifier: 'BR' }, 'ved'),
+      createBatch(context, { trackId: 'track-1', classifier: 'BR', instructorIds: ['teacher-1'] }, 'ved'),
     ).rejects.toMatchObject({ statusCode: 409 })
   })
 
@@ -110,7 +147,7 @@ describe('createBatch', () => {
     vi.mocked(repository.insert).mockRejectedValue(original)
 
     await expect(
-      createBatch(context, { trackId: 'track-1', classifier: 'BR' }, 'ved'),
+      createBatch(context, { trackId: 'track-1', classifier: 'BR', instructorIds: ['teacher-1'] }, 'ved'),
     ).rejects.toBe(original)
   })
 })

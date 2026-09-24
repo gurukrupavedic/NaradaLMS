@@ -407,13 +407,17 @@ describe('creating a batch', () => {
     const s = await seedTwoCourses()
     world = s.w
 
+    const teacher = await createProfile(world)
     const created = await createBatchViaService(
       { db: world.schoolDb },
-      { trackId: s.smartamTrack.id, classifier: 'BR' },
+      { trackId: s.smartamTrack.id, classifier: 'BR', instructorIds: [teacher.id] },
       s.smartam.slug,
     )
 
     expect(created.courseId).toBe(s.smartam.id)
+    // The teacher is seated in the same transaction, in the batch's own course.
+    const seats = await world.schoolDb.query.enrollment.findMany({ where: (t, { eq }) => eq(t.batchId, created.id) })
+    expect(seats).toMatchObject([{ profileId: teacher.id, role: 'instructor', courseId: s.smartam.id }])
   })
 
   it('422s for a track that does not exist', async () => {
@@ -423,7 +427,7 @@ describe('creating a batch', () => {
     await expect(
       createBatchViaService(
         { db: world.schoolDb },
-        { trackId: crypto.randomUUID(), classifier: 'BR' },
+        { trackId: crypto.randomUUID(), classifier: 'BR', instructorIds: [crypto.randomUUID()] },
         s.smartam.slug,
       ),
     ).rejects.toMatchObject({ statusCode: 422 })

@@ -140,7 +140,7 @@ export const keys = {
     // Prefix key — invalidating this catches every in-flight search regardless of query text or
     // excludeBatchId, for a mutation (enroll/move) that can change who's addable to any batch.
     searchAll: ['profiles', 'search'] as const,
-    search: (query: string, excludeBatchId: string) =>
+    search: (query: string, excludeBatchId?: string) =>
       ['profiles', 'search', query, excludeBatchId] as const,
     // Every profile the signed-in *account* holds (app-shell.tsx's profile switcher) — the same
     // GET /profiles the login page's own picker uses, scoped by session rather than by the
@@ -350,7 +350,7 @@ export const profileDetailQuery = (profileId: string) =>
 // itself, not just the batch — each keystroke is its own cache entry rather than one entry the
 // next keystroke overwrites, which is what lets backspacing to an earlier search show its result
 // instantly instead of refetching.
-export const profileSearchQuery = (query: string, excludeBatchId: string) =>
+export const profileSearchQuery = (query: string, excludeBatchId?: string) =>
   queryOptions({
     queryKey: keys.profiles.search(query, excludeBatchId),
     queryFn: () => searchProfiles(query, excludeBatchId),

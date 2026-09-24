@@ -42,6 +42,7 @@ export type AdminSittingRow = {
   id: string
   studentId: string
   studentName: string
+  trackId: string
   track: string
   when: string
   status: ApiExam['status']
@@ -60,6 +61,7 @@ function toAdminSittingRow(exam: ApiExam): AdminSittingRow {
     id: exam.id,
     studentId: exam.studentId,
     studentName: exam.student.name,
+    trackId: exam.trackId,
     track: exam.track.name,
     when: exam.scheduledAt,
     status: exam.status,
@@ -91,8 +93,9 @@ export type AdminSittingsPage = { items: AdminSittingRow[]; nextCursor: string |
 
 // One page of GET /v1/exams for the admin exams screen itself (components/admin/admin-exams-screen.tsx),
 // which paginates with a "Load more" button instead of walking every page up front. `graded` picks
-// the awaiting/graded split server-side (and, for `graded: true`, newest-graded-first — see
-// apps/api's `FindExamsSchema`); `query` matches the sitting's student by name.
+// the awaiting/graded split server-side; both lists come back ordered by track, then student name
+// (`sort=track` — see apps/api's `FindExamsSchema`) so the screen can group them by track. `query`
+// matches the sitting's student by name, email or phone.
 export async function fetchAdminSittingsPage({
   graded,
   query,
@@ -107,7 +110,7 @@ export async function fetchAdminSittingsPage({
   const params = new URLSearchParams({
     limit: String(limit),
     graded: String(graded),
-    sort: graded ? 'desc' : 'asc',
+    sort: 'track',
   })
   if (query) params.set('query', query)
   if (cursor) params.set('cursor', cursor)

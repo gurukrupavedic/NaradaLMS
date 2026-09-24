@@ -240,13 +240,11 @@ describe('getDashboardData', () => {
         id: 'exam-1',
         trackId: 'track-1',
         studentId: 'me',
-        batchId: 'batch-A',
         scheduledAt: new Date(),
         status: 'scheduled' as const,
-        track: { id: 'track-1', courseId: 'course-1', name: 'Track 1' },
+        track: { id: 'track-1', courseId: 'course-1', name: 'Track 1', order: 1 },
         result: null,
         student: { id: 'me', name: 'Me' },
-        batch: { id: 'batch-A', code: 'BATCH-A' },
       },
     ]
 

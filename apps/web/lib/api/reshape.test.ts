@@ -196,7 +196,9 @@ describe('buildRoster', () => {
       member('break-student', 'student', 'break'),
       member('inactive-student', 'student', 'inactive'),
       member('dropped-student', 'student', 'dropped'),
+      member('active-ta', 'ta', 'active'),
       member('break-ta', 'ta', 'break'),
+      member('teacher', 'instructor', 'active'),
     ],
   })
 
@@ -204,12 +206,18 @@ describe('buildRoster', () => {
     buildRoster(batchWith(batchStatus), [], []).map(s => s.id)
 
   it('hides a student on break while the batch is still running', () => {
-    expect(idsFor('active')).toEqual(['active-student'])
-    expect(idsFor('upcoming')).toEqual(['active-student'])
+    expect(idsFor('active')).toEqual(['active-student', 'active-ta'])
+    expect(idsFor('upcoming')).toEqual(['active-student', 'active-ta'])
   })
 
   it('shows students on break once the batch is completed, but no other non-active seat', () => {
-    expect(idsFor('completed')).toEqual(['active-student', 'break-student'])
+    expect(idsFor('completed')).toEqual(['active-student', 'break-student', 'active-ta', 'break-ta'])
+  })
+
+  it('shows a class TA on the roster like a student, and never the teacher', () => {
+    expect(idsFor('active')).toContain('active-ta')
+    expect(idsFor('active')).not.toContain('teacher')
+    expect(idsFor('completed')).not.toContain('teacher')
   })
 
   it('isRosterStudent agrees with the roster for every batch status, so a batch count matches its rows', () => {

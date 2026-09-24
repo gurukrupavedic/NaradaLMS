@@ -165,7 +165,7 @@ describe('recordExamResult', () => {
   const detail = {
     ...existingExam,
     status: 'completed' as const,
-    track: { id: 'track-1', name: 'Track 1' },
+    track: { id: 'track-1', name: 'Track 1', order: 1 },
     result: null,
     student: { id: 'student-1', name: 'Student One' },
   }
@@ -398,7 +398,7 @@ describe('findByIdWithDetail', () => {
       studentId: 'student-1',
       scheduledAt: new Date(),
       status: 'scheduled' as const,
-      track: { id: 'track-1', name: 'Track 1' },
+      track: { id: 'track-1', name: 'Track 1', order: 1 },
       result: null,
       student: { id: 'student-1', name: 'Student One' },
       }

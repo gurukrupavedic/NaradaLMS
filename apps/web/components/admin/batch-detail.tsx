@@ -19,7 +19,7 @@ import { summariseRoster, type AdminBatchDetail } from '@/lib/models/dashboard'
 import { useCoursePath } from '@/lib/course'
 import { pluralize } from '@/lib/pluralize'
 
-const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Completed' } as const
+const STATUS_LABEL = { upcoming: 'Upcoming', active: 'Active', completed: 'Closed' } as const
 
 /**
  * Batch detail.

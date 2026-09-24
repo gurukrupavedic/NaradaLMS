@@ -548,7 +548,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
     )
 
     const found = items.find(item => item.id === seed.examRow.id)
-    expect(found?.track).toEqual({ id: seed.trackRow.id, name: seed.trackRow.name })
+    expect(found?.track).toEqual({ id: seed.trackRow.id, name: seed.trackRow.name, order: seed.trackRow.order })
     expect(found?.result).toBeNull()
 
     // Complete it with a result, then confirm the eager-loaded result reflects it — including the
@@ -650,7 +650,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
     const detail = await findByIdWithDetail(world.schoolDb, examRow.id)
 
     expect(detail?.id).toBe(examRow.id)
-    expect(detail?.track).toEqual({ id: trackRow.id, name: trackRow.name })
+    expect(detail?.track).toEqual({ id: trackRow.id, name: trackRow.name, order: trackRow.order })
     expect(detail?.result).toBeNull()
   })
 
@@ -844,5 +844,82 @@ describe('findMany — search, the awaiting/graded split, and sort (admin exams 
       await defaultCourseId(world),
     )
     expect(secondPage.items.map(i => i.id)).toEqual([seed.scheduled.id])
+  })
+})
+
+describe('findMany — sort=track and contact search (admin grading screen)', () => {
+  const page = { limit: 20, status: undefined, cursor: undefined, mine: false, sort: 'track' as const }
+
+  async function seed() {
+    const w = await createTestSchool()
+    // Created out of order on purpose: the list must follow the tracks' own `order`, not creation order.
+    const second = await createTrack(w, { name: 'Track 2', order: 2 })
+    const first = await createTrack(w, { name: 'Track 1', order: 1 })
+    const anu = await createProfile(w, { name: 'Anu', email: 'anu@example.com', phone: '+919876500001' })
+    const bala = await createProfile(w, { name: 'Bala', email: 'bala@example.org', phone: '+919876500002' })
+    const chitra = await createProfile(w, { name: 'Chitra', email: 'chitra@example.com', phone: '+919876500003' })
+    const exams = {
+      chitraSecond: await createExam(w, { student: chitra, track: second }),
+      balaFirst: await createExam(w, { student: bala, track: first }),
+      anuSecond: await createExam(w, { student: anu, track: second }),
+      anuFirst: await createExam(w, { student: anu, track: first }),
+    }
+    return { w, exams }
+  }
+
+  it('lists by track order, then student name', async () => {
+    const s = await seed()
+    world = s.w
+
+    const { items } = await findMany(world.schoolDb, page, { kind: 'all' }, await defaultCourseId(world))
+
+    expect(items.map(i => i.id)).toEqual([
+      s.exams.anuFirst.id,
+      s.exams.balaFirst.id,
+      s.exams.anuSecond.id,
+      s.exams.chitraSecond.id,
+    ])
+    expect(items.map(i => i.track.order)).toEqual([1, 1, 2, 2])
+  })
+
+  it('pages through the same order without repeating or skipping a row', async () => {
+    const s = await seed()
+    world = s.w
+    const courseId = await defaultCourseId(world)
+
+    const seen: string[] = []
+    let cursor: unknown = undefined
+    do {
+      const result: { items: { id: string }[]; nextCursor: string | null } = await findMany(
+        world.schoolDb,
+        { ...page, limit: 1, cursor: cursor as never },
+        { kind: 'all' },
+        courseId,
+      )
+      seen.push(...result.items.map(i => i.id))
+      cursor = result.nextCursor ? JSON.parse(Buffer.from(result.nextCursor, 'base64url').toString()) : undefined
+    } while (cursor)
+
+    expect(seen).toEqual([
+      s.exams.anuFirst.id,
+      s.exams.balaFirst.id,
+      s.exams.anuSecond.id,
+      s.exams.chitraSecond.id,
+    ])
+  })
+
+  it.each([
+    ['name', 'chitra', ['chitraSecond']],
+    ['email', 'bala@example.org', ['balaFirst']],
+    ['a partial email', 'example.com', ['anuFirst', 'anuSecond', 'chitraSecond']],
+    ['phone, with the leading +', '+919876500001', ['anuFirst', 'anuSecond']],
+    ['phone, without it', '9876500002', ['balaFirst']],
+  ] as const)('query matches by %s', async (_label, query, expected) => {
+    const s = await seed()
+    world = s.w
+
+    const { items } = await findMany(world.schoolDb, { ...page, query }, { kind: 'all' }, await defaultCourseId(world))
+
+    expect(items.map(i => i.id).sort()).toEqual(expected.map(key => s.exams[key].id).sort())
   })
 })

@@ -10,7 +10,7 @@ import { useCoursePath } from '@/lib/course'
 const STATUS_LABEL: Record<AdminBatchRow['status'], string> = {
   upcoming: 'Upcoming',
   active: 'Active',
-  completed: 'Completed',
+  completed: 'Closed',
 }
 
 export function BatchTable({ rows }: { rows: AdminBatchRow[] }) {

@@ -11,12 +11,14 @@ vi.mock('@narada/db', () => ({
 }))
 
 const trackId = crypto.randomUUID()
+const instructorIds = [crypto.randomUUID()]
 
 describe('CreateBatchSchema', () => {
   it('accepts a valid body with startDate and meetingUrl', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
       classifier: 'BR',
+      instructorIds,
       startDate: '2024-01-01T00:00:00Z',
       meetingUrl: 'https://zoom.us/j/123',
     })
@@ -27,6 +29,7 @@ describe('CreateBatchSchema', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
       classifier: 'BR',
+      instructorIds,
       startDate: null,
       meetingUrl: null,
     })
@@ -34,7 +37,7 @@ describe('CreateBatchSchema', () => {
   })
 
   it('accepts omitted startDate and meetingUrl', () => {
-    const result = CreateBatchSchema.safeParse({ trackId, classifier: 'BR' })
+    const result = CreateBatchSchema.safeParse({ trackId, classifier: 'BR', instructorIds })
     expect(result.success).toBe(true)
   })
 
@@ -42,6 +45,7 @@ describe('CreateBatchSchema', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
       classifier: 'BR',
+      instructorIds,
       startDate: '2024-01-01',
     })
     expect(result.success).toBe(false)
@@ -51,6 +55,7 @@ describe('CreateBatchSchema', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
       classifier: 'BR',
+      instructorIds,
       meetingUrl: 'http://zoom.us/j/123',
     })
     expect(result.success).toBe(false)
@@ -60,13 +65,14 @@ describe('CreateBatchSchema', () => {
     const result = CreateBatchSchema.safeParse({
       trackId,
       classifier: 'BR',
+      instructorIds,
       meetingUrl: 'javascript:alert(1)',
     })
     expect(result.success).toBe(false)
   })
 
   it('uppercases a lowercase classifier', () => {
-    const result = CreateBatchSchema.safeParse({ trackId, classifier: 'teach' })
+    const result = CreateBatchSchema.safeParse({ trackId, classifier: 'teach', instructorIds })
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.classifier).toBe('TEACH')
@@ -74,16 +80,33 @@ describe('CreateBatchSchema', () => {
   })
 
   it('rejects an empty classifier', () => {
-    expect(CreateBatchSchema.safeParse({ trackId, classifier: '' }).success).toBe(false)
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: '', instructorIds }).success).toBe(false)
   })
 
   it('rejects a classifier with spaces or punctuation', () => {
-    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'B R' }).success).toBe(false)
-    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'BR-1' }).success).toBe(false)
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'B R', instructorIds }).success).toBe(false)
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'BR-1', instructorIds }).success).toBe(false)
+  })
+
+  it('requires at least one teacher', () => {
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'BR' }).success).toBe(false)
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'BR', instructorIds: [] }).success).toBe(false)
+  })
+
+  it('rejects a teacher id that is not a uuid', () => {
+    expect(CreateBatchSchema.safeParse({ trackId, classifier: 'BR', instructorIds: ['nope'] }).success).toBe(false)
+  })
+
+  it('drops a teacher named twice', () => {
+    const result = CreateBatchSchema.safeParse({ trackId, classifier: 'BR', instructorIds: [instructorIds[0], instructorIds[0]] })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.instructorIds).toEqual([instructorIds[0]])
+    }
   })
 
   it('rejects a missing classifier', () => {
-    expect(CreateBatchSchema.safeParse({ trackId }).success).toBe(false)
+    expect(CreateBatchSchema.safeParse({ trackId, instructorIds }).success).toBe(false)
   })
 })
 

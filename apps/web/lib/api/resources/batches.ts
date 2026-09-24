@@ -46,9 +46,10 @@ async function fetchAdminBatchesWithTracks(): Promise<{
 
 export async function fetchAdminBatches(): Promise<AdminBatchesPayload> {
   const { items, tracksById } = await fetchAdminBatchesWithTracks()
-  const rows = items.map(batch =>
-    toAdminBatchRow(batch, tracksById.get(batch.trackId)?.name ?? batch.trackId),
-  )
+  // Alphabetical by code, numbers compared as numbers (…-2 before …-10).
+  const rows = items
+    .map(batch => toAdminBatchRow(batch, tracksById.get(batch.trackId)?.name ?? batch.trackId))
+    .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' }))
 
   return {
     active: rows.filter(r => r.status === 'active'),
@@ -59,7 +60,7 @@ export async function fetchAdminBatches(): Promise<AdminBatchesPayload> {
       total: rows.length,
       // Students currently in a seat — not those on a break, dropped or inactive, and not a
       // completed batch's cohort, which the per-batch count above keeps for the record.
-      students: items.reduce((n, b) => n + b.members.filter(m => m.role === 'student' && m.status === 'active').length, 0),
+      students: items.reduce((n, b) => n + b.members.filter(m => m.role !== 'instructor' && m.status === 'active').length, 0),
       tracks: tracksById.size,
     },
   }
@@ -97,11 +98,13 @@ export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
       time: slot.time,
       durationMinutes: slot.durationMinutes,
     })),
+    // Teachers before TAs, whatever order the members arrived in.
     staffRoster: batch.members
       .filter(
         (m): m is typeof m & { role: 'instructor' | 'ta' } =>
           m.role === 'instructor' || m.role === 'ta',
       )
+      .sort((a, b) => Number(a.role === 'ta') - Number(b.role === 'ta'))
       .map(m => ({ name: m.name, role: m.role })),
     chapterCodes: orderedChapters.map(chapter => chapter.code),
     // Parallel to chapterCodes — lets a caller (the mark book's grade editor) resolve which real
@@ -156,6 +159,8 @@ export async function createEvaluation(
 export type CreateBatchInput = {
   trackId: string
   classifier: string
+  // At least one: a batch is never created without a teacher.
+  instructorIds: string[]
   startDate?: string | null
   meetingUrl?: string | null
 }

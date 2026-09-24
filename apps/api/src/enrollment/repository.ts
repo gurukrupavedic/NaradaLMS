@@ -6,6 +6,10 @@ import type { CreateEnrollmentData } from './schema'
 
 export type Enrollment = typeof enrollment.$inferSelect
 
+// A class TA is a student of that class who also assists, so for grading and exam eligibility they
+// count as one of its learners. (The one-active-seat-per-course rule below stays student-only.)
+const LEARNER_ROLES: Enrollment['role'][] = ['student', 'ta']
+
 // Every batch on `trackId` that `studentId` is enrolled in as a student — callers only need to
 // know whether there is one (`assertEnrolledInTrack`).
 //
@@ -26,7 +30,7 @@ export async function findQualifyingBatches(
     .where(
       and(
         eq(enrollment.profileId, studentId),
-        eq(enrollment.role, 'student'),
+        inArray(enrollment.role, LEARNER_ROLES),
         eq(batch.trackId, trackId),
         isNull(profile.deletedAt),
       ),
@@ -77,7 +81,7 @@ export async function findStudentIdsInBatch(
     .where(
       and(
         eq(enrollment.batchId, batchId),
-        eq(enrollment.role, 'student'),
+        inArray(enrollment.role, LEARNER_ROLES),
         inArray(enrollment.profileId, profileIds),
       ),
     )
