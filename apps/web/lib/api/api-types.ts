@@ -130,7 +130,8 @@ export type ApiBatchMember = {
   role: ApiEnrollmentRole
   joinedAt: string | null
   // This member's own enrollment status in this batch — see reshape.ts's `buildRoster`, the one
-  // place that reads it (to drop a student put on a break off the mark book).
+  // place that reads it (to drop a student put on a break off the mark book, unless the batch is
+  // completed).
   status: ApiEnrollmentStatus
 }
 

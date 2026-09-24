@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ApiBatchWithRole, ApiDashboard, ApiEvaluation, ApiTrack } from '@/lib/api/api-types'
-import { buildLearningTracks, isArchivedTrack } from './reshape'
+import { buildLearningTracks, buildRoster, isArchivedTrack } from './reshape'
 
 const chapter = (id: string, trackId: string, order: number) => ({
   id,
@@ -170,5 +170,45 @@ describe('a student seat that is not live', () => {
       const [ladder] = buildLearningTracks(baseDashboard({ tracks: [t1], memberships }))
       expect(ladder.batchCode).toBe('CODE-track-1-student-active')
     }
+  })
+})
+
+describe('buildRoster', () => {
+  const member = (
+    profileId: string,
+    role: ApiBatchWithRole['members'][number]['role'],
+    status: ApiBatchWithRole['members'][number]['status'],
+  ) => ({
+    profileId,
+    name: profileId,
+    phone: null,
+    email: null,
+    city: null,
+    role,
+    joinedAt: null,
+    status,
+  })
+
+  const batchWith = (batchStatus: ApiBatchWithRole['status']): ApiBatchWithRole => ({
+    ...membership('track-1', 'instructor', batchStatus),
+    members: [
+      member('active-student', 'student', 'active'),
+      member('break-student', 'student', 'break'),
+      member('inactive-student', 'student', 'inactive'),
+      member('dropped-student', 'student', 'dropped'),
+      member('break-ta', 'ta', 'break'),
+    ],
+  })
+
+  const idsFor = (batchStatus: ApiBatchWithRole['status']) =>
+    buildRoster(batchWith(batchStatus), [], []).map(s => s.id)
+
+  it('hides a student on break while the batch is still running', () => {
+    expect(idsFor('active')).toEqual(['active-student'])
+    expect(idsFor('upcoming')).toEqual(['active-student'])
+  })
+
+  it('shows students on break once the batch is completed, but no other non-active seat', () => {
+    expect(idsFor('completed')).toEqual(['active-student', 'break-student'])
   })
 })

@@ -329,8 +329,14 @@ export function buildRoster(
   // place that has to filter them back out: everything downstream of `buildRoster` (both the
   // admin batch-detail grid and the teacher's own dashboard) only ever sees this function's
   // output, so a student stops showing up here the moment their status isn't 'active' anymore.
+  // The exception is a completed batch: nobody is being taught in it, so a break is just part of
+  // the record of who was in the cohort (and the imported `-0` batches are all-break — see
+  // seed-data/source-data-issues.md) rather than a live seat to hide.
+  const showBreaks = membership.status === 'completed'
   const students = membership.members.filter(
-    member => member.role === 'student' && member.status === 'active',
+    member =>
+      member.role === 'student' &&
+      (member.status === 'active' || (showBreaks && member.status === 'break')),
   )
 
   return students.map(student => {
