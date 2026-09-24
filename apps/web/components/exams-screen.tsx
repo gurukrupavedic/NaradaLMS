@@ -43,7 +43,7 @@ export function ExamsScreen() {
   const pendingTrackIds = new Set(
     (myRequests ?? []).filter(r => r.status === 'pending').map(r => r.trackId),
   )
-  // Approved requests already show up above as a booked sitting or, once graded, sitting history —
+  // Approved requests already show up above as a booked sitting or, once graded, exam feedback —
   // showing them a third time here would be redundant, so this list is only the ones still moving.
   const openRequests = (myRequests ?? []).filter(r => r.status !== 'approved')
 
@@ -61,10 +61,10 @@ export function ExamsScreen() {
               ? 'Every track certified'
               : `Certified in ${certified} of ${pluralize(total, 'track')}`
         }
-        meta={`${pluralize(total - certified, 'track')} remaining · ${pluralize(scheduled.length, 'sitting')} booked`}
+        meta={`${pluralize(total - certified, 'track')} remaining · ${pluralize(scheduled.length, 'attempt')} booked`}
         stats={[
           { value: `${certified}/${total}`, label: 'Certified' },
-          { value: String(past.length), label: 'Sittings' },
+          { value: String(past.length), label: 'Attempts' },
         ]}
       />
 
@@ -74,7 +74,7 @@ export function ExamsScreen() {
             omitted entirely rather than rendered as a "nothing here" panel. */}
         {scheduled.length > 0 && (
           <Reveal>
-            <Section title="Booked" count={pluralize(scheduled.length, 'sitting')}>
+            <Section title="Booked" count={pluralize(scheduled.length, 'attempt')}>
               <ol className="sheet">
                 {scheduled.map(sitting => (
                   <li
@@ -113,7 +113,7 @@ export function ExamsScreen() {
             so (like "Booked" above) this is omitted rather than shown as "nothing here". */}
         {!!openSlots?.length && (
           <Reveal delay={80}>
-            <Section title="Available sittings" count={`${openSlots.length}`}>
+            <Section title="Available attempts" count={`${openSlots.length}`}>
               <ol className="sheet">
                 {openSlots.map(slot => (
                   <AvailableSlotRow
@@ -136,7 +136,7 @@ export function ExamsScreen() {
 
         {past.length > 0 && (
           <Reveal delay={160}>
-            <Section title="Sitting history" count={pluralize(past.length, 'sitting')}>
+            <Section title="Exam feedback" count={pluralize(past.length, 'attempt')}>
               <ol className="sheet">
                 {past.map(sitting => {
                   const result = sitting.result!

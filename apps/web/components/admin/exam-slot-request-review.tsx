@@ -25,7 +25,7 @@ export function ExamSlotRequestReview() {
       status={status}
       onStatusChange={setStatus}
       query={query}
-      emptyLabel="sitting requests"
+      emptyLabel="attempt requests"
       renderRow={request => <ExamSlotRequestRowItem key={request.id} request={request} />}
     />
   )

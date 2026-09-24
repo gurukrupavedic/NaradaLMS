@@ -81,7 +81,7 @@ export function AdminExamsScreen() {
 
       <div className="mx-auto max-w-5xl space-y-12 px-5 py-9">
         <Reveal>
-          <Section title="Awaiting a result" count={awaiting.hasNextPage ? `${awaitingCount} sittings` : pluralize(awaiting.rows.length, 'sitting')}>
+          <Section title="Awaiting a result" count={awaiting.hasNextPage ? `${awaitingCount} attempts` : pluralize(awaiting.rows.length, 'attempt')}>
             <input
               value={awaiting.query}
               onChange={e => awaiting.setQuery(e.target.value)}
@@ -91,8 +91,8 @@ export function AdminExamsScreen() {
             {awaiting.rows.length === 0 ? (
               <p className="text-[0.9375rem] text-ink-muted">
                 {awaiting.query.trim()
-                  ? `No sittings match "${awaiting.query.trim()}".`
-                  : 'No sittings are booked right now.'}
+                  ? `No attempts match "${awaiting.query.trim()}".`
+                  : 'No attempts are booked right now.'}
               </p>
             ) : (
               <ol className="sheet">
@@ -136,7 +136,7 @@ export function AdminExamsScreen() {
         </Reveal>
 
         <Reveal delay={60}>
-          <Section title="Graded" count={graded.hasNextPage ? `${gradedCount} sittings` : pluralize(graded.rows.length, 'sitting')}>
+          <Section title="Graded" count={graded.hasNextPage ? `${gradedCount} attempts` : pluralize(graded.rows.length, 'attempt')}>
             <input
               value={graded.query}
               onChange={e => graded.setQuery(e.target.value)}
@@ -146,8 +146,8 @@ export function AdminExamsScreen() {
             {graded.rows.length === 0 ? (
               <p className="text-[0.9375rem] text-ink-muted">
                 {graded.query.trim()
-                  ? `No sittings match "${graded.query.trim()}".`
-                  : 'No sittings have been graded yet.'}
+                  ? `No attempts match "${graded.query.trim()}".`
+                  : 'No attempts have been graded yet.'}
               </p>
             ) : (
               <ol className="sheet">

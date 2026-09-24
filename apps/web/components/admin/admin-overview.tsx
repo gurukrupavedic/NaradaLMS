@@ -129,7 +129,7 @@ export function AdminOverview() {
                 href={cp('/admin/exam-slots?view=requests')}
                 className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
               >
-                <span className="text-[0.9375rem]">Review sitting requests</span>
+                <span className="text-[0.9375rem]">Review attempt requests</span>
                 {(pendingSlotRequests?.length ?? 0) > 0 ? (
                   <span className="label text-vermilion">{pendingSlotRequests!.length} awaiting review →</span>
                 ) : (
@@ -142,7 +142,7 @@ export function AdminOverview() {
                 href={cp('/admin/exam-slots')}
                 className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
               >
-                <span className="text-[0.9375rem]">Open a sitting slot</span>
+                <span className="text-[0.9375rem]">Open an attempt slot</span>
                 <span className="label text-ink-muted">→</span>
               </Link>
             </li>
