@@ -223,25 +223,68 @@ export async function findPassedTrackIds(
  * checks a *previous exam result* on this track — this is chapter-level standing, the thing that
  * makes a first sitting requestable in the first place. A track with no gradable chapters is never
  * eligible (vacuously true would let a student "pass" a track that isn't ready to certify at all).
- *
- * Reduces each chapter's evaluation history to its current level — last write (by `evaluatedAt`)
- * wins, the same reduction the dashboard does client-side over a student's whole course — but
- * scoped to one track, so the row count stays small enough to fold in JS rather than needing a
- * real `DISTINCT ON` (`SchoolDb` doesn't expose one; see `findPassedTrackIds`'s own note on this).
  */
 export async function isCertifiedAcrossTrack(
   db: SchoolDb,
   studentId: string,
   trackId: string,
 ): Promise<boolean> {
-  const chapterIds = await findGradableChapterIds(db, trackId)
-  if (chapterIds.length === 0) {
-    return false
+  const chapters = await db
+    .select({ id: chapter.id, trackId: chapter.trackId })
+    .from(chapter)
+    .where(gradableChapterOf(eq(chapter.trackId, trackId)))
+
+  return (await eligibleTrackIds(db, studentId, chapters)).has(trackId)
+}
+
+/**
+ * Every track in `courseId` the student is currently eligible to request a sitting on — the bulk
+ * counterpart to {@link isCertifiedAcrossTrack} (same rule, one pair of queries for the whole
+ * course instead of one pair per track), backing the exams screen's request-button pre-check.
+ */
+export async function findEligibleTrackIds(
+  db: SchoolDb,
+  studentId: string,
+  courseId: string,
+): Promise<string[]> {
+  const chapters = await db
+    .select({ id: chapter.id, trackId: chapter.trackId })
+    .from(chapter)
+    .where(gradableChapterOf(inArray(chapter.trackId, tracksOfCourse(db, courseId))))
+
+  return [...(await eligibleTrackIds(db, studentId, chapters))]
+}
+
+// Published and not archived — the chapters a student actually sees, and the ones a result applies to.
+function gradableChapterOf(trackFilter: SQL) {
+  return and(trackFilter, eq(chapter.status, 'published'), eq(chapter.archived, false))
+}
+
+/**
+ * The one place the eligibility rule lives: a track qualifies when it has at least one gradable
+ * chapter and every one of them is currently L3+. Reduces each chapter's evaluation history to its
+ * current level — last write (by `evaluatedAt`) wins, the same reduction the dashboard does
+ * client-side over a student's whole course — in JS, since `SchoolDb` doesn't expose a real
+ * `DISTINCT ON` (see `findPassedTrackIds`'s own note on this).
+ */
+async function eligibleTrackIds(
+  db: SchoolDb,
+  studentId: string,
+  chapters: { id: string; trackId: string }[],
+): Promise<Set<string>> {
+  if (chapters.length === 0) {
+    return new Set()
   }
 
   const rows = await db.query.evaluation.findMany({
     where: (t, { and: andCols, eq: eqCol, inArray: inArrayCol }) =>
-      andCols(eqCol(t.studentId, studentId), inArrayCol(t.chapterId, chapterIds)),
+      andCols(
+        eqCol(t.studentId, studentId),
+        inArrayCol(
+          t.chapterId,
+          chapters.map(c => c.id),
+        ),
+      ),
     orderBy: (t, { asc: ascCol }) => ascCol(t.evaluatedAt),
     columns: { chapterId: true, level: true },
   })
@@ -251,10 +294,15 @@ export async function isCertifiedAcrossTrack(
     currentLevelByChapter.set(row.chapterId, row.level)
   }
 
-  return chapterIds.every(id => {
-    const level = currentLevelByChapter.get(id)
-    return level === 'level3' || level === 'level4'
-  })
+  const eligible = new Set(chapters.map(c => c.trackId))
+  for (const c of chapters) {
+    const level = currentLevelByChapter.get(c.id)
+    if (level !== 'level3' && level !== 'level4') {
+      eligible.delete(c.trackId)
+    }
+  }
+
+  return eligible
 }
 
 /** `undefined` for a missing profile *and* for one with no year of birth on file — the service treats both as "cannot compute the children's bonus." */
@@ -274,9 +322,7 @@ export async function findGradableChapterIds(db: SchoolDb, trackId: string): Pro
   const rows = await db
     .select({ id: chapter.id })
     .from(chapter)
-    .where(
-      and(eq(chapter.trackId, trackId), eq(chapter.status, 'published'), eq(chapter.archived, false)),
-    )
+    .where(gradableChapterOf(eq(chapter.trackId, trackId)))
   return rows.map(row => row.id)
 }
 

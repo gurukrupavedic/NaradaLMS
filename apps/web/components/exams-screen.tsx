@@ -10,7 +10,7 @@ import { Pill } from '@/components/proficiency-pill'
 import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
-import { examSlotsQuery, examsQuery, myExamSlotRequestsQuery } from '@/lib/query/options'
+import { examEligibilityQuery, examSlotsQuery, examsQuery, myExamSlotRequestsQuery } from '@/lib/query/options'
 import { useRequestExamSlot } from '@/lib/query/use-exam-slot-mutations'
 import { ExamMarksLine } from '@/components/exam-marks-line'
 import { EXAM_MAX_TOTAL, EXAM_OUTCOME_LABEL } from '@/lib/exam-grading'
@@ -27,6 +27,9 @@ export function ExamsScreen() {
   // this screen alone.
   const { data: openSlots } = useQuery(examSlotsQuery({ status: 'open' }))
   const { data: myRequests } = useQuery(myExamSlotRequestsQuery())
+  // Which tracks the reader may request right now (L3+ on every chapter). Only a pre-check — the
+  // server enforces the same rule — so a failed fetch just leaves the buttons disabled, never wrong.
+  const { data: eligibleTrackIds } = useQuery(examEligibilityQuery())
   const profileName = useSelectedProfileName()
 
   // No hooks below this point, so the early return is safe.
@@ -116,6 +119,7 @@ export function ExamsScreen() {
                     key={slot.id}
                     slot={slot}
                     alreadyRequested={pendingTrackIds.has(slot.trackId)}
+                    eligible={eligibleTrackIds ? eligibleTrackIds.includes(slot.trackId) : undefined}
                   />
                 ))}
               </ol>
@@ -198,8 +202,19 @@ function MyRequestRow({ request }: { request: ExamSlotRequestRow }) {
   )
 }
 
-function AvailableSlotRow({ slot, alreadyRequested }: { slot: ExamSlotRow; alreadyRequested: boolean }) {
+// `eligible` is undefined while the pre-check is still loading — the button stays disabled rather
+// than flashing enabled and then locking.
+function AvailableSlotRow({
+  slot,
+  alreadyRequested,
+  eligible,
+}: {
+  slot: ExamSlotRow
+  alreadyRequested: boolean
+  eligible: boolean | undefined
+}) {
   const request = useRequestExamSlot()
+  const blocked = eligible === false && !alreadyRequested
 
   return (
     <li className="flex flex-wrap items-center gap-4 border-b border-rule-soft px-4 py-3.5 last:border-0">
@@ -208,16 +223,21 @@ function AvailableSlotRow({ slot, alreadyRequested }: { slot: ExamSlotRow; alrea
         <span className="label mt-0.5 block text-ink-muted">
           <Timestamp variant="dateTime" value={slot.when} />
         </span>
+        {blocked && (
+          <span className="mt-1 block text-[0.75rem] text-ink-muted">
+            Needs L3 on every chapter of this track.
+          </span>
+        )}
       </span>
       <button
         type="button"
-        disabled={request.isPending || alreadyRequested}
+        disabled={request.isPending || alreadyRequested || eligible !== true}
         aria-busy={request.isPending}
         onClick={() => request.mutate(slot.id)}
         className="label inline-flex shrink-0 items-center gap-2 border border-ink/25 px-3 py-1.5 text-ink transition-colors hover:border-vermilion hover:text-vermilion disabled:pointer-events-none disabled:opacity-50"
       >
         {request.isPending && <Spinner />}
-        {alreadyRequested ? 'Requested' : 'Request'}
+        {alreadyRequested ? 'Requested' : blocked ? 'Not yet eligible' : 'Request'}
       </button>
     </li>
   )

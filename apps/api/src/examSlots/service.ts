@@ -39,6 +39,19 @@ export async function findSlotByIdWithDetail(
   return orNotFound(await repository.findSlotByIdWithDetail(context.db, id))
 }
 
+/**
+ * The tracks `studentId` may currently request a sitting on — the same rule `request` below
+ * enforces (`exams/repository.ts::isCertifiedAcrossTrack`), exposed up front so the student UI can
+ * disable the button instead of letting them click into a 403.
+ */
+export async function findEligibleTrackIds(
+  context: ExamSlotServiceContext,
+  studentId: string,
+  courseId: string,
+): Promise<string[]> {
+  return examRepository.findEligibleTrackIds(context.db, studentId, courseId)
+}
+
 export async function findManyRequests(
   context: ExamSlotServiceContext,
   params: FindExamSlotRequestsData,

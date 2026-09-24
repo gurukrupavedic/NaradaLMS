@@ -16,6 +16,7 @@ import {
   fetchCourse,
   fetchCourses,
   fetchDashboard,
+  fetchEligibleTrackIds,
   fetchEnrollmentRequests,
   fetchExams,
   fetchExamSlotRequests,
@@ -77,6 +78,9 @@ export const keys = {
   // `profiles.search` below.
   adminExamsPage: (graded: boolean, query: string) =>
     ['exams', 'admin', 'page', graded, query] as const,
+
+  // Under the `exams` prefix so recording a result (which rewrites chapter levels) refreshes it.
+  examEligibility: ['exams', 'eligibility'] as const,
 
   examSlots: {
     // Prefix key — opening, cancelling, or approving/rejecting a request against a slot all
@@ -236,6 +240,12 @@ export const examSlotRequestsQuery = (status: ApiExamSlotRequestStatus) =>
   queryOptions({
     queryKey: keys.examSlotRequests.list(status),
     queryFn: () => fetchExamSlotRequests(status),
+  })
+
+export const examEligibilityQuery = () =>
+  queryOptions({
+    queryKey: keys.examEligibility,
+    queryFn: fetchEligibleTrackIds,
   })
 
 export const myExamSlotRequestsQuery = () =>
