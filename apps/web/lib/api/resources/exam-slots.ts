@@ -1,4 +1,4 @@
-import { fetchAllPages, mutateApi } from '@/lib/api/client'
+import { fetchApi, fetchAllPages, mutateApi } from '@/lib/api/client'
 import type { ApiExamSlot, ApiExamSlotRequest, ApiExamSlotRequestStatus, ApiExamSlotRequestWithDetail, ApiExamSlotStatus, ApiExamSlotWithDetail } from '@/lib/api/api-types'
 
 export type ExamSlotRow = {
@@ -25,6 +25,13 @@ export async function fetchExamSlots(filter?: { trackId?: string; status?: ApiEx
     cursor => `/exam-slots?${params}${cursor ? `&cursor=${cursor}` : ''}`,
   )
   return slots.map(toExamSlotRow)
+}
+
+// GET /v1/exam-slots/eligibility — the tracks the signed-in profile may request a sitting on right
+// now (L3+ on every chapter, the same rule the server enforces when they actually request one).
+// Only a pre-check so the button can be disabled up front; the server stays the source of truth.
+export async function fetchEligibleTrackIds(): Promise<string[]> {
+  return fetchApi<string[]>('/exam-slots/eligibility')
 }
 
 export async function openExamSlot(input: { trackId: string; scheduledAt: string }): Promise<ApiExamSlot> {

@@ -3,7 +3,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { AccessPolicy } from '../utils/accessPolicy'
 import { destroyTestWorld } from '../testing/cleanup'
 import {
+  createChapter,
   createCourse,
+  createEvaluation,
   createExamSlot,
   createExamSlotRequest,
   createProfile,
@@ -12,6 +14,7 @@ import {
   defaultCourseId,
   type TestWorld,
 } from '../testing/fixtures'
+import { findEligibleTrackIds, isCertifiedAcrossTrack } from '../exams/repository'
 import { findManyRequests, findManySlots, findRequestById } from './repository'
 import { cancelSlot } from './service'
 
@@ -214,5 +217,71 @@ describe('cancelSlot (real Postgres, end to end)', () => {
     await expect(
       cancelSlot({ db: w.schoolDb, access: grantingAccess }, slot.id, admin.id),
     ).rejects.toMatchObject({ statusCode: 409 })
+  })
+})
+
+describe('eligibility (L3+ on every gradable chapter of a track)', () => {
+  async function seed() {
+    const w = await createTestSchool()
+    const student = await createProfile(w, { name: 'Student' })
+    const evaluator = await createProfile(w, { name: 'Evaluator' })
+    const grade = (chapter: Awaited<ReturnType<typeof createChapter>>, level: 'level2' | 'level3' | 'level4') =>
+      createEvaluation(w, { student, chapter, evaluator, level })
+    return { w, student, grade }
+  }
+
+  it('lists only tracks where every published chapter is currently L3 or L4', async () => {
+    const { w, student, grade } = await seed()
+    world = w
+    const ready = await createTrack(w)
+    const oneShort = await createTrack(w)
+    const ungraded = await createTrack(w)
+    const empty = await createTrack(w)
+    const [r1, r2] = [
+      await createChapter(w, ready, { status: 'published' }),
+      await createChapter(w, ready, { status: 'published' }),
+    ]
+    const [s1, s2] = [
+      await createChapter(w, oneShort, { status: 'published' }),
+      await createChapter(w, oneShort, { status: 'published' }),
+    ]
+    await createChapter(w, ungraded, { status: 'published' })
+    await grade(r1, 'level3')
+    await grade(r2, 'level4')
+    await grade(s1, 'level4')
+    await grade(s2, 'level2')
+
+    const eligible = await findEligibleTrackIds(w.schoolDb, student.id, await defaultCourseId(w))
+
+    expect(eligible).toEqual([ready.id])
+    expect(eligible).not.toContain(empty.id)
+    expect(await isCertifiedAcrossTrack(w.schoolDb, student.id, ready.id)).toBe(true)
+    expect(await isCertifiedAcrossTrack(w.schoolDb, student.id, oneShort.id)).toBe(false)
+    expect(await isCertifiedAcrossTrack(w.schoolDb, student.id, empty.id)).toBe(false)
+  })
+
+  it('uses the latest evaluation per chapter, so a later downgrade breaks eligibility', async () => {
+    const { w, student, grade } = await seed()
+    world = w
+    const trackRow = await createTrack(w)
+    const chapterRow = await createChapter(w, trackRow, { status: 'published' })
+    await grade(chapterRow, 'level4')
+    await grade(chapterRow, 'level2')
+
+    expect(await findEligibleTrackIds(w.schoolDb, student.id, await defaultCourseId(w))).toEqual([])
+  })
+
+  it('ignores draft chapters and never counts another course\'s tracks', async () => {
+    const { w, student, grade } = await seed()
+    world = w
+    const trackRow = await createTrack(w)
+    const published = await createChapter(w, trackRow, { status: 'published' })
+    await createChapter(w, trackRow, { status: 'draft' })
+    await grade(published, 'level3')
+    const otherCourse = await createCourse(w)
+    const otherTrack = await createTrack(w, { course: otherCourse })
+    await grade(await createChapter(w, otherTrack, { status: 'published' }), 'level4')
+
+    expect(await findEligibleTrackIds(w.schoolDb, student.id, await defaultCourseId(w))).toEqual([trackRow.id])
   })
 })

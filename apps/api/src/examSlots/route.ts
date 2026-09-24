@@ -7,6 +7,7 @@ import { FindExamSlotRequestsSchema, FindExamSlotsSchema, OpenExamSlotSchema } f
 import {
   approve,
   cancelSlot,
+  findEligibleTrackIds,
   findManyRequests,
   findManySlots,
   findRequestByIdWithDetail,
@@ -41,6 +42,16 @@ router.get(
     const query = await parse(FindExamSlotRequestsSchema, req.query)
     const result = await findManyRequests({ db }, query, scope, (await getCourse()).id)
     res.status(200).json({ data: result })
+  }),
+)
+
+// The caller's own eligibility, so `profileRoute` — there's nothing to compute without a profile.
+// Registered before `/:examSlotId` for the same literal-beats-wildcard reason as `/requests`.
+router.get(
+  '/eligibility',
+  profileRoute(async ({ res, db, profile, getCourse }) => {
+    const trackIds = await findEligibleTrackIds({ db }, profile.id, (await getCourse()).id)
+    res.status(200).json({ data: trackIds })
   }),
 )
 
