@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
 
 import { cn } from '@/lib/utils'
 import { lookupDeviceLink, approveDeviceLink, type DeviceLinkLookup } from '@/lib/auth/client'
 import { summarizeUserAgent } from '@/lib/user-agent'
+import { formatAgo } from '@/lib/format-date'
 
 /**
  * Shared by `/settings` (blank entry form) and `/settings/approve-device` (pre-filled from a QR
@@ -97,7 +97,7 @@ export function ApproveDeviceForm({ initialCode }: { initialCode?: string }) {
         <p className="label text-ink-muted">Approve this sign-in?</p>
         <p className="mt-2.5 text-[0.9375rem] text-ink">{summarizeUserAgent(info.requestUserAgent)}</p>
         <p className="mt-1 text-[0.8125rem] text-ink-muted">
-          Requested {formatDistanceToNow(new Date(info.createdAt), { addSuffix: true })}
+          Requested {formatAgo(info.createdAt)}
         </p>
 
         <div className="mt-5 flex gap-2.5">

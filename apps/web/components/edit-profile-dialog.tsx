@@ -4,6 +4,14 @@ import { useState } from 'react'
 import { Dialog } from '@base-ui/react/dialog'
 
 import { Spinner } from '@/components/spinner'
+import {
+  CheckboxField,
+  FieldLabel,
+  SelectField,
+  TagListField,
+  TextAreaField,
+  TextField,
+} from '@/components/form-fields'
 import type { ApiProfile, ApiProficiencyLevel } from '@/lib/api/api-types'
 import type { UpdateProfileInput } from '@/lib/api/resources'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
@@ -140,10 +148,11 @@ function EditProfileForm({
         </Dialog.Description>
       </div>
 
-      <TextField label="Name" value={name} onChange={setName} required />
-      <TextField label="City" value={city} onChange={setCity} placeholder="Hyderabad" />
+      <TextField variant="box" label="Name" value={name} onChange={setName} required />
+      <TextField variant="box" label="City" value={city} onChange={setCity} placeholder="Hyderabad" />
       <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
         <SelectField
+        variant="box"
           label="Country"
           placeholder="Prefer not to say"
           value={country}
@@ -151,6 +160,7 @@ function EditProfileForm({
           options={COUNTRY_OPTIONS}
         />
         <SelectField
+        variant="box"
           label="State / province"
           placeholder={stateOptions.length > 0 ? 'Prefer not to say' : 'No states on record'}
           value={state}
@@ -164,6 +174,7 @@ function EditProfileForm({
         {isSelf ? 'your' : 'their'} city and state/country.
       </p>
       <TextField
+        variant="box"
         label="Email"
         type="email"
         value={email}
@@ -171,37 +182,43 @@ function EditProfileForm({
         placeholder="you@example.com"
       />
       <TextAreaField
+        variant="box"
         label="Learning goal"
         value={learningGoal}
         onChange={setLearningGoal}
         placeholder="Fluency, exam prep, …"
       />
       <SelectField
+        variant="box"
         label="Self-reported starting point"
         placeholder="Prefer not to say"
         value={currentProficiency}
-        onChange={v => setCurrentProficiency(v as ApiProficiencyLevel | '')}
+        onChange={setCurrentProficiency}
         options={SELF_REPORTED_PROFICIENCY_OPTIONS}
       />
       <TagListField
+        variant="box"
         label={isSelf ? 'Languages you speak' : 'Languages they speak'}
         values={spokenLanguages}
         onChange={setSpokenLanguages}
         placeholder="Telugu"
       />
       <TagListField
+        variant="box"
         label={isSelf ? 'Languages you read' : 'Languages they read'}
         values={readLanguages}
         onChange={setReadLanguages}
         placeholder="English"
       />
       <TagListField
+        variant="box"
         label="Parent / guardian name(s)"
         values={parentNames}
         onChange={setParentNames}
         placeholder="Parent's name"
       />
       <TextAreaField
+        variant="box"
         label="Comments"
         value={comments}
         onChange={setComments}
@@ -211,21 +228,25 @@ function EditProfileForm({
       <div className="space-y-3">
         <FieldLabel label="Agreements" />
         <CheckboxField
+        variant="box"
           label="I agree to follow the school's dress code."
           checked={dressCodeAgreed}
           onChange={setDressCodeAgreed}
         />
         <CheckboxField
+        variant="box"
           label="I agree not to eat meat while enrolled."
           checked={noMeatAgreed}
           onChange={setNoMeatAgreed}
         />
         <CheckboxField
+        variant="box"
           label="I agree not to drink alcohol while enrolled."
           checked={noAlcoholAgreed}
           onChange={setNoAlcoholAgreed}
         />
         <CheckboxField
+        variant="box"
           label="I agree not to smoke while enrolled."
           checked={noSmokingAgreed}
           onChange={setNoSmokingAgreed}
@@ -251,186 +272,5 @@ function EditProfileForm({
         </button>
       </div>
     </form>
-  )
-}
-
-function FieldLabel({ label }: { label: string }) {
-  return <span className="label block text-ink-muted">{label}</span>
-}
-
-function TextField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = 'text',
-  required,
-}: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-  type?: string
-  required?: boolean
-}) {
-  return (
-    <label className="block">
-      <FieldLabel label={label} />
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        required={required}
-        className="mt-2 w-full border border-rule bg-transparent p-2.5 text-[0.8125rem] placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
-      />
-    </label>
-  )
-}
-
-function SelectField({
-  label,
-  placeholder,
-  value,
-  onChange,
-  options,
-  disabled,
-}: {
-  label: string
-  placeholder: string
-  value: string
-  onChange: (value: string) => void
-  options: { value: string; label: string }[]
-  disabled?: boolean
-}) {
-  return (
-    <label className="block">
-      <FieldLabel label={label} />
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        disabled={disabled}
-        className="mt-2 w-full border border-rule bg-transparent p-2.5 text-[0.8125rem] text-ink focus:border-vermilion focus:outline-none disabled:opacity-50"
-      >
-        <option value="">{placeholder}</option>
-        {options.map(option => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-}
-
-function CheckboxField({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string
-  checked: boolean
-  onChange: (checked: boolean) => void
-}) {
-  return (
-    <label className="flex items-start gap-3">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={e => onChange(e.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-vermilion"
-      />
-      <span className="text-[0.8125rem] leading-relaxed text-ink">{label}</span>
-    </label>
-  )
-}
-
-function TextAreaField({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-}) {
-  return (
-    <label className="block">
-      <FieldLabel label={label} />
-      <textarea
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={2}
-        className="mt-2 w-full resize-none border border-rule bg-transparent p-2.5 text-[0.8125rem] placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
-      />
-    </label>
-  )
-}
-
-// Same interaction as registration-form.tsx's own TagListField (Enter/comma to add, × to
-// remove) — kept as a separate local copy rather than a shared import since that one is private
-// to the registration form and this dialog is a different, smaller surface.
-function TagListField({
-  label,
-  values,
-  onChange,
-  placeholder,
-}: {
-  label: string
-  values: string[]
-  onChange: (values: string[]) => void
-  placeholder: string
-}) {
-  const [draft, setDraft] = useState('')
-
-  function commit() {
-    const trimmed = draft.trim()
-    if (trimmed && !values.includes(trimmed)) {
-      onChange([...values, trimmed])
-    }
-    setDraft('')
-  }
-
-  return (
-    <div>
-      <FieldLabel label={label} />
-      <input
-        type="text"
-        value={draft}
-        onChange={e => setDraft(e.target.value)}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault()
-            commit()
-          }
-        }}
-        onBlur={commit}
-        placeholder={placeholder}
-        className="mt-2 w-full border border-rule bg-transparent p-2.5 text-[0.8125rem] placeholder:text-ink-muted/40 focus:border-vermilion focus:outline-none"
-      />
-      {values.length > 0 && (
-        <ul className="mt-2 flex flex-wrap gap-2">
-          {values.map(value => (
-            <li
-              key={value}
-              className="flex items-center gap-1.5 border border-rule px-2.5 py-1 text-[0.8125rem]"
-            >
-              {value}
-              <button
-                type="button"
-                onClick={() => onChange(values.filter(v => v !== value))}
-                aria-label={`Remove ${value}`}
-                className="text-ink-muted transition-colors hover:text-vermilion"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   )
 }

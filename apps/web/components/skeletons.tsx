@@ -12,7 +12,7 @@ function Bar({ className, style }: { className?: string; style?: React.CSSProper
   return <span style={style} className={cn('block animate-pulse bg-ink/[0.07]', className)} />
 }
 
-export function StandingSkeleton() {
+function StandingSkeleton() {
   return (
     <header className="border-b border-rule">
       <div className="mx-auto flex max-w-5xl flex-wrap items-end justify-between gap-x-12 gap-y-7 px-5 pt-10 pb-8">
@@ -30,7 +30,7 @@ export function StandingSkeleton() {
   )
 }
 
-export function ListSkeleton({ rows = 8 }: { rows?: number }) {
+function ListSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <div className="mx-auto max-w-5xl space-y-11 px-5 py-9">
       <div className="space-y-5">

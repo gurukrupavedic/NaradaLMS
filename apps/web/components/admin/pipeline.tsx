@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { PIPELINE_STAGES, pipelineOf, type CatalogChapter } from '@/lib/mock-catalog'
+import { PIPELINE_STAGES, pipelineOf, type CatalogChapter } from '@/lib/models/catalog'
 
 /**
  * Four ruled cells, filled left to right — the same reading as the mark book

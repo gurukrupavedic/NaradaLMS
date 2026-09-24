@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { useHasAdminAccess } from '@/lib/auth/profile-store'
 import { batchesWithRosterQuery, catalogTracksQuery, registrationsQuery } from '@/lib/query/options'
 import type { ApiBatchWithRole, ApiRegistration } from '@/lib/api/api-types'
-import type { CatalogTrack } from '@/lib/mock-catalog'
+import type { CatalogTrack } from '@/lib/models/catalog'
 import {
   Command,
   CommandEmpty,

@@ -8,7 +8,7 @@ import { ScriptEditor } from '@/components/admin/script-editor'
 import { AudioUploader } from '@/components/admin/audio-uploader'
 import { AudioMappingEditor } from '@/components/admin/audio-mapping-editor'
 import { ResegmentEditor } from '@/components/admin/resegment-editor'
-import type { CatalogChapter, ScriptCode } from '@/lib/mock-catalog'
+import type { CatalogChapter, ScriptCode } from '@/lib/models/catalog'
 import type { ApiScriptKey } from '@/lib/api/api-types'
 
 const SCRIPTS: ScriptCode[] = ['sa', 'te', 'en']

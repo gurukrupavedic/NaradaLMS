@@ -7,9 +7,7 @@
  * JS ever touches the cookie's value.
  *
  * Endpoint paths and payload shapes here are load-bearing on BetterAuth's own phone-number plugin
- * (packages/auth/src/index.ts in the api-next checkout) rather than anything this workspace
- * controls — verified against apps/web's own working `authClient.phoneNumber.sendOtp`/`.verify`
- * calls (components/auth/sign-in-form.tsx there), which exercise the same plugin.
+ * (packages/auth/src/index.ts) rather than anything this app controls.
  */
 
 async function authFetch(path: string, init?: RequestInit): Promise<Response> {
@@ -123,9 +121,9 @@ async function authFetchJson<T>(path: string, init?: RequestInit): Promise<Resul
  * Device linking — a new, unauthenticated device joins an already-signed-in account with no OTP.
  * The code is shown on the new device and approved from a trusted one (the standard direction for
  * this pattern), not the reverse. Backed by the custom `device-link` BetterAuth plugin
- * (packages/auth/src/plugins/device-link.ts in the api-next checkout), so these hit `/v1/auth/*`
- * the same as every other function in this file, not `lib/api/resources.ts` — this is an
- * account-level auth concern, not a general api-next domain endpoint.
+ * (packages/auth/src/plugins/device-link.ts), so these hit `/v1/auth/*`
+ * the same as every other function in this file, not `lib/api/resources` — this is an
+ * account-level auth concern, not a general apps/api domain endpoint.
  */
 export type DeviceLinkStart = { id: string; code: string; expiresAt: string }
 

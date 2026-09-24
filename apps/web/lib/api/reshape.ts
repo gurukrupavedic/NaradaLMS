@@ -2,8 +2,8 @@
  * Real-data → presentation-shape transforms for the fetchers in `resources.ts`.
  *
  * This is the reshaping apps/web's own `lib/dashboard-view.ts` already solves for the live app —
- * adapted here to `web-next`'s presentation types (`LadderTrack`/`TeachingBatch`/
- * `RosterStudent`, from `components/track-ladder.tsx` / `lib/mock-dashboard.ts`), which differ
+ * adapted here to `apps/web`'s presentation types (`LadderTrack`/`TeachingBatch`/
+ * `RosterStudent`, from `components/track-ladder.tsx` / `lib/models/dashboard.ts`), which differ
  * from apps/web's own (e.g. this workspace's dashboard renders a full roster mark-book inline,
  * where apps/web's dashboard only shows a summary card). Concepts and formulas are ported
  * directly where the shapes match (progress percentages); the roster/mark-book construction below
@@ -25,9 +25,9 @@ import {
   type ProficiencyLevel,
 } from '@/lib/proficiency'
 import type { ChapterRow, LadderTrack } from '@/components/track-ladder'
-import type { CertificationRow, RosterStudent, TeachingBatch } from '@/lib/mock-dashboard'
-import { EMPTY, type CatalogChapter, type CatalogTrack } from '@/lib/mock-catalog'
-import type { ChapterContent } from '@/lib/mock-content'
+import type { CertificationRow, RosterStudent, TeachingBatch } from '@/lib/models/dashboard'
+import { EMPTY, type CatalogChapter, type CatalogTrack } from '@/lib/models/catalog'
+import type { ChapterContent } from '@/lib/models/content'
 import type {
   ApiBatchWithRole,
   ApiChapter,
@@ -50,7 +50,7 @@ export function narrowLevel(level: ApiProficiencyLevel): ProficiencyLevel {
 }
 
 /** Latest graded exam per track — same "history, not a single mutable mark" shape as evaluations. A track's certification is this. */
-export function latestExamResultByTrackId(
+function latestExamResultByTrackId(
   results: ApiStudentExamResult[],
 ): Map<string, ApiStudentExamResult> {
   const byTrack = new Map<string, ApiStudentExamResult>()
@@ -134,7 +134,7 @@ function chapterLevelsForTrack(
  * One learner's ladder for one track: the track's published chapters, each chapter's most recent
  * evaluation level, and the batch (if any) the student sits in for it.
  */
-export function buildLadderTrack(
+function buildLadderTrack(
   track: ApiTrack,
   evaluations: ApiEvaluation[],
   membership: ApiBatchWithRole | undefined,
@@ -283,7 +283,7 @@ export function findResumeChapterId(track: LadderTrack): string | null {
 
 /**
  * An admin's view of one track: drafts included, no student's progress on it — the same real
- * `ApiTrack` `buildLadderTrack` reads above, reshaped for `lib/mock-catalog.ts`'s admin-catalog
+ * `ApiTrack` `buildLadderTrack` reads above, reshaped for `lib/models/catalog.ts`'s admin-catalog
  * types instead of the reader's `LadderTrack`.
  *
  * Two things this workspace's fixture catalog had that no real field backs: `subtitle` (left
@@ -316,7 +316,7 @@ export function buildCatalogTrack(track: ApiTrack, batchCodes: string[]): Catalo
 /**
  * A batch's roster as a mark-book: each student's level per chapter in the batch's track, and
  * which chapter they were most recently evaluated on (`current`; null means never evaluated —
- * `web-next`'s "unevaluated" signal, see `components/mark-book.tsx`).
+ * `apps/web`'s "unevaluated" signal, see `components/mark-book.tsx`).
  */
 export function buildRoster(
   membership: ApiBatchWithRole,

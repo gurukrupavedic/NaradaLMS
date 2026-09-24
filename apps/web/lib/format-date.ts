@@ -1,4 +1,4 @@
-import { format } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 
 /**
  * The two date shapes this app actually shows a reader: a bare date (a chapter's evaluation, a
@@ -15,4 +15,9 @@ export function formatDate(iso: string | null | undefined): string {
 
 export function formatDateTime(iso: string | null | undefined): string {
   return iso ? format(new Date(iso), 'EEE, MMM d, h:mm a') : ''
+}
+
+/** "3 hours ago" — a moment relative to now, for things a reader triages by recency (a queue, a session). */
+export function formatAgo(iso: string): string {
+  return formatDistanceToNow(new Date(iso), { addSuffix: true })
 }

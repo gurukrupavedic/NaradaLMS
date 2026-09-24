@@ -20,7 +20,7 @@ import {
   useUpdateChapter,
   useUpdateTrack,
 } from '@/lib/query/use-catalog-mutations'
-import { isReady, type CatalogChapter, type CatalogTrack } from '@/lib/mock-catalog'
+import { isReady, type CatalogChapter, type CatalogTrack } from '@/lib/models/catalog'
 import { useCoursePath } from '@/lib/course'
 
 /**

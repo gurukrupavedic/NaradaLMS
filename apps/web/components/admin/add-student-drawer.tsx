@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { profileSearchQuery } from '@/lib/query/options'
@@ -8,7 +8,8 @@ import { useEnrollProfile } from '@/lib/query/use-enrollment-mutations'
 import { Drawer } from '@/components/drawer'
 import { Spinner } from '@/components/spinner'
 import { cn } from '@/lib/utils'
-import type { AdminBatchDetail } from '@/lib/mock-dashboard'
+import { useDebouncedValue } from '@/lib/use-debounced-value'
+import type { AdminBatchDetail } from '@/lib/models/dashboard'
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -45,7 +46,7 @@ export function AddStudentDrawer({
   onOpenChange: (open: boolean) => void
 }) {
   const [query, setQuery] = useState('')
-  const [debounced, setDebounced] = useState('')
+  const debounced = useDebouncedValue(query, SEARCH_DEBOUNCE_MS)
   const [role, setRole] = useState<Role>('student')
 
   // A fresh search every time the drawer opens — leftover text from the last student an admin
@@ -57,15 +58,9 @@ export function AddStudentDrawer({
     setWasOpen(open)
     if (!open) {
       setQuery('')
-      setDebounced('')
       setRole('student')
     }
   }
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(query), SEARCH_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [query])
 
   const { data: results, isFetching, isError } = useQuery(profileSearchQuery(debounced, batch.id))
   const enroll = useEnrollProfile(batch.code, batch.id)

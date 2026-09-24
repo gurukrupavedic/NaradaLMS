@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 
 import { ScreenSkeleton } from '@/components/skeletons'
@@ -16,6 +16,7 @@ import type { AdminSittingRow } from '@/lib/api/resources'
 import { narrowLevel } from '@/lib/api/reshape'
 import { EXAM_MAX_TOTAL, EXAM_OUTCOME_LABEL } from '@/lib/exam-grading'
 import { adminSittingsPageQuery } from '@/lib/query/options'
+import { useDebouncedValue } from '@/lib/use-debounced-value'
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -26,12 +27,7 @@ const SEARCH_DEBOUNCE_MS = 300
  */
 function useSittingList(graded: boolean) {
   const [query, setQuery] = useState('')
-  const [debounced, setDebounced] = useState('')
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(query), SEARCH_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [query])
+  const debounced = useDebouncedValue(query, SEARCH_DEBOUNCE_MS)
 
   const result = useInfiniteQuery(adminSittingsPageQuery(graded, debounced))
   const rows = result.data?.pages.flatMap(page => page.items) ?? []

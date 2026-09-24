@@ -2,10 +2,8 @@ import type { ApiExamOutcome, ApiExamResult } from '@/lib/api/api-types'
 import { getMasteredProgress, getProficiencyProgress, type ProficiencyLevel } from '@/lib/proficiency'
 
 /**
- * Types this workspace's real fetchers (`lib/api/resources.ts`) still build, for shapes that have
- * no fixture data behind them anymore — the same move `lib/mock-catalog.ts` and
- * `lib/mock-content.ts` made, for the same reason: their own header comments have the fuller
- * account. `summariseRoster` is the one real function left here, not just a type:
+ * The dashboard and admin views' types, which `lib/api/resources`'s real fetchers build.
+ * `summariseRoster` is the one real function left here, not just a type:
  * `components/admin/batch-detail.tsx` calls it directly on a roster it gets from
  * `lib/api/reshape.ts`'s `buildRoster` — a different, real-data function despite the similar name.
  */

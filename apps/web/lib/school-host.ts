@@ -7,7 +7,7 @@
  */
 
 /** The apex domain schools are subdomains of. */
-export const SCHOOL_ROOT_DOMAIN = 'naradas.app'
+const SCHOOL_ROOT_DOMAIN = 'naradas.app'
 
 /** Subdomains that are never a school, so `www.naradas.app` can't be mistaken for one. */
 const NON_SCHOOL_SUBDOMAINS: readonly string[] = ['www']

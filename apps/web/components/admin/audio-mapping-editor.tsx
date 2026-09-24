@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
 import { Spinner } from '@/components/spinner'
-import { formatClock } from '@/lib/mock-content'
+import { formatClock } from '@/lib/models/content'
 import { chapterAuthoringDetailQuery } from '@/lib/query/options'
 import { useDeleteChapterAudioAsset, useSetChapterAudioMappings } from '@/lib/query/use-content-mutations'
 import type { ApiAudioAsset, ApiScriptSegment } from '@/lib/api/api-types'

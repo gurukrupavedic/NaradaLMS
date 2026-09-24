@@ -58,17 +58,6 @@ function makeQueryClient() {
           return failureCount < 2
         },
       },
-      // NOTE: only settled queries are dehydrated — the library default.
-      //
-      // Overriding `shouldDehydrateQuery` to also ship *pending* queries looks
-      // like free streaming and is a trap without the experimental
-      // `ReactQueryStreamedHydration` provider: plain `HydrationBoundary` has no
-      // channel to deliver the eventual result, so the client hydrates a promise
-      // that never settles. `useSuspenseQuery` then suspends forever, the
-      // subtree silently keeps its server HTML and never becomes interactive,
-      // and nothing errors. Prefetches are awaited instead (see
-      // `lib/query/hydrate.tsx`), which is what makes them settled by the time
-      // `dehydrate` runs.
     },
   })
 }

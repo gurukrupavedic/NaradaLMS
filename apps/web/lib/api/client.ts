@@ -1,6 +1,6 @@
 /**
  * The real API client, for the read paths that have a real endpoint to call — dashboard, tracks,
- * exams, admin batches (see `lib/api/resources.ts`). `fetchApi` below hits `apps/api` through
+ * exams, admin batches (see `lib/api/resources`). `fetchApi` below hits `apps/api` through
  * this app's own `/v1/*` path, which `next.config.ts`'s rewrite forwards to the real API origin:
  * this is a browser-side data layer (`lib/query/client.ts` explains why — SSR prefetch is off
  * because of a Next 16.2.6 streaming/hydration bug), so the browser is what actually issues these
@@ -9,12 +9,10 @@
  * signed-in account's profiles is active (`lib/auth/profile-store.ts`) isn't part of the session,
  * so every call attaches it explicitly rather than depending on the API to infer it.
  *
- * `rejectApi`/`send` below remain the mock layer for the four admin mutations with no real backend
- * yet (title/order/status edits — out of scope per PARITY_PLAN.md §17). Latency there is simulated
- * on purpose — a data layer that only ever resolves synchronously hides every loading state, every
- * race, and every flash of fallback content. Content authoring (`mutateApi` below) is different:
- * it has a real endpoint (`apps/api/src/chapters/route.ts`), so it goes through a real fetch
- * instead — see `lib/api/resources.ts`'s own doc comment on the resulting mock/real split.
+ * `send` below is the one remaining mock: `saveTrack`'s `subtitle` edit has no real endpoint. Its
+ * latency is simulated on purpose — a data layer that only ever resolves synchronously hides every
+ * loading state, every race, and every flash of fallback content. Everything else, writes
+ * included (`mutateApi`), goes through a real fetch.
  */
 
 import { clearSelectedProfile, getSelectedProfileId } from '@/lib/auth/profile-store'
@@ -98,10 +96,8 @@ export async function fetchApi<T>(path: string, options?: { schoolWide?: boolean
 }
 
 /**
- * A real write against apps/api — unlike `send` below, this isn't a stand-in for a backend
- * that doesn't exist yet. Content authoring (`lib/api/resources.ts`'s `saveChapterScript`,
- * `presignAudioUpload`, etc.) is the one place in this app's admin surface with a real endpoint to
- * call, so it calls it, through the same header injection and 401 handling `fetchApi` already has.
+ * A real write against apps/api — unlike `send` below, not a stand-in for a backend that doesn't
+ * exist yet — through the same header injection and 401 handling `fetchApi` has.
  */
 export async function mutateApi<T>(
   path: string,
@@ -132,21 +128,15 @@ export async function fetchAllPages<T>(
   return items
 }
 
-const LATENCY_MS = 180
 const MUTATION_LATENCY_MS = 260
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-/** Reject as the API would, so `retry` and error boundaries see a real shape. */
-export async function rejectApi(status: number, code: string, message: string): Promise<never> {
-  await delay(LATENCY_MS)
-  throw new ApiError(status, code, message)
-}
-
+/** A 404 shaped like the API's own, for a lookup that came back empty client-side. */
 export async function notFound(what: string): Promise<never> {
-  return rejectApi(404, 'NOT_FOUND', `${what} not found`)
+  throw new ApiError(404, 'NOT_FOUND', `${what} not found`)
 }
 
 /**

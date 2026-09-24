@@ -3,7 +3,7 @@ import { Pill } from '@/components/proficiency-pill'
 import { Timestamp } from '@/components/timestamp'
 import { isCertified } from '@/lib/proficiency'
 import { EXAM_MAX_TOTAL, EXAM_OUTCOME_LABEL } from '@/lib/exam-grading'
-import type { CertificationRow } from '@/lib/mock-dashboard'
+import type { CertificationRow } from '@/lib/models/dashboard'
 
 /**
  * The certification record reads as a document rather than a dashboard widget:

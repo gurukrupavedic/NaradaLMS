@@ -18,7 +18,7 @@ import {
   examSlotRequestsQuery,
   registrationsQuery,
 } from '@/lib/query/options'
-import { summariseTrack, type CatalogTrack } from '@/lib/mock-catalog'
+import { summariseTrack, type CatalogTrack } from '@/lib/models/catalog'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useSelectedProfileName } from '@/lib/auth/profile-store'
 import { useCoursePath } from '@/lib/course'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { Select } from '@base-ui/react/select'
@@ -18,7 +18,7 @@ import {
   segmentAt,
   type ChapterContent,
   type ScriptKey,
-} from '@/lib/mock-content'
+} from '@/lib/models/content'
 import { useCoursePath } from '@/lib/course'
 
 const RATES = [0.5, 0.75, 1] as const
@@ -176,32 +176,35 @@ function PracticeRoomView({ chapter }: { chapter: ChapterContent }) {
   // Chant practice is hands-busy — you are holding a book, or your eyes are
   // shut. Space to start and stop, arrows to step a line, without hunting for
   // a target on screen.
-  useEffect(() => {
+  const onShortcut = useEffectEvent((event: KeyboardEvent) => {
+    if (event.metaKey || event.ctrlKey || event.altKey) return
+    // Typing, or a select that already owns the arrow keys — the shortcut must not also fire.
+    const target = event.target as HTMLElement | null
+    if (target?.closest('input, textarea, select, [contenteditable]')) return
+
     function step(direction: -1 | 1) {
       const index = audio.mappings.findIndex(m => m.segmentId === currentSegmentId)
       const next = audio.mappings[Math.max(0, (index === -1 ? 0 : index) + direction)]
       if (next) playFrom(next.segmentId)
     }
 
-    function handler(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null
-      if (target && ['INPUT', 'TEXTAREA'].includes(target.tagName)) return
-
-      if (event.code === 'Space') {
-        event.preventDefault()
-        toggle()
-      } else if (event.code === 'ArrowLeft') {
-        event.preventDefault()
-        step(-1)
-      } else if (event.code === 'ArrowRight') {
-        event.preventDefault()
-        step(1)
-      }
+    if (event.code === 'Space') {
+      event.preventDefault()
+      toggle()
+    } else if (event.code === 'ArrowLeft') {
+      event.preventDefault()
+      step(-1)
+    } else if (event.code === 'ArrowRight') {
+      event.preventDefault()
+      step(1)
     }
+  })
 
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => onShortcut(event)
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  })
+  }, [])
 
   return (
     <div className="flex min-h-dvh flex-col">

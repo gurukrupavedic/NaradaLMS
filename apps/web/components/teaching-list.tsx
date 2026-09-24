@@ -7,7 +7,7 @@ import { MarkBook } from '@/components/mark-book'
 import { keys } from '@/lib/query/options'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
 import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
-import type { TeachingBatch } from '@/lib/mock-dashboard'
+import type { TeachingBatch } from '@/lib/models/dashboard'
 
 const ROLE_LABEL: Record<TeachingBatch['role'], string> = { instructor: 'Teacher', ta: 'TA' }
 

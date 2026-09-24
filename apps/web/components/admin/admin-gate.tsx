@@ -8,7 +8,7 @@ import { useCoursePath } from '@/lib/course'
 
 /**
  * The one choke point every `/admin/*` screen renders behind. Hiding the "Admin" nav item in
- * `AppShell` stops the casual path in, but api-next's own `AccessPolicy` — which decides `x-profile
+ * `AppShell` stops the casual path in, but apps/api's own `AccessPolicy` — which decides `x-profile
  * -id`'s scope on the batches/tracks endpoints — is the real authority, and a direct hit on the URL
  * or a stale bookmark shouldn't reach a screen built assuming school-wide data and quietly render
  * whatever narrower slice a non-admin's requests happen to come back with (see the "why do I only

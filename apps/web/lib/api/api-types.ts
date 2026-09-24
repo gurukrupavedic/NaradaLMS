@@ -1,7 +1,6 @@
 /**
- * The subset of apps/api's real response shapes this workspace's real fetchers need.
- * Mirrors apps/web/lib/types.ts (the live app's own copy of the same contract) rather than
- * importing it — web-next is a standalone package with its own dependency graph.
+ * The subset of apps/api's real response shapes the fetchers in `resources.ts` need. Hand-mirrored
+ * from the API's zod schemas rather than imported: apps/web has no dependency on apps/api.
  */
 
 // GET /v1/profiles — every profile the signed-in account can act as (see app/login/page.tsx's own

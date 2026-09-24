@@ -4,7 +4,7 @@ import { isUnlocked, PREVIEW_COOKIE, PREVIEW_UNLOCK_PATH } from '@/lib/preview-u
 
 /**
  * Gate on cookie presence only — not a real session check. Validating the session would mean this
- * proxy making its own round trip to api-next on every navigation, and a stale-but-present
+ * proxy making its own round trip to apps/api on every navigation, and a stale-but-present
  * cookie already fails safely downstream: `lib/api/client.ts`'s calls 401 and the screen renders
  * whatever this app's normal error state is for a failed query. This layer exists to stop the
  * *common* case — no cookie at all — from ever reaching a page that assumes one, not to be the
@@ -20,11 +20,11 @@ import { isUnlocked, PREVIEW_COOKIE, PREVIEW_UNLOCK_PATH } from '@/lib/preview-u
  */
 const SESSION_COOKIE = 'better-auth.session_token'
 // better-auth prefixes its own cookie with `__Secure-` whenever it considers the connection secure
-// (api-next's `API_BASE_URL` starting with `https://`, true on every deployed environment — see
+// (apps/api's `API_BASE_URL` starting with `https://`, true on every deployed environment — see
 // better-auth's own `dist/cookies/index.mjs`), so the plain name above only ever matches in local
 // dev over http. Without this, every deployed environment sees `hasSession` as permanently false —
 // `/dashboard` bounces back to `/login` no matter what, which loops right back to profile selection
-// after a real sign-in since `getAuthSession()` there still succeeds (it hits api-next directly and
+// after a real sign-in since `getAuthSession()` there still succeeds (it hits apps/api directly and
 // doesn't care which cookie name the browser used).
 const SECURE_SESSION_COOKIE = `__Secure-${SESSION_COOKIE}`
 const PROFILE_COOKIE = 'narada-profile-id'
@@ -47,7 +47,7 @@ const isPublicPath = (pathname: string) =>
 // just to check one flag.
 const COMING_SOON_PATH = '/coming-soon'
 
-// api-next's own origin, read directly off process.env for the same reason as COMING_SOON_MODE
+// apps/api's own origin, read directly off process.env for the same reason as COMING_SOON_MODE
 // above (this proxy runs before @narada/env's full server validation would be worth paying for).
 // Mirrors next.config.ts's former `apiUrl` — that file's own `/v1/*` rewrite is gone now that this
 // proxy performs it directly (see the `/v1/` branch below).
@@ -55,18 +55,18 @@ const API_BASE_URL = process.env.API_BASE_URL
 
 // Better-auth's OAuth flow (packages/auth/src/index.ts) needs to know which origin the browser is
 // actually on, to build a redirect_uri that survives the round trip through Google and back
-// through this proxy's own /v1/* rewrite to api-next. X-Forwarded-Host looked like the standard
-// way to carry that, but the reverse proxy fronting api-next doesn't forward it unmodified, so
+// through this proxy's own /v1/* rewrite to apps/api. X-Forwarded-Host looked like the standard
+// way to carry that, but the reverse proxy fronting apps/api doesn't forward it unmodified, so
 // better-auth never sees the real value. This header is a stand-in this proxy controls end to
 // end instead: stamped below from the request actually received, on every /v1/* call — never read
 // back from (or let through from) the incoming request, so it can't be forged by a caller hitting
-// api-next directly.
+// apps/api directly.
 //
-// This has to be a `rewrite()` this proxy issues itself, to an explicit api-next destination URL,
+// This has to be a `rewrite()` this proxy issues itself, to an explicit apps/api destination URL,
 // rather than a `next()` that lets next.config.ts's own `/v1/*` rewrite carry the request the rest
 // of the way: a proxy/middleware's request-header mutations don't propagate into a *separate*
 // external rewrite defined in next.config.ts — those are two different layers in Next's request
-// pipeline, and headers set here would otherwise never reach api-next at all.
+// pipeline, and headers set here would otherwise never reach apps/api at all.
 const APP_ORIGIN_HEADER = 'x-app-origin'
 
 function hasSession(request: NextRequest): boolean {
@@ -82,7 +82,7 @@ function hasPreviewAccess(request: NextRequest): Promise<boolean> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // OTP send/verify and OAuth sign-in have to reach api-next before any session exists, and
+  // OTP send/verify and OAuth sign-in have to reach apps/api before any session exists, and
   // better-auth's redirect_uri resolution (see APP_ORIGIN_HEADER above) needs this header on
   // every one of these calls — so this is handled before the coming-soon/session gating below,
   // not folded into it.

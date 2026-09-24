@@ -10,7 +10,7 @@ import {
   saveChapterOrder,
   saveTrack,
 } from '@/lib/api/resources'
-import type { CatalogChapter, CatalogTrack } from '@/lib/mock-catalog'
+import type { CatalogChapter, CatalogTrack } from '@/lib/models/catalog'
 
 /**
  * Catalog mutations, all optimistic.
