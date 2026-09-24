@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ApiBatchWithRole, ApiDashboard, ApiEvaluation, ApiTrack } from '@/lib/api/api-types'
-import { buildLearningTracks, buildRoster, isArchivedTrack } from './reshape'
+import { buildLearningTracks, buildRoster, isArchivedTrack, isRosterStudent } from './reshape'
 
 const chapter = (id: string, trackId: string, order: number) => ({
   id,
@@ -210,5 +210,14 @@ describe('buildRoster', () => {
 
   it('shows students on break once the batch is completed, but no other non-active seat', () => {
     expect(idsFor('completed')).toEqual(['active-student', 'break-student'])
+  })
+
+  it('isRosterStudent agrees with the roster for every batch status, so a batch count matches its rows', () => {
+    for (const batchStatus of ['upcoming', 'active', 'completed'] as const) {
+      const batch = batchWith(batchStatus)
+      expect(batch.members.filter(m => isRosterStudent(m, batchStatus)).map(m => m.profileId)).toEqual(
+        idsFor(batchStatus),
+      )
+    }
   })
 })
