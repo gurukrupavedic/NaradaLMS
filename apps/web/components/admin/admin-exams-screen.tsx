@@ -106,7 +106,7 @@ export function AdminExamsScreen() {
                         {sitting.studentName}
                       </span>
                       <span className="label mt-0.5 block text-ink-muted">
-                        {sitting.track} · {sitting.batchCode}
+                        {sitting.track}
                       </span>
                     </span>
                     <span className="hidden shrink-0 font-mono text-[0.75rem] text-ink-muted sm:block">
@@ -163,7 +163,7 @@ export function AdminExamsScreen() {
                           {sitting.studentName} · {EXAM_OUTCOME_LABEL[result.outcome]}
                         </span>
                         <span className="label mt-1 block text-ink-muted">
-                          {sitting.track} · {sitting.batchCode} ·{' '}
+                          {sitting.track} ·{' '}
                           <Timestamp variant="dateTime" value={result.evaluatedAt} /> ·{' '}
                           {result.total} / {EXAM_MAX_TOTAL}
                         </span>

@@ -22,15 +22,15 @@ vi.mock('./repository', () => ({
   complete: vi.fn(),
 }))
 
-// The enrollment-ambiguity check itself is owned and tested by the enrollment domain
+// The enrollment check itself is owned and tested by the enrollment domain
 // (`enrollment/service.test.ts`) — these tests only prove createExam calls it correctly and
-// propagates its result/errors, not the ambiguity logic itself.
+// propagates its errors, not the check itself.
 vi.mock('../tracks/repository', () => ({
   exists: vi.fn(),
 }))
 
 vi.mock('../enrollment/service', () => ({
-  resolveQualifyingBatch: vi.fn(),
+  assertEnrolledInTrack: vi.fn(),
 }))
 
 describe('createExam', () => {
@@ -44,7 +44,6 @@ describe('createExam', () => {
     id: 'exam-1',
     trackId: 'track-1',
     studentId: 'student-1',
-    batchId: 'batch-1',
     scheduledAt: new Date(),
     status: 'scheduled' as const,
   }
@@ -52,7 +51,7 @@ describe('createExam', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(trackRepository.exists).mockResolvedValue(true)
-    vi.mocked(enrollmentService.resolveQualifyingBatch).mockResolvedValue('batch-1')
+    vi.mocked(enrollmentService.assertEnrolledInTrack).mockResolvedValue(undefined)
   })
 
   it.each([DbConstraint.examStudentIdFk, DbConstraint.examTrackIdFk])(
@@ -69,37 +68,37 @@ describe('createExam', () => {
     },
   )
 
-  it('succeeds and stores the resolved batchId on the new exam', async () => {
+  it('succeeds and inserts the exam as given', async () => {
     vi.mocked(repository.insert).mockResolvedValue(created)
 
     await createExam(context, data)
 
-    expect(repository.insert).toHaveBeenCalledWith(db, { ...data, batchId: 'batch-1' })
+    expect(repository.insert).toHaveBeenCalledWith(db, data)
   })
 
-  it('authorizes before resolving the qualifying batch', async () => {
+  it("authorizes before checking the student's enrollment", async () => {
     vi.mocked(repository.insert).mockResolvedValue(created)
 
     await createExam(context, data)
 
     expect(requireCanCreateExam).toHaveBeenCalledWith()
     expect(requireCanCreateExam.mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(enrollmentService.resolveQualifyingBatch).mock.invocationCallOrder[0]!,
+      vi.mocked(enrollmentService.assertEnrolledInTrack).mock.invocationCallOrder[0]!,
     )
   })
 
-  it('propagates a rejection from access.requireCanCreateExam without resolving a batch or inserting', async () => {
+  it('propagates a rejection from access.requireCanCreateExam without checking enrollment or inserting', async () => {
     requireCanCreateExam.mockImplementation(() => {
       throw new Error('forbidden')
     })
 
     await expect(createExam(context, data)).rejects.toThrow('forbidden')
 
-    expect(enrollmentService.resolveQualifyingBatch).not.toHaveBeenCalled()
+    expect(enrollmentService.assertEnrolledInTrack).not.toHaveBeenCalled()
     expect(repository.insert).not.toHaveBeenCalled()
   })
 
-  it('rejects a track that does not exist with a 422, before resolving any batch', async () => {
+  it('rejects a track that does not exist with a 422, before checking enrollment', async () => {
     vi.mocked(trackRepository.exists).mockResolvedValue(false)
 
     await expect(createExam(context, data)).rejects.toMatchObject({
@@ -107,29 +106,29 @@ describe('createExam', () => {
       message: 'track not found',
     })
 
-    expect(enrollmentService.resolveQualifyingBatch).not.toHaveBeenCalled()
+    expect(enrollmentService.assertEnrolledInTrack).not.toHaveBeenCalled()
     expect(repository.insert).not.toHaveBeenCalled()
   })
 
-  it("calls resolveQualifyingBatch with the exam's own trackId and propagates its result", async () => {
+  it("calls assertEnrolledInTrack with the exam's own student and trackId", async () => {
     vi.mocked(repository.insert).mockResolvedValue(created)
 
     await createExam(context, data)
 
-    expect(enrollmentService.resolveQualifyingBatch).toHaveBeenCalledWith(
+    expect(enrollmentService.assertEnrolledInTrack).toHaveBeenCalledWith(
       db,
       'student-1',
       'track-1',
     )
   })
 
-  it('propagates a rejection from resolveQualifyingBatch (e.g. ambiguous or no qualifying batch) without inserting', async () => {
-    vi.mocked(enrollmentService.resolveQualifyingBatch).mockRejectedValue(
-      new Error('student is enrolled in multiple batches for this track'),
+  it('propagates a rejection from assertEnrolledInTrack (no enrollment on the track) without inserting', async () => {
+    vi.mocked(enrollmentService.assertEnrolledInTrack).mockRejectedValue(
+      new Error('student is not enrolled in a batch for this track'),
     )
 
     await expect(createExam(context, data)).rejects.toThrow(
-      'student is enrolled in multiple batches for this track',
+      'student is not enrolled in a batch for this track',
     )
 
     expect(repository.insert).not.toHaveBeenCalled()
@@ -148,7 +147,6 @@ describe('recordExamResult', () => {
     id: 'exam-1',
     trackId: 'track-1',
     studentId: 'student-1',
-    batchId: 'batch-1',
     // June 2026 — the year the children's bonus is measured against.
     scheduledAt: new Date('2026-06-15T10:00:00Z'),
     status: 'scheduled' as const,
@@ -170,7 +168,6 @@ describe('recordExamResult', () => {
     track: { id: 'track-1', name: 'Track 1' },
     result: null,
     student: { id: 'student-1', name: 'Student One' },
-    batch: { id: 'batch-1', code: 'BATCH-1' },
   }
 
   beforeEach(() => {
@@ -213,7 +210,7 @@ describe('recordExamResult', () => {
     )
   })
 
-  it("writes the granted level to every gradable chapter of the exam's track, in the exam's batch", async () => {
+  it("writes the granted level to every gradable chapter of the exam's track, with no batch", async () => {
     await recordExamResult(context, 'exam-1', 'evaluator-1', { ...marks, notes: 'n' })
 
     expect(repository.findGradableChapterIds).toHaveBeenCalledWith({}, 'track-1')
@@ -222,7 +219,6 @@ describe('recordExamResult', () => {
       {
         studentId: 'student-1',
         chapterId: 'chapter-1',
-        batchId: 'batch-1',
         level: 'level4',
         notes: 'n',
         evaluatorId: 'evaluator-1',
@@ -230,12 +226,26 @@ describe('recordExamResult', () => {
       {
         studentId: 'student-1',
         chapterId: 'chapter-2',
-        batchId: 'batch-1',
         level: 'level4',
         notes: 'n',
         evaluatorId: 'evaluator-1',
       },
     ])
+  })
+
+  it('stamps the result and its chapter evaluations with a supplied evaluatedAt', async () => {
+    const evaluatedAt = new Date('2026-09-24T00:00:00Z')
+
+    await recordExamResult(context, 'exam-1', 'evaluator-1', marks, { evaluatedAt })
+
+    expect(repository.insertResult).toHaveBeenCalledWith({}, expect.objectContaining({ evaluatedAt }))
+    expect(repository.insertEvaluations).toHaveBeenCalledWith(
+      {},
+      [
+        expect.objectContaining({ chapterId: 'chapter-1', evaluatedAt }),
+        expect.objectContaining({ chapterId: 'chapter-2', evaluatedAt }),
+      ],
+    )
   })
 
   it('a reappear stores the result but touches no chapter', async () => {
@@ -386,14 +396,12 @@ describe('findByIdWithDetail', () => {
       id: 'exam-1',
       trackId: 'track-1',
       studentId: 'student-1',
-      batchId: 'batch-1',
       scheduledAt: new Date(),
       status: 'scheduled' as const,
       track: { id: 'track-1', name: 'Track 1' },
       result: null,
       student: { id: 'student-1', name: 'Student One' },
-      batch: { id: 'batch-1', code: 'BATCH-1' },
-    }
+      }
     vi.mocked(repository.findByIdWithDetail).mockResolvedValue(detail)
 
     await expect(findByIdWithDetail(context, 'exam-1')).resolves.toEqual(detail)

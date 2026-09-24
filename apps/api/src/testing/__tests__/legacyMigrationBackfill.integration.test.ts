@@ -92,7 +92,8 @@ describe('legacy pre-H1 school migration backfill', () => {
          WHERE table_schema = $1 AND table_name = 'exam'`,
         [schemaName],
       )
-      expect(examColumns.rows.map(row => row.column_name)).toContain('batchId')
+      // Dropped by the latest pending migration, so its absence proves every pending migration ran.
+      expect(examColumns.rows.map(row => row.column_name)).not.toContain('batchId')
     } finally {
       await pool.end()
     }

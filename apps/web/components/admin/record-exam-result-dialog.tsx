@@ -124,7 +124,7 @@ function ResultForm({ sitting, onCancel }: { sitting: AdminSittingRow; onCancel:
           {isCorrection ? 'Correct exam result' : 'Record exam result'}
         </Dialog.Title>
         <Dialog.Description className="mt-1 text-[0.8125rem] text-ink-muted">
-          {sitting.studentName} — {sitting.track} · {sitting.batchCode}
+          {sitting.studentName} — {sitting.track}
         </Dialog.Description>
       </div>
 

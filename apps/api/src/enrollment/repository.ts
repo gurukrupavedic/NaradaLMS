@@ -6,9 +6,8 @@ import type { CreateEnrollmentData } from './schema'
 
 export type Enrollment = typeof enrollment.$inferSelect
 
-// Deliberately returns every qualifying batch rather than `.limit(1)`-ing to one — the caller
-// (`resolveQualifyingBatch`) must reject ambiguity when a student qualifies for more than one
-// batch, not silently pick one (DD-012 §1).
+// Every batch on `trackId` that `studentId` is enrolled in as a student — callers only need to
+// know whether there is one (`assertEnrolledInTrack`).
 //
 // Requires the target student's own profile to still be active (DD-011 §4.6): profile
 // deactivation deliberately leaves `enrollment` rows untouched so historical queries keep
@@ -32,6 +31,23 @@ export async function findQualifyingBatches(
         isNull(profile.deletedAt),
       ),
     )
+}
+
+/** Whether `profileId` holds an enrollment, of any role or status, in any of `batchIds`. */
+export async function isEnrolledInAnyBatch(
+  db: SchoolDb,
+  profileId: string,
+  batchIds: string[],
+): Promise<boolean> {
+  if (batchIds.length === 0) {
+    return false
+  }
+
+  const found = await db.query.enrollment.findFirst({
+    where: (t, { and, eq, inArray }) => and(eq(t.profileId, profileId), inArray(t.batchId, batchIds)),
+    columns: { batchId: true },
+  })
+  return found !== undefined
 }
 
 export async function findEnrollment(

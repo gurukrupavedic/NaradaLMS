@@ -1,7 +1,7 @@
 import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound, orNotFound, unprocessable } from '../error'
-import { resolveQualifyingBatch } from '../enrollment/service'
+import { assertEnrolledInTrack } from '../enrollment/service'
 import type { AccessPolicy, ExamReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import { gradeExam, levelForOutcome } from './grading'
@@ -44,7 +44,7 @@ export async function findByIdWithDetail(
 
 /**
  * Booking a sitting is school-admin-only (`access.requireCanCreateExam`), independent of any
- * batch role, so that check runs first — no need to resolve the qualifying batch just to reject an
+ * batch role, so that check runs first — no need to look up enrollments just to reject an
  * unauthorized caller. Only once authorized does this validate the student/track assignment
  * invariant; see {@link assertValidExamAssignment}.
  */
@@ -53,10 +53,10 @@ export async function createExam(
   data: CreateExamData,
 ): Promise<Exam> {
   context.access.requireCanCreateExam()
-  const batchId = await assertValidExamAssignment(context.db, data.studentId, data.trackId)
+  await assertValidExamAssignment(context.db, data.studentId, data.trackId)
 
   const row = await withConstraintMapping(
-    () => repository.insert(context.db, { ...data, batchId }),
+    () => repository.insert(context.db, data),
     {
       [DbConstraint.examStudentIdFk]: () => unprocessable('student or track no longer exists'),
       [DbConstraint.examTrackIdFk]: () => unprocessable('student or track no longer exists'),
@@ -70,22 +70,19 @@ export async function createExam(
   return row
 }
 
-// A student can only sit a track they're enrolled in as a student, and that enrollment must be
-// unambiguous — the resolved batch is stored on the exam as immutable assessment context
-// (DD-012). The enrollment-ambiguity check itself lives in the enrollment domain
-// (`resolveQualifyingBatch`) so it can't drift from the same check on direct evaluation creation
-// (PARITY_PLAN.md §10.5); this function only adds the track lookup, which is exam-specific, not
-// an enrollment concern.
+// A student can only sit a track they're enrolled in as a student. The enrollment check lives in
+// the enrollment domain (`assertEnrolledInTrack`); this function only adds the track lookup,
+// which is exam-specific, not an enrollment concern.
 async function assertValidExamAssignment(
   db: SchoolDb,
   studentId: string,
   trackId: string,
-): Promise<string> {
+): Promise<void> {
   if (!(await trackExists(db, trackId))) {
     throw unprocessable('track not found')
   }
 
-  return resolveQualifyingBatch(db, studentId, trackId)
+  await assertEnrolledInTrack(db, studentId, trackId)
 }
 
 /**
@@ -132,12 +129,18 @@ export async function updateExam(
  * is gone, 409 "already recorded" if it is now completed, 409 "status changed concurrently"
  * otherwise. Failing the whole request (not just skipping the chapter writes) on any error keeps
  * a result from ever existing without the evaluations it implies.
+ *
+ * `evaluatedAt` stamps the result and the chapter evaluations it writes; it defaults to the
+ * database's clock. The bulk school importer passes it so a result is strictly later than the
+ * spreadsheet marks it was imported alongside — a transaction's `now()` is one instant for every
+ * row, and "the latest evaluation wins" cannot break a tie.
  */
 export async function recordExamResult(
   context: ExamServiceContext,
   id: string,
   evaluatorId: string,
   data: RecordExamResultData,
+  options: { evaluatedAt?: Date } = {},
 ): Promise<ExamWithDetail> {
   const existing = await findById(context, id)
   if (!RECORDABLE_STATUSES.includes(existing.status)) {
@@ -174,6 +177,7 @@ export async function recordExamResult(
           ...graded,
           notes,
           evaluatorId,
+          evaluatedAt: options.evaluatedAt,
         }),
       {
         [DbConstraint.examResultEvaluatorIdFk]: () => unprocessable('evaluator no longer exists'),
@@ -183,7 +187,7 @@ export async function recordExamResult(
       throw internalError()
     }
 
-    await writeChapterEvaluations(tx, existing, level, evaluatorId, notes)
+    await writeChapterEvaluations(tx, existing, level, evaluatorId, notes, options.evaluatedAt)
   })
 
   return findByIdWithDetail(context, id)
@@ -271,6 +275,7 @@ async function writeChapterEvaluations(
   level: ReturnType<typeof levelForOutcome>,
   evaluatorId: string,
   notes: string | undefined,
+  evaluatedAt?: Date,
 ): Promise<void> {
   if (!level) {
     return
@@ -284,10 +289,10 @@ async function writeChapterEvaluations(
         chapterIds.map(chapterId => ({
           studentId: exam.studentId,
           chapterId,
-          batchId: exam.batchId,
           level,
           notes,
           evaluatorId,
+          evaluatedAt,
         })),
       ),
     {

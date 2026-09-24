@@ -18,7 +18,7 @@ export function parseExams(
     markHeaders: string[]
     tracks: TrackRow[]
     profiles: Map<string, ProfileRow>
-    seats: Map<string, { batchId: string; evaluatorId: string }>
+    seats: Map<string, { evaluatorId: string }>
   },
 ) {
   const { course, report, block } = ctx
@@ -55,7 +55,7 @@ export function parseExams(
       const profile = input.profiles.get(key)
       if (!profile) return block(where, 'PRIMARY KEY is in no row of the registration sheet')
       const seat = input.seats.get(key)
-      if (!seat) return block(where, 'has marks, but the tracker sheet has no usable row for this person, so there is no batch to attach the exam to')
+      if (!seat) return block(where, 'has marks, but the tracker sheet has no usable row for this person, so there is no evaluator to record the exam under')
 
       const [aksharaShuddhi, swaraShuddhi, niyantranaAnargalata, shraavyata, pratishakyaGrammar] = marks as number[]
       const childrenBonus = Number(row[bonusColumn])
@@ -76,7 +76,6 @@ export function parseExams(
         id,
         trackId: track.id,
         studentId: profile.id,
-        batchId: seat.batchId,
         marks: { aksharaShuddhi, swaraShuddhi, niyantranaAnargalata, shraavyata, pratishakyaGrammar },
         childrenBonus,
         total,

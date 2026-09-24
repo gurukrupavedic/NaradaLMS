@@ -13,7 +13,7 @@ import {
 
 import { isProfilePartOfCourse } from '../courses/repository'
 import { forbidden } from '../error'
-import { hasSharedInstructorEnrollment } from '../enrollment/service'
+import { hasSharedInstructorEnrollment, isEnrolledInAnyBatch } from '../enrollment/service'
 import type { Exam } from '../exams/schema'
 import type { ExamSlotRequest } from '../examSlots/schema'
 import type { User } from '../session'
@@ -27,7 +27,8 @@ type BatchRole = typeof enrollment.$inferSelect.role
 export type BatchReadScope = { kind: 'all' } | { kind: 'enrolled'; profileId: string }
 // 'own' is a profile with no batch where they hold exam:read (e.g. a plain student) — every exam
 // visible to them has studentId === profileId. 'manageable' adds every batch where they do hold
-// exam:read (instructor/TA): studentId === profileId OR batchId is one of `batchIds`. `batchIds`
+// exam:read (instructor/TA): studentId === profileId OR the student is enrolled in one of
+// `batchIds` (the batches where the actor is instructor/TA). `batchIds`
 // is always non-empty for 'manageable' — an empty-permission actor gets 'own' instead, so
 // repository code never has to special-case an empty SQL IN-list.
 export type ExamReadScope =
@@ -293,14 +294,13 @@ export class AccessPolicy {
 
   // -- Exams ------------------------------------------------------------------
   // Instructor/TA exam authorization (DD-003/DD-005/DD-006, approved 2026-08-28) is scoped
-  // per-batch via `hasBatchPermission`, matching the enrollment role the actor actually holds in
-  // the exam's batch — not "school admin or nothing." An exam's `batchId` is resolved once, at
-  // creation, by `enrollment/service.ts::resolveQualifyingBatch` (DD-012); every check below
-  // reuses that stored value rather than re-resolving it.
+  // through the student: an instructor/TA with `exam:update` in a batch may see and reschedule the
+  // sittings of any student enrolled in that batch (past or present) — not "school admin or
+  // nothing." An exam carries no batch of its own; see `teachesStudent`.
   //
   // Booking a sitting (requireCanCreateExam) is the one exception: it was originally a batch-role
   // check like the others, but exam bookings are now a school-admin (or super-admin) decision, so
-  // it no longer touches `batchId`/`hasBatchPermission` at all — see its own doc comment.
+  // it no longer touches batch roles at all — see its own doc comment.
   //
   // The "can see every exam in this batch" checks below deliberately test EXAM_UPDATE_PERMISSION,
   // not EXAM_READ_PERMISSION: the batch ACL grants `exam:read` to students too (so they can read
@@ -311,18 +311,22 @@ export class AccessPolicy {
   // requireCanReadExam delegates to getExamVisibility so list and detail visibility can never
   // drift apart by construction (PARITY_PLAN.md §11.3: "a record hidden in list must not become
   // readable by guessing its ID").
-  public requireCanReadExam(exam: Exam): void {
+  public async requireCanReadExam(exam: Exam): Promise<void> {
     const scope = this.getExamVisibility()
     const visible =
       scope.kind === 'all' ||
       (scope.kind === 'own' && exam.studentId === scope.profileId) ||
       (scope.kind === 'manageable' &&
-        (exam.studentId === scope.profileId ||
-          (exam.batchId !== null && scope.batchIds.includes(exam.batchId))))
+        (exam.studentId === scope.profileId || (await isEnrolledInAnyBatch(this.db, exam.studentId, scope.batchIds))))
 
     if (!visible) {
       throw forbidden()
     }
+  }
+
+  /** Whether the actor holds `exam:update` (instructor/TA) in a batch `studentId` is enrolled in. */
+  private async teachesStudent(studentId: string): Promise<boolean> {
+    return isEnrolledInAnyBatch(this.db, studentId, this.batchIdsWithPermission(EXAM_UPDATE_PERMISSION))
   }
 
   /**
@@ -339,13 +343,10 @@ export class AccessPolicy {
   }
 
   // No school-admin fallback (PARITY_PLAN.md §11.4): a plain owner/admin who isn't also enrolled
-  // as instructor/TA in the exam's batch cannot update it here — unlike requireCanCreateExam
-  // above, rescheduling/cancelling stays a batch-role decision.
-  public requireCanUpdateExam(exam: Exam): void {
-    if (
-      this.isSuperAdmin ||
-      (exam.batchId !== null && this.hasBatchPermission(exam.batchId, EXAM_UPDATE_PERMISSION))
-    ) {
+  // as instructor/TA in a batch the student is in cannot update it here — unlike
+  // requireCanCreateExam above, rescheduling/cancelling stays a batch-role decision.
+  public async requireCanUpdateExam(exam: Exam): Promise<void> {
+    if (this.isSuperAdmin || (await this.teachesStudent(exam.studentId))) {
       return
     }
 

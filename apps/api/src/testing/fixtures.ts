@@ -608,7 +608,6 @@ export async function createExam(
   o: {
     student: ProfileRow
     track: TrackRow
-    batch: BatchRow
     scheduledAt?: Date
     status?: ExamRow['status']
   },
@@ -618,7 +617,6 @@ export async function createExam(
     .values({
       studentId: o.student.id,
       trackId: o.track.id,
-      batchId: o.batch.id,
       scheduledAt: o.scheduledAt ?? new Date(),
       status: o.status ?? 'scheduled',
     })

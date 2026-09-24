@@ -76,8 +76,9 @@ export async function findRequestByIdWithDetail(
 /**
  * Opens a new bookable appointment on a track — school-admin (or super-admin) only, the same gate
  * as booking an exam directly (`AccessPolicy#requireCanCreateExam`). Deliberately independent of
- * `batch`: which batch the eventual sitting lands in is only resolved once a request on this slot
- * is approved (`approve` below), the same way it already is for a direct-admin exam.
+ * `batch`: a sitting belongs to no batch, and the student's enrollment on the track is only checked
+ * once a request on this slot is approved (`approve` below), the same way it is for a direct-admin
+ * exam.
  */
 export async function openSlot(
   context: ExamSlotServiceContext & { access: AccessPolicy },

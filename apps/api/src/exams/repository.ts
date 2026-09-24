@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, getTableColumns, inArray, ne, notInArray, or, type SQL } from 'drizzle-orm'
 
-import { chapter, evaluation, exam, examResult, profile, track, type SchoolDb } from '@narada/db'
+import { chapter, enrollment, evaluation, exam, examResult, profile, track, type SchoolDb } from '@narada/db'
 
 import { tokenMatch } from '../utils/search'
 import type { ExamReadScope } from '../utils/accessPolicy'
@@ -22,14 +22,13 @@ type ExamResultRow = typeof examResult.$inferSelect
 
 /**
  * What a `GET /exams`-style read eager-loads: the track's name, the result (if any), and the
- * sitting's student/batch — the admin exams screen renders these directly off each exam row
- * rather than cross-referencing a separate (paginated, possibly-incomplete) batch roster fetch.
+ * sitting's student — the admin exams screen renders these directly off each exam row rather
+ * than cross-referencing a separate (paginated, possibly-incomplete) roster fetch.
  */
 const DETAIL = {
   track: { columns: { id: true, name: true } },
   result: true,
   student: { columns: { id: true, name: true } },
-  batch: { columns: { id: true, code: true } },
 } as const
 
 // `level` is derived from `outcome` rather than stored (a `reappear` grants none), so a stored
@@ -66,10 +65,13 @@ export async function findMany(
     conditions.push(eq(exam.studentId, scope.profileId))
   } else if (scope.kind === 'manageable') {
     // `batchIds` is guaranteed non-empty by `AccessPolicy.getExamVisibility` (an empty-permission
-    // actor gets 'own' instead), so `inArray` never has to handle a zero-length list here.
-    conditions.push(
-      or(eq(exam.studentId, scope.profileId), inArray(exam.batchId, scope.batchIds))!,
-    )
+    // actor gets 'own' instead), so `inArray` never has to handle a zero-length list here. An
+    // instructor/TA sees the sittings of every student enrolled in a batch they teach.
+    const studentsInMyBatches = db
+      .select({ profileId: enrollment.profileId })
+      .from(enrollment)
+      .where(inArray(enrollment.batchId, scope.batchIds))
+    conditions.push(or(eq(exam.studentId, scope.profileId), inArray(exam.studentId, studentsInMyBatches))!)
   }
 
   if (status) {
@@ -326,7 +328,7 @@ export async function findGradableChapterIds(db: SchoolDb, trackId: string): Pro
   return rows.map(row => row.id)
 }
 
-export async function insert(db: SchoolDb, data: CreateExamData & { batchId: string }): Promise<Exam | undefined> {
+export async function insert(db: SchoolDb, data: CreateExamData): Promise<Exam | undefined> {
   const rows = await db.insert(exam).values(data).returning()
   return rows.at(0)
 }

@@ -6,35 +6,21 @@ import * as repository from './repository'
 import type { CreateEnrollmentData } from './schema'
 import type { Enrollment } from './repository'
 
-export { findStudentIdsInBatch, hasSharedInstructorEnrollment } from './repository'
+export { findStudentIdsInBatch, hasSharedInstructorEnrollment, isEnrolledInAnyBatch } from './repository'
 
-// A student can only be examined on a chapter belonging to a track they're enrolled in as a
-// student, and that enrollment must be unambiguous — used when the batch itself is *not* yet
-// known and must be found by searching every batch on the chapter's track (exam creation,
-// DD-012: the resolved batchId becomes the immutable assessment context stored on the new row).
-// Direct evaluation creation is a different shape of the same underlying invariant — there the
-// batch is already given (from the URL), so it's validated, not searched for — see
-// `assertStudentEnrolledInBatch` below.
-export async function resolveQualifyingBatch(
+// A student can only be examined on a track they're enrolled in as a student. Which batch that
+// was isn't recorded on the exam, so any enrollment on the track qualifies. Direct evaluation
+// creation is a different shape of the same invariant — there the batch is already given (from
+// the URL), so it's validated, not searched for — see `assertStudentEnrolledInBatch` below.
+export async function assertEnrolledInTrack(
   db: SchoolDb,
   studentId: string,
   trackId: string,
-): Promise<string> {
+): Promise<void> {
   const qualifying = await repository.findQualifyingBatches(db, studentId, trackId)
   if (qualifying.length === 0) {
-    throw unprocessable('student is not enrolled in a batch for this chapter')
+    throw unprocessable('student is not enrolled in a batch for this track')
   }
-
-  if (qualifying.length > 1) {
-    throw unprocessable("student is enrolled in multiple batches for this chapter's track")
-  }
-
-  const [only] = qualifying
-  if (!only) {
-    throw internalError()
-  }
-
-  return only.batchId
 }
 
 // A student holds at most one `active` batch seat per course. The partial unique index

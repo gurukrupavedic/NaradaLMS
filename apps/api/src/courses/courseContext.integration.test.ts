@@ -255,9 +255,8 @@ describe('reads limited to a course', () => {
     const vedamExam = await createExam(world, {
       student: s.student,
       track: s.vedamTrack,
-      batch: s.vedamBatch,
     })
-    await createExam(world, { student: s.student, track: s.smartamTrack, batch: s.smartamBatch })
+    await createExam(world, { student: s.student, track: s.smartamTrack })
     const page = { limit: 50, status: undefined, cursor: undefined, mine: false, sort: 'asc' as const }
 
     const scoped = await findExams(world.schoolDb, page, { kind: 'all' }, s.vedam.id)
@@ -314,11 +313,10 @@ describe('a student’s dashboard on each course’s address', () => {
     const sat = await createExam(world, {
       student: s.student,
       track: s.smartamTrack,
-      batch: s.smartamBatch,
       status: 'completed',
     })
     await createExamResult(world, { exam: sat, evaluator: s.evaluator })
-    await createExam(world, { student: s.student, track: s.vedamTrack, batch: s.vedamBatch })
+    await createExam(world, { student: s.student, track: s.vedamTrack })
     await createEnrollmentRequest(world, s.student, s.vedamBatch)
 
     const onVedam = await getDashboardData(
