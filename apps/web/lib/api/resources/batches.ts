@@ -4,8 +4,7 @@ import { getSelectedProfileId } from '@/lib/auth/profile-store'
 import type { ApiBatch, ApiBatchWithRole, ApiEvaluation, ApiProficiencyLevel, ApiTrack } from '@/lib/api/api-types'
 import { buildRoster, isRosterStudent } from '@/lib/api/reshape'
 
-// GET /v1/profiles/:profileId/batches?withDetail=true (the signed-in profile — the real gap closed
-// in apps/api specifically because this page needed it, see PARITY_PLAN.md).
+// GET /v1/profiles/:profileId/batches?withDetail=true (the signed-in profile).
 export type AdminBatchesPayload = {
   active: AdminBatchRow[]
   upcoming: AdminBatchRow[]

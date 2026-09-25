@@ -56,7 +56,7 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-describe('AccessPolicy.load / normalizeSchoolRole (DD-010)', () => {
+describe('AccessPolicy.load / normalizeSchoolRole', () => {
   it('rejects a caller with no membership row and no super-admin flag', async () => {
     mockMembership(undefined)
 

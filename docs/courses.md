@@ -2,8 +2,8 @@
 
 A school runs one or more courses (Vedam, Smartam, …). A course owns its tracks, and through them its
 chapters, batches, exams and evaluations. Courses are seeded, not managed from the app. The data model
-and the one-active-batch-per-course rule are in `data-model.md`; this doc is how the app knows which
-course you are in.
+and the one-active-batch-per-course rule live in the schema (`packages/db/src/schema/school.ts`); this
+doc is how the app knows which course you are in.
 
 ## Which course a request is about
 

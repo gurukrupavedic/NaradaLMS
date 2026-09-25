@@ -59,8 +59,7 @@ export const CreateProfileSchema = ProfileSchema.pick({
 // sign-in), so changing it needs its own re-verification flow, not a silent profile-details edit;
 // `yearOfBirth` is treated as fixed once recorded. `countryTimeZone` is deliberately excluded too:
 // it's server-derived from `city`/`state`/`country` (`service.ts::updateProfile`), not something a
-// client sets directly. Zod strips these unlisted keys rather than rejecting them, same as
-// `UpdateBatchSchema` dropping `trackId` (see PARITY_PLAN.md).
+// client sets directly. Zod strips these unlisted keys rather than rejecting them.
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>
 export const UpdateProfileSchema = requireNonEmpty(
   ProfileSchema.pick({

@@ -18,8 +18,7 @@ export function translateDbError(error: unknown): AppError | null {
 }
 
 /**
- * Every constraint a service currently gives domain-specific meaning to (HARDENING_PLAN.md H7 /
- * DD-001 §3.1). The value is the real Postgres constraint name from the generated migrations
+ * Every constraint a service currently gives domain-specific meaning to. The value is the real Postgres constraint name from the generated migrations
  * (`packages/db/drizzle/school/0000_organic_jasper_sitwell.sql`); the camelCase key is what
  * services reference, so a typo in the raw name is a compile error instead of a silently-ignored
  * mapping entry.

@@ -147,7 +147,7 @@ export async function findById(db: SchoolDb, id: string): Promise<Exam | undefin
   })
 }
 
-/** The `GET /:examId` read path — list-detail equivalence (§11.3/DD-004): same eager-load as {@link findMany}, not a separate, thinner shape. */
+/** One exam with the same eager-load as {@link findMany} — list-detail equivalence, not a separate, thinner shape. */
 export async function findByIdWithDetail(db: SchoolDb, id: string): Promise<ExamWithDetail | undefined> {
   const row = await db.query.exam.findFirst({
     where: (t, { eq }) => eq(t.id, id),

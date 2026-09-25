@@ -39,7 +39,7 @@ describe('schoolRoute / resolveSchool (matrix item 10)', () => {
     expect((caught as AppError).message).toMatch(/X-School-Slug/i)
   })
 
-  it('rejects an unknown school slug with a 404 notFound ("school not found") — H5/DD-014 fixed this from 400', async () => {
+  it('rejects an unknown school slug with a 404 notFound ("school not found") — a 404, not a 400', async () => {
     const handler = schoolRoute(async () => {
       throw new Error('handler should not run when school resolution fails')
     })

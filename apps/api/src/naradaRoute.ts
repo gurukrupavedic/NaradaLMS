@@ -105,10 +105,10 @@ export function userRoute(handler: (args: UserRouteArgs) => Promise<void>): Requ
 /**
  * Wraps a handler that requires a valid school and authenticated user, and resolves the caller's
  * own active profile if `X-Profile-Id` is supplied — but does not require it. For school-wide
- * capabilities (PARITY_PLAN.md §3.2: batch list/detail/create/update, exam list/detail), a school
+ * capabilities (batch list/create/schedule, exam list), a school
  * admin doesn't need an active profile at all; `AccessPolicy`'s own checks already handle
  * `profile: undefined` correctly (`isSchoolAdmin()` doesn't consult it), so this wrapper's only
- * job is to stop *forcing* one where the old backend never required it.
+ * job is to stop *forcing* one where none is needed.
  */
 export function optionalProfileRoute(
   handler: (args: OptionalProfileRouteArgs) => Promise<void>,
@@ -204,7 +204,7 @@ function resolveSchool(req: Request): Promise<{ db: SchoolDbClient; school: Scho
 /**
  * Resolves `X-Profile-Id` to a profile in this school if the header is present, rejecting a
  * profile that doesn't exist, belongs to a different user (never trust a caller-supplied profile
- * ID), or has been deactivated (DD-011) — the single choke point that keeps a soft-deleted
+ * ID), or has been deactivated — the single choke point that keeps a soft-deleted
  * profile out of every `optionalProfileRoute`/`profileRoute`-gated read and write. Returns
  * `undefined`, rather than throwing, when the header is simply absent — `optionalProfileRoute`'s
  * whole point.

@@ -641,7 +641,7 @@ describe('ExamWithDetail projection (real gap: GET /exams list + detail, addendu
     expect(ids).not.toContain(othersSitting.id)
   })
 
-  it('findByIdWithDetail returns the same track/result projection as the list (list-detail equivalence, §11.3/DD-004)', async () => {
+  it('findByIdWithDetail returns the same track/result projection as the list (list-detail equivalence)', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
     const studentProfile = await createProfile(world)

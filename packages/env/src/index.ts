@@ -57,7 +57,7 @@ export const env = createEnv({
       .pipe(z.array(z.string().min(1)))
       .default([]),
 
-    // Connection-pool budget and timeouts (DD-015). Defaults are conservative placeholders
+    // Connection-pool budget and timeouts. Defaults are conservative placeholders
     // pending real ops data (PostgreSQL max_connections, instance count, proxy presence);
     // tune via environment, not code. DB_MAX_LIFETIME_SECONDS 0 = disabled (pg's own default).
     DB_PUBLIC_POOL_MAX: z.coerce.number().int().positive().default(5),

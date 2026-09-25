@@ -15,7 +15,7 @@ import { createServer } from './server'
  *
  * Full per-domain HTTP-layer coverage (real BetterAuth session fixtures, school/profile headers,
  * every route's status/envelope) is real, additional design and fixture work beyond this proof
- * and is intentionally left as future work — see PARITY_PLAN.md §14.1 layer 3.
+ * and is intentionally left as future work.
  */
 describe('HTTP server (supertest, real app + real Postgres)', () => {
   it('GET /v{version}/health returns 200 with no database involved', async () => {
@@ -36,7 +36,7 @@ describe('HTTP server (supertest, real app + real Postgres)', () => {
     expect(response.body).toEqual({ status: 'ready', checks: { database: 'up' } })
   })
 
-  it('an unmatched route under the versioned router 404s as JSON, not an HTML error page (DD-009)', async () => {
+  it('an unmatched route under the versioned router 404s as JSON, not an HTML error page', async () => {
     const app = createServer()
 
     const response = await request(app).get(`/v${env.API_VERSION}/no-such-route`)
@@ -61,7 +61,7 @@ describe('HTTP server (supertest, real app + real Postgres)', () => {
     })
   })
 
-  it('an unparseable JSON body gets a structured 400, not the generic 500 the reference backend returns (DD-009)', async () => {
+  it('an unparseable JSON body gets a structured 400, not a generic 500', async () => {
     const app = createServer()
 
     const response = await request(app)

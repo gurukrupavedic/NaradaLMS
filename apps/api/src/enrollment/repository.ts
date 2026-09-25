@@ -13,7 +13,7 @@ const LEARNER_ROLES: Enrollment['role'][] = ['student', 'ta']
 // Every batch on `trackId` that `studentId` is enrolled in as a student — callers only need to
 // know whether there is one (`assertEnrolledInTrack`).
 //
-// Requires the target student's own profile to still be active (DD-011 §4.6): profile
+// Requires the target student's own profile to still be active: profile
 // deactivation deliberately leaves `enrollment` rows untouched so historical queries keep
 // working, which means a deactivated student's stale enrollment would otherwise still "qualify"
 // them for a brand-new exam/evaluation.

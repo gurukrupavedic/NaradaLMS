@@ -43,8 +43,7 @@ router.get(
   }),
 )
 
-// "View a profile's batch history" — a real capability (see the philosophy discussion in
-// PARITY_PLAN.md §1.2), not just richer profile data. `withDetail=true` eager-loads each batch's
+// "View a profile's batch history" — a real capability, not just richer profile data. `withDetail=true` eager-loads each batch's
 // roster/schedule/the target's own role in the same query — added once a real consumer showed up
 // (apps/web's admin overview, scoped while migrating apps/web onto this contract): without it,
 // showing "every batch in the school with its roster" would cost one request per batch, the same
