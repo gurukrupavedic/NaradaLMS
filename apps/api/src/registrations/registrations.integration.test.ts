@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { courseProfile, publicDb } from '@narada/db'
 
+import { find as findCourseProfile } from '../courseProfile/repository'
 import { destroyTestWorld } from '../testing/cleanup'
 import {
   createCourse,
@@ -219,6 +220,8 @@ describe('approve', () => {
       phone: '+15556660002',
       email: 'anjali@example.com',
       learningGoal: 'Fluency',
+      comments: 'Happy to help set up.',
+      currentProficiency: 'practicing',
     })
 
     const row = await approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, pending.id, null)
@@ -236,7 +239,18 @@ describe('approve', () => {
       name: 'Anjali Rao',
       phone: '+15556660002',
       email: 'anjali@example.com',
+    })
+    // The three course-level answers went to the profile's row for the course applied to, not the
+    // school-wide profile.
+    const courseRow = await findCourseProfile(
+      world.schoolDb,
+      row.convertedProfileId!,
+      pending.courseId,
+    )
+    expect(courseRow).toMatchObject({
       learningGoal: 'Fluency',
+      currentProficiency: 'practicing',
+      comments: 'Happy to help set up.',
     })
 
     const memberRow = await publicDb.query.member.findFirst({

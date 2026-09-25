@@ -1,7 +1,8 @@
 import { and, eq, isNull, sql } from 'drizzle-orm'
 
 import { courseProfile, profile, type SchoolDb } from '@narada/db'
-import type { Details } from '@narada/profile-fields'
+
+import type { CourseProfile } from './schema'
 
 /**
  * The profile, if it's one the caller may write to. `ownerUserId` is `null` for a school admin (any
@@ -27,58 +28,69 @@ export async function findWritableProfile(
   return rows.at(0)
 }
 
-/** The course-level details, or `undefined` for a profile with no course-level row yet. */
-export async function findDetails(
+const courseProfileColumns = {
+  learningGoal: courseProfile.learningGoal,
+  currentProficiency: courseProfile.currentProficiency,
+  comments: courseProfile.comments,
+  details: courseProfile.details,
+}
+
+const forCourse = (profileId: string, courseId: string) =>
+  and(eq(courseProfile.profileId, profileId), eq(courseProfile.courseId, courseId))
+
+/** The profile's record in the course, or `undefined` for one with no row there yet. */
+export async function find(
   db: SchoolDb,
   profileId: string,
   courseId: string,
-): Promise<Details | undefined> {
+): Promise<CourseProfile | undefined> {
   const rows = await db
-    .select({ details: courseProfile.details })
+    .select(courseProfileColumns)
     .from(courseProfile)
-    .where(and(eq(courseProfile.profileId, profileId), eq(courseProfile.courseId, courseId)))
-  return rows.at(0)?.details
+    .where(forCourse(profileId, courseId))
+  return rows.at(0)
 }
 
 /**
- * Creates the row if it isn't there (a student an admin put on a roster has none), then returns its
- * details, row-locked for `service.ts::updateDetails`'s transaction — an edit is a
+ * Creates the row if it isn't there (a student an admin put on a roster has none), then returns it,
+ * row-locked for `service.ts::updateCourseProfile`'s transaction — an edit is a
  * read-merge-validate-write, so two concurrent edits must queue rather than each merge onto the same
  * stale copy and one silently undo the other. The relational query API has no `FOR UPDATE`, so this
  * uses the plain query builder, like `profiles/repository.ts::findDetailsForUpdate`.
  */
-export async function lockDetails(
+export async function lock(
   db: SchoolDb,
   profileId: string,
   courseId: string,
-): Promise<Details> {
+): Promise<CourseProfile> {
   await db.insert(courseProfile).values({ profileId, courseId }).onConflictDoNothing()
   const rows = await db
-    .select({ details: courseProfile.details })
+    .select(courseProfileColumns)
     .from(courseProfile)
-    .where(and(eq(courseProfile.profileId, profileId), eq(courseProfile.courseId, courseId)))
+    .where(forCourse(profileId, courseId))
     .for('update')
-  return rows[0]!.details
+  return rows[0]!
 }
 
-export async function replaceDetails(
+/** Writes the given fields (`details` whole — the service has already merged and validated it). */
+export async function update(
   db: SchoolDb,
   profileId: string,
   courseId: string,
-  details: Details,
-): Promise<Details> {
+  values: Partial<CourseProfile>,
+): Promise<CourseProfile> {
   const rows = await db
     .update(courseProfile)
-    .set({ details })
-    .where(and(eq(courseProfile.profileId, profileId), eq(courseProfile.courseId, courseId)))
-    .returning({ details: courseProfile.details })
-  return rows[0]!.details
+    .set(values)
+    .where(forCourse(profileId, courseId))
+    .returning(courseProfileColumns)
+  return rows[0]!
 }
 
 /** Creates the row for a newly approved student. Idempotent, so a retried approval doesn't fail. */
 export async function insert(
   db: SchoolDb,
-  values: { profileId: string; courseId: string; details: Details },
+  values: { profileId: string; courseId: string } & Partial<CourseProfile>,
 ): Promise<void> {
   await db.insert(courseProfile).values(values).onConflictDoNothing()
 }

@@ -4,7 +4,7 @@
  * 401s).
  */
 export * from './profiles'
-export * from './course-details'
+export * from './course-profile'
 export * from './registrations'
 export * from './dashboard'
 export * from './exams'

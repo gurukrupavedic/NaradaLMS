@@ -33,8 +33,6 @@ const validProfile = {
   state: 'TG',
   country: 'IN',
   countryTimeZone: 'Asia/Kolkata',
-  learningGoal: 'Fluency',
-  currentProficiency: 'level1',
   spokenLanguages: ['Telugu'],
   readLanguages: [],
   parentNames: ['Parent One'],
@@ -42,7 +40,6 @@ const validProfile = {
   noMeatAgreed: false,
   noAlcoholAgreed: true,
   noSmokingAgreed: true,
-  comments: null,
   details: { gothram: 'Bharadwaja' },
   updatedAt: new Date().toISOString(),
   createdAt: new Date().toISOString(),
@@ -62,8 +59,6 @@ describe('ProfileSchema', () => {
       state: null,
       country: null,
       countryTimeZone: null,
-      learningGoal: null,
-      currentProficiency: null,
       spokenLanguages: [],
       readLanguages: [],
       parentNames: [],
@@ -71,7 +66,6 @@ describe('ProfileSchema', () => {
       noMeatAgreed: false,
       noAlcoholAgreed: false,
       noSmokingAgreed: false,
-      comments: null,
     })
     expect(result.success).toBe(true)
   })
@@ -85,8 +79,6 @@ describe('UpdateProfileSchema (student self-edit)', () => {
       state: 'TG',
       country: 'IN',
       email: 'anjali@example.com',
-      learningGoal: 'Fluency',
-      currentProficiency: 'level2',
       spokenLanguages: ['Telugu'],
       readLanguages: [],
       parentNames: ['Parent One'],
@@ -94,7 +86,6 @@ describe('UpdateProfileSchema (student self-edit)', () => {
       noMeatAgreed: true,
       noAlcoholAgreed: false,
       noSmokingAgreed: true,
-      comments: 'Anything the reviewing teacher should know.',
     })
     expect(result.success).toBe(true)
   })

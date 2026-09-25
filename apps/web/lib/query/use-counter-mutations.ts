@@ -1,15 +1,17 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import type { Details } from '@narada/profile-fields'
-
 import { keys } from '@/lib/query/options'
 import { useEditMutation } from '@/lib/query/use-edit-mutation'
-import { addToCounter, updateCourseDetails } from '@/lib/api/resources'
+import {
+  addToCounter,
+  updateCourseProfile,
+  type UpdateCourseProfileInput,
+} from '@/lib/api/resources'
 import { formatCount } from '@/lib/counter'
 
 /**
- * The write paths for a profile's course-level details (`components/counter-card.tsx`). The values
+ * The write paths for a profile's course-level record (`components/counter-card.tsx`). The values
  * come back with the profile page's own response, so that one query is what's refreshed.
  */
 function useRefreshProfile(profileId: string) {
@@ -30,13 +32,13 @@ export function useAddToCounter(profileId: string, key: string) {
   )
 }
 
-/** Edits the course-level details — for a counter, setting it outright (a correction). */
-export function useUpdateCourseDetails(profileId: string) {
+/** Edits the course profile — for a counter, setting its total outright (a correction). */
+export function useUpdateCourseProfile(profileId: string) {
   const refresh = useRefreshProfile(profileId)
 
   return useEditMutation(
     {
-      mutationFn: (patch: Details) => updateCourseDetails(profileId, patch),
+      mutationFn: (patch: UpdateCourseProfileInput) => updateCourseProfile(profileId, patch),
       onSuccess: refresh,
     },
     { success: 'Updated.', failure: "Couldn't save that." },

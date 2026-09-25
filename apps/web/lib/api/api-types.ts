@@ -8,11 +8,12 @@ import type { Details } from '@narada/profile-fields'
 // GET /v1/profiles — every profile the signed-in account can act as (see app/login/page.tsx's own
 // doc comment on why a household can have several).
 //
-// The fields from `email` through `comments` mirror `ApiRegistration`'s own fields exactly:
+// The fields from `email` through `noSmokingAgreed` mirror `ApiRegistration`'s own fields:
 // apps/api's `registrations/service.ts::provisionApprovedApplicant` copies an approved
-// application's full detail onto the profile it creates, so `profile` is the living record —
+// application's detail onto the profile it creates, so `profile` is the living record —
 // `registration` stays an immutable snapshot of what was originally submitted. A profile created
-// directly (no registration behind it) simply carries the null/empty defaults for all of them.
+// directly (no registration behind it) simply carries the null/empty defaults for all of them. What
+// the application said about the *course* (goal, starting point, comments) goes to `ApiCourseProfile`.
 export type ApiProfile = {
   id: string
   name: string
@@ -27,8 +28,6 @@ export type ApiProfile = {
   // An IANA zone id, server-derived from city/state/country — never directly editable. Format for
   // display with `lib/timezone.ts::formatTimeZone` rather than rendering the raw id.
   countryTimeZone: string | null
-  learningGoal: string | null
-  currentProficiency: ApiProficiencyLevel | null
   spokenLanguages: string[]
   readLanguages: string[]
   parentNames: string[]
@@ -36,7 +35,6 @@ export type ApiProfile = {
   noMeatAgreed: boolean
   noAlcoholAgreed: boolean
   noSmokingAgreed: boolean
-  comments: string | null
   // What this school collects beyond the columns above (`@narada/profile-fields`), keyed by field
   // key — render it with `components/detail-summary.tsx`, not by reading keys directly.
   details: Details
@@ -341,14 +339,22 @@ export type ApiEnrollmentRequest = {
   createdAt: string
 }
 
+// One student's record in one course (the course-level component of a profile, from `courseProfile`):
+// what they said about the course, and the course's own `details` — keyed by field key like
+// `ApiProfile.details`; counters (japam) are plain numbers there, absent until first written (read
+// that as 0). All-empty for a student with no row in the course yet.
+export type ApiCourseProfile = {
+  learningGoal: string | null
+  currentProficiency: ApiProficiencyLevel | null
+  comments: string | null
+  details: Details
+}
+
 // GET /v1/profiles/:profileId/detail — the profile page's data: full contact/background detail
 // plus the same track/exam-history shape the dashboard already assembles for "self," reused here
 // for any profile the caller is allowed to view (self, a teacher sharing a batch, or an admin).
 export type ApiProfileDetail = {
   profile: ApiProfile
-  // What this person has in the course the request names (the course-level component, from
-  // `courseProfile`) — keyed by field key like `ApiProfile.details`; counters (japam) are plain
-  // numbers here, absent until first written (read that as 0). Empty for a course with none.
-  courseDetails: Details
+  courseProfile: ApiCourseProfile
   dashboard: ApiDashboard
 }

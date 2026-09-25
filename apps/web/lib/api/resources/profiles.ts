@@ -1,6 +1,7 @@
 import type { Details } from '@narada/profile-fields'
 
 import { fetchApi, mutateApi } from '@/lib/api/client'
+import { updateCourseProfile, type UpdateCourseProfileInput } from '@/lib/api/resources/course-profile'
 import { getSelectedProfileId } from '@/lib/auth/profile-store'
 import type { ApiAuthProfile, ApiBatchWithRole, ApiProfile, ApiProfileDetail } from '@/lib/api/api-types'
 
@@ -42,8 +43,6 @@ export type UpdateProfileInput = Partial<
     | 'state'
     | 'country'
     | 'email'
-    | 'learningGoal'
-    | 'currentProficiency'
     | 'spokenLanguages'
     | 'readLanguages'
     | 'parentNames'
@@ -51,7 +50,6 @@ export type UpdateProfileInput = Partial<
     | 'noMeatAgreed'
     | 'noAlcoholAgreed'
     | 'noSmokingAgreed'
-    | 'comments'
   > & {
     // A *patch*: only the keys sent change, a blank string clears one. See
     // `lib/profile-details.ts::detailsPatch`, which builds it.
@@ -64,6 +62,20 @@ export async function updateProfile(
   patch: UpdateProfileInput,
 ): Promise<ApiProfile> {
   return mutateApi<ApiProfile>(`/profiles/${profileId}`, 'PATCH', patch)
+}
+
+// The profile page's edit form spans both components of a profile: the school-wide `profile` and this
+// course's `courseProfile` (goal, starting point, comments). Saving it is one PATCH to each — the
+// profile's first, and only the ones that carry something — so a failure in the second leaves the
+// first saved (the page reloads to show what's actually stored either way).
+export type SaveProfileInput = {
+  profile?: UpdateProfileInput
+  course?: UpdateCourseProfileInput
+}
+
+export async function saveProfile(profileId: string, input: SaveProfileInput): Promise<void> {
+  if (input.profile) await updateProfile(profileId, input.profile)
+  if (input.course) await updateCourseProfile(profileId, input.course)
 }
 
 // GET /v1/profiles/search — admin-only (AccessPolicy.requireCanSearchProfiles). Backs the "add a

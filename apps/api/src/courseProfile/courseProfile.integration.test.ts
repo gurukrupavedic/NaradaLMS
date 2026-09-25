@@ -8,7 +8,7 @@ import type { AccessPolicy } from '../utils/accessPolicy'
 import { destroyTestWorld } from '../testing/cleanup'
 import { createCourse, createProfile, createTestSchool, type TestWorld } from '../testing/fixtures'
 import * as repository from './repository'
-import { addToCounter, updateDetails } from './service'
+import { addToCounter, updateCourseProfile } from './service'
 
 // The service only ever calls `access.isSchoolAdmin()`, and only needs the school's and course's
 // slugs — a minimal fake avoids a real membership round trip in tests that aren't about access.
@@ -55,7 +55,7 @@ function as(
 }
 
 async function detailsOf(s: Seed, profileId: string, courseId = s.ved.id) {
-  return repository.findDetails(s.w.schoolDb, profileId, courseId)
+  return (await repository.find(s.w.schoolDb, profileId, courseId))?.details
 }
 
 describe('addToCounter', () => {
@@ -202,15 +202,56 @@ describe('per course', () => {
   })
 })
 
-describe('updateDetails', () => {
+describe('updateCourseProfile', () => {
   it('sets a counter outright, creating the row if there is none', async () => {
     const s = await seed()
     world = s.w
     const p = await createProfile(s.w, { userId: owner.id })
 
-    expect(await updateDetails(as(s, owner), p.id, { japam: 500 })).toEqual({ japam: 500 })
-    expect(await updateDetails(as(s, owner), p.id, { japam: 40 })).toEqual({ japam: 40 })
+    expect(
+      (await updateCourseProfile(as(s, owner), p.id, { details: { japam: 500 } })).details,
+    ).toEqual({ japam: 500 })
+    expect(
+      (await updateCourseProfile(as(s, owner), p.id, { details: { japam: 40 } })).details,
+    ).toEqual({ japam: 40 })
     expect(await detailsOf(s, p.id)).toEqual({ japam: 40 })
+  })
+
+  it('writes the three answers as columns, keeping details, and clears one with null', async () => {
+    const s = await seed()
+    world = s.w
+    const p = await createProfile(s.w, { userId: owner.id })
+    await addToCounter(as(s, owner), p.id, 'japam', 9)
+
+    const set = await updateCourseProfile(as(s, owner), p.id, {
+      learningGoal: 'Recite the Vedam',
+      currentProficiency: 'level1',
+      comments: 'Evenings only',
+    })
+    expect(set).toEqual({
+      learningGoal: 'Recite the Vedam',
+      currentProficiency: 'level1',
+      comments: 'Evenings only',
+      details: { japam: 9 },
+    })
+
+    const cleared = await updateCourseProfile(as(s, owner), p.id, { comments: null })
+    expect(cleared).toMatchObject({ learningGoal: 'Recite the Vedam', comments: null })
+  })
+
+  it('keeps the three answers per course, like details', async () => {
+    const s = await seed()
+    world = s.w
+    const other = await createCourse(s.w, { slug: 'other', name: 'Other' })
+    const p = await createProfile(s.w, { userId: owner.id })
+
+    await updateCourseProfile(as(s, owner), p.id, { learningGoal: 'in ved' })
+    await updateCourseProfile(as(s, owner, false, { school: 'slmts', course: other }), p.id, {
+      learningGoal: 'in other',
+    })
+
+    expect((await repository.find(s.w.schoolDb, p.id, s.ved.id))?.learningGoal).toBe('in ved')
+    expect((await repository.find(s.w.schoolDb, p.id, other.id))?.learningGoal).toBe('in other')
   })
 
   it('a rejected edit leaves nothing behind — not even the row it would have created', async () => {
@@ -218,10 +259,14 @@ describe('updateDetails', () => {
     world = s.w
     const p = await createProfile(s.w, { userId: owner.id })
 
-    await expect(updateDetails(as(s, owner), p.id, { japam: -1 })).rejects.toMatchObject({
+    await expect(
+      updateCourseProfile(as(s, owner), p.id, { details: { japam: -1 } }),
+    ).rejects.toMatchObject({
       statusCode: 400,
     })
-    await expect(updateDetails(as(s, owner), p.id, { unknown: 'x' })).rejects.toMatchObject({
+    await expect(
+      updateCourseProfile(as(s, owner), p.id, { details: { unknown: 'x' } }),
+    ).rejects.toMatchObject({
       statusCode: 400,
     })
 
@@ -247,14 +292,16 @@ describe('updateDetails', () => {
     let letGo!: () => void
     const goAhead = new Promise<void>(resolve => (letGo = resolve))
     const holder = s.w.schoolDb.transaction(async tx => {
-      await repository.lockDetails(tx, p.id, s.ved.id)
+      await repository.lock(tx, p.id, s.ved.id)
       lockTaken()
       await goAhead
-      await repository.replaceDetails(tx, p.id, s.ved.id, { japam: 5, note: 'from the other edit' })
+      await repository.update(tx, p.id, s.ved.id, {
+        details: { japam: 5, note: 'from the other edit' },
+      })
     })
 
     await taken
-    const edit = updateDetails(as(s, owner), p.id, { japam: 6 })
+    const edit = updateCourseProfile(as(s, owner), p.id, { details: { japam: 6 } })
     await new Promise(resolve => setTimeout(resolve, 150))
     letGo()
     await Promise.all([holder, edit])
@@ -272,7 +319,9 @@ describe('who may write', () => {
     await expect(addToCounter(as(s, stranger), p.id, 'japam', 1)).rejects.toMatchObject({
       statusCode: 404,
     })
-    await expect(updateDetails(as(s, stranger), p.id, { japam: 1 })).rejects.toMatchObject({
+    await expect(
+      updateCourseProfile(as(s, stranger), p.id, { details: { japam: 1 } }),
+    ).rejects.toMatchObject({
       statusCode: 404,
     })
     expect(await detailsOf(s, p.id)).toBeUndefined()
@@ -284,7 +333,7 @@ describe('who may write', () => {
     const p = await createProfile(s.w, { userId: owner.id })
 
     await addToCounter(as(s, stranger, true), p.id, 'japam', 30)
-    await updateDetails(as(s, stranger, true), p.id, { japam: 20 })
+    await updateCourseProfile(as(s, stranger, true), p.id, { details: { japam: 20 } })
 
     expect(await detailsOf(s, p.id)).toEqual({ japam: 20 })
   })
@@ -298,7 +347,9 @@ describe('who may write', () => {
     await expect(addToCounter(as(s, owner), p.id, 'japam', 1)).rejects.toMatchObject({
       statusCode: 404,
     })
-    await expect(updateDetails(as(s, stranger, true), p.id, { japam: 1 })).rejects.toMatchObject({
+    await expect(
+      updateCourseProfile(as(s, stranger, true), p.id, { details: { japam: 1 } }),
+    ).rejects.toMatchObject({
       statusCode: 404,
     })
   })

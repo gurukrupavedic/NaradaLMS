@@ -63,7 +63,8 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   if (error) return <ScreenError error={error} />
   if (!data) return <ScreenSkeleton rows={9} />
 
-  const { profile, dashboard, courseDetails } = data
+  const { profile, dashboard, courseProfile } = data
+  const courseDetails = courseProfile.details
   const learningTracks = buildLearningTracks(dashboard).sort((a, b) => a.order - b.order)
   const certifications = buildCertificationRows(dashboard)
   const certifiedCount = certifications.filter(c => isCertified(c.level)).length
@@ -135,12 +136,13 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
 
               <div className="px-4 py-4">
                 <dt className="label text-ink-muted">Goal</dt>
-                <dd className="mt-2 text-[0.9375rem] leading-relaxed">{profile.learningGoal ?? '—'}</dd>
+                <dd className="mt-2 text-[0.9375rem] leading-relaxed">{courseProfile.learningGoal ?? '—'}</dd>
 
                 <dt className="label mt-5 text-ink-muted">Self-reported starting point</dt>
                 <dd className="mt-2 text-[0.9375rem]">
-                  {profile.currentProficiency
-                    ? (SELF_REPORTED_PROFICIENCY_LABEL[profile.currentProficiency] ?? profile.currentProficiency)
+                  {courseProfile.currentProficiency
+                    ? (SELF_REPORTED_PROFICIENCY_LABEL[courseProfile.currentProficiency] ??
+                      courseProfile.currentProficiency)
                     : '—'}
                 </dd>
 
@@ -166,7 +168,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           </Reveal>
         )}
 
-        {(profile.parentNames.length > 0 || profile.comments || AGREEMENT_LABELS.some(({ key }) => profile[key])) && (
+        {(profile.parentNames.length > 0 || courseProfile.comments || AGREEMENT_LABELS.some(({ key }) => profile[key])) && (
           <Reveal delay={40}>
             <Section title="Family & agreements">
               <dl className="sheet grid grid-cols-1 divide-y divide-rule-soft sm:grid-cols-2 sm:divide-x sm:divide-y-0">
@@ -177,7 +179,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
                   </dd>
 
                   <dt className="label mt-5 text-ink-muted">Comments</dt>
-                  <dd className="mt-2 text-[0.9375rem] leading-relaxed">{profile.comments ?? '—'}</dd>
+                  <dd className="mt-2 text-[0.9375rem] leading-relaxed">{courseProfile.comments ?? '—'}</dd>
                 </div>
 
                 <div className="px-4 py-4">
@@ -281,6 +283,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           open={editOpen}
           onOpenChange={setEditOpen}
           profile={profile}
+          courseProfile={courseProfile}
           updating={updating}
           isSelf={isSelf}
         />
