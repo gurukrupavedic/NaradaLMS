@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SchoolDbClient } from '@narada/db'
 
 import { DbConstraint } from '../utils/dbError'
-import { createBatch, findByIdWithMembers, setClassSlots, updateBatch } from './service'
+import { createBatch, setClassSlots, updateBatch } from './service'
 import * as repository from './repository'
 import { CreateBatchSchema } from './schema'
 
@@ -13,13 +13,12 @@ vi.mock('./repository', () => ({
   findTrackForBatch: vi.fn(),
   nextBatchIndex: vi.fn(),
   findClassifiers: vi.fn(),
-  endActiveStudentSeats: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
   findById: vi.fn(),
-  findByIdWithMembers: vi.fn(),
   deleteClassSlots: vi.fn(),
   insertClassSlots: vi.fn(),
+  endActiveStudentSeats: vi.fn(),
   findExistingProfileIds: vi.fn(),
   insertInstructors: vi.fn(),
 }))
@@ -214,48 +213,6 @@ describe('updateBatch', () => {
       await updateBatch(context, 'batch-1', { status })
 
       expect(repository.endActiveStudentSeats).not.toHaveBeenCalled()
-    })
-  })
-})
-
-describe('findByIdWithMembers', () => {
-  beforeEach(() => {
-    vi.resetAllMocks()
-  })
-
-  it('returns the batch with its roster', async () => {
-    const detail = {
-      id: 'batch-1',
-      trackId: 'track-1',
-      courseId: 'course-1',
-      code: 'B1',
-      status: 'active' as const,
-      startDate: null,
-      meetingUrl: null,
-      members: [
-        {
-          profileId: 'profile-1',
-          name: 'Student One',
-          phone: null,
-          email: null,
-          city: null,
-          role: 'student' as const,
-          joinedAt: new Date(),
-          status: 'active' as const,
-        },
-      ],
-      classSlots: [],
-    }
-    vi.mocked(repository.findByIdWithMembers).mockResolvedValue(detail)
-
-    await expect(findByIdWithMembers(context, 'batch-1')).resolves.toEqual(detail)
-  })
-
-  it('throws 404 when the batch does not exist', async () => {
-    vi.mocked(repository.findByIdWithMembers).mockResolvedValue(undefined)
-
-    await expect(findByIdWithMembers(context, 'batch-1')).rejects.toMatchObject({
-      statusCode: 404,
     })
   })
 })

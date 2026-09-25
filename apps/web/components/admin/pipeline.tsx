@@ -28,7 +28,7 @@ export function Pipeline({ chapter }: { chapter: CatalogChapter }) {
   // can already open. Tinting the whole row instead put vermilion on 8 of 11
   // rows, which is the same mistake as flagging a setup gap on all 43 batches —
   // a mark that appears on the majority has stopped marking anything.
-  const breaks = chapter.status === 'published' && !content.hasText && !chapter.isCertification
+  const breaks = chapter.status === 'published' && !content.hasText
 
   return (
     <span className="flex shrink-0 items-center gap-px" aria-label="Content pipeline">

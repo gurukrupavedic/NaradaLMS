@@ -8,7 +8,7 @@ import { enrollProfile, moveEnrollmentToBatch, putStudentOnBreak } from '@/lib/a
 
 /**
  * Admin "add a student" (components/admin/add-student-drawer.tsx). Besides this batch's own
- * detail view (the roster it renders comes straight from `GET /batches/:batchId`), every cached
+ * detail view (its roster comes from `GET /profiles/:id/batches?withDetail=true`), every cached
  * profile search is invalidated too — the profile just added is now enrolled here, so a search
  * result still showing its "Add" button, unrefreshed, would let the admin re-click into a 409 the
  * search itself could have prevented. `profileName` isn't sent anywhere — it's only there so the
@@ -78,7 +78,7 @@ export function useMoveEnrollment(code: string, batchId: string) {
  * The mark book's "Mark on break" row action (components/mark-book.tsx, wired from
  * components/admin/batch-detail.tsx and components/teaching-list.tsx) — same batchId/invalidateKey
  * shape as use-evaluation-mutations.ts's useSetEvaluation, since the two screens read from
- * different endpoints (`GET /batches/:id` vs. `GET /me/dashboard`) and each needs its own query
+ * different endpoints (`GET /profiles/:id/batches` vs. `GET /me/dashboard`) and each needs its own query
  * invalidated once the student drops off the roster.
  */
 export function useSetOnBreak(batchId: string, invalidateKey: readonly unknown[]) {

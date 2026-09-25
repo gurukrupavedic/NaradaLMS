@@ -203,13 +203,11 @@ function CatalogRow({ track }: { track: CatalogTrack }) {
         {...prefetch}
         className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-ink/[0.03]"
       >
-        {/* Order, not the name again — a real track has only the one name, and repeating it in
-            both columns read as a rendering bug rather than a second field with nothing in it. */}
         <span className="w-20 shrink-0 font-mono text-[0.75rem] text-ink-muted">
           {String(track.order).padStart(2, '0')}
         </span>
         <span className="min-w-0 flex-1 truncate text-[0.9375rem]">
-          {track.subtitle ?? track.name}
+          {track.name}
         </span>
         {summary.publishedButEmpty > 0 && (
           <span className="label shrink-0 text-vermilion">{summary.publishedButEmpty} empty</span>

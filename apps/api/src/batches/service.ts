@@ -8,7 +8,6 @@ import { constraintNameOf, DbConstraint, withConstraintMapping } from '../utils/
 import * as repository from './repository'
 import type {
   Batch,
-  BatchDetail,
   BatchWithRole,
   ClassSlot,
   CreateBatchData,
@@ -42,13 +41,6 @@ export async function findAllAccessibleWithDetail(
 
 export async function findById(context: BatchServiceContext, id: string): Promise<Batch> {
   return orNotFound(await repository.findById(context.db, id))
-}
-
-export async function findByIdWithMembers(
-  context: BatchServiceContext,
-  id: string,
-): Promise<BatchDetail> {
-  return orNotFound(await repository.findByIdWithMembers(context.db, id))
 }
 
 // Retries beat asking the caller to resubmit for what's normally a same-request race (two admins

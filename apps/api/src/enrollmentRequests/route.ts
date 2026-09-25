@@ -23,16 +23,6 @@ router.get(
   }),
 )
 
-router.get(
-  '/:enrollmentRequestId',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { enrollmentRequestId } = await parse(z.object({ enrollmentRequestId: z.uuid() }), req.params)
-    const row = await findById({ db }, enrollmentRequestId)
-    access.requireCanCreateEnrollment(row.batchId)
-    res.status(200).json({ data: row })
-  }),
-)
-
 function reviewHandler(action: typeof approve | typeof reject) {
   return optionalProfileRoute(async ({ req, res, db, access, profile }) => {
     const { enrollmentRequestId } = await parse(z.object({ enrollmentRequestId: z.uuid() }), req.params)

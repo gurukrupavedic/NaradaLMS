@@ -13,9 +13,8 @@
  * sees a syllabus of titles with nothing behind them. Nothing else in the app
  * surfaces that; the catalog puts it in the primary column.
  *
- * `lib/api/store.ts` seeds real `CatalogTrack`s from `GET /v1/tracks` (via
- * `lib/api/reshape.ts`'s `buildCatalogTrack`). This module is the shape every
- * real and locally-edited track shares, plus the derivations
+ * `lib/api/resources/catalog.ts` builds real `CatalogTrack`s from `GET /v1/tracks` (via
+ * `lib/api/reshape.ts`'s `buildCatalogTrack`). This module is their shape, plus the derivations
  * (`pipelineOf`/`isReady`/`summariseTrack`) that read it.
  */
 
@@ -35,18 +34,12 @@ export type CatalogChapter = {
   code: string
   title: string
   status: 'draft' | 'published'
-  isCertification: boolean
   content: ChapterContentState
 }
 
 export type CatalogTrack = {
   id: string
   name: string
-  // Real tracks (`ApiTrack` in lib/api/api-types.ts) have no subtitle column. Optional so the real
-  // path (`lib/api/reshape.ts`'s `buildCatalogTrack`) can leave it unset rather than fake a value,
-  // the same way `LadderTrack`'s own `subtitle` (components/track-ladder.tsx) already does for the
-  // student-facing view.
-  subtitle?: string
   order: number
   batchCodes: string[]
   chapters: CatalogChapter[]
@@ -96,6 +89,6 @@ export function summariseTrack(track: CatalogTrack) {
     ready: track.chapters.filter(c => isReady(c.content)).length,
     // The number that matters: chapters a student can already open and find
     // nothing in.
-    publishedButEmpty: published.filter(c => !c.content.hasText && !c.isCertification).length,
+    publishedButEmpty: published.filter(c => !c.content.hasText).length,
   }
 }

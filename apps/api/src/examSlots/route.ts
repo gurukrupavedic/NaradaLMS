@@ -10,8 +10,6 @@ import {
   findEligibleTrackIds,
   findManyRequests,
   findManySlots,
-  findRequestByIdWithDetail,
-  findSlotByIdWithDetail,
   openSlot,
   reject,
   request,
@@ -19,10 +17,10 @@ import {
 
 const router = Router()
 
-// A slot carries no personal data — just a track, a time and who opened it — so listing or reading
-// one needs no dedicated access check beyond ordinary school membership (already enforced upstream
-// by `naradaRoute`'s course/school resolution). Compare the `/requests` routes below, which do
-// check, because a *request* carries a student.
+// A slot carries no personal data — just a track, a time and who opened it — so listing them needs
+// no dedicated access check beyond ordinary school membership (already enforced upstream by
+// `naradaRoute`'s course/school resolution). Compare the `/requests` route below, which does check,
+// because a *request* carries a student.
 router.get(
   '/',
   optionalProfileRoute(async ({ req, res, db, getCourse }) => {
@@ -32,9 +30,6 @@ router.get(
   }),
 )
 
-// Registered before `/:examSlotId` below — as a literal path it must win over that single-segment
-// wildcard, or a request for "the requests list" would instead be parsed as "the slot whose id is
-// the literal string 'requests'" and 400 on the uuid check.
 router.get(
   '/requests',
   optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
@@ -46,31 +41,11 @@ router.get(
 )
 
 // The caller's own eligibility, so `profileRoute` — there's nothing to compute without a profile.
-// Registered before `/:examSlotId` for the same literal-beats-wildcard reason as `/requests`.
 router.get(
   '/eligibility',
   profileRoute(async ({ res, db, profile, getCourse }) => {
     const trackIds = await findEligibleTrackIds({ db }, profile.id, (await getCourse()).id)
     res.status(200).json({ data: trackIds })
-  }),
-)
-
-router.get(
-  '/:examSlotId',
-  optionalProfileRoute(async ({ req, res, db }) => {
-    const { examSlotId } = await parse(z.object({ examSlotId: z.uuid() }), req.params)
-    const slot = await findSlotByIdWithDetail({ db }, examSlotId)
-    res.status(200).json({ data: slot })
-  }),
-)
-
-router.get(
-  '/requests/:examSlotRequestId',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { examSlotRequestId } = await parse(z.object({ examSlotRequestId: z.uuid() }), req.params)
-    const row = await findRequestByIdWithDetail({ db }, examSlotRequestId)
-    access.requireCanReadExamSlotRequest(row)
-    res.status(200).json({ data: row })
   }),
 )
 

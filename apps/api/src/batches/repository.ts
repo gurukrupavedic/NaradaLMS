@@ -199,16 +199,6 @@ export async function findOpen(db: SchoolDb, courseId: string): Promise<Omit<Ope
   })
 }
 
-/** Batch detail plus its roster and recurring schedule — one relational query, not a fan-out. */
-export async function findByIdWithMembers(db: SchoolDb, id: string): Promise<BatchDetail | undefined> {
-  const row = await db.query.batch.findFirst({
-    where: (t, { eq }) => eq(t.id, id),
-    with: WITH_DETAIL,
-  })
-
-  return row && toBatchDetail(row)
-}
-
 /**
  * Deletes a batch's entire current recurring schedule. Paired with {@link insertClassSlots} by
  * the service inside one transaction — a full replace rather than a diff/upsert, matching the

@@ -22,7 +22,6 @@ import {
   deleteClassSlots,
   findAccessible,
   findAccessibleWithDetail,
-  findByIdWithMembers,
   insertClassSlots,
 } from './repository'
 import { CreateBatchSchema, UpdateBatchSchema } from './schema'
@@ -210,7 +209,22 @@ describe('findAccessible pagination (§3.4/§9.1 compound cursor)', () => {
   })
 })
 
-describe('findByIdWithMembers (batch detail with roster)', () => {
+/**
+ * One batch with its roster and schedule, through the admin list read `findAccessibleWithDetail` — the
+ * same shaping (`toBatchDetail`) that `GET /profiles/:id/batches?withDetail` serves.
+ */
+async function detailOf(w: TestWorld, batchId: string) {
+  const { items } = await findAccessibleWithDetail(
+    w.schoolDb,
+    { limit: 100 },
+    { kind: 'all' },
+    crypto.randomUUID(),
+    await defaultCourseId(w),
+  )
+  return items.find(item => item.id === batchId)
+}
+
+describe('batch detail with roster (findAccessibleWithDetail)', () => {
   it('returns the batch with every enrolled member, including name/phone/email/city/role/joinedAt', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
@@ -224,7 +238,7 @@ describe('findByIdWithMembers (batch detail with roster)', () => {
     await enroll(world, instructorProfile, batchRow, 'instructor')
     await enroll(world, studentProfile, batchRow, 'student')
 
-    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    const detail = await detailOf(world, batchRow.id)
 
     expect(detail?.id).toBe(batchRow.id)
     expect(detail?.members).toHaveLength(2)
@@ -266,7 +280,7 @@ describe('findByIdWithMembers (batch detail with roster)', () => {
       await enroll(world, await createProfile(world, { name }), batchRow, role)
     }
 
-    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    const detail = await detailOf(world, batchRow.id)
 
     expect(detail?.members.map(m => m.name)).toEqual([
       'Cy Instructor',
@@ -283,15 +297,9 @@ describe('findByIdWithMembers (batch detail with roster)', () => {
     const trackRow = await createTrack(world)
     const batchRow = await createBatch(world, trackRow)
 
-    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    const detail = await detailOf(world, batchRow.id)
 
     expect(detail?.members).toEqual([])
-  })
-
-  it('returns undefined for a nonexistent batch', async () => {
-    world = await createTestSchool()
-
-    await expect(findByIdWithMembers(world.schoolDb, crypto.randomUUID())).resolves.toBeUndefined()
   })
 
   it('eager-loads the recurring class schedule alongside the roster', async () => {
@@ -303,7 +311,7 @@ describe('findByIdWithMembers (batch detail with roster)', () => {
       { dayOfWeek: 3, time: '15:30', durationMinutes: 45 },
     ])
 
-    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    const detail = await detailOf(world, batchRow.id)
 
     expect(detail?.classSlots).toHaveLength(2)
     expect(detail?.classSlots).toContainEqual({ dayOfWeek: 1, time: '09:00:00', durationMinutes: 60 })
@@ -348,7 +356,7 @@ describe('setClassSlots (PUT /batches/:batchId/schedule — real gap: recurring 
     })
 
     expect(result).toEqual([{ dayOfWeek: 5, time: '18:00:00', durationMinutes: 30 }])
-    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    const detail = await detailOf(world, batchRow.id)
     expect(detail?.classSlots).toEqual([{ dayOfWeek: 5, time: '18:00:00', durationMinutes: 30 }])
   })
 
@@ -363,7 +371,7 @@ describe('setClassSlots (PUT /batches/:batchId/schedule — real gap: recurring 
     const result = await setClassSlots({ db: world.schoolDb }, batchRow.id, { slots: [] })
 
     expect(result).toEqual([])
-    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    const detail = await detailOf(world, batchRow.id)
     expect(detail?.classSlots).toEqual([])
   })
 
@@ -397,8 +405,8 @@ describe('setClassSlots (PUT /batches/:batchId/schedule — real gap: recurring 
 
     await setClassSlots({ db: world.schoolDb }, batchA.id, { slots: [] })
 
-    const detailA = await findByIdWithMembers(world.schoolDb, batchA.id)
-    const detailB = await findByIdWithMembers(world.schoolDb, batchB.id)
+    const detailA = await detailOf(world, batchA.id)
+    const detailB = await detailOf(world, batchB.id)
     expect(detailA?.classSlots).toEqual([])
     expect(detailB?.classSlots).toEqual([{ dayOfWeek: 2, time: '11:00:00', durationMinutes: 60 }])
   })
@@ -441,7 +449,7 @@ describe('setClassSlots (PUT /batches/:batchId/schedule — real gap: recurring 
       }),
     ).rejects.toSatisfy((error: unknown) => pgErrorCode(error) === '23505')
 
-    const detail = await findByIdWithMembers(world.schoolDb, batchRow.id)
+    const detail = await detailOf(world, batchRow.id)
     expect(detail?.classSlots).toEqual([{ dayOfWeek: 1, time: '09:00:00', durationMinutes: 60 }])
   })
 })
@@ -567,7 +575,7 @@ describe(
   },
 )
 
-describe('updateBatch (real gap: PATCH /batches/:batchId must not accept trackId, §9.4)', () => {
+describe('updateBatch (real gap: PATCH /batches/:batchId must not accept trackId)', () => {
   it("a trackId in the request body never reaches the DB — the batch's real track is unchanged", async () => {
     world = await createTestSchool()
     const originalTrack = await createTrack(world)
@@ -575,7 +583,7 @@ describe('updateBatch (real gap: PATCH /batches/:batchId must not accept trackId
     const batchRow = await createBatch(world, originalTrack)
 
     // Mirrors exactly what the route does: parse the request body through the real schema, then
-    // hand the (already-stripped) result to the service — not a hand-constructed service call.
+    // hand the (already-stripped) result to the service — not a hand-constructed service call, same convention as the `updateBatch` test above.
     const data = await parse(UpdateBatchSchema, { trackId: otherTrack.id, code: 'renamed' })
     const updated = await updateBatch({ db: world.schoolDb }, batchRow.id, data)
 
@@ -589,7 +597,7 @@ describe('createBatch generates the code (real gap: manual code entry replaced)'
 
   // Mirrors exactly what the route does: parse the request body through the real schema (so the
   // classifier's uppercase transform actually runs), then hand the result to the service — not a
-  // hand-constructed service call, same convention as the `updateBatch` test above.
+  // hand-constructed service call.
   async function create(w: TestWorld, trackId: string, classifier: string, courseSlug: string) {
     const teacher = await createProfile(w)
     const data = await parse(CreateBatchSchema, { trackId, classifier, instructorIds: [teacher.id] })

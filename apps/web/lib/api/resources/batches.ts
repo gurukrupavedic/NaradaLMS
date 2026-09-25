@@ -66,12 +66,11 @@ export async function fetchAdminBatches(): Promise<AdminBatchesPayload> {
   }
 }
 
-// GET /v1/batches/:batchId — looked up by `code` (the admin overview's route param), since the
-// bare batch id isn't part of this app's URLs; reuses the same withDetail list rather than a
-// separate by-code lookup endpoint (apps/api's GET /batches/:batchId takes a UUID, not a
-// code). The roster's per-chapter marks come from GET /batches/:batchId/evaluations — the same
-// endpoint the live app's batch-detail page uses — via `buildRoster` (shared with the dashboard's
-// teaching panel).
+// One batch, looked up by `code` (the admin overview's route param), since the bare batch id isn't
+// part of this app's URLs: it picks the batch out of the same withDetail list the overview reads
+// (`GET /profiles/:profileId/batches?withDetail=true`). The roster's per-chapter marks come from
+// `GET /batches/:batchId/evaluations`, via `buildRoster` (shared with the dashboard's teaching
+// panel).
 export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
   const { items, tracksById } = await fetchAdminBatchesWithTracks()
   const batch = items.find(b => b.code === code)

@@ -3,7 +3,7 @@ import * as z from 'zod'
 
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { findAll, findByIdForReader, reorderChapters } from './service'
+import { findAll, reorderChapters } from './service'
 import { ReorderChaptersSchema } from './schema'
 
 const router = Router()
@@ -18,16 +18,6 @@ router.get(
     await access.requireCanReadCourseContent(course.id)
     const tracks = await findAll({ db }, view, course.id)
     res.status(200).json({ data: tracks })
-  }),
-)
-
-router.get(
-  '/:trackId',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { trackId } = await parse(z.object({ trackId: z.uuid() }), req.params)
-    const view = access.getContentReadView()
-    const track = await findByIdForReader({ db }, trackId, view, access)
-    res.status(200).json({ data: track })
   }),
 )
 

@@ -188,15 +188,13 @@ describe('GET /tracks — the course the request names', () => {
   })
 })
 
-describe('GET /tracks/:id and /chapters/:id — by id', () => {
+describe('GET /chapters/:id — by id', () => {
   it('serves content in a course the caller is part of', async () => {
     const s = await seed()
     world = s.w
 
-    const track = await get(s, `/tracks/${s.vedamTrack.id}`, s.vedamStudent)
     const chapter = await get(s, `/chapters/${s.vedamChapter.id}`, s.vedamStudent)
 
-    expect(track.status).toBe(200)
     expect(chapter.status).toBe(200)
   })
 
@@ -204,7 +202,6 @@ describe('GET /tracks/:id and /chapters/:id — by id', () => {
     const s = await seed()
     world = s.w
 
-    const otherTrack = await get(s, `/tracks/${s.smartamTrack.id}`, s.vedamStudent)
     const otherChapter = await get(s, `/chapters/${s.smartamChapter.id}`, s.vedamStudent)
     const missingChapter = await get(
       s,
@@ -212,7 +209,6 @@ describe('GET /tracks/:id and /chapters/:id — by id', () => {
       s.vedamStudent,
     )
 
-    expect(otherTrack.status).toBe(404)
     expect(otherChapter.status).toBe(404)
     expect(missingChapter.status).toBe(404)
     expect(otherChapter.body).toEqual(missingChapter.body)
@@ -240,10 +236,8 @@ describe('GET /tracks/:id and /chapters/:id — by id', () => {
     const s = await seed()
     world = s.w
 
-    const track = await get(s, `/tracks/${s.vedamTrack.id}`, s.nobody)
     const chapter = await get(s, `/chapters/${s.vedamChapter.id}`, s.nobody)
 
-    expect(track.status).toBe(404)
     expect(chapter.status).toBe(404)
   })
 })

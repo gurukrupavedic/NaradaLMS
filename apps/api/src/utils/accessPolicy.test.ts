@@ -30,7 +30,6 @@ import { AccessPolicy } from './accessPolicy'
 import * as enrollmentService from '../enrollment/service'
 import type { User } from '../session'
 import type { Exam } from '../exams/schema'
-import type { ExamSlotRequest } from '../examSlots/schema'
 
 const school = { id: 'school-1' } as Parameters<typeof AccessPolicy.load>[0]['school']
 
@@ -102,7 +101,7 @@ describe('AccessPolicy.load / normalizeSchoolRole (DD-010)', () => {
   })
 })
 
-describe('AccessPolicy#hasBatchPermission / requireCanReadBatch', () => {
+describe('AccessPolicy#hasBatchPermission', () => {
   it("grants a batch permission the actor's own enrollment role satisfies", async () => {
     mockMembership('member')
 
@@ -114,7 +113,6 @@ describe('AccessPolicy#hasBatchPermission / requireCanReadBatch', () => {
     })
 
     expect(access.hasBatchPermission('batch-1', { enrollment: ['read'] })).toBe(true)
-    expect(() => access.requireCanReadBatch('batch-1')).not.toThrow()
   })
 
   it('denies a batch the actor has no enrollment role in', async () => {
@@ -128,20 +126,8 @@ describe('AccessPolicy#hasBatchPermission / requireCanReadBatch', () => {
     })
 
     expect(access.hasBatchPermission('batch-2', { enrollment: ['read'] })).toBe(false)
-    expect(() => access.requireCanReadBatch('batch-2')).toThrow()
   })
 
-  it('a school admin can read any batch regardless of enrollment role', async () => {
-    mockMembership('admin')
-
-    const access = await AccessPolicy.load({
-      db: schoolDbWithEnrollments([]),
-      school,
-      user: user(),
-    })
-
-    expect(() => access.requireCanReadBatch('batch-1')).not.toThrow()
-  })
 })
 
 describe('AccessPolicy — enrollment (batch roster)', () => {
@@ -195,7 +181,7 @@ describe('AccessPolicy — enrollment (batch roster)', () => {
   })
 })
 
-describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
+describe('AccessPolicy — exams', () => {
   const examOf = (studentId: string) => ({ studentId }) as Exam
 
   // Which batches each student is enrolled in, as `isEnrolledInAnyBatch` would answer it.
@@ -334,21 +320,6 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
     expect(() => superAdmin.getOwnExamScope()).toThrow()
   })
 
-  it("requireCanReadExam allows the exam's own student, an admin, or a teacher of a batch the student is in", async () => {
-    mockMembership('member')
-    const access = await AccessPolicy.load({
-      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'instructor' }]),
-      school,
-      user: user(),
-      profile,
-    })
-
-    await expect(access.requireCanReadExam(examOf('student-in-batch-1'))).resolves.toBeUndefined()
-    await expect(access.requireCanReadExam(examOf('profile-1'))).resolves.toBeUndefined()
-    await expect(access.requireCanReadExam(examOf('student-in-batch-2'))).rejects.toThrow()
-    await expect(access.requireCanReadExam(examOf('student-in-none'))).rejects.toThrow()
-  })
-
   it('requireCanCreateExam is school-admin (or super-admin) only — a batch instructor/TA role does not grant it', async () => {
     mockMembership('member')
     const instructorAccess = await AccessPolicy.load({
@@ -462,44 +433,6 @@ describe('AccessPolicy — exams (DD-003/DD-005/DD-006)', () => {
 })
 
 describe('AccessPolicy — exam slot requests', () => {
-  const requestBy = (studentId: string) => ({ studentId }) as ExamSlotRequest
-
-  it('requireCanReadExamSlotRequest allows the request\'s own student', async () => {
-    mockMembership('member')
-    const access = await AccessPolicy.load({
-      db: schoolDbWithEnrollments([]),
-      school,
-      user: user(),
-      profile,
-    })
-
-    expect(() => access.requireCanReadExamSlotRequest(requestBy('profile-1'))).not.toThrow()
-    expect(() => access.requireCanReadExamSlotRequest(requestBy('someone-else'))).toThrow()
-  })
-
-  it('requireCanReadExamSlotRequest allows a school admin to read anyone\'s request, batch role notwithstanding', async () => {
-    mockMembership('admin')
-    const access = await AccessPolicy.load({
-      db: schoolDbWithEnrollments([]),
-      school,
-      user: user(),
-      profile,
-    })
-
-    expect(() => access.requireCanReadExamSlotRequest(requestBy('someone-else'))).not.toThrow()
-  })
-
-  it('requireCanReadExamSlotRequest allows a super admin', async () => {
-    mockMembership(undefined)
-    const access = await AccessPolicy.load({
-      db: schoolDbWithEnrollments([]),
-      school,
-      user: user({ isSuperAdmin: true }),
-    })
-
-    expect(() => access.requireCanReadExamSlotRequest(requestBy('someone-else'))).not.toThrow()
-  })
-
   it('getExamSlotRequestVisibility returns "all" for a school admin, "own" for anyone else — never widened by a batch role', async () => {
     mockMembership('admin')
     const adminAccess = await AccessPolicy.load({
@@ -550,19 +483,6 @@ describe('AccessPolicy — evaluations (§10.3–§10.5)', () => {
 
     expect(() => access.requireCanReadBatchEvaluations('batch-1')).not.toThrow()
     expect(() => access.requireCanReadBatchEvaluations('batch-2')).toThrow()
-  })
-
-  it('requireCanReadStudentEvaluations: self needs evaluation:read, another student needs evaluation:create', async () => {
-    mockMembership('member')
-    const access = await AccessPolicy.load({
-      db: schoolDbWithEnrollments([{ batchId: 'batch-1', role: 'student' }]),
-      school,
-      user: user(),
-      profile,
-    })
-
-    expect(() => access.requireCanReadStudentEvaluations('batch-1', 'profile-1')).not.toThrow()
-    expect(() => access.requireCanReadStudentEvaluations('batch-1', 'someone-else')).toThrow()
   })
 
   it('requireCanCreateEvaluation allows a school admin, a super admin, or a batch evaluation:create role', async () => {

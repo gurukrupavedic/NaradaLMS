@@ -100,15 +100,6 @@ export async function findSlotById(db: SchoolDb, id: string): Promise<ExamSlot |
   })
 }
 
-/** The `GET /exam-slots/:examSlotId` read path — list-detail equivalence, not a separate, thinner shape. */
-export async function findSlotByIdWithDetail(db: SchoolDb, id: string): Promise<ExamSlotWithDetail | undefined> {
-  const row = await db.query.examSlot.findFirst({
-    where: (t, { eq: eqCol }) => eqCol(t.id, id),
-    with: SLOT_DETAIL,
-  })
-  return row && toSlotDetail(row)
-}
-
 /**
  * Lists requests visible under `scope` — an admin sees every one in `courseId`, a student only
  * their own — newest-first with a matching compound cursor, mirroring
@@ -158,18 +149,6 @@ export async function findRequestById(db: SchoolDb, id: string): Promise<ExamSlo
   return db.query.examSlotRequest.findFirst({
     where: (t, { eq: eqCol }) => eqCol(t.id, id),
   })
-}
-
-/** The `GET /exam-slots/requests/:examSlotRequestId` read path — list-detail equivalence, not a separate, thinner shape. */
-export async function findRequestByIdWithDetail(
-  db: SchoolDb,
-  id: string,
-): Promise<ExamSlotRequestWithDetail | undefined> {
-  const row = await db.query.examSlotRequest.findFirst({
-    where: (t, { eq: eqCol }) => eqCol(t.id, id),
-    with: REQUEST_DETAIL,
-  })
-  return row && toRequestDetail(row)
 }
 
 /** Backs the "one pending request per student per track" friendly precheck in `service.ts::request`

@@ -13,7 +13,6 @@ import {
   correctExamResult,
   createExam,
   findById,
-  findByIdWithDetail,
   findExams,
   recordExamResult,
   updateExam,
@@ -28,16 +27,6 @@ router.get(
     const visibility = query.mine ? access.getOwnExamScope() : access.getExamVisibility()
     const exams = await findExams({ db }, query, visibility, (await getCourse()).id)
     res.status(200).json({ data: exams })
-  }),
-)
-
-router.get(
-  '/:examId',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
-    const exam = await findByIdWithDetail({ db }, examId)
-    await access.requireCanReadExam(exam)
-    res.status(200).json({ data: exam })
   }),
 )
 

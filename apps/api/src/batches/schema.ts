@@ -23,10 +23,8 @@ export const BatchSchema = z.object({
   meetingUrl: httpsUrl.nullable(),
 })
 
-// "View a batch" includes "see who's in it" — this is a capability, not just a richer response
-// shape, so it lives on the same GET /batches/:batchId a caller already uses (see PARITY_PLAN.md
-// §1.2: no reason this needs to be a separate endpoint just because apps/api/src also happens to
-// inline it here).
+// A batch's roster: who is enrolled in it. Returned with the batch list that carries detail
+// (`GET /profiles/:profileId/batches?withDetail=true`) rather than through a batch-by-id read.
 export type BatchMember = z.infer<typeof BatchMemberSchema>
 export const BatchMemberSchema = z.object({
   profileId: z.uuid(),

@@ -8,7 +8,6 @@ import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema, UpdateBatchS
 import {
   createBatch,
   findAllAccessible,
-  findByIdWithMembers,
   findClassifiers,
   findOpenBatches,
   setClassSlots,
@@ -49,16 +48,6 @@ router.get(
     access.requireCanCreateBatch()
     const classifiers = await findClassifiers({ db }, (await getCourse()).id)
     res.status(200).json({ data: classifiers })
-  }),
-)
-
-router.get(
-  '/:batchId',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    access.requireCanReadBatch(batchId)
-    const batch = await findByIdWithMembers({ db }, batchId)
-    res.status(200).json({ data: batch })
   }),
 )
 
