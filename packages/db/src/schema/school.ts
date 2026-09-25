@@ -8,7 +8,6 @@ import {
   boolean,
   timestamp,
   time,
-  date,
   jsonb,
   uuid,
   index,
@@ -19,7 +18,6 @@ import {
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
 import { COURSE_SLUG_PATTERN, RESERVED_COURSE_SLUGS } from '../courseSlug'
-import { COUNTER_DAILY_MAX } from '../counter'
 
 // Declared before `profile` (below) since `profile.currentProficiency` references it — a pgEnum
 // value must exist before a pgTable call closes over it.
@@ -97,51 +95,36 @@ export const profile = pgTable(
 
 export type SchoolProfile = typeof profile.$inferSelect
 
-// A running total a student keeps within a course — japam, today — as a dated log: one row per
-// profile, course, counter and day they logged any. Which counters exist (and what they are called)
-// is declared per school and course in `@narada/profile-fields` (`counterFieldsFor`); `counterKey` is
-// that declaration's permanent key. The total is a sum over whatever window is asked for — a year,
-// a lifetime, a range — so nothing here (or in the API) assumes the count resets annually. A day's
-// row is created and grown by an atomic upsert (`count = count + n`), which is why this is a table
-// and not a number in `profile.details`: a single number has no history to window, and would have
-// nowhere to keep "this year" once a total is being reset. Only the school's own analytics read
-// it beyond the profile page; it feeds no grading.
-export const counterLog = pgTable(
-  'counterLog',
+// The course-level component of a profile: what a person has *in one course*, as opposed to the
+// school-level `profile`. Same shape as `profile.details` — a `details` jsonb driven by the rules in
+// `@narada/profile-fields` (`courseFieldsFor(school, course)`), including counters (japam), which
+// are just numbers here. At most one row per profile per course (the primary key); a profile has as
+// many as it has courses. It is created when a registration is approved, or lazily by the first
+// course-level write (a student an admin put on a roster has none until then). It does not say who
+// is *in* the course — enrollments do; this only holds what we know about them there.
+export const courseProfile = pgTable(
+  'courseProfile',
   {
     profileId: uuid('profileId')
       .notNull()
       .references(() => profile.id),
-    // A profile belongs to the school, but a counter belongs to a course: the same student keeps a
-    // separate count in each course that defines one.
     courseId: uuid('courseId')
       .notNull()
       .references(() => course.id),
-    counterKey: text('counterKey').notNull(),
-    // A calendar date in the *profile's own* time zone (`profile.countryTimeZone`), as
-    // 'YYYY-MM-DD' — not an instant. "Today" is the student's today, so a late-evening sitting
-    // counts for the day they sat it, wherever the server or an admin viewing it happens to be.
-    loggedOn: date('loggedOn', { mode: 'string' }).notNull(),
-    count: integer('count').notNull(),
+    details: jsonb('details')
+      .$type<Record<string, string | number | boolean>>()
+      .notNull()
+      .default({}),
     updatedAt: timestamp('updatedAt')
       .defaultNow()
       .notNull()
       .$onUpdateFn(() => new Date()),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
   },
-  table => [
-    // One row per profile, course, counter and day: the upsert's conflict target, and the index
-    // every read of one counter (and a date range of it) uses.
-    primaryKey({ columns: [table.profileId, table.courseId, table.counterKey, table.loggedOn] }),
-    // A day with nothing logged has no row at all (setting a day to 0 deletes it), so every
-    // stored count is positive.
-    check(
-      'counterLog_count_valid',
-      sql`${table.count} > 0 AND ${table.count} <= ${sql.raw(String(COUNTER_DAILY_MAX))}`,
-    ),
-  ],
+  table => [primaryKey({ columns: [table.profileId, table.courseId] })],
 )
 
-export type CounterLogRow = typeof counterLog.$inferSelect
+export type CourseProfileRow = typeof courseProfile.$inferSelect
 
 export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])

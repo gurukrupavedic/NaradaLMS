@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { publicDb } from '@narada/db'
+import { and, eq } from 'drizzle-orm'
+
+import { courseProfile, publicDb } from '@narada/db'
 
 import { destroyTestWorld } from '../testing/cleanup'
 import {
@@ -43,7 +45,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb, school: { slug: 'test' } },
+      { db: world.schoolDb, school: { slug: 'test' }, course: { slug: 'ved' } },
       {
         firstName: 'Anjali',
         lastName: 'Rao',
@@ -67,7 +69,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb, school: { slug: 'test' } },
+      { db: world.schoolDb, school: { slug: 'test' }, course: { slug: 'ved' } },
       { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15551234567' },
       (await createCourse(world)).id,
     )
@@ -83,7 +85,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb, school: { slug: 'test' } },
+      { db: world.schoolDb, school: { slug: 'test' }, course: { slug: 'ved' } },
       {
         firstName: 'Anjali',
         lastName: 'Rao',
@@ -103,7 +105,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb, school: { slug: 'test' } },
+      { db: world.schoolDb, school: { slug: 'test' }, course: { slug: 'ved' } },
       { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15556660098' },
       (await createCourse(world)).id,
     )
@@ -119,7 +121,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     const row = await submit(
-      { db: world.schoolDb, school: { slug: 'slmts' } },
+      { db: world.schoolDb, school: { slug: 'slmts' }, course: { slug: 'ved' } },
       {
         ...applicant,
         details: { gothram: 'Bharadwaja', married: false, gothramSpouse: 'stale', gothramMother: 'Vasishta' },
@@ -134,7 +136,7 @@ describe('submit', () => {
     world = await createTestSchool()
 
     await expect(
-      submit({ db: world.schoolDb, school: { slug: 'rr' } }, applicant, (await createCourse(world)).id),
+      submit({ db: world.schoolDb, school: { slug: 'rr' }, course: { slug: 'ved' } }, applicant, (await createCourse(world)).id),
     ).rejects.toMatchObject({ statusCode: 400, message: 'details.gothram: is required' })
   })
 
@@ -143,7 +145,7 @@ describe('submit', () => {
 
     await expect(
       submit(
-        { db: world.schoolDb, school: { slug: 'slmts' } },
+        { db: world.schoolDb, school: { slug: 'slmts' }, course: { slug: 'ved' } },
         { ...applicant, details: { gothram: 'A', married: true, gothramMother: 'B' } },
         (await createCourse(world)).id,
       ),
@@ -155,10 +157,10 @@ describe('submit', () => {
     const courseId = (await createCourse(world)).id
 
     await expect(
-      submit({ db: world.schoolDb, school: { slug: 'rr' } }, { ...applicant, details: { gothram: 'A', gothramMother: 'B' } }, courseId),
+      submit({ db: world.schoolDb, school: { slug: 'rr' }, course: { slug: 'ved' } }, { ...applicant, details: { gothram: 'A', gothramMother: 'B' } }, courseId),
     ).rejects.toMatchObject({ statusCode: 400, message: 'details.gothramMother: is not a field for this school' })
 
-    const row = await submit({ db: world.schoolDb, school: { slug: 'test' } }, applicant, courseId)
+    const row = await submit({ db: world.schoolDb, school: { slug: 'test' }, course: { slug: 'ved' } }, applicant, courseId)
     expect(row.details).toEqual({})
   })
 })
@@ -201,7 +203,7 @@ describe('approve', () => {
     const reviewer = await createProfile(world)
     const pending = await createRegistration(world, { phone: '+15556660001' })
 
-    const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, reviewer.id)
+    const row = await approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, pending.id, reviewer.id)
     await trackProvisionedUser(world, '+15556660001')
 
     expect(row.status).toBe('approved')
@@ -219,7 +221,7 @@ describe('approve', () => {
       learningGoal: 'Fluency',
     })
 
-    const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    const row = await approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, pending.id, null)
     const provisionedUser = await trackProvisionedUser(world, '+15556660002')
 
     expect(row.convertedProfileId).not.toBeNull()
@@ -246,7 +248,7 @@ describe('approve', () => {
   it('copies state, country, and the derived countryTimeZone onto the provisioned profile', async () => {
     world = await createTestSchool()
     const pending = await submit(
-      { db: world.schoolDb, school: { slug: 'test' } },
+      { db: world.schoolDb, school: { slug: 'test' }, course: { slug: 'ved' } },
       {
         firstName: 'Anjali',
         lastName: 'Rao',
@@ -259,7 +261,7 @@ describe('approve', () => {
       (await createCourse(world)).id,
     )
 
-    const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    const row = await approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, pending.id, null)
     await trackProvisionedUser(world, '+15556660097')
 
     const profileRow = await world.schoolDb.query.profile.findFirst({
@@ -272,10 +274,11 @@ describe('approve', () => {
     })
   })
 
-  it('copies the details onto the provisioned profile unchanged', async () => {
+  it('sends each answer to its own level, and gives the student a row for the course applied to', async () => {
     world = await createTestSchool()
+    const course = await createCourse(world, { slug: 'ved', name: 'Vedam' })
     const pending = await submit(
-      { db: world.schoolDb, school: { slug: 'slmts' } },
+      { db: world.schoolDb, school: { slug: 'slmts' }, course: { slug: 'ved' } },
       {
         firstName: 'Anjali',
         lastName: 'Rao',
@@ -283,23 +286,32 @@ describe('approve', () => {
         phone: '+15556660095',
         details: { gothram: 'Bharadwaja', married: true, gothramSpouse: 'Kashyapa', gothramMother: 'Vasishta' },
       },
-      (await createCourse(world)).id,
+      course.id,
     )
 
-    const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    const row = await approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'slmts' } }, pending.id, null)
     await trackProvisionedUser(world, '+15556660095')
 
+    // The school's fields (gothrams) land on the profile, unchanged...
     const profileRow = await world.schoolDb.query.profile.findFirst({
       where: (t, { eq }) => eq(t.id, row.convertedProfileId!),
     })
     expect(profileRow?.details).toEqual(pending.details)
+
+    // ...and the student now has a course-level row for the course they applied to. Vedam's own field
+    // is a counter, which a registration never asks for, so it starts empty (the counter reads 0).
+    const courseRows = await world.schoolDb
+      .select()
+      .from(courseProfile)
+      .where(and(eq(courseProfile.profileId, row.convertedProfileId!), eq(courseProfile.courseId, course.id)))
+    expect(courseRows.map(r => r.details)).toEqual([{}])
   })
 
   it('uses a synthetic email when the registration gave none', async () => {
     world = await createTestSchool()
     const pending = await createRegistration(world, { phone: '+15556660003' })
 
-    await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    await approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, pending.id, null)
     const provisionedUser = await trackProvisionedUser(world, '+15556660003')
 
     expect(provisionedUser.email).toMatch(/@narada\.local$/)
@@ -310,7 +322,7 @@ describe('approve', () => {
     const existingUser = await createUser(world, { phoneNumber: '+15556660004' })
     const pending = await createRegistration(world, { phone: '+15556660004' })
 
-    const row = await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    const row = await approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, pending.id, null)
 
     const profileRow = await world.schoolDb.query.profile.findFirst({
       where: (t, { eq }) => eq(t.id, row.convertedProfileId!),
@@ -323,7 +335,7 @@ describe('approve', () => {
     await createUser(world, { email: 'taken@example.com' })
     const pending = await createRegistration(world, { phone: '+15556660005', email: 'taken@example.com' })
 
-    await approve({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    await approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, pending.id, null)
     const provisionedUser = await trackProvisionedUser(world, '+15556660005')
 
     expect(provisionedUser.email).not.toBe('taken@example.com')
@@ -333,7 +345,7 @@ describe('approve', () => {
     world = await createTestSchool()
 
     await expect(
-      approve({ db: world.schoolDb, school: { id: world.orgId } }, crypto.randomUUID(), null),
+      approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, crypto.randomUUID(), null),
     ).rejects.toMatchObject({ statusCode: 404 })
   })
 
@@ -342,14 +354,14 @@ describe('approve', () => {
     const alreadyApproved = await createRegistration(world, { status: 'approved' })
 
     await expect(
-      approve({ db: world.schoolDb, school: { id: world.orgId } }, alreadyApproved.id, null),
+      approve({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, alreadyApproved.id, null),
     ).rejects.toMatchObject({ statusCode: 409 })
   })
 
   it('provisions exactly one profile when the same registration is approved twice at once', async () => {
     world = await createTestSchool()
     const pending = await createRegistration(world, { phone: '+15556660010' })
-    const context = { db: world.schoolDb, school: { id: world.orgId } }
+    const context = { db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }
 
     const results = await Promise.allSettled([
       approve(context, pending.id, null),
@@ -373,7 +385,7 @@ describe('reject', () => {
     world = await createTestSchool()
     const pending = await createRegistration(world, { phone: '+15556660006' })
 
-    const row = await reject({ db: world.schoolDb, school: { id: world.orgId } }, pending.id, null)
+    const row = await reject({ db: world.schoolDb, school: { id: world.orgId, slug: 'test' } }, pending.id, null)
 
     expect(row.status).toBe('rejected')
     expect(row.reviewedAt).not.toBeNull()

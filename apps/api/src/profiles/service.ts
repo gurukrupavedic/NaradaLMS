@@ -3,6 +3,8 @@ import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 import { forbidden, internalError, notFound, orNotFound } from '../error'
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
+import { profileFieldsFor } from '@narada/profile-fields'
+
 import { mergeDetailsPatch } from '../utils/details'
 import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
@@ -106,7 +108,7 @@ export async function updateProfile(
 
   return context.db.transaction(async tx => {
     const current = orNotFound(await repository.findDetailsForUpdate(tx, id, ownerUserId))
-    const details = mergeDetailsPatch(context.school.slug, current, detailsPatch)
+    const details = mergeDetailsPatch(profileFieldsFor(context.school.slug), current, detailsPatch)
     return orNotFound(await repository.update(tx, id, ownerUserId, { ...patch, details }))
   })
 }

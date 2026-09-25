@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { profileFieldsFor } from '@narada/profile-fields'
+import { registrationFieldsFor } from '@narada/profile-fields'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
@@ -17,7 +17,7 @@ import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
 import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
 import type { ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
-import { useCoursePath } from '@/lib/course'
+import { useCoursePath, useCourseSlug } from '@/lib/course'
 import { useSchoolSlug } from '@/lib/school'
 import { formatAgo } from '@/lib/format-date'
 
@@ -50,7 +50,7 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
   const approve = useApproveRegistration()
   const reject = useRejectRegistration()
   const pending = approve.isPending || reject.isPending
-  const detailFields = profileFieldsFor(useSchoolSlug() ?? '')
+  const detailFields = registrationFieldsFor(useSchoolSlug() ?? '', useCourseSlug())
 
   async function handleApprove() {
     await approve.mutateAsync(registration.id)

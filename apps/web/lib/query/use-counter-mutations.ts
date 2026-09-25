@@ -1,52 +1,44 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
+import type { Details } from '@narada/profile-fields'
 
 import { keys } from '@/lib/query/options'
 import { useEditMutation } from '@/lib/query/use-edit-mutation'
-import { logCounter, setCounterDay } from '@/lib/api/resources'
+import { addToCounter, updateCourseDetails } from '@/lib/api/resources'
 import { formatCount } from '@/lib/counter'
 
 /**
- * Both write paths for one counter of one profile (`components/counter-card.tsx`). Either changes
- * every window that counter has cached — this year's total, the lifetime, the recent days — so what's
- * invalidated is the profile's whole counters prefix, not one window.
+ * The write paths for a profile's course-level details (`components/counter-card.tsx`). The values
+ * come back with the profile page's own response, so that one query is what's refreshed.
  */
-function useInvalidateCounters(profileId: string) {
+function useRefreshProfile(profileId: string) {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: keys.counters.profile(profileId) })
+  return () => queryClient.invalidateQueries({ queryKey: keys.profiles.detail(profileId) })
 }
 
-/** Adds to a day — the student's today unless a past date is given. */
-export function useLogCounter(profileId: string, key: string) {
-  const invalidate = useInvalidateCounters(profileId)
+/** Adds to one of the course's counters. */
+export function useAddToCounter(profileId: string, key: string) {
+  const refresh = useRefreshProfile(profileId)
 
   return useEditMutation(
     {
-      mutationFn: (input: { count: number; loggedOn?: string }) =>
-        logCounter(profileId, key, input),
-      onSuccess: invalidate,
+      mutationFn: (count: number) => addToCounter(profileId, key, count),
+      onSuccess: refresh,
     },
-    {
-      success: (_day, { count }) => `Added ${formatCount(count)}.`,
-      failure: "Couldn't log that.",
-    },
+    { success: (_result, count) => `Added ${formatCount(count)}.`, failure: "Couldn't add that." },
   )
 }
 
-/** Sets a day's total outright — a correction; 0 clears the day. */
-export function useSetCounterDay(profileId: string, key: string) {
-  const invalidate = useInvalidateCounters(profileId)
+/** Edits the course-level details — for a counter, setting it outright (a correction). */
+export function useUpdateCourseDetails(profileId: string) {
+  const refresh = useRefreshProfile(profileId)
 
   return useEditMutation(
     {
-      mutationFn: ({ loggedOn, count }: { loggedOn: string; count: number }) =>
-        setCounterDay(profileId, key, loggedOn, count),
-      onSuccess: invalidate,
+      mutationFn: (patch: Details) => updateCourseDetails(profileId, patch),
+      onSuccess: refresh,
     },
-    {
-      success: (_day, { count }) => (count === 0 ? 'Day cleared.' : 'Day updated.'),
-      failure: "Couldn't update that day.",
-    },
+    { success: 'Updated.', failure: "Couldn't save that." },
   )
 }

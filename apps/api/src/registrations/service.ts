@@ -1,6 +1,8 @@
 import { publicDb, type SchoolDb, type SchoolDbClient } from '@narada/db'
+import { registrationFieldsFor, splitDetails } from '@narada/profile-fields'
 
 import { conflict, internalError, orInternalError, orNotFound } from '../error'
+import { insert as insertCourseProfile } from '../courseDetails/repository'
 import { insert as insertProfile } from '../profiles/repository'
 import { resolveDetails } from '../utils/details'
 import { deriveTimeZone } from '../utils/timezone'
@@ -8,8 +10,11 @@ import * as repository from './repository'
 import type { CreateRegistrationData, FindRegistrationsData, Registration } from './schema'
 
 type RegistrationServiceContext = { db: SchoolDbClient }
-type SubmitContext = RegistrationServiceContext & { school: { slug: string } }
-type ReviewContext = RegistrationServiceContext & { school: { id: string } }
+type SubmitContext = RegistrationServiceContext & {
+  school: { slug: string }
+  course: { slug: string }
+}
+type ReviewContext = RegistrationServiceContext & { school: { id: string; slug: string } }
 
 export async function findAll(
   context: RegistrationServiceContext,
@@ -30,8 +35,13 @@ export async function submit(
 ): Promise<Registration> {
   const row = await repository.insert(context.db, {
     ...data,
-    // The whole form is being submitted, so every visible required field must be answered.
-    details: resolveDetails(context.school.slug, data.details ?? {}, 'all'),
+    // The whole form is being submitted, so every visible required field must be answered — both the
+    // school's fields and the course's, as one list. `provisionApprovedApplicant` divides them again.
+    details: resolveDetails(
+      registrationFieldsFor(context.school.slug, context.course.slug),
+      data.details ?? {},
+      'all',
+    ),
     courseId,
     countryTimeZone: deriveTimeZone({ city: data.city, state: data.state, country: data.country }),
   })
@@ -55,10 +65,12 @@ export async function submit(
  */
 async function provisionApprovedApplicant(
   db: SchoolDb,
-  school: { id: string },
+  school: { id: string; slug: string },
   registration: Registration,
 ): Promise<string> {
   const fullName = `${registration.firstName} ${registration.lastName}`
+  const courseSlug = orNotFound(await repository.findCourseSlug(db, registration.courseId))
+  const answers = splitDetails(school.slug, courseSlug, registration.details)
   const applicantUser = await repository.findOrCreateApplicantUser(publicDb, {
     phone: registration.phone,
     name: fullName,
@@ -89,11 +101,19 @@ async function provisionApprovedApplicant(
     noAlcoholAgreed: registration.noAlcoholAgreed,
     noSmokingAgreed: registration.noSmokingAgreed,
     comments: registration.comments,
-    details: registration.details,
+    // The answers divide by the level that declares each key: the school's go on the profile, the
+    // course's on the profile's row for the course applied to (`courseProfile`).
+    details: answers.profile,
   })
   if (!profile) {
     throw internalError()
   }
+
+  await insertCourseProfile(db, {
+    profileId: profile.id,
+    courseId: registration.courseId,
+    details: answers.course,
+  })
 
   return profile.id
 }

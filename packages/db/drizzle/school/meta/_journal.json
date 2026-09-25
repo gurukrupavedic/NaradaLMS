@@ -169,6 +169,13 @@
       "when": 1790297089990,
       "tag": "0023_elite_mockingbird",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790302750454,
+      "tag": "0024_huge_enchantress",
+      "breakpoints": true
     }
   ]
 }

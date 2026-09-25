@@ -32,9 +32,9 @@ const api = (path: string) => `/v${env.API_VERSION}${path}`
 
 /**
  * The routes over HTTP: mount path, `mergeParams`, course scoping, validation and permissions. The
- * world's slugs are the real ones (`slmts` / `ved`, the only pair that keeps a `japam` counter), so
+ * world's slugs are the real ones (`slmts` / `ved`, the only pair with a course-level counter), so
  * this is the only integration test that may create a school by that name (organization slugs are
- * unique). `course` is `ved` unless the world is built for another school.
+ * unique).
  */
 async function seed(school = { slug: 'slmts', course: 'ved' }) {
   const w = await createTestSchool({ slug: school.slug })
@@ -79,72 +79,70 @@ function as(s: Seed, who: Person, course: string | null = s.school.course) {
   return {
     get: (path: string) => request(server).get(api(path)).set(headers),
     post: (path: string, body: object) => request(server).post(api(path)).set(headers).send(body),
-    put: (path: string, body: object) => request(server).put(api(path)).set(headers).send(body),
+    patch: (path: string, body: object) => request(server).patch(api(path)).set(headers).send(body),
   }
 }
 
-describe('counter routes', () => {
-  it('logs, reads, and corrects a student’s japam', async () => {
+describe('course-details routes', () => {
+  it('adds to a counter, sets it, and shows it on the profile page — all for this course', async () => {
     const s = await seed()
     world = s.w
     const me = as(s, s.student)
-    const path = `/profiles/${s.student.profile.id}/counters/japam`
+    const id = s.student.profile.id
 
-    const logged = await me.post(path, { count: 108 })
-    expect(logged.status).toBe(200)
-    expect(logged.body.data).toEqual({
-      loggedOn: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-      count: 108,
-    })
-    const day = logged.body.data.loggedOn
+    // Nothing yet: the profile page says so with an empty object, not an error.
+    expect((await me.get(`/profiles/${id}/detail`)).body.data.courseDetails).toEqual({})
 
-    await me.post(path, { count: 54 })
-    const read = await me.get(path)
-    expect(read.status).toBe(200)
-    expect(read.body.data).toMatchObject({
-      today: day,
-      total: 162,
-      lifetime: 162,
-      days: [{ loggedOn: day, count: 162 }],
-    })
+    const added = await me.post(`/profiles/${id}/course-details/counters/japam`, { count: 108 })
+    expect(added.status).toBe(200)
+    expect(added.body.data).toEqual({ key: 'japam', total: 108 })
+    await me.post(`/profiles/${id}/course-details/counters/japam`, { count: 54 })
+    expect((await me.get(`/profiles/${id}/detail`)).body.data.courseDetails).toEqual({ japam: 162 })
 
-    const corrected = await me.put(`${path}/${day}`, { count: 100 })
-    expect(corrected.status).toBe(200)
-    expect(corrected.body.data).toEqual({ loggedOn: day, count: 100 })
-    expect((await me.get(`${path}?from=${day}&to=${day}`)).body.data.total).toBe(100)
-
-    await me.put(`${path}/${day}`, { count: 0 })
-    expect((await me.get(path)).body.data).toMatchObject({ total: 0, lifetime: 0, days: [] })
+    const set = await me.patch(`/profiles/${id}/course-details`, { details: { japam: 100 } })
+    expect(set.status).toBe(200)
+    expect(set.body.data).toEqual({ details: { japam: 100 } })
+    expect((await me.get(`/profiles/${id}/detail`)).body.data.courseDetails).toEqual({ japam: 100 })
   })
 
-  it('lets a school admin read and write anyone’s, but keeps other students out', async () => {
+  it('lets a school admin write anyone’s, but keeps other students out', async () => {
     const s = await seed()
     world = s.w
-    const path = `/profiles/${s.student.profile.id}/counters/japam`
+    const id = s.student.profile.id
 
-    expect((await as(s, s.admin).post(path, { count: 30 })).status).toBe(200)
-    expect((await as(s, s.admin).get(path)).body.data.lifetime).toBe(30)
+    expect(
+      (await as(s, s.admin).post(`/profiles/${id}/course-details/counters/japam`, { count: 30 }))
+        .status,
+    ).toBe(200)
+    expect((await as(s, s.admin).get(`/profiles/${id}/detail`)).body.data.courseDetails).toEqual({
+      japam: 30,
+    })
 
     // A classmate — part of the course, but with no teaching relationship to the student — can
     // neither see nor change it.
-    expect((await as(s, s.classmate).get(path)).status).toBe(403)
-    expect((await as(s, s.classmate).post(path, { count: 1 })).status).toBe(404)
-    expect((await as(s, s.classmate).put(`${path}/2026-01-01`, { count: 1 })).status).toBe(404)
+    expect((await as(s, s.classmate).get(`/profiles/${id}/detail`)).status).toBe(403)
+    expect(
+      (await as(s, s.classmate).post(`/profiles/${id}/course-details/counters/japam`, { count: 1 }))
+        .status,
+    ).toBe(404)
+    expect(
+      (await as(s, s.classmate).patch(`/profiles/${id}/course-details`, { details: { japam: 1 } }))
+        .status,
+    ).toBe(404)
   })
 
   it('is for people in the course: a member with no place in it is refused, and so is a request that names none', async () => {
     const s = await seed()
     world = s.w
-    const path = `/profiles/${s.outsider.profile.id}/counters/japam`
+    const path = `/profiles/${s.outsider.profile.id}/course-details/counters/japam`
 
-    // The outsider's own counter, in a course they are not part of.
     const refused = await as(s, s.outsider).post(path, { count: 1 })
     expect(refused.status).toBe(403)
     expect(refused.body.error.message).toBe('you are not part of this course')
-    expect((await as(s, s.outsider).get(path)).status).toBe(403)
 
-    const unnamed = await as(s, s.student, null).get(
-      `/profiles/${s.student.profile.id}/counters/japam`,
+    const unnamed = await as(s, s.student, null).post(
+      `/profiles/${s.student.profile.id}/course-details/counters/japam`,
+      { count: 1 },
     )
     expect(unnamed.status).toBe(400)
     expect(unnamed.body.error.message).toBe('X-Course-Slug header is required')
@@ -154,37 +152,43 @@ describe('counter routes', () => {
     const s = await seed()
     world = s.w
     const me = as(s, s.student)
-    const path = `/profiles/${s.student.profile.id}/counters/japam`
+    const base = `/profiles/${s.student.profile.id}/course-details`
 
-    const badCount = await me.post(path, { count: 0 })
+    const badCount = await me.post(`${base}/counters/japam`, { count: 0 })
     expect(badCount.status).toBe(400)
     expect(badCount.body.error.message).toMatch(/^count:/)
-    expect((await me.post(path, { count: 5, loggedOn: '2026-02-30' })).status).toBe(400)
-    expect((await me.put(`${path}/not-a-date`, { count: 5 })).status).toBe(400)
-    expect((await me.get(`${path}?from=2026-02-01&to=2026-01-01`)).status).toBe(400)
-    expect((await me.get('/profiles/not-a-uuid/counters/japam')).status).toBe(400)
-    expect((await me.post(path, { count: 5, loggedOn: '2999-01-01' })).status).toBe(422)
+    expect((await me.patch(base, { details: {} })).status).toBe(400)
+    const unknown = await me.patch(base, { details: { gothram: 'A' } })
+    expect(unknown.status).toBe(400)
+    expect(unknown.body.error.message).toBe('details.gothram: is not a field for this school')
+    expect((await me.patch(base, { details: { japam: -1 } })).status).toBe(400)
+    expect(
+      (await me.post('/profiles/not-a-uuid/course-details/counters/japam', { count: 1 })).status,
+    ).toBe(400)
   })
 
   it('404s a counter the course does not keep', async () => {
     const s = await seed()
     world = s.w
-    const me = as(s, s.student)
 
-    expect((await me.get(`/profiles/${s.student.profile.id}/counters/parayanam`)).status).toBe(404)
-    expect(
-      (await me.post(`/profiles/${s.student.profile.id}/counters/parayanam`, { count: 1 })).status,
-    ).toBe(404)
+    const res = await as(s, s.student).post(
+      `/profiles/${s.student.profile.id}/course-details/counters/parayanam`,
+      { count: 1 },
+    )
+    expect(res.status).toBe(404)
   })
 
-  it('does not exist for a school and course that declare no counter (RR’s Puranokta)', async () => {
+  it('has nothing to edit in a school and course that declare no course-level fields (RR’s Puranokta)', async () => {
     const s = await seed({ slug: 'rr', course: 'pur' })
     world = s.w
     const me = as(s, s.student)
-    const path = `/profiles/${s.student.profile.id}/counters/japam`
+    const base = `/profiles/${s.student.profile.id}/course-details`
 
-    expect((await me.get(path)).status).toBe(404)
-    expect((await me.post(path, { count: 1 })).status).toBe(404)
-    expect((await me.put(`${path}/2026-01-01`, { count: 1 })).status).toBe(404)
+    expect((await me.post(`${base}/counters/japam`, { count: 1 })).status).toBe(404)
+    expect((await me.patch(base, { details: { japam: 1 } })).status).toBe(404)
+    // The profile page still works and reports an empty course-level component.
+    expect(
+      (await me.get(`/profiles/${s.student.profile.id}/detail`)).body.data.courseDetails,
+    ).toEqual({})
   })
 })

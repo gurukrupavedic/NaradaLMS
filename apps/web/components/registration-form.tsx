@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { profileFieldsFor, type FieldDefinition } from '@narada/profile-fields'
+import { registrationFieldsFor, type FieldDefinition } from '@narada/profile-fields'
 
 import { cn } from '@/lib/utils'
 import { PHONE_REGEX } from '@/lib/phone-countries'
@@ -145,7 +145,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
   // What this school asks on top of the common fields. The school is only known once the page is in
   // the browser, so this is empty for the server render and the first paint, then fills in.
   const schoolSlug = useSchoolSlug()
-  const detailFields = profileFieldsFor(schoolSlug ?? '')
+  const detailFields = registrationFieldsFor(schoolSlug ?? '', course.slug)
 
   function patch(fields: Partial<FormState>) {
     setForm(prev => ({ ...prev, ...fields }))
