@@ -24,8 +24,8 @@ export async function fetchMyCourses(): Promise<ApiCourse[]> {
 }
 
 // GET /v1/batches/open — every batch a student can request to join: any batch not yet marked
-// completed, any track. Not scoped by the caller's own existing enrollments (unlike GET /batches's
-// default `enrolled` scope) — this is "what can I ask to join," a different question from "what am
+// completed, any track. Not scoped by the caller's own existing enrollments (unlike
+// `GET /profiles/:profileId/batches`) — this is "what can I ask to join," a different question from "what am
 // I already in."
 export async function fetchOpenBatches(): Promise<ApiOpenBatch[]> {
   return fetchApi<ApiOpenBatch[]>('/batches/open')

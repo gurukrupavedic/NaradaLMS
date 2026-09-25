@@ -37,7 +37,7 @@ export async function getDashboardData(
 
   // Excludes every other role — this is "batches I personally teach," not "every batch I can
   // administer." A school-wide admin's broader access is a separate question (AccessPolicy's
-  // getBatchVisibility), deliberately not consulted here: the dashboard shows a profile's own
+  // getProfileBatchListScope), deliberately not consulted here: the dashboard shows a profile's own
   // activity, not an admin browsing view.
   const teachingMemberships = memberships.filter(m => m.role === 'instructor' || m.role === 'ta')
 

@@ -183,17 +183,8 @@ export class AccessPolicy {
     }
   }
 
-  public getBatchVisibility(): BatchReadScope {
-    if (this.isSchoolAdmin()) {
-      return { kind: 'all' }
-    }
-
-    return { kind: 'enrolled', profileId: this.requireProfileId() }
-  }
-
   /**
-   * The read scope for "list `targetProfileId`'s batches" — a *different* question from
-   * `getBatchVisibility()`, which is "list batches" with no target in mind. School-wide access grants 'all' only for a **self** lookup
+   * The read scope for "list `targetProfileId`'s batches": school-wide access grants 'all' only for a **self** lookup
    * (an admin looking at their own batches) — looking up someone else's batches is always scoped
    * to that person's own enrollments, never the whole school, whether the caller is a super
    * admin, owner, admin, or a shared instructor/TA. School-wide status there only grants
