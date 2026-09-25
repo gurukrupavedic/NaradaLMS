@@ -1,3 +1,5 @@
+import type { Details } from '@narada/profile-fields'
+
 import { fetchApi, mutateApi } from '@/lib/api/client'
 import { getSelectedProfileId } from '@/lib/auth/profile-store'
 import type { ApiAuthProfile, ApiBatchWithRole, ApiProfile, ApiProfileDetail } from '@/lib/api/api-types'
@@ -50,7 +52,11 @@ export type UpdateProfileInput = Partial<
     | 'noAlcoholAgreed'
     | 'noSmokingAgreed'
     | 'comments'
-  >
+  > & {
+    // A *patch*: only the keys sent change, a blank string clears one. See
+    // `lib/profile-details.ts::detailsPatch`, which builds it.
+    details: Details
+  }
 >
 
 export async function updateProfile(

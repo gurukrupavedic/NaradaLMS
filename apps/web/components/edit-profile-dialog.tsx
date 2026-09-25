@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { Dialog } from '@base-ui/react/dialog'
+import { profileFieldsFor } from '@narada/profile-fields'
 
+import { DetailFields } from '@/components/detail-fields'
 import { Spinner } from '@/components/spinner'
 import {
   CheckboxField,
@@ -16,6 +18,13 @@ import type { ApiProfile, ApiProficiencyLevel } from '@/lib/api/api-types'
 import type { UpdateProfileInput } from '@/lib/api/resources'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
 import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
+import {
+  detailsPatch,
+  draftFromDetails,
+  editDetailsError,
+  type DetailDraft,
+} from '@/lib/profile-details'
+import { useSchoolSlug } from '@/lib/school'
 
 /**
  * The "edit profile" form, opened from `components/student-profile-screen.tsx` either by the
@@ -99,6 +108,13 @@ function EditProfileForm({
   const [noSmokingAgreed, setNoSmokingAgreed] = useState(profile.noSmokingAgreed)
   const [comments, setComments] = useState(profile.comments ?? '')
 
+  // This school's own fields. What's shown is the stored values with the edits made so far laid over
+  // them, so an untouched field is never a change (`detailsPatch` sends only what differs).
+  const detailFields = profileFieldsFor(useSchoolSlug() ?? '')
+  const [detailEdits, setDetailEdits] = useState<DetailDraft>({})
+  const detailDraft: DetailDraft = { ...draftFromDetails(detailFields, profile.details), ...detailEdits }
+  const [error, setError] = useState<string | null>(null)
+
   const stateOptions = getStateOptions(country)
 
   // Switching country invalidates whatever state was picked for the old one — reset it rather
@@ -113,6 +129,14 @@ function EditProfileForm({
     const trimmedName = name.trim()
     if (!trimmedName) return
 
+    const details = detailsPatch(detailFields, detailDraft, profile.details)
+    const detailsError = details ? editDetailsError(detailFields, profile.details, details) : null
+    if (detailsError) {
+      setError(detailsError)
+      return
+    }
+
+    setError(null)
     updating.mutate(
       {
         name: trimmedName,
@@ -130,6 +154,8 @@ function EditProfileForm({
         noAlcoholAgreed,
         noSmokingAgreed,
         comments: comments.trim() || null,
+        // Only when something changed: a patch of nothing is refused by the API.
+        ...(details && { details }),
       },
       { onSuccess: onCancel },
     )
@@ -224,6 +250,13 @@ function EditProfileForm({
         onChange={setComments}
         placeholder="Anything the reviewing teacher should know."
       />
+      <DetailFields
+        variant="box"
+        editing
+        fields={detailFields}
+        draft={detailDraft}
+        onChange={(key, value) => setDetailEdits(prev => ({ ...prev, [key]: value }))}
+      />
 
       <div className="space-y-3">
         <FieldLabel label="Agreements" />
@@ -252,6 +285,8 @@ function EditProfileForm({
           onChange={setNoSmokingAgreed}
         />
       </div>
+
+      {error && <p className="text-[0.8125rem] text-vermilion">{error}</p>}
 
       <div className="flex justify-end gap-3">
         <button

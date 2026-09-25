@@ -3,10 +3,12 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import { profileFieldsFor } from '@narada/profile-fields'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
+import { DetailSummary } from '@/components/detail-summary'
 import { Section } from '@/components/section'
 import { Spinner } from '@/components/spinner'
 import { registrationQuery } from '@/lib/query/options'
@@ -16,6 +18,7 @@ import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
 import type { ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
 import { useCoursePath } from '@/lib/course'
+import { useSchoolSlug } from '@/lib/school'
 import { formatAgo } from '@/lib/format-date'
 
 const STATUS_LABEL: Record<ApiRegistrationStatus, string> = {
@@ -47,6 +50,7 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
   const approve = useApproveRegistration()
   const reject = useRejectRegistration()
   const pending = approve.isPending || reject.isPending
+  const detailFields = profileFieldsFor(useSchoolSlug() ?? '')
 
   async function handleApprove() {
     await approve.mutateAsync(registration.id)
@@ -98,6 +102,12 @@ function RegistrationDetailView({ registration }: { registration: ApiRegistratio
             </div>
           </dl>
         </Section>
+
+        {detailFields.length > 0 && (
+          <Section title="Additional details">
+            <DetailSummary fields={detailFields} details={registration.details} />
+          </Section>
+        )}
 
         <Section title="Learning background">
           <dl className="sheet grid grid-cols-1 divide-y divide-rule-soft sm:grid-cols-2 sm:divide-x sm:divide-y-0">

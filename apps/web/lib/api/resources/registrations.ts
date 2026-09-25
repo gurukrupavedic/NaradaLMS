@@ -1,3 +1,5 @@
+import type { Details } from '@narada/profile-fields'
+
 import { fetchAllPages, fetchApi, mutateApi } from '@/lib/api/client'
 import type { ApiProficiencyLevel, ApiRegistration, ApiRegistrationStatus } from '@/lib/api/api-types'
 
@@ -22,6 +24,9 @@ export type SubmitRegistrationInput = {
   noAlcoholAgreed?: boolean
   noSmokingAgreed?: boolean
   comments?: string | null
+  // The school's own fields (`@narada/profile-fields`); the API validates them against the school
+  // this request names, so a key it doesn't collect is refused.
+  details?: Details
 }
 
 // POST /v1/registrations — the one call in this file with no signed-in caller. `mutateApi` still

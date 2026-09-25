@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { assertValidDefinitions, normalizeDetails, visibleFields } from './details'
+import { assertValidDefinitions, mergeDetails, normalizeDetails, visibleFields } from './details'
 import { profileFieldsFor } from './schools'
 import type { FieldDefinition } from './types'
 
@@ -156,6 +156,73 @@ describe('normalizeDetails', () => {
     })
     expect(normalizeDetails(fields, { age: '30', house: 'a' }, ALL).errors).toEqual({
       age: 'must be a number',
+    })
+  })
+})
+
+describe('normalizeDetails: blank means no value for every type', () => {
+  const fields: FieldDefinition[] = [{ key: 'age', label: 'Age', type: 'number' }]
+
+  it('lets a client clear a number by sending a blank string', () => {
+    expect(normalizeDetails(fields, { age: '' }, ALL)).toEqual({ values: {}, errors: {} })
+  })
+})
+
+describe('mergeDetails', () => {
+  const stored = { gothram: 'Bharadwaja', married: false, gothramMother: 'Vasishta' }
+
+  it('lays the patch over what is stored', () => {
+    expect(mergeDetails(slmts, stored, { gothramMother: 'Kashyapa' })).toEqual({
+      values: { gothram: 'Bharadwaja', married: false, gothramMother: 'Kashyapa' },
+      errors: {},
+    })
+  })
+
+  it('requires a field the patch reveals, even though the patch does not name it', () => {
+    expect(mergeDetails(slmts, stored, { married: true }).errors).toEqual({
+      gothramSpouse: 'is required',
+    })
+  })
+
+  it('drops a field the patch hides', () => {
+    const married = { ...stored, married: true, gothramSpouse: 'Kashyapa' }
+    expect(mergeDetails(slmts, married, { married: false }).values).toEqual(stored)
+  })
+
+  it('does not demand fields a profile predates, unless the patch names them', () => {
+    expect(mergeDetails(slmts, {}, { gothramMother: 'B' })).toEqual({
+      values: { married: false, gothramMother: 'B' },
+      errors: {},
+    })
+    expect(mergeDetails(slmts, { gothram: 'A' }, { gothram: '' }).errors).toEqual({
+      gothram: 'is required',
+    })
+  })
+
+  it('does not require a field that was already visible and unanswered', () => {
+    // Married was already ticked (with the spouse's gothram never filled in); an unrelated edit
+    // must not start demanding it.
+    const legacy = { gothram: 'A', married: true, gothramMother: 'B' }
+    expect(mergeDetails(slmts, legacy, { gothramMother: 'C' }).errors).toEqual({})
+  })
+
+  it('carries a stored key no field defines any more', () => {
+    expect(mergeDetails(slmts, { ...stored, retired: 'kept' }, { gothram: 'A' }).values).toEqual({
+      retired: 'kept',
+      gothram: 'A',
+      married: false,
+      gothramMother: 'Vasishta',
+    })
+  })
+
+  it('rejects a key no field defines, and a change to a non-editable field', () => {
+    expect(mergeDetails(slmts, stored, { nope: 'x' }).errors).toEqual({
+      nope: 'is not a field for this school',
+    })
+
+    const locked: FieldDefinition[] = [{ key: 'id', label: 'Id', type: 'text', editable: false }]
+    expect(mergeDetails(locked, { id: 'a' }, { id: 'b' }).errors).toEqual({
+      id: 'cannot be changed',
     })
   })
 })

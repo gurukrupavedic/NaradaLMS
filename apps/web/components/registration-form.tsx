@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { profileFieldsFor, type FieldDefinition } from '@narada/profile-fields'
 
 import { cn } from '@/lib/utils'
 import { PHONE_REGEX } from '@/lib/phone-countries'
@@ -10,7 +11,10 @@ import { ApiError } from '@/lib/api/client'
 import type { ApiCourse, ApiProficiencyLevel } from '@/lib/api/api-types'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
 import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
+import { detailsFromDraft, registrationDetailsError, type DetailDraft } from '@/lib/profile-details'
+import { useSchoolSlug } from '@/lib/school'
 import { Wordmark } from '@/components/app-shell'
+import { DetailFields } from '@/components/detail-fields'
 import { PhoneInput } from '@/components/phone-input'
 import {
   CheckboxField,
@@ -54,6 +58,9 @@ type FormState = {
   noAlcoholAgreed: boolean
   noSmokingAgreed: boolean
   comments: string
+  // This school's own fields (`@narada/profile-fields`), keyed by field key. Sparse: a field
+  // nobody has touched has no entry.
+  details: DetailDraft
 }
 
 const EMPTY_FORM: FormState = {
@@ -75,9 +82,10 @@ const EMPTY_FORM: FormState = {
   noAlcoholAgreed: false,
   noSmokingAgreed: false,
   comments: '',
+  details: {},
 }
 
-function validateStep(step: number, form: FormState): string | null {
+function validateStep(step: number, form: FormState, detailFields: readonly FieldDefinition[]): string | null {
   if (step === 0) {
     if (!form.firstName.trim() || !form.lastName.trim()) {
       return 'First and last name are required.'
@@ -92,11 +100,12 @@ function validateStep(step: number, form: FormState): string | null {
     if (!form.yearOfBirth.trim() || !Number.isInteger(year) || year < 1900 || year > CURRENT_YEAR) {
       return `Enter your year of birth, between 1900 and ${CURRENT_YEAR}.`
     }
+    return registrationDetailsError(detailFields, form.details)
   }
   return null
 }
 
-function toPayload(form: FormState): SubmitRegistrationInput {
+function toPayload(form: FormState, detailFields: readonly FieldDefinition[]): SubmitRegistrationInput {
   return {
     firstName: form.firstName.trim(),
     lastName: form.lastName.trim(),
@@ -116,6 +125,7 @@ function toPayload(form: FormState): SubmitRegistrationInput {
     noAlcoholAgreed: form.noAlcoholAgreed,
     noSmokingAgreed: form.noSmokingAgreed,
     comments: form.comments.trim() || undefined,
+    details: detailsFromDraft(detailFields, form.details),
   }
 }
 
@@ -132,8 +142,17 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
+  // What this school asks on top of the common fields. The school is only known once the page is in
+  // the browser, so this is empty for the server render and the first paint, then fills in.
+  const schoolSlug = useSchoolSlug()
+  const detailFields = profileFieldsFor(schoolSlug ?? '')
+
   function patch(fields: Partial<FormState>) {
     setForm(prev => ({ ...prev, ...fields }))
+  }
+
+  function patchDetail(key: string, value: string | boolean) {
+    setForm(prev => ({ ...prev, details: { ...prev.details, [key]: value } }))
   }
 
   // Switching country invalidates whatever state was picked for the old one.
@@ -149,7 +168,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
   }
 
   function handleContinue() {
-    const validationError = validateStep(step, form)
+    const validationError = validateStep(step, form, detailFields)
     if (validationError) {
       setError(validationError)
       return
@@ -160,7 +179,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const validationError = validateStep(step, form)
+    const validationError = validateStep(step, form, detailFields)
     if (validationError) {
       setError(validationError)
       return
@@ -169,7 +188,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
     setSubmitting(true)
     setError(null)
     try {
-      await submitRegistration(toPayload(form))
+      await submitRegistration(toPayload(form, detailFields))
       setSubmitted(true)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.')
@@ -285,6 +304,7 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
                 options={stateOptions}
               />
             )}
+            <DetailFields fields={detailFields} draft={form.details} onChange={patchDetail} />
           </div>
         )}
 
