@@ -1,24 +1,36 @@
 import { describe, expect, it } from 'vitest'
 
-import { AddToCounterSchema, CounterParamsSchema, UpdateCourseDetailsSchema } from './schema'
+import { AddToCounterSchema, CounterParamsSchema, UpdateCourseProfileSchema } from './schema'
 
 const profileId = '11111111-1111-4111-8111-111111111111'
 
-describe('UpdateCourseDetailsSchema', () => {
+describe('UpdateCourseProfileSchema', () => {
   it('takes a non-empty patch of scalars', () => {
     expect(
-      UpdateCourseDetailsSchema.safeParse({ details: { japam: 5, note: 'x', done: true } }).success,
+      UpdateCourseProfileSchema.safeParse({ details: { japam: 5, note: 'x', done: true } }).success,
     ).toBe(true)
   })
 
-  it('rejects an empty patch, a missing one, and anything nested or null', () => {
+  it('takes the three answers, alone or with details, and null to clear one', () => {
     for (const body of [
-      { details: {} },
+      { learningGoal: 'recite' },
+      { currentProficiency: 'level1', comments: null },
+      { comments: 'hi', details: { japam: 1 } },
+    ]) {
+      expect(UpdateCourseProfileSchema.safeParse(body).success, JSON.stringify(body)).toBe(true)
+    }
+  })
+
+  it('rejects an empty edit, an empty details patch, a level that does not exist, and anything nested or null in details', () => {
+    for (const body of [
       {},
+      { details: {} },
+      { learningGoal: 'x', details: {} },
+      { currentProficiency: 'expert' },
       { details: { japam: null } },
       { details: { japam: { n: 1 } } },
     ]) {
-      expect(UpdateCourseDetailsSchema.safeParse(body).success, JSON.stringify(body)).toBe(false)
+      expect(UpdateCourseProfileSchema.safeParse(body).success, JSON.stringify(body)).toBe(false)
     }
   })
 })

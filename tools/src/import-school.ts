@@ -8,6 +8,7 @@ import {
   batch,
   chapter,
   course,
+  courseProfile,
   enrollment,
   evaluation,
   exam,
@@ -346,6 +347,21 @@ const dataCmd = defineCommand({
         }
         record('registration', registrations.length, n)
 
+        // ...and the profile's course-level record for that course, carrying what the application said
+        // about it (goal, starting point, comments) — what approving one in the app writes.
+        n = 0
+        for (const rows of chunk(registrations, CHUNK_SIZE)) {
+          const values = rows.map(r => ({
+            profileId: r.profileId,
+            courseId: courseIdBySlug.get(r.courseSlug)!,
+            learningGoal: r.learningGoal,
+            currentProficiency: r.currentProficiency,
+            comments: r.comments,
+          }))
+          n += (await tx.insert(courseProfile).values(values).onConflictDoNothing().returning({ profileId: courseProfile.profileId })).length
+        }
+        record('courseProfile', registrations.length, n)
+
         n = 0
         for (const rows of chunk(enrollments, CHUNK_SIZE)) {
           const values = rows.map(r => ({
@@ -406,7 +422,7 @@ const dataCmd = defineCommand({
       console.log(
         `✅ Import committed: ${courses.length} courses, ${inserted.track} tracks, ${inserted.chapter} chapters, ` +
           `${inserted.batch} batches, ${inserted.profile} profiles, ${inserted.registration} registrations, ` +
-          `${inserted.enrollment} enrollments, ${inserted.evaluation} evaluations, ${inserted.exam} exams with results.`,
+          `${inserted.courseProfile} course profiles, ${inserted.enrollment} enrollments, ${inserted.evaluation} evaluations, ${inserted.exam} exams with results.`,
       )
     } finally {
       await shutdownPools()

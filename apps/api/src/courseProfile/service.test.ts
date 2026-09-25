@@ -5,14 +5,14 @@ import type { SchoolDbClient } from '@narada/db'
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
 import * as repository from './repository'
-import { addToCounter, updateDetails } from './service'
+import { addToCounter, updateCourseProfile } from './service'
 
 // Explicit factories so neither the real repository (which pulls in `@narada/db`) nor `@narada/db`
 // itself loads — that would trigger real env-var validation.
 vi.mock('./repository', () => ({
   findWritableProfile: vi.fn(),
-  lockDetails: vi.fn(),
-  replaceDetails: vi.fn(),
+  lock: vi.fn(),
+  update: vi.fn(),
   addToCounter: vi.fn(),
 }))
 vi.mock('@narada/db', () => ({}))
@@ -45,25 +45,59 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-describe('updateDetails', () => {
-  it('lays the patch over the locked details and writes the result, all in the one transaction', async () => {
-    vi.mocked(repository.findWritableProfile).mockResolvedValue({ id: 'p1' })
-    vi.mocked(repository.lockDetails).mockResolvedValue({ japam: 100 })
-    vi.mocked(repository.replaceDetails).mockResolvedValue({ japam: 40 })
+const stored = { learningGoal: null, currentProficiency: null, comments: null }
 
-    await expect(updateDetails(own, 'p1', { japam: 40 })).resolves.toEqual({ japam: 40 })
+describe('updateCourseProfile', () => {
+  it('lays the details patch over the locked details and writes the result, all in the one transaction', async () => {
+    vi.mocked(repository.findWritableProfile).mockResolvedValue({ id: 'p1' })
+    vi.mocked(repository.lock).mockResolvedValue({ ...stored, details: { japam: 100 } })
+    vi.mocked(repository.update).mockResolvedValue({ ...stored, details: { japam: 40 } })
+
+    await expect(updateCourseProfile(own, 'p1', { details: { japam: 40 } })).resolves.toEqual({
+      ...stored,
+      details: { japam: 40 },
+    })
 
     expect(repository.findWritableProfile).toHaveBeenCalledWith(db, 'p1', 'user-1')
-    expect(repository.lockDetails).toHaveBeenCalledWith(tx, 'p1', 'course-ved')
-    expect(repository.replaceDetails).toHaveBeenCalledWith(tx, 'p1', 'course-ved', { japam: 40 })
+    expect(repository.lock).toHaveBeenCalledWith(tx, 'p1', 'course-ved')
+    expect(repository.update).toHaveBeenCalledWith(tx, 'p1', 'course-ved', {
+      details: { japam: 40 },
+    })
+  })
+
+  it('writes the three columns as sent, leaving details alone when there is no details patch', async () => {
+    vi.mocked(repository.findWritableProfile).mockResolvedValue({ id: 'p1' })
+    vi.mocked(repository.lock).mockResolvedValue({ ...stored, details: { japam: 100 } })
+    vi.mocked(repository.update).mockResolvedValue({
+      ...stored,
+      learningGoal: 'recite',
+      details: { japam: 100 },
+    })
+
+    await updateCourseProfile(own, 'p1', { learningGoal: 'recite', currentProficiency: 'level1' })
+
+    expect(repository.update).toHaveBeenCalledWith(tx, 'p1', 'course-ved', {
+      learningGoal: 'recite',
+      currentProficiency: 'level1',
+    })
+  })
+
+  it('takes the columns in a course that declares no course-level details', async () => {
+    vi.mocked(repository.findWritableProfile).mockResolvedValue({ id: 'p1' })
+    vi.mocked(repository.lock).mockResolvedValue({ ...stored, details: {} })
+    vi.mocked(repository.update).mockResolvedValue({ ...stored, comments: 'hi', details: {} })
+
+    await updateCourseProfile(rr, 'p1', { comments: 'hi' })
+
+    expect(repository.update).toHaveBeenCalledWith(tx, 'p1', 'course-pur', { comments: 'hi' })
   })
 
   it('lets a school admin edit anyone’s, with no owner check', async () => {
     vi.mocked(repository.findWritableProfile).mockResolvedValue({ id: 'p1' })
-    vi.mocked(repository.lockDetails).mockResolvedValue({})
-    vi.mocked(repository.replaceDetails).mockResolvedValue({ japam: 5 })
+    vi.mocked(repository.lock).mockResolvedValue({ ...stored, details: {} })
+    vi.mocked(repository.update).mockResolvedValue({ ...stored, details: { japam: 5 } })
 
-    await updateDetails(admin, 'p1', { japam: 5 })
+    await updateCourseProfile(admin, 'p1', { details: { japam: 5 } })
 
     expect(repository.findWritableProfile).toHaveBeenCalledWith(db, 'p1', null)
   })
@@ -71,28 +105,27 @@ describe('updateDetails', () => {
   it('404s someone else’s profile for a non-admin, and locks and writes nothing', async () => {
     vi.mocked(repository.findWritableProfile).mockResolvedValue(undefined)
 
-    await expect(updateDetails(own, 'p1', { japam: 1 })).rejects.toMatchObject({ statusCode: 404 })
-    expect(repository.lockDetails).not.toHaveBeenCalled()
-  })
-
-  it('404s in a course that declares nothing course-level', async () => {
-    await expect(updateDetails(rr, 'p1', { japam: 1 })).rejects.toMatchObject({ statusCode: 404 })
-    expect(repository.findWritableProfile).not.toHaveBeenCalled()
+    await expect(updateCourseProfile(own, 'p1', { details: { japam: 1 } })).rejects.toMatchObject({
+      statusCode: 404,
+    })
+    expect(repository.lock).not.toHaveBeenCalled()
   })
 
   it('refuses a key the course does not define, and a value the type does not allow, writing nothing', async () => {
     vi.mocked(repository.findWritableProfile).mockResolvedValue({ id: 'p1' })
-    vi.mocked(repository.lockDetails).mockResolvedValue({})
+    vi.mocked(repository.lock).mockResolvedValue({ ...stored, details: {} })
 
-    await expect(updateDetails(own, 'p1', { gothram: 'A' })).rejects.toMatchObject({
+    await expect(
+      updateCourseProfile(own, 'p1', { details: { gothram: 'A' } }),
+    ).rejects.toMatchObject({
       statusCode: 400,
       message: 'details.gothram: is not a field for this school',
     })
-    await expect(updateDetails(own, 'p1', { japam: -3 })).rejects.toMatchObject({
+    await expect(updateCourseProfile(own, 'p1', { details: { japam: -3 } })).rejects.toMatchObject({
       statusCode: 400,
       message: 'details.japam: must be a whole number, 0 or more',
     })
-    expect(repository.replaceDetails).not.toHaveBeenCalled()
+    expect(repository.update).not.toHaveBeenCalled()
   })
 })
 

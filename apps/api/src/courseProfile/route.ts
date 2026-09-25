@@ -5,29 +5,30 @@ import { parse } from '../utils/validate'
 import {
   AddToCounterSchema,
   CounterParamsSchema,
-  CourseDetailsParamsSchema,
-  UpdateCourseDetailsSchema,
+  CourseProfileParamsSchema,
+  UpdateCourseProfileSchema,
 } from './schema'
-import { addToCounter, updateDetails } from './service'
+import { addToCounter, updateCourseProfile } from './service'
 
-// mergeParams: mounted at /profiles/:profileId/course-details in routes.ts, so this needs the parent
+// mergeParams: mounted at /profiles/:profileId/course-profile in routes.ts, so this needs the parent
 // path's :profileId. optionalProfileRoute (not profileRoute) because a school admin editing a
-// student's details doesn't need an active profile of their own — same as editing their profile.
-// Both routes are course-scoped: course-level details belong to the course the request names
-// (`X-Course-Slug`), and the caller has to be part of it. Reading them is part of the profile page's
+// student's record doesn't need an active profile of their own — same as editing their profile.
+// Both routes are course-scoped: a course profile belongs to the course the request names
+// (`X-Course-Slug`), and the caller has to be part of it. Reading it is part of the profile page's
 // own response (`GET /profiles/:profileId/detail`).
 const router = Router({ mergeParams: true })
 
-// Edits the course-level details (a patch). The owner or a school admin only — `service.ts` decides.
+// Edits the student's record in this course: the three answers, and a patch of its details. The
+// owner or a school admin only — `service.ts` decides.
 router.patch(
   '/',
   optionalProfileRoute(async ({ req, res, db, school, user, access, getCourse }) => {
-    const { profileId } = await parse(CourseDetailsParamsSchema, req.params)
-    const { details } = await parse(UpdateCourseDetailsSchema, req.body)
+    const { profileId } = await parse(CourseProfileParamsSchema, req.params)
+    const data = await parse(UpdateCourseProfileSchema, req.body)
     const course = await getCourse()
     await access.requireCanReadCourseContent(course.id)
-    const updated = await updateDetails({ db, school, course, user, access }, profileId, details)
-    res.status(200).json({ data: { details: updated } })
+    const updated = await updateCourseProfile({ db, school, course, user, access }, profileId, data)
+    res.status(200).json({ data: updated })
   }),
 )
 

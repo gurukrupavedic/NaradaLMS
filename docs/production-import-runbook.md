@@ -1,4 +1,4 @@
-# Staging/production runbook: apply pending migrations + import the SLMTS roster
+# Staging/production runbook: reset the database, then import the SLMTS and RR rosters
 
 **Audience:** whoever has Railway access to the `narada` project's staging or production
 environment. Written to be followed step-by-step; each step says what to run, what you should see,
@@ -9,8 +9,8 @@ Railway environment/service with its own Postgres database and its own credentia
 shared between them. Don't skip straight to production because staging "should" behave the same —
 the whole point of doing staging first is to catch anything environment-specific before it matters.
 
-**Covers:** applying any pending `packages/db/drizzle/public` migrations, bringing existing school
-schemas up to date, and importing the real registration/tracker/mark-sheet data into **two schools**,
+**Covers:** emptying the environment's database (needed once, when the migration history was collapsed
+into a single baseline), letting the API create the schema on boot, and importing the real registration/tracker/mark-sheet data into **two schools**,
 one per workbook (`seed-data/slmts.xlsx`, `seed-data/rr.xlsx`):
 
 | School (`--slug`) | Workbook | Course (URL segment) | Batches |
@@ -21,8 +21,9 @@ one per workbook (`seed-data/slmts.xlsx`, `seed-data/rr.xlsx`):
 Every person is identified by the sheets' `PRIMARY KEY` (`<country code>-<phone>-<year of birth>`).
 `user` is platform-wide — one login per phone number — so someone in both workbooks is one user with a
 profile in each school; nothing else is shared. Each registration-sheet row becomes an **approved
-registration** linked to the profile, which is what makes a person with no batch "part of" the course
-(see `importer-watchouts.md`); each mark-sheet row with marks becomes a completed `exam` + `examResult`. The workbooks record no exam date (the `TRACK n` sheets' `YEAR`/`SEMESTER`
+registration** linked to the profile, which is what makes a person with no batch "part of" the course,
+plus a **`courseProfile`** row for that course carrying what they said about it (goal, starting point,
+comments); each mark-sheet row with marks becomes a completed `exam` + `examResult`. The workbooks record no exam date (the `TRACK n` sheets' `YEAR`/`SEMESTER`
 columns are certificate print details and are ignored), so every imported exam is dated the day of import.
 
 **The data is not in Git.** `seed-data/` is gitignored — the workbooks and everything parsed from
@@ -37,10 +38,10 @@ the same reason; ask for it if you don't have it). The parser refuses to hand th
 fixed in the spreadsheets before Step 4 can pass. The counts below are what the workbooks give as of 2026-09-20
 (with no blocking findings open); re-parse and update them if the workbooks change:
 
-| | users | profiles | registrations | tracks | chapters | batches | enrollments | evaluations | exams |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `slmts` | 981 | 1046 | 1046 | 8 | 90 | 55 | 825 | 21,020 | 463 |
-| `rr` | 877 | 978 | 978 | 10 | 114 | 40 | 625 | 18,607 | 379 |
+| | users | profiles | registrations | course profiles | tracks | chapters | batches | enrollments | evaluations | exams |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `slmts` | 981 | 1046 | 1046 | 1046 | 8 | 90 | 55 | 825 | 21,020 | 463 |
+| `rr` | 877 | 978 | 978 | 978 | 10 | 114 | 40 | 625 | 18,607 | 379 |
 
 (128 users appear in both, so the platform gains 1,730 users, not 1,858.)
 
@@ -153,85 +154,58 @@ changes, update `import-school.ts`'s imports *before* running this runbook — o
 
 ---
 
-## Step 1 — Public-schema migrations (applied by the API on boot)
+## Step 1 — Empty the database, then let the API create the schema
 
-There is no migration command to run. `apps/api/src/index.ts` applies the public-schema migrations
-(`migratePublicSchema()`) and every school schema's (`migrateAllSchoolSchemas()`, Step 3) on every
-boot, before the server opens its port. So this step is: make sure the API build you want is deployed
-to this environment and started cleanly.
+The migration history is one baseline per schema (`packages/db/drizzle/public/0000_baseline.sql` and
+`.../school/0000_baseline.sql`), replacing the chain that came before. A database that has the old
+chain applied can't be brought forward: the baseline would try to `CREATE` tables that already exist
+and the API would refuse to boot. **The environment's data is disposable, so empty it.** This is a
+one-time reset; from then on the API applies new migrations itself on every boot
+(`apps/api/src/index.ts` runs `migratePublicSchema()` and `migrateAllSchoolSchemas()` before it opens
+its port), and no step here needs repeating.
 
-**Expect** in the API's logs: `applied pending database migrations` (`event: startup.migrated`), and
-the service healthy. A migration that fails stops the boot, so a healthy API means the schema is
-current.
+**Order matters on staging.** Staging deploys the API automatically once CI passes on `main`, and the
+new build's first boot is what creates the schema. Empty the database **before** the change that
+introduces the baseline is merged. If it's merged first, the staging API fails to boot with
+`relation "..." already exists` (it stops before serving anything, so nothing is damaged) — empty the
+database then and let it restart. Production gets the same treatment when you choose to deploy.
 
-**If the API fails to boot with `relation "..." already exists`** (e.g. `relation "account" already exists`, or
-`column "phoneNumber" of relation "user" already exists`): this means drizzle's migration-tracking
-table (`drizzle.__drizzle_migrations`) doesn't reflect reality — either it's missing the row for a
-migration that's actually already applied, or it doesn't exist at all yet (the likely case if this
-environment's public schema was ever set up via `pnpm db:push`, which never writes to that table).
-`migrate()` runs in one transaction, so the failure itself is safe — nothing partial is left behind
-— but don't just restart it blindly. Reconcile first:
-
-> **A note on the SQL below:** it's written as plain SQL to paste into an already-open `psql` session
-> (e.g. Railway's console) — no shell involved, no shell-quoting needed. If you'd rather run it as a
-> one-shot shell command instead (`psql "$DATABASE_URL" -c '...'`), that needs its own, different
-> quoting to embed SQL string literals inside a shell argument — ask for that form rather than
-> improvising it, since mixing the two conventions produces a confusing parse error rather than an
-> obvious one.
-
-1. **Check current state** (safe, read-only):
+1. **Check what you are about to erase** (read-only), and that it really is this environment:
    ```sh
-   psql "$DATABASE_URL" -c "SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;"
+   psql "$DATABASE_URL" -c "SELECT id, slug FROM organization;"   # fails with 'does not exist' on an empty database — fine
+   psql "$DATABASE_URL" -c "SELECT count(*) FROM \"user\";"
    ```
-   Expect either "relation does not exist" or zero rows if this environment predates any tracked
-   migration. **If you see unexpected rows already there, stop and investigate before continuing**
-   — don't backfill on top of an unknown state.
-
-2. **Backfill the tracking row(s) for whatever's genuinely already applied.** `packages/db/drizzle/public/`
-   currently has four migrations (`0000_nebulous_the_liberteens` through `0003_grey_sheva_callister`
-   — check `packages/db/drizzle/public/meta/_journal.json` for the current list, since more may have
-   landed since this was written). For the common case — this environment's tables already exist
-   from an original `db:push` setup, so however many of these migrations are already reflected in
-   the live schema count as "already applied."
-
-   Open an interactive session (`psql "$DATABASE_URL"`, or however your provider's console gets you
-   a `psql`/`=#` prompt) and paste this as **plain SQL** — don't wrap it in `psql -c '...'` from a
-   shell, since the quoting needed for that is different and easy to get wrong when pasting into an
-   already-open session (ask me if you want the shell-wrapped form instead). Repeat the `INSERT` for
-   each migration you're backfilling, in order:
-   ```sql
-   CREATE SCHEMA IF NOT EXISTS "drizzle";
-   CREATE TABLE IF NOT EXISTS "drizzle"."__drizzle_migrations" (
-     id SERIAL PRIMARY KEY,
-     hash text NOT NULL,
-     created_at bigint
-   );
-   INSERT INTO "drizzle"."__drizzle_migrations" (hash, created_at)
-   VALUES ('b5d361c0be6cb4d0bcd7eed656eaf7e30a21676b28d2094188faa7840d65744f', 1780374016543);
+2. **Erase it.** Drops the public schema, the migration bookkeeping, and every school's schema:
+   ```sh
+   psql "$DATABASE_URL" <<'SQL'
+   DO $$
+   DECLARE s text;
+   BEGIN
+     FOR s IN SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'school-%' LOOP
+       EXECUTE format('DROP SCHEMA %I CASCADE', s);
+     END LOOP;
+   END $$;
+   DROP SCHEMA IF EXISTS drizzle CASCADE;
+   DROP SCHEMA public CASCADE;
+   CREATE SCHEMA public;
+   SQL
    ```
-   That hash/timestamp pair is `0000_nebulous_the_liberteens.sql` as of this runbook — recompute it
-   yourself for any migration you're backfilling (`sha256` of the raw `.sql` file content; the
-   timestamp is that migration's `when` in `packages/db/drizzle/public/meta/_journal.json`), don't
-   reuse a stale value from this doc without checking.
+   If `DROP SCHEMA public` is refused for lack of ownership, stop and ask rather than improvising.
+3. **Deploy the API build with the baseline and let it boot.** Nothing to run.
 
-3. **Verify exactly the row(s) you intended landed** (plain SQL, same session):
-   ```sql
-   SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;
-   ```
-
-4. **Restart the API** — it should now skip whatever you backfilled and apply only what's genuinely
-   still pending.
-
-If the failure doesn't match this pattern (e.g. it's a *different* table/column than expected, or
-you're unsure what's already applied), stop and ask rather than guessing at a backfill under time
-pressure — an incorrect hash/timestamp here just makes `migrate()`'s bookkeeping wrong in a
-different way, not obviously wrong.
+**Expect** in the API's logs: `applied pending database migrations` (`event: startup.migrated`) with
+`schools: 0`, and the service healthy. A migration that fails stops the boot, so a healthy API means
+the schema is current.
 
 **Verify:**
 ```sh
 psql "$DATABASE_URL" -c "\d \"user\"" | grep -i phone
+psql "$DATABASE_URL" -c "SELECT count(*) FROM drizzle.__drizzle_migrations;"
 ```
-Expect to see `phoneNumber` (text, unique) and `phoneNumberVerified` (boolean).
+Expect `phoneNumber` (text, unique) and `phoneNumberVerified` (boolean), and a count of `1`.
+
+Local development databases need the same reset once (drop and recreate the database, run the API
+once, then re-import or `pnpm seed`), since they carry the old chain too.
 
 ---
 
@@ -258,11 +232,11 @@ prerequisite 6 above is actually satisfied on this environment), enter the code.
 
 ---
 
-## Step 3 — Existing schools are migrated by the same boot
+## Step 3 — Schools are provisioned by the importer
 
-Nothing to run: `migrateAllSchoolSchemas()` (Step 1) brings every school that already exists up to
-date, and a new school is provisioned at its current schema by the importer (Step 6). Check the boot
-log's `startup.migrated` line reports the number of schools you expect.
+Nothing to run: after Step 1 there are no schools yet, and each is provisioned at its current schema
+by the importer (Step 6). From then on `migrateAllSchoolSchemas()` brings every existing school up to
+date on each API boot; the `startup.migrated` log line reports how many it touched.
 
 ---
 
@@ -304,7 +278,7 @@ lists every finding about the spreadsheets themselves; don't proceed on a mismat
 ```sh
 psql "$DATABASE_URL" -c "SELECT id, slug FROM organization WHERE slug IN ('slmts', 'rr');"
 ```
-Expect zero rows. If a row already exists, **stop** — re-running the importer against an org that's
+Expect zero rows (Step 1 emptied the database). If a row already exists, **stop** — re-running the importer against an org that's
 already been imported will not cleanly re-apply (see "Re-running this runbook" below).
 
 ---
@@ -322,7 +296,7 @@ pnpm exec tsx src/import-school.ts data --slug rr --name "RR" --commit
 ✅ All rows pass validation against the live API schemas, and every person can reach a course.
 Importing into organization "slmts" (<uuid>)
 ✅ Imported 981 new users (0 reused existing accounts, 0 already present) + 981 org memberships.
-✅ Import committed: 1 courses, 8 tracks, 90 chapters, 55 batches, 1046 profiles, 1046 registrations, 825 enrollments, 21020 evaluations, 463 exams with results.
+✅ Import committed: 1 courses, 8 tracks, 90 chapters, 55 batches, 1046 profiles, 1046 registrations, 1046 course profiles, 825 enrollments, 21020 evaluations, 463 exams with results.
 ```
 and for `rr` (run second): `Imported 749 new users (0 reused existing accounts, 128 already present) + 877 org
 memberships` — the 128 are people whose phone number is also in the SLMTS workbook, whose login already
@@ -334,8 +308,8 @@ rows matching one of the roster's emails/phone numbers (e.g. this environment wa
 testing) — that's expected and safe, not a sign of a problem; see `import-school.ts`'s own id-remap
 logic if you want the detail.
 
-This is the only step in this runbook that writes real, permanent data. Everything before it is
-read-only or additive/idempotent (Steps 1 and 3 are safe to re-run; Step 2 checks before creating).
+This is the only step in this runbook that writes real, permanent data. (Step 1 erases, but only what
+was already disposable; Step 2 checks before creating.)
 
 ---
 
@@ -355,15 +329,16 @@ UNION ALL SELECT 'chapter', count(*) FROM \"$SCHEMA\".chapter
 UNION ALL SELECT 'batch', count(*) FROM \"$SCHEMA\".batch
 UNION ALL SELECT 'profile', count(*) FROM \"$SCHEMA\".profile
 UNION ALL SELECT 'registration', count(*) FROM \"$SCHEMA\".registration
+UNION ALL SELECT 'courseProfile', count(*) FROM \"$SCHEMA\".\"courseProfile\"
 UNION ALL SELECT 'enrollment', count(*) FROM \"$SCHEMA\".enrollment
 UNION ALL SELECT 'evaluation', count(*) FROM \"$SCHEMA\".evaluation
 UNION ALL SELECT 'exam', count(*) FROM \"$SCHEMA\".exam
 UNION ALL SELECT 'examResult', count(*) FROM \"$SCHEMA\".\"examResult\";
 "
-# Expect for slmts: track 8, chapter 90, batch 55, profile 1046, registration 1046, enrollment 825,
-#                   evaluation 21020, exam 463, examResult 463
-# Expect for rr:    track 10, chapter 114, batch 40, profile 978, registration 978, enrollment 625,
-#                   evaluation 18607, exam 379, examResult 379
+# Expect for slmts: track 8, chapter 90, batch 55, profile 1046, registration 1046, courseProfile 1046,
+#                   enrollment 825, evaluation 21020, exam 463, examResult 463
+# Expect for rr:    track 10, chapter 114, batch 40, profile 978, registration 978, courseProfile 978,
+#                   enrollment 625, evaluation 18607, exam 379, examResult 379
 
 # Every profile must be part of a course (an enrollment, or the approved registration it came from),
 # or that person reads no content and is told they are in no course.
@@ -438,7 +413,7 @@ and prints a summary:
 
 ## Re-running this runbook / partial failures
 
-- **Steps 1–3** are idempotent — safe to re-run from a clean start at any point, in any environment.
+- **Step 1's reset** is destructive by design — run it once per environment, deliberately; **Steps 2 and 3** check before they create, so they are safe to repeat.
 - **Step 6 is atomic per school and, as of the deterministic-id importer, re-runnable.** Every row's id
   is derived from its spreadsheet key (a person's `PRIMARY KEY`, a batch code, …), so parsing the same
   workbooks twice gives identical JSON and importing it twice inserts nothing new. A second `--commit`
@@ -446,8 +421,8 @@ and prints a summary:
   `--allow-existing` it completes as a no-op. Neither duplicates anyone.
   - User/membership inserts (before the school-scoped transaction) use `ON CONFLICT DO NOTHING` on
     `id` — safe to leave as-is.
-  - The `course`/`track`/`chapter`/`batch`/`profile`/`registration`/`enrollment`/`evaluation`/`exam`/
-    `examResult` writes are one transaction — a failure there rolls back cleanly, so nothing partial
+  - The `course`/`track`/`chapter`/`batch`/`profile`/`registration`/`courseProfile`/`enrollment`/
+    `evaluation`/`exam`/`examResult` writes are one transaction — a failure there rolls back cleanly, so nothing partial
     persists at the school-schema level.
   - If it failed and rolled back: check `SELECT id FROM organization WHERE slug='<school>'` — if the org
     row exists but the school schema has no data, something is inconsistent; **stop and ask** rather

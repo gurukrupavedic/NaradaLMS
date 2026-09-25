@@ -1,7 +1,6 @@
 import * as z from 'zod'
 
 import { FindBatchesSchema } from '../batches/schema'
-import { proficiencyLevelSchema } from '../evaluations/schema'
 import { DetailsSchema } from '../utils/details'
 import { requireNonEmpty } from '../utils/validate'
 
@@ -25,8 +24,6 @@ export const ProfileSchema = z.object({
   // Never accepted directly in `UpdateProfileSchema` below — derived server-side from
   // city/state/country by `utils/timezone.ts::deriveTimeZone` (see `service.ts::updateProfile`).
   countryTimeZone: z.string().nullable(),
-  learningGoal: z.string().nullable(),
-  currentProficiency: proficiencyLevelSchema.nullable(),
   spokenLanguages: z.array(z.string()),
   readLanguages: z.array(z.string()),
   parentNames: z.array(z.string()),
@@ -34,7 +31,6 @@ export const ProfileSchema = z.object({
   noMeatAgreed: z.boolean(),
   noAlcoholAgreed: z.boolean(),
   noSmokingAgreed: z.boolean(),
-  comments: z.string().nullable(),
   // The school-specific answers (`@narada/profile-fields`), copied from the registration on
   // approval. Editable through `UpdateProfileSchema` as a *patch*: only the keys sent change.
   details: DetailsSchema,
@@ -57,8 +53,6 @@ export const UpdateProfileSchema = requireNonEmpty(
     state: true,
     country: true,
     email: true,
-    learningGoal: true,
-    currentProficiency: true,
     spokenLanguages: true,
     readLanguages: true,
     parentNames: true,
@@ -66,7 +60,6 @@ export const UpdateProfileSchema = requireNonEmpty(
     noMeatAgreed: true,
     noAlcoholAgreed: true,
     noSmokingAgreed: true,
-    comments: true,
   })
     .partial()
     .extend({

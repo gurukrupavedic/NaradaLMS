@@ -1,4 +1,4 @@
-import type { PersonFields, ProficiencyLevel, ProfileRow, RegistrationRow, UserRow } from '../seed-types'
+import type { CourseAnswers, PersonFields, ProficiencyLevel, ProfileRow, RegistrationRow, UserRow } from '../seed-types'
 import { clean, columns, digits, normHeader, orNull, readSheet, rowNumber, stableId, type Ctx } from './sheet'
 
 /** What the schools share: `user` is platform-wide, so one phone number is one user in every school. */
@@ -121,13 +121,12 @@ export function parsePeople(ctx: Ctx, sheetName: string, shared: SharedUsers) {
     users.set(user.id, user)
 
     // A profile is its registration's snapshot (as when an admin approves an application in the app),
-    // so both carry the same converted fields.
+    // so both carry the same converted fields; the answers about the course stay on the registration
+    // (the importer writes them to the profile's `courseProfile` row from there).
     const person: PersonFields = {
       email,
       yearOfBirth,
       countryTimeZone: TIME_ZONES[normHeader(at('COUNTRY TIME ZONE'))] ?? null,
-      learningGoal: orNull(at('GOAL')),
-      currentProficiency: proficiency(orNull(at('PROFICIENCY'))),
       spokenLanguages: splitList(orNull(at('LANGUAGES SPOKEN'))),
       readLanguages: splitList(orNull(at('LANGUAGES READ'))),
       parentNames: splitList(orNull(at('PARENT NAMES'))),
@@ -136,6 +135,10 @@ export function parsePeople(ctx: Ctx, sheetName: string, shared: SharedUsers) {
       noMeatAgreed: parseYesNo(orNull(at('NO MEAT'))),
       noAlcoholAgreed: parseYesNo(orNull(at('NO ALCHOHOL'))),
       noSmokingAgreed: parseYesNo(orNull(at('NO SMOKING'))),
+    }
+    const answers: CourseAnswers = {
+      learningGoal: orNull(at('GOAL')),
+      currentProficiency: proficiency(orNull(at('PROFICIENCY'))),
       comments: orNull(at('COMMENTS')),
     }
 
@@ -143,6 +146,7 @@ export function parsePeople(ctx: Ctx, sheetName: string, shared: SharedUsers) {
     profiles.set(key, { ...person, id: profileId, userId: user.id, name, phone, city, sourceKey: key })
     registrations.push({
       ...person,
+      ...answers,
       id: stableId('registration', school, key),
       courseSlug: course,
       profileId,

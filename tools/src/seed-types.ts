@@ -45,8 +45,6 @@ export type PersonFields = {
   email: string | null
   yearOfBirth: number
   countryTimeZone: string | null
-  learningGoal: string | null
-  currentProficiency: ProficiencyLevel | null
   spokenLanguages: string[]
   readLanguages: string[]
   parentNames: string[]
@@ -54,6 +52,15 @@ export type PersonFields = {
   noMeatAgreed: boolean
   noAlcoholAgreed: boolean
   noSmokingAgreed: boolean
+}
+
+/**
+ * What a registration says about the course applied to. On the registration itself, and — as the
+ * importer writes it — on the `courseProfile` row of the profile it produced, for that course.
+ */
+export type CourseAnswers = {
+  learningGoal: string | null
+  currentProficiency: ProficiencyLevel | null
   comments: string | null
 }
 
@@ -68,7 +75,7 @@ export type ProfileRow = PersonFields & {
 }
 
 /** Every registration-sheet row is an admitted person, so it imports as an approved registration. */
-export type RegistrationRow = PersonFields & {
+export type RegistrationRow = PersonFields & CourseAnswers & {
   id: string
   courseSlug: string
   profileId: string

@@ -32,22 +32,20 @@ export const proficiencyLevel = pgEnum('proficiencyLevel', [
   'level4',
 ])
 
-export const profile = pgTable(
-  'profile',
-  {
-    id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    userId: text('userId').notNull(),
-    name: text('name').notNull(),
-    phone: text('phone'),
-    city: text('city'),
-    // The rest of these mirror `registration`'s own columns exactly (same names/types):
-    // `registrations/service.ts::provisionApprovedApplicant` copies them straight across when an
-    // application is approved, so `profile` becomes the living record of a student's contact and
-    // background details — `registration` stays an immutable snapshot of what was submitted.
-    // Null/empty-default for every one of these so a profile created directly via `POST /profiles`
-    // (no registration behind it) stays valid.
+// Column groups, declared once because more than one table carries them. Each is a factory rather
+// than a shared object so every table builds its own column instances.
+
+/**
+ * What a person *is* everywhere in a school — contact, location, background, the agreements.
+ * `profile` (the living record) and `registration` (the immutable snapshot of what was submitted)
+ * both carry it, and `registrations/service.ts::provisionApprovedApplicant` copies it straight
+ * across when an application is approved. Null/empty-default throughout so a profile created
+ * without a registration behind it stays valid.
+ */
+function personColumns() {
+  return {
     email: text('email'),
-    yearOfBirth: integer('yearOfBirth'),
+    city: text('city'),
     // ISO 3166-2 subdivision code (e.g. 'MA', 'TG') and ISO 3166-1 alpha-2 country code (e.g.
     // 'US', 'IN') — codes rather than display names so `country-state-city` can re-derive a
     // human-readable name ("Massachusetts", "India") and the coordinates `utils/timezone.ts`
@@ -61,8 +59,6 @@ export const profile = pgTable(
     // abbreviation) happens at render time so it's always correct for the current DST state,
     // rather than baked into the stored string.
     countryTimeZone: text('countryTimeZone'),
-    learningGoal: text('learningGoal'),
-    currentProficiency: proficiencyLevel('currentProficiency'),
     spokenLanguages: text('spokenLanguages').array().notNull().default([]),
     readLanguages: text('readLanguages').array().notNull().default([]),
     parentNames: text('parentNames').array().notNull().default([]),
@@ -70,16 +66,46 @@ export const profile = pgTable(
     noMeatAgreed: boolean('noMeatAgreed').notNull().default(false),
     noAlcoholAgreed: boolean('noAlcoholAgreed').notNull().default(false),
     noSmokingAgreed: boolean('noSmokingAgreed').notNull().default(false),
+  }
+}
+
+/**
+ * What a person says about themselves *in one course* — their goal, where they think they start,
+ * anything else the teacher should know. `registration` holds it as submitted (the application is
+ * for one course) and `courseProfile` as the living record, copied across on approval.
+ */
+function courseAnswerColumns() {
+  return {
+    learningGoal: text('learningGoal'),
+    currentProficiency: proficiencyLevel('currentProficiency'),
     comments: text('comments'),
-    // What this school collects on top of the columns above (gothrams, ...), keyed by the field keys
-    // in `@narada/profile-fields`. Validated against that school's definitions on every write
-    // (`apps/api/src/details.ts`) — the database only guarantees it is a JSON object. Copied
-    // unchanged from `registration.details` on approval. Keys are permanent: renaming one strands
-    // the values already stored under it.
-    details: jsonb('details')
-      .$type<Record<string, string | number | boolean>>()
-      .notNull()
-      .default({}),
+  }
+}
+
+/**
+ * What a school (or a course) collects beyond the columns above — gothrams, japam — keyed by the
+ * field keys in `@narada/profile-fields`. Validated against those definitions on every write
+ * (`apps/api/src/utils/details.ts`); the database only guarantees it is a JSON object. Keys are
+ * permanent: renaming one strands the values already stored under it.
+ */
+function detailsColumn() {
+  return jsonb('details').$type<Record<string, string | number | boolean>>().notNull().default({})
+}
+
+// The school-level component of a person: who they are, in every course of the school. What they
+// have *in a course* is `courseProfile` (below).
+export const profile = pgTable(
+  'profile',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    userId: text('userId').notNull(),
+    name: text('name').notNull(),
+    phone: text('phone'),
+    yearOfBirth: integer('yearOfBirth'),
+    ...personColumns(),
+    // The school's own fields (gothrams, ...) — see `detailsColumn`. Copied from the school-level
+    // part of `registration.details` on approval.
+    details: detailsColumn(),
     // Soft-delete marker: NULL = active. Deliberately has no `.$onUpdateFn` —
     // unlike `updatedAt`, this is set exactly once, explicitly, by the soft-delete write,
     // and must never be auto-touched by an unrelated UPDATE.
@@ -95,13 +121,15 @@ export const profile = pgTable(
 
 export type SchoolProfile = typeof profile.$inferSelect
 
-// The course-level component of a profile: what a person has *in one course*, as opposed to the
-// school-level `profile`. Same shape as `profile.details` — a `details` jsonb driven by the rules in
-// `@narada/profile-fields` (`courseFieldsFor(school, course)`), including counters (japam), which
-// are just numbers here. At most one row per profile per course (the primary key); a profile has as
-// many as it has courses. It is created when a registration is approved, or lazily by the first
-// course-level write (a student an admin put on a roster has none until then). It does not say who
-// is *in* the course — enrollments do; this only holds what we know about them there.
+// The course-level component of a person: what they have *in one course*, as opposed to the
+// school-level `profile`. The columns are what they said about themselves for that course
+// (`courseAnswerColumns`); `details` holds what the course collects beyond that — driven by the
+// rules in `@narada/profile-fields` (`courseFieldsFor(school, course)`), including counters
+// (japam), which are just numbers here. At most one row per profile per course (the primary key);
+// a profile has as many as it has courses. It is created when a registration is approved, or
+// lazily by the first course-level write (a student an admin put on a roster has none until then).
+// It does not say who is *in* the course — enrollments do; this only holds what we know about them
+// there.
 export const courseProfile = pgTable(
   'courseProfile',
   {
@@ -111,10 +139,8 @@ export const courseProfile = pgTable(
     courseId: uuid('courseId')
       .notNull()
       .references(() => course.id),
-    details: jsonb('details')
-      .$type<Record<string, string | number | boolean>>()
-      .notNull()
-      .default({}),
+    ...courseAnswerColumns(),
+    details: detailsColumn(),
     updatedAt: timestamp('updatedAt')
       .defaultNow()
       .notNull()
@@ -674,30 +700,11 @@ export const registration = pgTable(
     // nullable — staff profiles never file a registration).
     yearOfBirth: integer('yearOfBirth').notNull(),
     phone: text('phone').notNull(),
-    email: text('email'),
-    city: text('city'),
-    // Same shape as `profile`'s own columns — see that table's doc comment for why these are
-    // codes, and why `countryTimeZone` is server-derived rather than applicant-supplied.
-    state: text('state'),
-    country: text('country'),
-    countryTimeZone: text('countryTimeZone'),
-
-    learningGoal: text('learningGoal'),
-    currentProficiency: proficiencyLevel('currentProficiency'),
-    spokenLanguages: text('spokenLanguages').array().notNull().default([]),
-    readLanguages: text('readLanguages').array().notNull().default([]),
-
-    parentNames: text('parentNames').array().notNull().default([]),
-    dressCodeAgreed: boolean('dressCodeAgreed').notNull().default(false),
-    noMeatAgreed: boolean('noMeatAgreed').notNull().default(false),
-    noAlcoholAgreed: boolean('noAlcoholAgreed').notNull().default(false),
-    noSmokingAgreed: boolean('noSmokingAgreed').notNull().default(false),
-    comments: text('comments'),
-    // The school-specific answers — see `profile.details`.
-    details: jsonb('details')
-      .$type<Record<string, string | number | boolean>>()
-      .notNull()
-      .default({}),
+    ...personColumns(),
+    ...courseAnswerColumns(),
+    // The school-level and course-level answers together, as one form submits them — see
+    // `detailsColumn`. Approval divides them by the level that declares each key.
+    details: detailsColumn(),
 
     reviewedAt: timestamp('reviewedAt'),
     reviewedBy: uuid('reviewedBy').references(() => profile.id),

@@ -2,7 +2,7 @@ import { publicDb, type SchoolDb, type SchoolDbClient } from '@narada/db'
 import { registrationFieldsFor, splitDetails } from '@narada/profile-fields'
 
 import { conflict, internalError, orInternalError, orNotFound } from '../error'
-import { insert as insertCourseProfile } from '../courseDetails/repository'
+import { insert as insertCourseProfile } from '../courseProfile/repository'
 import { insert as insertProfile } from '../profiles/repository'
 import { resolveDetails } from '../utils/details'
 import { deriveTimeZone } from '../utils/timezone'
@@ -91,8 +91,6 @@ async function provisionApprovedApplicant(
     state: registration.state,
     country: registration.country,
     countryTimeZone: registration.countryTimeZone,
-    learningGoal: registration.learningGoal,
-    currentProficiency: registration.currentProficiency,
     spokenLanguages: registration.spokenLanguages,
     readLanguages: registration.readLanguages,
     parentNames: registration.parentNames,
@@ -100,7 +98,6 @@ async function provisionApprovedApplicant(
     noMeatAgreed: registration.noMeatAgreed,
     noAlcoholAgreed: registration.noAlcoholAgreed,
     noSmokingAgreed: registration.noSmokingAgreed,
-    comments: registration.comments,
     // The answers divide by the level that declares each key: the school's go on the profile, the
     // course's on the profile's row for the course applied to (`courseProfile`).
     details: answers.profile,
@@ -112,6 +109,9 @@ async function provisionApprovedApplicant(
   await insertCourseProfile(db, {
     profileId: profile.id,
     courseId: registration.courseId,
+    learningGoal: registration.learningGoal,
+    currentProficiency: registration.currentProficiency,
+    comments: registration.comments,
     details: answers.course,
   })
 

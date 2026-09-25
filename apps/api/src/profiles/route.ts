@@ -4,7 +4,8 @@ import * as z from 'zod'
 import { optionalProfileRoute, userRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { findAllAccessible, findAllAccessibleWithDetail } from '../batches/service'
-import { findDetails as findCourseDetails } from '../courseDetails/repository'
+import { find as findCourseProfile } from '../courseProfile/repository'
+import { EMPTY_COURSE_PROFILE } from '../courseProfile/schema'
 import { getDashboardData } from '../dashboard/service'
 import { ProfileBatchesQuerySchema, SearchProfilesQuerySchema, UpdateProfileSchema } from './schema'
 import { deleteProfile, findById, findByUserId, searchProfiles, updateProfile } from './service'
@@ -66,8 +67,9 @@ router.get(
     const dashboard = await getDashboardData({ db }, profile.id, profile.name, course.id)
     // What this person has in *this* course (the course-level component); empty until something is
     // written there — a student an admin put on a roster has no row yet.
-    const courseDetails = (await findCourseDetails(db, profile.id, course.id)) ?? {}
-    res.status(200).json({ data: { profile, courseDetails, dashboard } })
+    const courseProfile =
+      (await findCourseProfile(db, profile.id, course.id)) ?? EMPTY_COURSE_PROFILE
+    res.status(200).json({ data: { profile, courseProfile, dashboard } })
   }),
 )
 

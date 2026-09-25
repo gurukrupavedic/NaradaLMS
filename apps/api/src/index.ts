@@ -13,8 +13,8 @@ import { createServer, runServer } from './server'
 // which is the point — Railway's health check then fails and the previous deploy keeps serving,
 // rather than the new code running against a schema it doesn't match.
 await migratePublicSchema()
-const schoolResults = await migrateAllSchoolSchemas()
-logger.info({ event: 'startup.migrated', schools: schoolResults.length }, 'applied pending database migrations')
+const migratedSchools = await migrateAllSchoolSchemas()
+logger.info({ event: 'startup.migrated', schools: migratedSchools.length }, 'applied pending database migrations')
 
 const server = createServer()
 runServer(server, { port: env.PORT })

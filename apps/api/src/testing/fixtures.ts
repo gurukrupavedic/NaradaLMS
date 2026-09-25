@@ -739,6 +739,8 @@ export async function createRegistration(
     phone?: string
     email?: string | null
     learningGoal?: string | null
+    currentProficiency?: RegistrationRow['currentProficiency']
+    comments?: string | null
     reviewedAt?: Date | null
     reviewedBy?: string | null
   },
@@ -755,6 +757,8 @@ export async function createRegistration(
       phone: overrides?.phone ?? nextRegistrationPhone(),
       email: overrides?.email ?? null,
       learningGoal: overrides?.learningGoal ?? null,
+      currentProficiency: overrides?.currentProficiency ?? null,
+      comments: overrides?.comments ?? null,
       reviewedAt: overrides?.reviewedAt ?? null,
       reviewedBy: overrides?.reviewedBy ?? null,
     })

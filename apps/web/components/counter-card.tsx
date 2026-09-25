@@ -5,7 +5,7 @@ import type { CounterField } from '@narada/profile-fields'
 
 import { Spinner } from '@/components/spinner'
 import { formatCount, parseCount } from '@/lib/counter'
-import { useAddToCounter, useUpdateCourseDetails } from '@/lib/query/use-counter-mutations'
+import { useAddToCounter, useUpdateCourseProfile } from '@/lib/query/use-counter-mutations'
 
 const INPUT =
   'border border-rule bg-transparent p-2.5 text-[0.8125rem] focus:border-vermilion focus:outline-none'
@@ -14,7 +14,7 @@ const INPUT =
  * One of a course's counters (`@narada/profile-fields`' course-level rules — japam, for SLMTS's
  * Vedam): its running total, and for someone who may edit (the student themselves, or a school
  * admin) a box to add to it and a way to set it outright. `total` is the profile page's
- * `courseDetails[counter.key]` — a counter that was never written reads 0. The count is the current
+ * `courseProfile.details[counter.key]` — a counter that was never written reads 0. The count is the current
  * course's: the same student keeps a separate one in each course that has the counter. It keeps no
  * history; it's a number.
  */
@@ -98,7 +98,7 @@ function SetTotal({
   counterKey: string
   total: number
 }) {
-  const setting = useUpdateCourseDetails(profileId)
+  const setting = useUpdateCourseProfile(profileId)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -128,7 +128,7 @@ function SetTotal({
     }
 
     setError(null)
-    setting.mutate({ [counterKey]: parsed }, { onSuccess: () => setEditing(false) })
+    setting.mutate({ details: { [counterKey]: parsed } }, { onSuccess: () => setEditing(false) })
   }
 
   return (

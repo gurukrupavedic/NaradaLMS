@@ -1,1 +1,0 @@
-ALTER TABLE "course" ADD CONSTRAINT "course_slug_valid" CHECK ("course"."slug" ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND "course"."slug" NOT IN ('login', 'link-device', 'register', 'coming-soon', 'dashboard', 'exams', 'practice', 'admin', 'students', 'chapters', 'settings', 'v1', 'api', '_next', 'static', 'assets', 'public'));

@@ -1,19 +1,15 @@
 import type { SchoolDbClient } from '@narada/db'
-import {
-  COUNTER_MAX,
-  courseCounterFor,
-  courseFieldsFor,
-  type Details,
-} from '@narada/profile-fields'
+import { COUNTER_MAX, courseCounterFor, courseFieldsFor } from '@narada/profile-fields'
 
 import { notFound, orNotFound, unprocessable } from '../error'
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
 import { mergeDetailsPatch } from '../utils/details'
 import * as repository from './repository'
+import type { CourseProfile, UpdateCourseProfileData } from './schema'
 
-/** `course` is the one the request names (`X-Course-Slug`): course-level details belong to a course. */
-type CourseDetailsContext = {
+/** `course` is the one the request names (`X-Course-Slug`): a course profile belongs to a course. */
+type CourseProfileContext = {
   db: SchoolDbClient
   school: { slug: string }
   course: { id: string; slug: string }
@@ -26,41 +22,38 @@ type CourseDetailsContext = {
  * `profiles/service.ts::updateProfile`, enforced by the same ownership predicate in SQL, so someone
  * else's profile 404s exactly as a missing one does.
  */
-async function requireWritableProfile(context: CourseDetailsContext, profileId: string) {
+async function requireWritableProfile(context: CourseProfileContext, profileId: string) {
   const ownerUserId = context.access.isSchoolAdmin() ? null : context.user.id
   orNotFound(await repository.findWritableProfile(context.db, profileId, ownerUserId))
 }
 
 /**
- * Edits the profile's course-level details: the patch laid over what's stored and re-validated as a
- * whole against this course's rules (`courseFieldsFor`), in a transaction that first locks the row.
- * A course that declares no course-level fields has nothing to edit, so it 404s.
+ * Edits the profile's record in this course: the columns sent are replaced, and the `details` patch
+ * is laid over what's stored and re-validated as a whole against this course's rules
+ * (`courseFieldsFor`) — all in a transaction that first locks the row. A key this course doesn't
+ * declare is refused, so a course with no course-level fields still takes the three columns.
  */
-export async function updateDetails(
-  context: CourseDetailsContext,
+export async function updateCourseProfile(
+  context: CourseProfileContext,
   profileId: string,
-  patch: Details,
-): Promise<Details> {
+  data: UpdateCourseProfileData,
+): Promise<CourseProfile> {
+  const { details: detailsPatch, ...columns } = data
   const fields = courseFieldsFor(context.school.slug, context.course.slug)
-  if (fields.length === 0) {
-    throw notFound()
-  }
 
   await requireWritableProfile(context, profileId)
   return context.db.transaction(async tx => {
-    const current = await repository.lockDetails(tx, profileId, context.course.id)
-    return repository.replaceDetails(
-      tx,
-      profileId,
-      context.course.id,
-      mergeDetailsPatch(fields, current, patch),
-    )
+    const current = await repository.lock(tx, profileId, context.course.id)
+    return repository.update(tx, profileId, context.course.id, {
+      ...columns,
+      ...(detailsPatch && { details: mergeDetailsPatch(fields, current.details, detailsPatch) }),
+    })
   })
 }
 
 /** Adds to one of this course's counters and returns its new total. */
 export async function addToCounter(
-  context: CourseDetailsContext,
+  context: CourseProfileContext,
   profileId: string,
   key: string,
   count: number,

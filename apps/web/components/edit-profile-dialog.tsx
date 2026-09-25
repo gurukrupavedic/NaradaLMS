@@ -14,8 +14,8 @@ import {
   TextAreaField,
   TextField,
 } from '@/components/form-fields'
-import type { ApiProfile, ApiProficiencyLevel } from '@/lib/api/api-types'
-import type { UpdateProfileInput } from '@/lib/api/resources'
+import type { ApiCourseProfile, ApiProfile, ApiProficiencyLevel } from '@/lib/api/api-types'
+import type { SaveProfileInput } from '@/lib/api/resources'
 import { SELF_REPORTED_PROFICIENCY_OPTIONS } from '@/lib/registration-proficiency'
 import { COUNTRY_OPTIONS, getStateOptions } from '@/lib/geo'
 import {
@@ -29,19 +29,22 @@ import { useSchoolSlug } from '@/lib/school'
 /**
  * The "edit profile" form, opened from `components/student-profile-screen.tsx` either by the
  * profile's own owner or by a school admin correcting someone else's — same fields, same dialog,
- * same PATCH (`useUpdateProfile(profileId, isSelf)`, see `lib/query/use-profile-mutations.ts`);
+ * same save (`useUpdateProfile(profileId, isSelf)`, see `lib/query/use-profile-mutations.ts`);
  * `isSelf` here only changes the copy, never which fields are editable. Every registration-derived
  * field is editable here except `phone` and `yearOfBirth` — `phone` is the BetterAuth login
  * credential (changing it needs its own re-verification flow, not this form, even for an admin),
  * `yearOfBirth` is treated as fixed once recorded. The server enforces the same boundary
  * independently (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`), this is just the
  * matching client-side surface.
+ *
+ * It edits both components of a profile: the school-wide fields, and this course's own (goal,
+ * starting point, comments — `courseProfile`), which save as a second PATCH.
  */
 
 // The subset of `useMutation`'s return value this dialog needs — see grade-dialog.tsx's identical
 // reasoning for keeping this a small structural type rather than importing react-query's own.
 export type UpdateProfileMutation = {
-  mutate: (input: UpdateProfileInput, opts?: { onSuccess?: () => void }) => void
+  mutate: (input: SaveProfileInput, opts?: { onSuccess?: () => void }) => void
   isPending: boolean
 }
 
@@ -49,12 +52,14 @@ export function EditProfileDialog({
   open,
   onOpenChange,
   profile,
+  courseProfile,
   updating,
   isSelf = true,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   profile: ApiProfile
+  courseProfile: ApiCourseProfile
   updating: UpdateProfileMutation
   /** False when a school admin is editing someone else's profile — only changes the copy (whose phone/year of birth this is), never the fields. */
   isSelf?: boolean
@@ -68,6 +73,7 @@ export function EditProfileDialog({
             <EditProfileForm
               key={profile.updatedAt}
               profile={profile}
+              courseProfile={courseProfile}
               updating={updating}
               isSelf={isSelf}
               onCancel={() => onOpenChange(false)}
@@ -81,11 +87,13 @@ export function EditProfileDialog({
 
 function EditProfileForm({
   profile,
+  courseProfile,
   updating,
   isSelf,
   onCancel,
 }: {
   profile: ApiProfile
+  courseProfile: ApiCourseProfile
   updating: UpdateProfileMutation
   isSelf: boolean
   onCancel: () => void
@@ -95,9 +103,9 @@ function EditProfileForm({
   const [country, setCountry] = useState(profile.country ?? '')
   const [state, setState] = useState(profile.state ?? '')
   const [email, setEmail] = useState(profile.email ?? '')
-  const [learningGoal, setLearningGoal] = useState(profile.learningGoal ?? '')
+  const [learningGoal, setLearningGoal] = useState(courseProfile.learningGoal ?? '')
   const [currentProficiency, setCurrentProficiency] = useState<ApiProficiencyLevel | ''>(
-    profile.currentProficiency ?? '',
+    courseProfile.currentProficiency ?? '',
   )
   const [spokenLanguages, setSpokenLanguages] = useState(profile.spokenLanguages)
   const [readLanguages, setReadLanguages] = useState(profile.readLanguages)
@@ -106,7 +114,7 @@ function EditProfileForm({
   const [noMeatAgreed, setNoMeatAgreed] = useState(profile.noMeatAgreed)
   const [noAlcoholAgreed, setNoAlcoholAgreed] = useState(profile.noAlcoholAgreed)
   const [noSmokingAgreed, setNoSmokingAgreed] = useState(profile.noSmokingAgreed)
-  const [comments, setComments] = useState(profile.comments ?? '')
+  const [comments, setComments] = useState(courseProfile.comments ?? '')
 
   // This school's own fields. What's shown is the stored values with the edits made so far laid over
   // them, so an untouched field is never a change (`detailsPatch` sends only what differs).
@@ -139,23 +147,27 @@ function EditProfileForm({
     setError(null)
     updating.mutate(
       {
-        name: trimmedName,
-        city: city.trim() || null,
-        country: country || null,
-        state: state || null,
-        email: email.trim() || null,
-        learningGoal: learningGoal.trim() || null,
-        currentProficiency: currentProficiency || null,
-        spokenLanguages,
-        readLanguages,
-        parentNames,
-        dressCodeAgreed,
-        noMeatAgreed,
-        noAlcoholAgreed,
-        noSmokingAgreed,
-        comments: comments.trim() || null,
-        // Only when something changed: a patch of nothing is refused by the API.
-        ...(details && { details }),
+        profile: {
+          name: trimmedName,
+          city: city.trim() || null,
+          country: country || null,
+          state: state || null,
+          email: email.trim() || null,
+          spokenLanguages,
+          readLanguages,
+          parentNames,
+          dressCodeAgreed,
+          noMeatAgreed,
+          noAlcoholAgreed,
+          noSmokingAgreed,
+          // Only when something changed: a patch of nothing is refused by the API.
+          ...(details && { details }),
+        },
+        course: {
+          learningGoal: learningGoal.trim() || null,
+          currentProficiency: currentProficiency || null,
+          comments: comments.trim() || null,
+        },
       },
       { onSuccess: onCancel },
     )

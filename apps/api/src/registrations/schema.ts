@@ -1,7 +1,8 @@
 import * as z from 'zod'
 
-import { proficiencyLevel, registrationStatus } from '@narada/db'
+import { registrationStatus } from '@narada/db'
 
+import { courseAnswerShape } from '../courseProfile/schema'
 import { asCursor } from '../utils/cursor'
 import { DetailsSchema } from '../utils/details'
 import { e164Phone, isoInstant } from '../utils/validate'
@@ -10,7 +11,6 @@ const PAGE_SIZE = 20
 const CURRENT_YEAR = new Date().getFullYear()
 
 export const registrationStatusSchema = z.enum(registrationStatus.enumValues)
-export const proficiencyLevelSchema = z.enum(proficiencyLevel.enumValues)
 
 export type Registration = z.infer<typeof RegistrationSchema>
 export const RegistrationSchema = z.object({
@@ -33,8 +33,8 @@ export const RegistrationSchema = z.object({
   // city/state/country by `utils/timezone.ts::deriveTimeZone` (`service.ts::submit`).
   countryTimeZone: z.string().trim().min(1).nullable(),
 
-  learningGoal: z.string().trim().min(1).nullable(),
-  currentProficiency: proficiencyLevelSchema.nullable(),
+  // The three course-level answers (`courseAnswerShape`), carried through to `courseProfile` on approval.
+  ...courseAnswerShape,
   spokenLanguages: z.array(z.string().trim().min(1)),
   readLanguages: z.array(z.string().trim().min(1)),
 
@@ -43,7 +43,6 @@ export const RegistrationSchema = z.object({
   noMeatAgreed: z.boolean(),
   noAlcoholAgreed: z.boolean(),
   noSmokingAgreed: z.boolean(),
-  comments: z.string().trim().min(1).nullable(),
   // The school-specific answers (`@narada/profile-fields`). On the way in only the shape is checked
   // here; `service.ts::submit` validates it against the school's own field definitions.
   details: DetailsSchema,

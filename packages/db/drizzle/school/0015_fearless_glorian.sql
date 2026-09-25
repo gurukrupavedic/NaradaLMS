@@ -1,1 +1,0 @@
-ALTER TYPE "proficiencyLevel" ADD VALUE 'level0' BEFORE 'level1';
