@@ -1,32 +1,43 @@
-import { mutateApi, notFound, send } from '@/lib/api/client'
+import { fetchApi, mutateApi, notFound } from '@/lib/api/client'
+import { buildCatalogTrack } from '@/lib/api/reshape'
+import { getSelectedProfileId } from '@/lib/auth/profile-store'
 import type { CatalogChapter, CatalogTrack } from '@/lib/models/catalog'
-import { readTrack, readTracks, resetCatalogCache, writeTrack } from '@/lib/api/store'
-import type { ApiScriptKey } from '@/lib/api/api-types'
+import type { ApiBatch, ApiScriptKey, ApiTrack } from '@/lib/api/api-types'
 
-// GET /v1/tracks — admin view, drafts included. Reads through the store (lib/api/store.ts), which
-// seeds itself from this same real endpoint on first call and reflects edits made this session
-// from then on — see that module's own doc comment for why.
-export function fetchCatalogTracks(): Promise<CatalogTrack[]> {
-  return readTracks()
+// GET /v1/tracks (drafts included for an admin) plus the batches each track is taught in, reshaped
+// for the admin catalog. Two requests, not one per track: the batches call carries no roster or
+// schedule (`withDetail` is left off) since only `trackId` and `code` are needed to group them.
+export async function fetchCatalogTracks(): Promise<CatalogTrack[]> {
+  const profileId = getSelectedProfileId()
+  const [apiTracks, batchesPage] = await Promise.all([
+    fetchApi<ApiTrack[]>('/tracks'),
+    fetchApi<{ items: ApiBatch[] }>(`/profiles/${profileId}/batches?limit=100`),
+  ])
+
+  const batchCodesByTrackId = new Map<string, string[]>()
+  for (const batch of batchesPage.items) {
+    const codes = batchCodesByTrackId.get(batch.trackId) ?? []
+    codes.push(batch.code)
+    batchCodesByTrackId.set(batch.trackId, codes)
+  }
+
+  return apiTracks.map(track => buildCatalogTrack(track, batchCodesByTrackId.get(track.id) ?? []))
 }
 
-// GET /v1/tracks/:trackId — admin view, drafts included.
+// One track of that same catalog. There is no endpoint for a single track — `GET /tracks` is what
+// the app reads — so this fetches the catalog and picks it out.
 export async function fetchCatalogTrack(trackId: string): Promise<CatalogTrack> {
-  const track = await readTrack(trackId)
+  const track = (await fetchCatalogTracks()).find(candidate => candidate.id === trackId)
   return track ? track : notFound(`Track ${trackId}`)
 }
 
-// Named for the endpoint each one stands in for. `saveTrack` (name/subtitle — `subtitle` has no
-// real column, see `store.ts`'s doc comment) is still mocked via `send()` + the local store; the
-// four chapter mutations below are real (`chapters/route.ts`'s `POST /`, `PATCH /:chapterId`, and
-// `tracks/route.ts`'s `PUT /:trackId/chapters/order` — real gaps closed 2026-09-09). They resolve
-// to void: the optimistic cache write in `use-catalog-mutations.ts` already holds the new state,
-// so the only thing the caller needs back is whether it failed.
+// The four chapter mutations are real (`chapters/route.ts`'s `POST /` and `PATCH /:chapterId`, and
+// `tracks/route.ts`'s `PUT /:trackId/chapters/order`). They resolve to void: the optimistic cache
+// write in `use-catalog-mutations.ts` already holds the new state, so the only thing the caller
+// needs back is whether it failed.
 
-// `isCertification` has no real column (see `store.ts`'s doc comment) — a real PATCH wouldn't know
-// what to do with it, so only the fields the real schema understands are forwarded; anything else
-// in `patch` (isCertification, other `content` fields beyond `script`) is silently dropped rather
-// than sent.
+// Only the fields the real schema understands are forwarded; anything else in `patch` (the other
+// `content` fields beyond `script`) is dropped rather than sent.
 export async function saveChapter(id: string, patch: Partial<CatalogChapter>): Promise<void> {
   const body: {
     code?: string
@@ -39,44 +50,24 @@ export async function saveChapter(id: string, patch: Partial<CatalogChapter>): P
   if (patch.status !== undefined) body.status = patch.status
   if (patch.content !== undefined) body.script = patch.content.script
 
-  // A patch touching only `isCertification` has nothing real to send (the schema requires at
-  // least one recognized field) — the optimistic cache write already applied it locally, and
-  // that's genuinely all this field gets today; skip the round trip rather than send an empty
-  // body the server would reject.
+  // The schema requires at least one recognized field; skip the round trip rather than send an
+  // empty body the server would reject.
   if (Object.keys(body).length === 0) return
 
   await mutateApi(`/chapters/${id}`, 'PATCH', body)
-  resetCatalogCache()
 }
 
 export async function saveChapterOrder(trackId: string, orderedIds: string[]): Promise<void> {
   await mutateApi(`/tracks/${trackId}/chapters/order`, 'PUT', { chapterIds: orderedIds })
-  resetCatalogCache()
 }
 
 export async function createChapter(trackId: string, chapter: CatalogChapter): Promise<void> {
   await mutateApi('/chapters', 'POST', { trackId, code: chapter.code, title: chapter.title })
-  resetCatalogCache()
 }
 
 // "Delete" archives rather than removes the row — a chapter that ever had student activity can't
 // be hard-deleted (real `evaluation`/`exam` rows reference it). `archived` is a real column,
-// distinct from `status`; the chapter drops out of every catalog list once this settles and the
-// cache resets, but — unlike the old mocked behaviour — not before, since there's no local array
-// to splice out of anymore.
+// distinct from `status`; the chapter drops out of every catalog list once the refetch settles.
 export async function deleteChapter(id: string): Promise<void> {
   await mutateApi(`/chapters/${id}`, 'PATCH', { status: 'draft', archived: true })
-  resetCatalogCache()
 }
-
-export async function saveTrack(
-  trackId: string,
-  patch: Partial<Pick<CatalogTrack, 'name' | 'subtitle'>>,
-): Promise<void> {
-  await send('PATCH', `/tracks/${trackId}`, patch)
-  writeTrack(trackId, patch)
-}
-
-// Real writes against apps/api's chapters domain — unlike every mutation above, these have a
-// real endpoint to reach (`chapters/route.ts`), so they go through `mutateApi`, not the mocked
-// `send`. See `lib/api/client.ts`'s own doc comment for why the split exists.

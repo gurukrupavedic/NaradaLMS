@@ -3,7 +3,7 @@ import * as z from 'zod'
 import { examOutcome, examStatus } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
-import { isoInstant, requireNonEmpty } from '../utils/validate'
+import { isoInstant } from '../utils/validate'
 import { proficiencyLevelSchema } from '../evaluations/schema'
 import { TrackSchema } from '../tracks/schema'
 import { ProfileSchema } from '../profiles/schema'
@@ -66,17 +66,6 @@ export const CreateExamSchema = ExamSchema.pick({
   studentId: true,
   scheduledAt: true,
 })
-
-export type UpdateExamData = z.infer<typeof UpdateExamSchema>
-export const UpdateExamSchema = requireNonEmpty(
-  ExamSchema.pick({
-    scheduledAt: true,
-  })
-    .partial()
-    .safeExtend({
-      status: examStatusSchema.exclude(['completed']).optional(),
-    }),
-)
 
 // What an evaluator enters for a completed sitting: the five marks and an optional note. The
 // children's bonus, total and outcome are never sent — the server derives all three (see

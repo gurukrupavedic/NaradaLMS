@@ -19,17 +19,6 @@ export async function findByBatch(
   return repository.findForBatch(context.db, batchId, batchRow.trackId, query)
 }
 
-export async function findByStudent(
-  context: EvaluationServiceContext,
-  batchId: string,
-  studentId: string,
-  query: FindEvaluationsData,
-): Promise<{ items: Evaluation[]; nextCursor: string | null }> {
-  const batchRow = orNotFound(await findBatchById(context.db, batchId))
-
-  return repository.findForStudentInBatch(context.db, batchId, batchRow.trackId, studentId, query)
-}
-
 /**
  * One or many evaluations in a single request — the roster grid's per-cell grade dialog sends one
  * item, its "Promote to L3" row action sends one per not-yet-L3 chapter (mark-book.tsx computes

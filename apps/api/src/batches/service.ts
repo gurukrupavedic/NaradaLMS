@@ -1,21 +1,19 @@
-import { type SchoolDb, type SchoolDbClient } from '@narada/db'
+import { type SchoolDbClient } from '@narada/db'
 
 import { conflict, orInternalError, orNotFound, unprocessable } from '../error'
 import * as examRepository from '../exams/repository'
 import * as trackRepository from '../tracks/repository'
 import type { BatchReadScope } from '../utils/accessPolicy'
-import { constraintNameOf, DbConstraint, withConstraintMapping } from '../utils/dbError'
+import { constraintNameOf, DbConstraint } from '../utils/dbError'
 import * as repository from './repository'
 import type {
   Batch,
-  BatchDetail,
   BatchWithRole,
   ClassSlot,
   CreateBatchData,
   FindBatchesData,
   OpenBatch,
   SetClassSlotsData,
-  UpdateBatchData,
 } from './schema'
 
 /** Holds the tenant-scoped client so this service can pass it straight through to repository.ts. */
@@ -42,13 +40,6 @@ export async function findAllAccessibleWithDetail(
 
 export async function findById(context: BatchServiceContext, id: string): Promise<Batch> {
   return orNotFound(await repository.findById(context.db, id))
-}
-
-export async function findByIdWithMembers(
-  context: BatchServiceContext,
-  id: string,
-): Promise<BatchDetail> {
-  return orNotFound(await repository.findByIdWithMembers(context.db, id))
 }
 
 // Retries beat asking the caller to resubmit for what's normally a same-request race (two admins
@@ -118,34 +109,6 @@ export async function createBatch(
 /** Every classifier already in use in `courseId`'s batch codes, for the create-batch form's dropdown. */
 export async function findClassifiers(context: BatchServiceContext, courseId: string): Promise<string[]> {
   return repository.findClassifiers(context.db, courseId)
-}
-
-/**
- * Marking a batch `completed` also ends its students' active seats, in the same transaction — see
- * `repository.endActiveStudentSeats` for why. Re-opening a completed batch does not bring them back:
- * who was still enrolled at the end isn't recoverable from the roster, so that's a deliberate
- * re-enrolment rather than something to guess at.
- */
-export async function updateBatch(
-  context: BatchServiceContext,
-  id: string,
-  data: UpdateBatchData,
-): Promise<Batch> {
-  const write = (db: SchoolDb) =>
-    withConstraintMapping(() => repository.update(db, id, data), {
-      [DbConstraint.batchCodeUnique]: () => conflict('a batch with this code already exists'),
-    })
-
-  if (data.status !== 'completed') {
-    return orNotFound(await write(context.db))
-  }
-
-  return context.db.transaction(async tx => {
-    const row = orNotFound(await write(tx))
-
-    await repository.endActiveStudentSeats(tx, id)
-    return row
-  })
 }
 
 /**

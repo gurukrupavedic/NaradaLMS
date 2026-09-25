@@ -15,7 +15,7 @@ import {
   type ProfileRow,
   type TestWorld,
 } from '../testing/fixtures'
-import { findForBatch, findForStudentInBatch } from './repository'
+import { findForBatch } from './repository'
 import { createEvaluations } from './service'
 
 let world: TestWorld | undefined
@@ -48,7 +48,7 @@ async function insertEvaluation(
   return row
 }
 
-describe('findForBatch / findForStudentInBatch pagination (§10.2 compound cursor)', () => {
+describe('findForBatch pagination (§10.2 compound cursor)', () => {
   it('orders non-null evaluatedAt desc, then null-evaluatedAt evaluations last by id desc, across pages', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
@@ -114,37 +114,6 @@ describe('findForBatch / findForStudentInBatch pagination (§10.2 compound curso
     })
     expect(page3.items.map(e => e.id)).toEqual([nulls[1]!.id])
     expect(page3.nextCursor).toBeNull()
-  })
-
-  it('findForStudentInBatch restricts to just the one student', async () => {
-    world = await createTestSchool()
-    const trackRow = await createTrack(world)
-    const chapterRow = await createChapter(world, trackRow, { status: 'published' })
-    const batchRow = await createBatch(world, trackRow)
-    const studentA = await createProfile(world)
-    const studentB = await createProfile(world)
-    const evaluatorProfile = await createProfile(world)
-    await enroll(world, studentA, batchRow, 'student')
-    await enroll(world, studentB, batchRow, 'student')
-
-    const evalA = await insertEvaluation(world.schoolDb, {
-      student: studentA,
-      chapter: chapterRow,
-      evaluator: evaluatorProfile,
-      evaluatedAt: new Date(),
-    })
-    await insertEvaluation(world.schoolDb, {
-      student: studentB,
-      chapter: chapterRow,
-      evaluator: evaluatorProfile,
-      evaluatedAt: new Date(),
-    })
-
-    const page = await findForStudentInBatch(world.schoolDb, batchRow.id, trackRow.id, studentA.id, {
-      limit: 20,
-    })
-
-    expect(page.items.map(e => e.id)).toEqual([evalA.id])
   })
 
   it('returns an empty page when the batch track has no chapters, with no separate empty-list guard needed', async () => {

@@ -15,7 +15,6 @@ import type {
   ExamWithDetail,
   FindExamsData,
   StudentExamResult,
-  UpdateExamData,
 } from './schema'
 
 export type Evaluation = typeof evaluation.$inferSelect
@@ -357,26 +356,6 @@ export async function findGradableChapterIds(db: SchoolDb, trackId: string): Pro
 
 export async function insert(db: SchoolDb, data: CreateExamData): Promise<Exam | undefined> {
   const rows = await db.insert(exam).values(data).returning()
-  return rows.at(0)
-}
-
-/**
- * Optimistic compare-and-set: only applies `data` if the exam's status still matches
- * `expectedStatus`. Returns `undefined` on a lost race (concurrent status change) as well as on
- * a missing exam — the service distinguishes those two cases with a follow-up read.
- */
-export async function updateGuarded(
-  db: SchoolDb,
-  id: string,
-  data: UpdateExamData,
-  expectedStatus: Exam['status'],
-): Promise<Exam | undefined> {
-  const rows = await db
-    .update(exam)
-    .set(data)
-    .where(and(eq(exam.id, id), eq(exam.status, expectedStatus)))
-    .returning()
-
   return rows.at(0)
 }
 

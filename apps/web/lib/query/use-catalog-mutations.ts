@@ -8,7 +8,6 @@ import {
   deleteChapter,
   saveChapter,
   saveChapterOrder,
-  saveTrack,
 } from '@/lib/api/resources'
 import type { CatalogChapter, CatalogTrack } from '@/lib/models/catalog'
 
@@ -20,7 +19,7 @@ import type { CatalogChapter, CatalogTrack } from '@/lib/models/catalog'
  * makes the page feel broken even when it is working, so every mutation writes
  * to the cache immediately and reconciles afterwards.
  *
- * All five share one shape, which is the part worth getting right:
+ * All four share one shape, which is the part worth getting right:
  *
  *   onMutate  — cancel in-flight refetches for this key (an older response
  *               landing after our write would clobber it), snapshot the
@@ -124,13 +123,5 @@ export function useRemoveChapter(trackId: string) {
     trackId,
     ({ id }) => deleteChapter(id),
     (track, { id }) => ({ ...track, chapters: track.chapters.filter(c => c.id !== id) }),
-  )
-}
-
-export function useUpdateTrack(trackId: string) {
-  return useCatalogMutation<Partial<Pick<CatalogTrack, 'name' | 'subtitle'>>>(
-    trackId,
-    patch => saveTrack(trackId, patch),
-    (track, patch) => ({ ...track, ...patch }),
   )
 }

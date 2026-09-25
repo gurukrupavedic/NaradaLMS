@@ -18,7 +18,6 @@ import {
   useRemoveChapter,
   useReorderChapters,
   useUpdateChapter,
-  useUpdateTrack,
 } from '@/lib/query/use-catalog-mutations'
 import { isReady, type CatalogChapter, type CatalogTrack } from '@/lib/models/catalog'
 import { useCoursePath } from '@/lib/course'
@@ -67,7 +66,6 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
   const reorder = useReorderChapters(trackId)
   const addChapter = useAddChapter(trackId)
   const removeChapter = useRemoveChapter(trackId)
-  const updateTrack = useUpdateTrack(trackId)
 
   const { chapters } = track
   const published = chapters.filter(c => c.status === 'published')
@@ -76,7 +74,7 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
     published: published.length,
     drafts: chapters.length - published.length,
     ready: chapters.filter(c => isReady(c.content)).length,
-    publishedButEmpty: published.filter(c => !c.content.hasText && !c.isCertification).length,
+    publishedButEmpty: published.filter(c => !c.content.hasText).length,
   }
 
   // Any mutation in flight — one indicator rather than five, since they are all
@@ -85,8 +83,7 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
     updateChapter.isPending ||
     reorder.isPending ||
     addChapter.isPending ||
-    removeChapter.isPending ||
-    updateTrack.isPending
+    removeChapter.isPending
 
   async function handleAdd() {
     setAddChapterError(null)
@@ -113,7 +110,6 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
         code: `${track.order}.${suffix}`,
         title: 'Untitled chapter',
         status: 'draft',
-        isCertification: false,
         content: { script: null, hasText: false, segments: 0, audioCount: 0, mapped: false },
       }
       try {
@@ -138,7 +134,7 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
       <Standing
         eyebrow="Administration · track catalog"
         headline={track.name}
-        meta={`${track.subtitle ? `${track.subtitle} · ` : ''}${pluralize(summary.total, 'chapter')} · taught in ${pluralize(track.batchCodes.length, 'batch', 'batches')}`}
+        meta={`${pluralize(summary.total, 'chapter')} · taught in ${pluralize(track.batchCodes.length, 'batch', 'batches')}`}
         stats={[
           { value: `${summary.published}/${summary.total}`, label: 'Published' },
           { value: `${summary.ready}/${summary.total}`, label: 'Ready' },
@@ -181,19 +177,6 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
         )}
 
         <Section title="Track">
-          <div className="sheet grid grid-cols-1 divide-y divide-rule-soft sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-            <TrackField
-              label="Name"
-              value={track.name}
-              onCommit={name => updateTrack.mutate({ name })}
-            />
-            <TrackField
-              label="Subtitle"
-              value={track.subtitle ?? ''}
-              onCommit={subtitle => updateTrack.mutate({ subtitle })}
-            />
-          </div>
-
           <dl className="flex flex-wrap gap-x-8 gap-y-3">
             {[
               { label: 'Chapters', value: String(summary.total) },
@@ -264,39 +247,5 @@ function TrackEditorView({ track, trackId }: { track: CatalogTrack; trackId: str
         </Section>
       </div>
     </>
-  )
-}
-
-/**
- * A text field that commits on blur rather than on every keystroke.
- *
- * Mutating per character would fire a request per letter typed and, with
- * optimistic writes, make the cache the thing being edited — every keystroke
- * re-rendering the whole tree. The DOM holds the in-progress value (the input
- * is uncontrolled via `defaultValue`, keyed on the committed one) and the cache
- * only hears about it when the edit is finished.
- */
-function TrackField({
-  label,
-  value,
-  onCommit,
-}: {
-  label: string
-  value: string
-  onCommit: (next: string) => void
-}) {
-  return (
-    <label className="block px-4 py-4">
-      <span className="label text-ink-muted">{label}</span>
-      <input
-        key={value}
-        defaultValue={value}
-        onBlur={e => {
-          const next = e.target.value.trim()
-          if (next && next !== value) onCommit(next)
-        }}
-        className="mt-2 w-full border-b border-ink/20 bg-transparent pb-1.5 text-[1.125rem] transition-colors focus:border-vermilion focus:outline-none"
-      />
-    </label>
   )
 }

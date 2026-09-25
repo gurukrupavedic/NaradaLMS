@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { CreateBatchSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
+import { CreateBatchSchema, SetClassSlotsSchema } from './schema'
 
 // Explicit factory (rather than the real module) so importing `./schema` doesn't pull in
 // `@narada/db` at import time and trigger real env-var validation — never loads.
@@ -107,30 +107,6 @@ describe('CreateBatchSchema', () => {
 
   it('rejects a missing classifier', () => {
     expect(CreateBatchSchema.safeParse({ trackId, instructorIds }).success).toBe(false)
-  })
-})
-
-describe('UpdateBatchSchema', () => {
-  it('rejects a plain http meetingUrl', () => {
-    const result = UpdateBatchSchema.safeParse({ meetingUrl: 'http://host' })
-    expect(result.success).toBe(false)
-  })
-
-  it('accepts an https meetingUrl', () => {
-    const result = UpdateBatchSchema.safeParse({ meetingUrl: 'https://host/x' })
-    expect(result.success).toBe(true)
-  })
-
-  // A batch's track is set once at creation — the real API never allowed moving it (§9.4).
-  // Zod's default is to strip unrecognized keys, not reject them, so a `trackId` in the body
-  // parses fine but never reaches the service/DB — this documents that stripping, not a 400.
-  it('strips a trackId in the body rather than accepting or rejecting it', () => {
-    const result = UpdateBatchSchema.safeParse({ trackId, code: 'B1' })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data).not.toHaveProperty('trackId')
-      expect(result.data).toEqual({ code: 'B1' })
-    }
   })
 })
 

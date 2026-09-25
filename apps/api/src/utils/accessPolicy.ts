@@ -13,9 +13,7 @@ import {
 
 import { isProfilePartOfCourse } from '../courses/repository'
 import { forbidden } from '../error'
-import { hasSharedInstructorEnrollment, isEnrolledInAnyBatch } from '../enrollment/service'
-import type { Exam } from '../exams/schema'
-import type { ExamSlotRequest } from '../examSlots/schema'
+import { hasSharedInstructorEnrollment } from '../enrollment/service'
 import type { User } from '../session'
 
 type School = typeof organization.$inferSelect
@@ -56,11 +54,9 @@ type AccessPolicySource = {
   profile?: SchoolProfile
 }
 
-const BATCH_READ_PERMISSION: BatchPermissions = { enrollment: ['read'] }
 const ENROLLMENT_CREATE_PERMISSION: BatchPermissions = { enrollment: ['create'] }
 const ENROLLMENT_REMOVE_PERMISSION: BatchPermissions = { enrollment: ['remove'] }
 const EXAM_UPDATE_PERMISSION: BatchPermissions = { exam: ['update'] }
-const EVALUATION_READ_PERMISSION: BatchPermissions = { evaluation: ['read'] }
 const EVALUATION_CREATE_PERMISSION: BatchPermissions = { evaluation: ['create'] }
 
 /**
@@ -140,14 +136,6 @@ export class AccessPolicy {
   }
 
   // -- Batches --------------------------------------------------------------
-
-  public requireCanReadBatch(batchId: string): void {
-    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, BATCH_READ_PERMISSION)) {
-      return
-    }
-
-    throw forbidden()
-  }
 
   public requireCanCreateBatch(): void {
     this.requireSchoolAdmin()
@@ -293,14 +281,12 @@ export class AccessPolicy {
   }
 
   // -- Exams ------------------------------------------------------------------
-  // Instructor/TA exam authorization (DD-003/DD-005/DD-006, approved 2026-08-28) is scoped
-  // through the student: an instructor/TA with `exam:update` in a batch may see and reschedule the
-  // sittings of any student enrolled in that batch (past or present) — not "school admin or
-  // nothing." An exam carries no batch of its own; see `teachesStudent`.
+  // Instructor/TA exam visibility is scoped through the student: an instructor/TA with `exam:update`
+  // in a batch may see the sittings of any student enrolled in that batch (past or present) — not
+  // "school admin or nothing." An exam carries no batch of its own.
   //
-  // Booking a sitting (requireCanCreateExam) is the one exception: it was originally a batch-role
-  // check like the others, but exam bookings are now a school-admin (or super-admin) decision, so
-  // it no longer touches batch roles at all — see its own doc comment.
+  // Booking a sitting (requireCanCreateExam) is a school-admin (or super-admin) decision that
+  // doesn't touch batch roles at all — see its own doc comment.
   //
   // The "can see every exam in this batch" checks below deliberately test EXAM_UPDATE_PERMISSION,
   // not EXAM_READ_PERMISSION: the batch ACL grants `exam:read` to students too (so they can read
@@ -308,56 +294,22 @@ export class AccessPolicy {
   // `exam:update`. Using `read` here would let a student see every other student's exam in a
   // batch they merely happen to also be enrolled in.
 
-  // requireCanReadExam delegates to getExamVisibility so list and detail visibility can never
-  // drift apart by construction (PARITY_PLAN.md §11.3: "a record hidden in list must not become
-  // readable by guessing its ID").
-  public async requireCanReadExam(exam: Exam): Promise<void> {
-    const scope = this.getExamVisibility()
-    const visible =
-      scope.kind === 'all' ||
-      (scope.kind === 'own' && exam.studentId === scope.profileId) ||
-      (scope.kind === 'manageable' &&
-        (exam.studentId === scope.profileId || (await isEnrolledInAnyBatch(this.db, exam.studentId, scope.batchIds))))
-
-    if (!visible) {
-      throw forbidden()
-    }
-  }
-
-  /** Whether the actor holds `exam:update` (instructor/TA) in a batch `studentId` is enrolled in. */
-  private async teachesStudent(studentId: string): Promise<boolean> {
-    return isEnrolledInAnyBatch(this.db, studentId, this.batchIdsWithPermission(EXAM_UPDATE_PERMISSION))
-  }
-
   /**
    * Booking a sitting is a school-admin (or super-admin) decision, not a batch role — revises the
    * exam-booking feature's prior "instructor/TA with exam:create in the qualifying batch" rule.
    * `exam:create` no longer exists as a batch permission at all (packages/auth/src/permissions/
-   * batch.ts), so this doesn't need the exam's batchId the way requireCanUpdateExam still does; it
-   * runs first in `exams/service.ts::createExam`, before the qualifying batch is even resolved.
-   * Matches `requireCanRecordEvaluation`'s shape for the same reason: booking and grading a
-   * certification sitting are both school-level decisions, unlike rescheduling one.
+   * batch.ts), so this doesn't need the exam's batchId; it runs first in
+   * `exams/service.ts::createExam`, before the qualifying batch is even resolved. Matches
+   * `requireCanRecordEvaluation`'s shape for the same reason: booking and grading a certification
+   * sitting are both school-level decisions.
    */
   public requireCanCreateExam(): void {
     this.requireSchoolAdmin()
   }
 
-  // No school-admin fallback (PARITY_PLAN.md §11.4): a plain owner/admin who isn't also enrolled
-  // as instructor/TA in a batch the student is in cannot update it here — unlike
-  // requireCanCreateExam above, rescheduling/cancelling stays a batch-role decision.
-  public async requireCanUpdateExam(exam: Exam): Promise<void> {
-    if (this.isSuperAdmin || (await this.teachesStudent(exam.studentId))) {
-      return
-    }
-
-    throw forbidden()
-  }
-
-  // Deliberately narrower than requireCanUpdateExam (a batch instructor/TA can reschedule or
-  // cancel their own exam, but not grade one) — recording a result is what grants `level4` (and
-  // L1–L3 across the whole track), so it's gated on school-admin status alone, independent of any
-  // batch role. See evaluations/schema.ts's teacherGradableLevelSchema for the other half of
-  // that split.
+  // Recording a result is what grants `level4` (and L1–L3 across the whole track), so it's gated on
+  // school-admin status alone, independent of any batch role. See evaluations/schema.ts's
+  // teacherGradableLevelSchema for the other half of that split.
   public requireCanRecordEvaluation(): void {
     this.requireSchoolAdmin()
   }
@@ -368,23 +320,12 @@ export class AccessPolicy {
   // rather than a dedicated method here, since the question ("can this actor make an
   // exam-booking decision") is exactly the same one. Requesting a slot has no permission check at
   // all (any active profile may attempt it for themselves; the service's own L3-across-the-track
-  // eligibility check is the real gate) — so the one method this section actually needs is read
-  // access to a *request*, which (unlike a bare slot) carries a student.
+  // eligibility check is the real gate) — so the one method this section needs is who may *list*
+  // requests, which (unlike a bare slot) carry a student.
 
-  // No batch-manageable branch, unlike `requireCanReadExam`: a request isn't scoped to any batch,
-  // just to the student who filed it.
-  public requireCanReadExamSlotRequest(request: ExamSlotRequest): void {
-    if (this.isSchoolAdmin() || request.studentId === this.profileId) {
-      return
-    }
-
-    throw forbidden()
-  }
-
-  // "List every exam-slot request I can see" — the `findMany` counterpart to the single-request
-  // check above. An admin sees every request school-wide; anyone else only their own — never
-  // widened by a batch role, because (unlike `getExamVisibility`) there's no batch dimension here
-  // to widen through.
+  // "List every exam-slot request I can see". An admin sees every request school-wide; anyone else
+  // only their own — never widened by a batch role, because (unlike `getExamVisibility`) there's no
+  // batch dimension here to widen through.
   public getExamSlotRequestVisibility(): ExamSlotRequestReadScope {
     if (this.isSchoolAdmin()) {
       return { kind: 'all' }
@@ -434,12 +375,10 @@ export class AccessPolicy {
   }
 
   // -- Evaluations --------------------------------------------------------------
-  // PARITY_PLAN.md §10.3/§10.4 phrase these as "school evaluation:read or actor batch
-  // evaluation:<x>". There's no general hasSchoolPermission() yet (§6.4) — but under the current
-  // school ACL (packages/auth/src/permissions/school.ts), only owner/admin hold evaluation:read
-  // at all (member gets none), which is exactly isSchoolAdmin(). If the school ACL ever grants
-  // `member` evaluation:read, these three checks need a real permission-statement call instead of
-  // this shortcut.
+  // There's no general hasSchoolPermission() — but under the current school ACL
+  // (packages/auth/src/permissions/school.ts), only owner/admin hold evaluation:read at all (member
+  // gets none), which is exactly isSchoolAdmin(). If the school ACL ever grants `member`
+  // evaluation:read, these checks need a real permission-statement call instead of this shortcut.
 
   public requireCanReadBatchEvaluations(batchId: string): void {
     if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, EVALUATION_CREATE_PERMISSION)) {
@@ -449,22 +388,10 @@ export class AccessPolicy {
     throw forbidden()
   }
 
-  public requireCanReadStudentEvaluations(batchId: string, studentId: string): void {
-    const permission =
-      studentId === this.profileId ? EVALUATION_READ_PERMISSION : EVALUATION_CREATE_PERMISSION
-    if (this.isSchoolAdmin() || this.hasBatchPermission(batchId, permission)) {
-      return
-    }
-
-    throw forbidden()
-  }
-
   // A school admin/owner can grade any batch's roster, not just one they're personally enrolled
-  // in as instructor/TA — matching the read-side checks above (requireCanReadBatchEvaluations/
-  // requireCanReadStudentEvaluations already carry the same isSchoolAdmin() fallback). This is a
-  // deliberate product decision, not parity with the old backend (which had no such fallback here
-  // — see PARITY_PLAN.md §10.5): admins need to be able to correct or record a grade even for a
-  // batch they don't personally teach.
+  // in as instructor/TA — matching the read-side check above (requireCanReadBatchEvaluations
+  // carries the same isSchoolAdmin() fallback). This is a deliberate product decision: admins need
+  // to be able to correct or record a grade even for a batch they don't personally teach.
   public requireCanCreateEvaluation(batchId: string): void {
     if (
       this.isSuperAdmin ||

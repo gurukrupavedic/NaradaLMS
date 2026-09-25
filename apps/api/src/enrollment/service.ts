@@ -85,14 +85,9 @@ export async function enroll(
   return row
 }
 
-/** Removes a profile from a batch's roster. 404 if no such enrollment exists. */
-export async function unenroll(db: SchoolDb, batchId: string, profileId: string): Promise<void> {
-  orNotFound(await repository.deleteEnrollment(db, batchId, profileId))
-}
-
 /**
  * Puts a student's enrollment in this batch on a break: `apps/web`'s roster views only render
- * `'active'` members, so they drop off the mark book teachers see — but, unlike `unenroll`, the
+ * `'active'` members, so they drop off the mark book teachers see — but the
  * enrollment row itself survives (same "status transition, not delete" shape as a profile
  * deactivation — see `repository.ts::findQualifyingBatches`'s own doc comment), so their history
  * stays intact and `enroll` above can reactivate them later (see its own doc comment) instead of
@@ -104,8 +99,8 @@ export async function putOnBreak(db: SchoolDb, batchId: string, profileId: strin
 
 /**
  * Moves a profile from one batch to another, preserving whatever role they already held, in a
- * single transaction — the two-step unenroll-then-enroll an admin might otherwise do by hand
- * could leave the roster with neither if the second half failed. 404 if the profile isn't
+ * single transaction — a separate remove-then-enroll could leave the roster with neither if the
+ * second half failed. 404 if the profile isn't
  * enrolled in `fromBatchId`; 409 if they're already enrolled in `toBatchId` (this also covers
  * `fromBatchId === toBatchId`, since that enrollment is found there too before anything is
  * deleted).

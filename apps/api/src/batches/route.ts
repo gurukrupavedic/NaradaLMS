@@ -4,15 +4,13 @@ import * as z from 'zod'
 import { request as requestEnrollment } from '../enrollmentRequests/service'
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
+import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema } from './schema'
 import {
   createBatch,
   findAllAccessible,
-  findByIdWithMembers,
   findClassifiers,
   findOpenBatches,
   setClassSlots,
-  updateBatch,
 } from './service'
 
 const router = Router()
@@ -52,16 +50,6 @@ router.get(
   }),
 )
 
-router.get(
-  '/:batchId',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    access.requireCanReadBatch(batchId)
-    const batch = await findByIdWithMembers({ db }, batchId)
-    res.status(200).json({ data: batch })
-  }),
-)
-
 router.post(
   '/',
   optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
@@ -69,17 +57,6 @@ router.post(
     const data = await parse(CreateBatchSchema, req.body)
     const batch = await createBatch({ db }, data, (await getCourse()).slug)
     res.status(201).json({ data: batch })
-  }),
-)
-
-router.patch(
-  '/:batchId',
-  optionalProfileRoute(async ({ req, res, db, access }) => {
-    const { batchId } = await parse(z.object({ batchId: z.uuid() }), req.params)
-    access.requireCanUpdateBatch()
-    const data = await parse(UpdateBatchSchema, req.body)
-    const batch = await updateBatch({ db }, batchId, data)
-    res.status(200).json({ data: batch })
   }),
 )
 

@@ -1,15 +1,12 @@
 import type { SchoolDbClient } from '@narada/db'
 
-import { notFound, orNotFound, unprocessable } from '../error'
+import { orNotFound, unprocessable } from '../error'
 import * as chapterRepository from '../chapters/repository'
-import type { AccessPolicy, ContentReadView } from '../utils/accessPolicy'
+import type { ContentReadView } from '../utils/accessPolicy'
 import * as repository from './repository'
 import type { TrackWithChapters } from './schema'
 
 type TrackServiceContext = { db: SchoolDbClient }
-
-/** The one question the read path asks of `AccessPolicy` — narrow so a unit test can hand in a stub. */
-type CourseContentGate = Pick<AccessPolicy, 'canReadCourseContent'>
 
 export async function findAll(
   context: TrackServiceContext,
@@ -25,25 +22,6 @@ export async function findById(
   view: ContentReadView,
 ): Promise<TrackWithChapters> {
   return orNotFound(await repository.findById(context.db, id, view))
-}
-
-/**
- * `findById` for a *reader*: a track in a course the caller isn't part of 404s exactly like one that
- * doesn't exist — never 403 — so guessing an id can't disclose what another course teaches (the same
- * rule a draft chapter follows). The write paths use plain `findById`: they are admin-only.
- */
-export async function findByIdForReader(
-  context: TrackServiceContext,
-  id: string,
-  view: ContentReadView,
-  gate: CourseContentGate,
-): Promise<TrackWithChapters> {
-  const track = await findById(context, id, view)
-  if (!(await gate.canReadCourseContent(track.courseId))) {
-    throw notFound()
-  }
-
-  return track
 }
 
 /**

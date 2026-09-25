@@ -9,10 +9,7 @@
  * signed-in account's profiles is active (`lib/auth/profile-store.ts`) isn't part of the session,
  * so every call attaches it explicitly rather than depending on the API to infer it.
  *
- * `send` below is the one remaining mock: `saveTrack`'s `subtitle` edit has no real endpoint. Its
- * latency is simulated on purpose — a data layer that only ever resolves synchronously hides every
- * loading state, every race, and every flash of fallback content. Everything else, writes
- * included (`mutateApi`), goes through a real fetch.
+ * Every read (`fetchApi`) and write (`mutateApi`) goes through a real fetch.
  */
 
 import { clearSelectedProfile, getSelectedProfileId } from '@/lib/auth/profile-store'
@@ -125,34 +122,7 @@ export async function fetchAllPages<T>(
   return items
 }
 
-const MUTATION_LATENCY_MS = 260
-
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
 /** A 404 shaped like the API's own, for a lookup that came back empty client-side. */
 export async function notFound(what: string): Promise<never> {
   throw new ApiError(404, 'NOT_FOUND', `${what} not found`)
-}
-
-/**
- * A write, described the way it will actually be issued.
- *
- * Mutations resolve to void: the optimistic cache write already holds the new
- * state, so the only thing the caller needs from the response is whether it
- * failed. In `apps/web` the body becomes
- * `fetchApi(path, { method, body: JSON.stringify(payload) })`.
- *
- * Writes get a longer simulated latency than reads. Optimistic UI is only worth
- * anything when the round trip is slow enough to notice, and a 20ms stub makes
- * a broken rollback look like it works.
- */
-export async function send(
-  method: 'POST' | 'PATCH' | 'PUT' | 'DELETE',
-  path: string,
-  payload?: unknown,
-): Promise<void> {
-  await delay(MUTATION_LATENCY_MS)
-  void [method, path, payload]
 }

@@ -31,14 +31,6 @@ export async function findSlotById(context: ExamSlotServiceContext, id: string):
   return orNotFound(await repository.findSlotById(context.db, id))
 }
 
-/** The `GET /exam-slots/:examSlotId` read path — see `repository.ts::findSlotByIdWithDetail`'s own doc comment. */
-export async function findSlotByIdWithDetail(
-  context: ExamSlotServiceContext,
-  id: string,
-): Promise<ExamSlotWithDetail> {
-  return orNotFound(await repository.findSlotByIdWithDetail(context.db, id))
-}
-
 /**
  * The tracks `studentId` may currently request a sitting on — the same rule `request` below
  * enforces (`exams/repository.ts::isCertifiedAcrossTrack`), exposed up front so the student UI can
@@ -63,14 +55,6 @@ export async function findManyRequests(
 
 export async function findRequestById(context: ExamSlotServiceContext, id: string): Promise<ExamSlotRequest> {
   return orNotFound(await repository.findRequestById(context.db, id))
-}
-
-/** The `GET /exam-slots/requests/:examSlotRequestId` read path — see `repository.ts::findRequestByIdWithDetail`'s own doc comment. */
-export async function findRequestByIdWithDetail(
-  context: ExamSlotServiceContext,
-  id: string,
-): Promise<ExamSlotRequestWithDetail> {
-  return orNotFound(await repository.findRequestByIdWithDetail(context.db, id))
 }
 
 /**
@@ -212,9 +196,7 @@ export async function reject(
 /**
  * Withdraws a slot outright (an examiner is no longer free, a track was retired, ...) — school-admin
  * only. Only ever allowed from `open` or `requested`: a `booked` slot has already produced a real
- * `exam` row, which is the source of truth from there on — cancel *that* sitting instead
- * (`exams/service.ts::updateExam` with `status: 'cancelled'`), rather than this reaching in to do
- * it too and giving the same outcome two different call paths.
+ * `exam` row, which is the source of truth from there on.
  *
  * Cancelling a `requested` slot also rejects the pending request holding it (inside the same
  * transaction as the slot's own status change) — otherwise that request would sit `pending`
@@ -232,7 +214,7 @@ export async function cancelSlot(
   if (existing.status !== 'open' && existing.status !== 'requested') {
     throw conflict(
       existing.status === 'booked'
-        ? 'this slot is already booked — cancel the exam itself instead'
+        ? 'this slot is already booked'
         : 'this slot has already been cancelled',
     )
   }

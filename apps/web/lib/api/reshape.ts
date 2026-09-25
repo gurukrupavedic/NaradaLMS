@@ -285,12 +285,6 @@ export function findResumeChapterId(track: LadderTrack): string | null {
  * An admin's view of one track: drafts included, no student's progress on it — the same real
  * `ApiTrack` `buildLadderTrack` reads above, reshaped for `lib/models/catalog.ts`'s admin-catalog
  * types instead of the reader's `LadderTrack`.
- *
- * Two things this workspace's fixture catalog had that no real field backs: `subtitle` (left
- * unset — see `CatalogTrack`'s own doc comment) and `isCertification` (always `false` — a chapter
- * hasn't been able to *be* the certification since the real import stopped emitting a fake "TRACK N
- * CERTIFICATION" chapter for it; see this file's header comment). Neither is a placeholder pretending
- * to be real data — they're the actual, current, honest values.
  */
 export function buildCatalogTrack(track: ApiTrack, batchCodes: string[]): CatalogTrack {
   const chapters: CatalogChapter[] = [...track.chapters]
@@ -300,7 +294,6 @@ export function buildCatalogTrack(track: ApiTrack, batchCodes: string[]): Catalo
       code: chapter.code,
       title: chapter.title,
       status: chapter.status,
-      isCertification: false,
       content: { ...EMPTY, script: chapter.script },
     }))
 

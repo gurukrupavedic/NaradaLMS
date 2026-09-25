@@ -12,7 +12,6 @@ export type ChapterRow = {
   title: string
   level: ProficiencyLevel
   evaluatedAt: string | null
-  isCertification?: boolean
   // Set when the chapter has text and audio uploaded, which is what makes it
   // openable in the practice room. Across the imported syllabus this is
   // currently false for every chapter — the ladder says so rather than offering

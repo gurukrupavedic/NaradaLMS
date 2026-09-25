@@ -15,7 +15,7 @@ import {
   enroll as seat,
   type TestWorld,
 } from '../testing/fixtures'
-import { createBatch as createBatchViaService, updateBatch } from '../batches/service'
+import { createBatch as createBatchViaService } from '../batches/service'
 import { enroll, moveEnrollment } from '../enrollment/service'
 import { request as requestToJoin } from '../enrollmentRequests/service'
 import { resolveCourse } from './service'
@@ -318,46 +318,6 @@ describe('moving a student between batches', () => {
       moveEnrollment(world.schoolDb, s.vedamBatch1.id, s.smartamBatch.id, student.id),
     ).rejects.toMatchObject({ statusCode: 409 })
     expect(await activeSeats(world, student.id)).toHaveLength(2)
-  })
-})
-
-describe('finishing a batch', () => {
-  it('ends the students’ active seats, so they can join their next batch — and leaves staff and break rows alone', async () => {
-    const s = await seedTwoCourses()
-    world = s.w
-    const student = await createProfile(world)
-    const onBreak = await createProfile(world)
-    const teacher = await createProfile(world)
-    await seat(world, student, s.vedamBatch1, 'student')
-    await seat(world, onBreak, s.vedamBatch1, 'student', 'break')
-    await seat(world, teacher, s.vedamBatch1, 'instructor')
-
-    await updateBatch({ db: world.schoolDb }, s.vedamBatch1.id, { status: 'completed' })
-
-    const rows = await world.schoolDb.query.enrollment.findMany({
-      where: (t, { eq: eqCol }) => eqCol(t.batchId, s.vedamBatch1.id),
-    })
-    const byProfile = new Map(rows.map(r => [r.profileId, r]))
-    expect(byProfile.get(student.id)).toMatchObject({ status: 'inactive' })
-    expect(byProfile.get(student.id)?.leftDate).toBeInstanceOf(Date)
-    expect(byProfile.get(onBreak.id)).toMatchObject({ status: 'break' })
-    expect(byProfile.get(teacher.id)).toMatchObject({ status: 'active', role: 'instructor' })
-
-    // The point of it: the finished batch no longer blocks the student's next one in this course.
-    await expect(
-      enroll(world.schoolDb, s.vedamBatch2.id, { profileId: student.id, role: 'student' }),
-    ).resolves.toMatchObject({ status: 'active' })
-  })
-
-  it('does nothing to seats when a batch is only being renamed', async () => {
-    const s = await seedTwoCourses()
-    world = s.w
-    const student = await createProfile(world)
-    await seat(world, student, s.vedamBatch1, 'student')
-
-    await updateBatch({ db: world.schoolDb }, s.vedamBatch1.id, { code: 'RENAMED' })
-
-    expect(await activeSeats(world, student.id)).toHaveLength(1)
   })
 })
 

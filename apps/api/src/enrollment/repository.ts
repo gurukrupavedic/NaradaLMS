@@ -165,9 +165,9 @@ export async function deleteEnrollment(
   return rows.length > 0
 }
 
-/** Returns whether a row was actually updated — the service turns `false` into a 404. Unlike
- * `deleteEnrollment`, the row survives with its new status (see `enrollment/service.ts::putOnBreak`
- * for why a break isn't a delete). */
+/** Returns whether a row was actually updated — the service turns `false` into a 404. The row
+ * survives with its new status (see `enrollment/service.ts::putOnBreak` for why a break isn't a
+ * delete). */
 export async function updateEnrollmentStatus(
   db: SchoolDb,
   batchId: string,

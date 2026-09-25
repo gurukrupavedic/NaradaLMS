@@ -207,7 +207,7 @@ describe('cancelSlot (real Postgres, end to end)', () => {
     expect(updatedRequest?.examId).toBeNull()
   })
 
-  it('409s a booked slot instead of touching it — cancel the exam itself there', async () => {
+  it('409s a booked slot instead of touching it', async () => {
     const w = await createTestSchool()
     world = w
     const trackRow = await createTrack(w)

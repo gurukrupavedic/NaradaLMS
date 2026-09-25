@@ -59,19 +59,12 @@ export function ChapterLine({
         {started ? (
           <Link
             href={cp(`/chapters/${encodeURIComponent(chapter.code)}`)}
-            className={cn(
-              'truncate text-[0.875rem] text-ink underline decoration-vermilion/40 decoration-1 underline-offset-4 transition-colors hover:decoration-vermilion',
-              chapter.isCertification && 'font-medium',
-            )}
+            className="truncate text-[0.875rem] text-ink underline decoration-vermilion/40 decoration-1 underline-offset-4 transition-colors hover:decoration-vermilion"
           >
             {chapter.title}
           </Link>
         ) : (
-          <span
-            className={cn('truncate text-[0.875rem] text-ink-muted/65', chapter.isCertification && 'font-medium')}
-          >
-            {chapter.title}
-          </span>
+          <span className="truncate text-[0.875rem] text-ink-muted/65">{chapter.title}</span>
         )}
 
         {chapter.hasContent && (
@@ -79,7 +72,6 @@ export function ChapterLine({
             ♪
           </span>
         )}
-        {chapter.isCertification && <span className="stamp shrink-0">certification</span>}
         {isResume && <span className="label shrink-0 text-vermilion">resume</span>}
       </span>
 

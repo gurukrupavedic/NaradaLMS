@@ -4,14 +4,13 @@ import * as z from 'zod'
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateEvaluationsSchema, FindEvaluationsSchema } from './schema'
-import { createEvaluations, findByBatch, findByStudent } from './service'
+import { createEvaluations, findByBatch } from './service'
 
 // mergeParams: mounted at /batches/:batchId/evaluations in routes.ts — this router needs the
 // parent mount path's :batchId, not just its own path segments.
 const router = Router({ mergeParams: true })
 
 const BatchParamsSchema = z.object({ batchId: z.uuid() })
-const StudentParamsSchema = BatchParamsSchema.extend({ studentId: z.uuid() })
 
 router.get(
   '/',
@@ -20,17 +19,6 @@ router.get(
     access.requireCanReadBatchEvaluations(batchId)
     const query = await parse(FindEvaluationsSchema, req.query)
     const evaluations = await findByBatch({ db }, batchId, query)
-    res.status(200).json({ data: evaluations })
-  }),
-)
-
-router.get(
-  '/:studentId',
-  profileRoute(async ({ req, res, db, access }) => {
-    const { batchId, studentId } = await parse(StudentParamsSchema, req.params)
-    access.requireCanReadStudentEvaluations(batchId, studentId)
-    const query = await parse(FindEvaluationsSchema, req.query)
-    const evaluations = await findByStudent({ db }, batchId, studentId, query)
     res.status(200).json({ data: evaluations })
   }),
 )

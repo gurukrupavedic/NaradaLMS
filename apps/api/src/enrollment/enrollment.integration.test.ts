@@ -8,12 +8,11 @@ import {
   createBatch,
   createProfile,
   createTestSchool,
-  createCourse,
   createTrack,
   enroll as enrollFixture,
   type TestWorld,
 } from '../testing/fixtures'
-import { enroll, hasSharedInstructorEnrollment, unenroll } from './service'
+import { enroll, hasSharedInstructorEnrollment } from './service'
 import { findEnrollment } from './repository'
 
 let world: TestWorld | undefined
@@ -110,55 +109,6 @@ describe('enroll', () => {
         role: 'student',
       }),
     ).rejects.toSatisfy((error: unknown) => pgErrorCode(error) === '23503')
-  })
-})
-
-describe('unenroll', () => {
-  it('removes an existing enrollment', async () => {
-    world = await createTestSchool()
-    const trackRow = await createTrack(world)
-    const batchRow = await createBatch(world, trackRow)
-    const studentProfile = await createProfile(world)
-    await enrollFixture(world, studentProfile, batchRow, 'student')
-
-    await unenroll(world.schoolDb, batchRow.id, studentProfile.id)
-
-    await expect(
-      findEnrollment(world.schoolDb, studentProfile.id, batchRow.id),
-    ).resolves.toBeUndefined()
-  })
-
-  it('rejects with 404 when there is no such enrollment', async () => {
-    world = await createTestSchool()
-    const trackRow = await createTrack(world)
-    const batchRow = await createBatch(world, trackRow)
-    const studentProfile = await createProfile(world)
-
-    await expect(
-      unenroll(world.schoolDb, batchRow.id, studentProfile.id),
-    ).rejects.toMatchObject({ statusCode: 404 })
-  })
-
-  it('only removes the targeted (batchId, profileId) pair, not the profile\'s other enrollments', async () => {
-    world = await createTestSchool()
-    const trackRow = await createTrack(world)
-    // A student can only be active in one batch per course, so the "other" enrollment is in another
-    // course's batch.
-    const otherTrack = await createTrack(world, { course: await createCourse(world) })
-    const batchA = await createBatch(world, trackRow)
-    const batchB = await createBatch(world, otherTrack)
-    const studentProfile = await createProfile(world)
-    await enrollFixture(world, studentProfile, batchA, 'student')
-    await enrollFixture(world, studentProfile, batchB, 'student')
-
-    await unenroll(world.schoolDb, batchA.id, studentProfile.id)
-
-    await expect(
-      findEnrollment(world.schoolDb, studentProfile.id, batchA.id),
-    ).resolves.toBeUndefined()
-    await expect(
-      findEnrollment(world.schoolDb, studentProfile.id, batchB.id),
-    ).resolves.toEqual({ role: 'student', status: 'active' })
   })
 })
 

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDbClient } from '@narada/db'
 
-import { createEvaluations, findByBatch, findByStudent } from './service'
+import { createEvaluations, findByBatch } from './service'
 import * as repository from './repository'
 import * as enrollmentService from '../enrollment/service'
 import * as batchRepository from '../batches/repository'
@@ -12,7 +12,6 @@ import * as chapterRepository from '../chapters/repository'
 // pulls in `@narada/db` at import time and would trigger real env-var validation — never loads.
 vi.mock('./repository', () => ({
   findForBatch: vi.fn(),
-  findForStudentInBatch: vi.fn(),
   findForChaptersAndStudents: vi.fn(),
   insertMany: vi.fn(),
 }))
@@ -36,7 +35,7 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-describe('findByBatch / findByStudent', () => {
+describe('findByBatch', () => {
   it('findByBatch resolves the batch track and delegates to repository.findForBatch', async () => {
     vi.mocked(batchRepository.findById).mockResolvedValue({ trackId: 'track-1' } as never)
     vi.mocked(repository.findForBatch).mockResolvedValue({ items: [], nextCursor: null })
@@ -55,29 +54,6 @@ describe('findByBatch / findByStudent', () => {
     expect(repository.findForBatch).not.toHaveBeenCalled()
   })
 
-  it('findByStudent resolves the batch track and delegates to repository.findForStudentInBatch', async () => {
-    vi.mocked(batchRepository.findById).mockResolvedValue({ trackId: 'track-1' } as never)
-    vi.mocked(repository.findForStudentInBatch).mockResolvedValue({ items: [], nextCursor: null })
-
-    await findByStudent(context, 'batch-1', 'student-1', { limit: 20 })
-
-    expect(repository.findForStudentInBatch).toHaveBeenCalledWith(
-      db,
-      'batch-1',
-      'track-1',
-      'student-1',
-      { limit: 20 },
-    )
-  })
-
-  it('findByStudent throws 404 when the batch does not exist', async () => {
-    vi.mocked(batchRepository.findById).mockResolvedValue(undefined)
-
-    await expect(
-      findByStudent(context, 'batch-1', 'student-1', { limit: 20 }),
-    ).rejects.toMatchObject({ statusCode: 404 })
-    expect(repository.findForStudentInBatch).not.toHaveBeenCalled()
-  })
 })
 
 describe('createEvaluations', () => {

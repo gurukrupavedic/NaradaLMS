@@ -15,7 +15,6 @@ import healthRouter from './health'
 import profileRouter from './profile'
 import profilesRouter from './profiles'
 import registrationsRouter from './registrations'
-import schoolsRouter from './schools'
 import tracksRouter from './tracks'
 
 const apiRateLimit = rateLimit({
@@ -32,7 +31,6 @@ export default function setupRoutes(router: Router) {
     .use('/profile', profileRouter)
     .use('/me/dashboard', dashboardRouter)
     .use('/me/courses', myCoursesRouter)
-    .use('/schools', schoolsRouter)
     .use('/profiles', profilesRouter)
     .use('/profiles/:profileId/course-details', courseDetailsRouter)
     .use('/registrations', registrationsRouter)

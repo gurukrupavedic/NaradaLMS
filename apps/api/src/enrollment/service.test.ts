@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDb, SchoolDbClient } from '@narada/db'
 
-import { assertEnrolledInTrack, enroll, moveEnrollment, putOnBreak, unenroll } from './service'
+import { assertEnrolledInTrack, enroll, moveEnrollment, putOnBreak } from './service'
 import * as repository from './repository'
 import { DbConstraint } from '../utils/dbError'
 
@@ -178,26 +178,6 @@ describe('enroll', () => {
     ).resolves.toEqual(row)
     expect(repository.reactivateEnrollment).toHaveBeenCalledWith(db, 'batch-1', 'profile-1', 'student')
     expect(repository.insertEnrollment).not.toHaveBeenCalled()
-  })
-})
-
-describe('unenroll', () => {
-  const db = {} as SchoolDb
-
-  beforeEach(() => {
-    vi.resetAllMocks()
-  })
-
-  it('resolves when a row was deleted', async () => {
-    vi.mocked(repository.deleteEnrollment).mockResolvedValue(true)
-
-    await expect(unenroll(db, 'batch-1', 'profile-1')).resolves.toBeUndefined()
-  })
-
-  it('rejects with 404 when there was no such enrollment to delete', async () => {
-    vi.mocked(repository.deleteEnrollment).mockResolvedValue(false)
-
-    await expect(unenroll(db, 'batch-1', 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
   })
 })
 

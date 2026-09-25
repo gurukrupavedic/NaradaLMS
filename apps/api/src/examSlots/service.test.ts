@@ -387,7 +387,7 @@ describe('cancelSlot', () => {
 
     await expect(cancelSlot(context, 'slot-1', 'admin-1')).rejects.toMatchObject({
       statusCode: 409,
-      message: expect.stringContaining('cancel the exam itself instead'),
+      message: expect.stringContaining('already booked'),
     })
 
     expect(transactionMock).not.toHaveBeenCalled()

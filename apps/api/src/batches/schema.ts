@@ -3,7 +3,7 @@ import * as z from 'zod'
 import { batchStatus, enrollmentRole, enrollmentStatus } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
-import { httpsUrl, isoInstant, requireNonEmpty } from '../utils/validate'
+import { httpsUrl, isoInstant } from '../utils/validate'
 
 const PAGE_SIZE = 20
 
@@ -23,10 +23,8 @@ export const BatchSchema = z.object({
   meetingUrl: httpsUrl.nullable(),
 })
 
-// "View a batch" includes "see who's in it" — this is a capability, not just a richer response
-// shape, so it lives on the same GET /batches/:batchId a caller already uses (see PARITY_PLAN.md
-// §1.2: no reason this needs to be a separate endpoint just because apps/api/src also happens to
-// inline it here).
+// A batch's roster: who is enrolled in it. Returned with the batch list that carries detail
+// (`GET /profiles/:profileId/batches?withDetail=true`) rather than through a batch-by-id read.
 export type BatchMember = z.infer<typeof BatchMemberSchema>
 export const BatchMemberSchema = z.object({
   profileId: z.uuid(),
@@ -124,18 +122,6 @@ export const CreateBatchSchema = BatchSchema.pick({
       .regex(/^[A-Za-z0-9]+$/, 'classifier must be letters/digits only, no spaces or punctuation')
       .transform(value => value.toUpperCase()),
   })
-
-// No `trackId` — a batch's track is set once at creation; the real API never allowed moving it
-// after the fact, and nothing downstream (schedule, enrollment, evaluations) expects it to move.
-export type UpdateBatchData = z.infer<typeof UpdateBatchSchema>
-export const UpdateBatchSchema = requireNonEmpty(
-  BatchSchema.pick({
-    code: true,
-    status: true,
-    startDate: true,
-    meetingUrl: true,
-  }).partial(),
-)
 
 // GET /batches/open — deliberately its own shape, not `BatchDetail`: a student browsing batches to
 // join should see the schedule, never the existing roster (who's already in it). `trackName` is

@@ -90,7 +90,6 @@ export function ChapterRow({
           >
             {chapter.title}
           </span>
-          {chapter.isCertification && <span className="stamp shrink-0">certification</span>}
         </span>
 
         {/* One wrap unit rather than three separate ones — on a narrow screen this drops to its
@@ -175,16 +174,6 @@ export function ChapterRow({
                 })}
               </div>
             </div>
-
-            <label className="flex items-center gap-2.5">
-              <input
-                type="checkbox"
-                checked={chapter.isCertification}
-                onChange={e => onChange({ isCertification: e.target.checked })}
-                className="size-3.5 accent-[var(--vermilion)]"
-              />
-              <span className="label text-ink-muted">Certification chapter</span>
-            </label>
 
             {isConfirmingDelete ? (
               <span className="ml-auto flex items-center gap-3">

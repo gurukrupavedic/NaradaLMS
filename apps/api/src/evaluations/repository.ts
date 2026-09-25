@@ -56,25 +56,6 @@ export async function findForBatch(
   )
 }
 
-/** Same scope as {@link findForBatch}, additionally restricted to one student. */
-export async function findForStudentInBatch(
-  db: SchoolDb,
-  batchId: string,
-  trackId: string,
-  studentId: string,
-  query: FindEvaluationsData,
-): Promise<{ items: Evaluation[]; nextCursor: string | null }> {
-  return findEvaluations(
-    db,
-    [
-      eq(evaluation.studentId, studentId),
-      inArray(evaluation.studentId, enrolledProfileIdsInBatch(db, batchId)),
-      inArray(evaluation.chapterId, chapterIdsInTrack(db, trackId)),
-    ],
-    query,
-  )
-}
-
 /** The one write path into `evaluation` — a single-cell grade and a bulk "promote" both funnel
  * here via service.ts's `createEvaluations` (one item or many; an empty array is a valid no-op,
  * e.g. every item filtered out for already being certified). */

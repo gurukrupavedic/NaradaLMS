@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { CreateExamSchema, FindExamsSchema, RecordExamResultSchema, UpdateExamSchema } from './schema'
+import { CreateExamSchema, FindExamsSchema, RecordExamResultSchema } from './schema'
 
 // Explicit factory (rather than the real module) so importing `./schema` doesn't pull in
 // `@narada/db` at import time and trigger real env-var validation — never loads.
@@ -169,17 +169,5 @@ describe('FindExamsSchema', () => {
     if (result.success) {
       expect(result.data.graded).toBeUndefined()
     }
-  })
-})
-
-describe('UpdateExamSchema', () => {
-  it('rejects an offset-free scheduledAt', () => {
-    const result = UpdateExamSchema.safeParse({ scheduledAt: '2024-01-01T00:00:00' })
-    expect(result.success).toBe(false)
-  })
-
-  it('accepts a Z-suffixed scheduledAt', () => {
-    const result = UpdateExamSchema.safeParse({ scheduledAt: '2024-01-01T00:00:00Z' })
-    expect(result.success).toBe(true)
   })
 })
