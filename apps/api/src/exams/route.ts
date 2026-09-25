@@ -3,20 +3,8 @@ import * as z from 'zod'
 
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import {
-  CreateExamSchema,
-  FindExamsSchema,
-  RecordExamResultSchema,
-  UpdateExamSchema,
-} from './schema'
-import {
-  correctExamResult,
-  createExam,
-  findById,
-  findExams,
-  recordExamResult,
-  updateExam,
-} from './service'
+import { FindExamsSchema, RecordExamResultSchema, UpdateExamSchema } from './schema'
+import { correctExamResult, findById, findExams, recordExamResult, updateExam } from './service'
 
 const router = Router()
 
@@ -30,16 +18,8 @@ router.get(
   }),
 )
 
-// createExam itself calls access.requireCanCreateExam (school-admin only) before checking the
-// student's enrollment — see its doc comment.
-router.post(
-  '/',
-  profileRoute(async ({ req, res, db, access }) => {
-    const data = await parse(CreateExamSchema, req.body)
-    const exam = await createExam({ db, access }, data)
-    res.status(201).json({ data: exam })
-  }),
-)
+// There is no POST here: a sitting is booked by approving an exam-slot request (`examSlots/service.ts`,
+// which calls `service.ts::createExam`).
 
 router.patch(
   '/:examId',

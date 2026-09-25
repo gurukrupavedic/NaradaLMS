@@ -60,12 +60,9 @@ export const FindExamsSchema = ExamSchema.pick({
     sort: z.enum(['asc', 'desc', 'track']).optional().default('asc'),
   })
 
-export type CreateExamData = z.infer<typeof CreateExamSchema>
-export const CreateExamSchema = ExamSchema.pick({
-  trackId: true,
-  studentId: true,
-  scheduledAt: true,
-})
+// What booking a sitting takes. Not a request schema: no route accepts it (see `route.ts`), only
+// `examSlots/service.ts::approve` calls `service.ts::createExam`, with values read from the database.
+export type CreateExamData = Pick<Exam, 'trackId' | 'studentId' | 'scheduledAt'>
 
 export type UpdateExamData = z.infer<typeof UpdateExamSchema>
 export const UpdateExamSchema = requireNonEmpty(

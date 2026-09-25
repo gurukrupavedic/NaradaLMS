@@ -6,20 +6,8 @@ import { parse } from '../utils/validate'
 import { findAllAccessible, findAllAccessibleWithDetail } from '../batches/service'
 import { findDetails as findCourseDetails } from '../courseDetails/repository'
 import { getDashboardData } from '../dashboard/service'
-import {
-  CreateProfileSchema,
-  ProfileBatchesQuerySchema,
-  SearchProfilesQuerySchema,
-  UpdateProfileSchema,
-} from './schema'
-import {
-  createProfile,
-  deleteProfile,
-  findById,
-  findByUserId,
-  searchProfiles,
-  updateProfile,
-} from './service'
+import { ProfileBatchesQuerySchema, SearchProfilesQuerySchema, UpdateProfileSchema } from './schema'
+import { deleteProfile, findById, findByUserId, searchProfiles, updateProfile } from './service'
 
 const router = Router()
 
@@ -80,15 +68,6 @@ router.get(
     // written there — a student an admin put on a roster has no row yet.
     const courseDetails = (await findCourseDetails(db, profile.id, course.id)) ?? {}
     res.status(200).json({ data: { profile, courseDetails, dashboard } })
-  }),
-)
-
-router.post(
-  '/',
-  userRoute(async ({ req, res, db, school, user }) => {
-    const data = await parse(CreateProfileSchema, req.body)
-    const profile = await createProfile({ db, school, user }, data)
-    res.status(201).json({ data: profile })
   }),
 )
 

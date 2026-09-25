@@ -13,18 +13,10 @@ vi.mock('./repository', () => ({
   findById: vi.fn(),
   findByUserId: vi.fn(),
   findDetailsForUpdate: vi.fn(),
-  findMembership: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
   softDelete: vi.fn(),
   search: vi.fn(),
-}))
-
-// `profiles/service.ts` imports the real `publicDb` value directly from `@narada/db`, so that
-// package needs its own stub too — loading the real one triggers `@narada/env`'s validation
-// against unset environment variables in this test environment.
-vi.mock('@narada/db', () => ({
-  publicDb: {},
 }))
 
 type School = typeof organization.$inferSelect
