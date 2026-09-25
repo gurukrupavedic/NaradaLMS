@@ -3,6 +3,8 @@
  * from the API's zod schemas rather than imported: apps/web has no dependency on apps/api.
  */
 
+import type { Details } from '@narada/profile-fields'
+
 // GET /v1/profiles — every profile the signed-in account can act as (see app/login/page.tsx's own
 // doc comment on why a household can have several).
 //
@@ -35,6 +37,9 @@ export type ApiProfile = {
   noAlcoholAgreed: boolean
   noSmokingAgreed: boolean
   comments: string | null
+  // What this school collects beyond the columns above (`@narada/profile-fields`), keyed by field
+  // key — render it with `components/detail-summary.tsx`, not by reading keys directly.
+  details: Details
   createdAt: string
   updatedAt: string
 }
@@ -299,6 +304,8 @@ export type ApiRegistration = {
   noAlcoholAgreed: boolean
   noSmokingAgreed: boolean
   comments: string | null
+  // The school-specific answers — see `ApiProfile.details`.
+  details: Details
   reviewedAt: string | null
   reviewedBy: string | null
   createdAt: string

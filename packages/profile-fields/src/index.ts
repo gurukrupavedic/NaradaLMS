@@ -1,4 +1,4 @@
-export { assertValidDefinitions, normalizeDetails, visibleFields } from './details'
+export { assertValidDefinitions, mergeDetails, normalizeDetails, visibleFields } from './details'
 export type { NormalizeOptions, NormalizeResult } from './details'
 export { profileFieldsFor } from './schools'
 export type {

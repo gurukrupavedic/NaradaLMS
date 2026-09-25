@@ -14,16 +14,16 @@ const PROFILE_FIELDS_BY_SCHOOL: Record<string, readonly FieldDefinition[]> = {
   rr: [{ key: 'gothram', label: 'Gothram', type: 'text', required: true }],
 
   slmts: [
-    { key: 'gothram', label: 'Your gothram', type: 'text', required: true },
-    { key: 'married', label: 'I am married', type: 'boolean' },
+    { key: 'gothram', label: 'Gothram', type: 'text', required: true },
+    { key: 'married', label: 'Married', type: 'boolean' },
     {
       key: 'gothramSpouse',
-      label: "Your wife's gothram",
+      label: "Wife's gothram",
       type: 'text',
       required: true,
       showIf: { field: 'married', equals: true },
     },
-    { key: 'gothramMother', label: "Your mother's gothram", type: 'text', required: true },
+    { key: 'gothramMother', label: "Mother's gothram", type: 'text', required: true },
   ],
 }
 

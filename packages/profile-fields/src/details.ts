@@ -69,7 +69,9 @@ function coerce(field: FieldDefinition, raw: unknown): Coerced {
     return typeof raw === 'boolean' ? { value: raw } : { error: 'must be true or false' }
   }
 
-  if (raw === undefined || raw === null) {
+  // A blank string is how a client says "clear this" (a details value can't be null), so it means
+  // no value for every type, not just text.
+  if (raw === undefined || raw === null || (typeof raw === 'string' && raw.trim() === '')) {
     return { value: undefined }
   }
 
@@ -79,9 +81,6 @@ function coerce(field: FieldDefinition, raw: unknown): Coerced {
         return { error: 'must be text' }
       }
       const text = raw.trim()
-      if (text === '') {
-        return { value: undefined }
-      }
       const maxLength = field.maxLength ?? DEFAULT_TEXT_MAX_LENGTH
       return text.length > maxLength
         ? { error: `must be at most ${maxLength} characters` }
@@ -100,9 +99,6 @@ function coerce(field: FieldDefinition, raw: unknown): Coerced {
       return { value: raw }
     }
     case 'select': {
-      if (typeof raw === 'string' && raw.trim() === '') {
-        return { value: undefined }
-      }
       return field.options.some(option => option.value === raw)
         ? { value: raw as string }
         : { error: 'is not one of the options' }
@@ -158,6 +154,53 @@ export function normalizeDetails(
   }
 
   return { values, errors }
+}
+
+/**
+ * The details after an edit: `current` with `patch` laid over it, re-validated as a whole so a
+ * change that reveals or hides a conditional field (ticking "married") takes effect immediately —
+ * the spouse's gothram is required from then on, and dropped if it is unticked again.
+ *
+ * Shared by the API (which stores the result) and the edit form (which checks it first), so the two
+ * can't disagree about what an edit is allowed to do. Allowances for data that no longer matches the
+ * definitions: a key `current` holds that no field defines any more is carried through untouched (an
+ * edit to one field must not delete, or be blocked by, another's leftovers), and `required` is only
+ * enforced for the keys in `patch` plus any field the patch newly reveals (a profile that predates
+ * a newly required field can still change something else). A non-`editable` field can't be in `patch`.
+ */
+export function mergeDetails(
+  fields: readonly FieldDefinition[],
+  current: Readonly<Record<string, DetailValue>>,
+  patch: Readonly<Record<string, DetailValue>>,
+): NormalizeResult {
+  const known = new Set(fields.map(field => field.key))
+  const locked: Record<string, string> = {}
+  for (const key of Object.keys(patch)) {
+    if (fields.some(field => field.key === key && field.editable === false)) {
+      locked[key] = 'cannot be changed'
+    }
+  }
+
+  const carried: Details = {}
+  const knownCurrent: Details = {}
+  for (const [key, value] of Object.entries(current)) {
+    ;(known.has(key) ? knownCurrent : carried)[key] = value
+  }
+
+  const merged = { ...knownCurrent, ...patch }
+
+  // A field the patch *reveals* (ticking "married" reveals the spouse's gothram) is being answered
+  // for the first time, so it is held to `required` exactly like a field the patch names.
+  const visibleBefore = new Set(visibleFields(fields, knownCurrent).map(field => field.key))
+  const revealed = visibleFields(fields, merged)
+    .map(field => field.key)
+    .filter(key => !visibleBefore.has(key))
+
+  const { values, errors } = normalizeDetails(fields, merged, {
+    enforceRequiredFor: [...Object.keys(patch), ...revealed],
+  })
+
+  return { values: { ...carried, ...values }, errors: { ...locked, ...errors } }
 }
 
 /**

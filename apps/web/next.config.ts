@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Workspace packages ship raw TypeScript (no build step), which Next only compiles when told to.
+  transpilePackages: ['@narada/profile-fields'],
   // Lets an ngrok-tunneled phone actually load the dev server: Next blocks cross-origin requests
   // to its own dev-only resources by default (`block-cross-site-dev.js`), which includes the HMR
   // websocket at `/_next/webpack-hmr`. Without this, that socket 403s from any origin outside

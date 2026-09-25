@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { profileFieldsFor } from '@narada/profile-fields'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
+import { DetailSummary } from '@/components/detail-summary'
 import { Section } from '@/components/section'
 import { TrackLadder } from '@/components/track-ladder'
 import { CertificationRecord } from '@/components/certification-record'
@@ -19,6 +21,7 @@ import { isCertified } from '@/lib/proficiency'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
 import { useHasAdminAccess, useSelectedProfileId } from '@/lib/auth/profile-store'
 import { useUpdateProfile } from '@/lib/query/use-profile-mutations'
+import { useSchoolSlug } from '@/lib/school'
 import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
 import type { ApiProfile } from '@/lib/api/api-types'
@@ -47,6 +50,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const [editOpen, setEditOpen] = useState(false)
   const canEdit = isSelf || isAdmin
   const updating = useUpdateProfile(profileId, isSelf)
+  const detailFields = profileFieldsFor(useSchoolSlug() ?? '')
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
@@ -146,6 +150,14 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
             </dl>
           </Section>
         </Reveal>
+
+        {detailFields.length > 0 && (
+          <Reveal delay={20}>
+            <Section title="Additional details">
+              <DetailSummary fields={detailFields} details={profile.details} />
+            </Section>
+          </Reveal>
+        )}
 
         {(profile.parentNames.length > 0 || profile.comments || AGREEMENT_LABELS.some(({ key }) => profile[key])) && (
           <Reveal delay={40}>
