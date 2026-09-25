@@ -106,10 +106,6 @@ export const profile = pgTable(
     // The school's own fields (gothrams, ...) — see `detailsColumn`. Copied from the school-level
     // part of `registration.details` on approval.
     details: detailsColumn(),
-    // Soft-delete marker: NULL = active. Deliberately has no `.$onUpdateFn` —
-    // unlike `updatedAt`, this is set exactly once, explicitly, by the soft-delete write,
-    // and must never be auto-touched by an unrelated UPDATE.
-    deletedAt: timestamp('deletedAt'),
     updatedAt: timestamp('updatedAt')
       .defaultNow()
       .notNull()

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SchoolDbClient, organization } from '@narada/db'
 
 import type { AccessPolicy } from '../utils/accessPolicy'
-import { deleteProfile, findById, searchProfiles, updateProfile } from './service'
+import { findById, searchProfiles, updateProfile } from './service'
 import * as repository from './repository'
 import type { Profile } from './schema'
 
@@ -15,7 +15,6 @@ vi.mock('./repository', () => ({
   findDetailsForUpdate: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
-  softDelete: vi.fn(),
   search: vi.fn(),
 }))
 
@@ -24,7 +23,7 @@ type School = typeof organization.$inferSelect
 const db = {} as SchoolDbClient
 const school = {} as School
 const user = { id: 'user-1', isSuperAdmin: false } as unknown as Parameters<
-  typeof deleteProfile
+  typeof updateProfile
 >[0]['user']
 
 function access(isSchoolAdmin: boolean): AccessPolicy {
@@ -56,42 +55,6 @@ const baseProfile: Profile = {
   updatedAt: new Date(),
   createdAt: new Date(),
 }
-
-describe('deleteProfile', () => {
-  beforeEach(() => {
-    vi.resetAllMocks()
-  })
-
-  it('soft-deletes the caller\'s own profile (pure soft-delete: only deletedAt changes)', async () => {
-    vi.mocked(repository.softDelete).mockResolvedValue([{ id: 'profile-1' }])
-
-    await expect(deleteProfile(ownContext, 'profile-1')).resolves.toBeUndefined()
-
-    expect(repository.softDelete).toHaveBeenCalledWith(db, 'profile-1', 'user-1')
-  })
-
-  it('404s a missing, foreign-owned, or already-deactivated profile for a non-admin', async () => {
-    vi.mocked(repository.softDelete).mockResolvedValue([])
-
-    await expect(deleteProfile(ownContext, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
-  })
-
-  it('a school admin soft-deletes any profile, with no owner check', async () => {
-    vi.mocked(repository.softDelete).mockResolvedValue([{ id: 'profile-1' }])
-
-    await expect(deleteProfile(adminContext, 'profile-1')).resolves.toBeUndefined()
-
-    expect(repository.softDelete).toHaveBeenCalledWith(db, 'profile-1', null)
-  })
-
-  it('404s a missing or already-deactivated profile for an admin too', async () => {
-    vi.mocked(repository.softDelete).mockResolvedValue([])
-
-    await expect(deleteProfile(adminContext, 'profile-1')).rejects.toMatchObject({
-      statusCode: 404,
-    })
-  })
-})
 
 describe('searchProfiles', () => {
   beforeEach(() => {
@@ -259,7 +222,7 @@ describe('updateProfile details', () => {
     })
   })
 
-  it('404s when the row to lock is missing, foreign-owned, or deactivated', async () => {
+  it('404s when the row to lock is missing or foreign-owned', async () => {
     vi.mocked(repository.findDetailsForUpdate).mockResolvedValue(undefined)
 
     await expect(updateProfile(slmts, 'profile-1', { details: { gothram: 'A' } })).rejects.toMatchObject({
@@ -286,7 +249,7 @@ describe('findById', () => {
     expect(repository.findById).toHaveBeenCalledWith(db, 'profile-1')
   })
 
-  it('404s a missing or soft-deleted profile', async () => {
+  it('404s a missing profile', async () => {
     vi.mocked(repository.findById).mockResolvedValue(undefined)
 
     await expect(findById(ownContext, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })

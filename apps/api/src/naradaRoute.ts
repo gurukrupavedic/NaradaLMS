@@ -204,8 +204,8 @@ function resolveSchool(req: Request): Promise<{ db: SchoolDbClient; school: Scho
 /**
  * Resolves `X-Profile-Id` to a profile in this school if the header is present, rejecting a
  * profile that doesn't exist, belongs to a different user (never trust a caller-supplied profile
- * ID), or has been deactivated — the single choke point that keeps a soft-deleted
- * profile out of every `optionalProfileRoute`/`profileRoute`-gated read and write. Returns
+ * ID) — the single choke point for every `optionalProfileRoute`/`profileRoute`-gated read and
+ * write. Returns
  * `undefined`, rather than throwing, when the header is simply absent — `optionalProfileRoute`'s
  * whole point.
  */
@@ -223,7 +223,7 @@ async function resolveOptionalProfile(
     where: (t, { eq }) => eq(t.id, profileId),
   })
 
-  if (!profile || profile.userId !== user.id || profile.deletedAt !== null) {
+  if (!profile || profile.userId !== user.id) {
     throw forbidden()
   }
 

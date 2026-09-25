@@ -2047,12 +2047,6 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
-        "deletedAt": {
-          "name": "deletedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
         "updatedAt": {
           "name": "updatedAt",
           "type": "timestamp",

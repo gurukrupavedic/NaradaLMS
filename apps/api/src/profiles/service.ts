@@ -1,6 +1,6 @@
 import type { organization, SchoolDbClient } from '@narada/db'
 
-import { notFound, orNotFound } from '../error'
+import { orNotFound } from '../error'
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
 import { profileFieldsFor } from '@narada/profile-fields'
@@ -81,21 +81,4 @@ export async function updateProfile(
     const details = mergeDetailsPatch(profileFieldsFor(context.school.slug), current, detailsPatch)
     return orNotFound(await repository.update(tx, id, ownerUserId, { ...patch, details }))
   })
-}
-
-/**
- * Deactivates a profile instead of physically deleting it: only `deletedAt` is set.
- * Every other column, and every `enrollment`/`exam`/`evaluation` row referencing this profile, is
- * left exactly as it was, so historical queries keep working. Same owner-vs-admin split as
- * `updateProfile` above: a school admin deactivates any profile, anyone else only their own.
- */
-export async function deleteProfile(
-  context: ProfileServiceContext & { access: AccessPolicy },
-  id: string,
-): Promise<void> {
-  const ownerUserId = context.access.isSchoolAdmin() ? null : context.user.id
-  const rows = await repository.softDelete(context.db, id, ownerUserId)
-  if (rows.length === 0) {
-    throw notFound()
-  }
 }

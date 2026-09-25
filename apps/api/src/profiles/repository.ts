@@ -1,4 +1,4 @@
-import { and, eq, isNull, notInArray } from 'drizzle-orm'
+import { and, eq, notInArray, type SQL } from 'drizzle-orm'
 
 import { enrollment, profile, type SchoolDb } from '@narada/db'
 
@@ -8,9 +8,8 @@ import type { Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
 const SEARCH_LIMIT = 25
 
 /**
- * Explicit projection matching `Profile` exactly. `profile.deletedAt` is an internal lifecycle
- * column and is deliberately never returned to API consumers, which serialize these
- * rows directly.
+ * Explicit projection matching `Profile` exactly, for the write paths that `.returning()` a row
+ * which API consumers then serialize directly.
  */
 const profileColumns = {
   id: profile.id,
@@ -35,18 +34,15 @@ const profileColumns = {
   createdAt: profile.createdAt,
 }
 
-/** Lists only active profiles; a soft-deleted profile is invisible to its own owner. */
 export async function findByUserId(db: SchoolDb, userId: string): Promise<Profile[]> {
   return db.query.profile.findMany({
-    where: (t, { and, eq, isNull }) => and(eq(t.userId, userId), isNull(t.deletedAt)),
-    columns: { deletedAt: false },
+    where: (t, { eq }) => eq(t.userId, userId),
   })
 }
 
 export async function findById(db: SchoolDb, id: string): Promise<Profile | undefined> {
   return db.query.profile.findFirst({
-    where: (t, { and, eq, isNull }) => and(eq(t.id, id), isNull(t.deletedAt)),
-    columns: { deletedAt: false },
+    where: (t, { eq }) => eq(t.id, id),
   })
 }
 
@@ -71,8 +67,8 @@ export async function findById(db: SchoolDb, id: string): Promise<Profile | unde
  */
 export async function search(db: SchoolDb, options: SearchProfilesQuery): Promise<Profile[]> {
   return db.query.profile.findMany({
-    where: (t, { and, isNull: isNullCol }) => {
-      const conditions = [isNullCol(t.deletedAt)]
+    where: t => {
+      const conditions: SQL[] = []
       if (options.query) {
         const match = tokenMatch(options.query.replace(/\+/g, ''), [t.name, t.email, t.phone])
         if (match) conditions.push(match)
@@ -99,7 +95,6 @@ export async function search(db: SchoolDb, options: SearchProfilesQuery): Promis
     },
     orderBy: (t, { asc }) => asc(t.name),
     limit: SEARCH_LIMIT,
-    columns: { deletedAt: false },
   })
 }
 
@@ -128,8 +123,7 @@ export async function insert(
  * re-derive `countryTimeZone` even when a patch only changes one of the three fields.
  * `ownerUserId` enforces ownership when the caller isn't a school admin (`null` for an admin, who
  * may read any profile's location) — a foreign-owned profile matches zero rows for a non-admin
- * caller rather than leaking its location to them. The `deletedAt IS NULL` guard matches
- * `findById`: a deactivated profile isn't editable, it's gone, for admin and owner alike.
+ * caller rather than leaking its location to them.
  */
 export async function findLocationFields(
   db: SchoolDb,
@@ -137,8 +131,8 @@ export async function findLocationFields(
   ownerUserId: string | null,
 ): Promise<{ city: string | null; state: string | null; country: string | null } | undefined> {
   return db.query.profile.findFirst({
-    where: (t, { and, eq, isNull: isNullCol }) =>
-      and(eq(t.id, id), isNullCol(t.deletedAt), ownerUserId ? eq(t.userId, ownerUserId) : undefined),
+    where: (t, { and, eq }) =>
+      and(eq(t.id, id), ownerUserId ? eq(t.userId, ownerUserId) : undefined),
     columns: { city: true, state: true, country: true },
   })
 }
@@ -147,8 +141,7 @@ export async function findLocationFields(
  * The current `details`, row-locked for `service.ts::updateProfile`'s transaction — a details edit
  * is a read-merge-validate-write, so two concurrent edits (the student and an admin) must queue
  * rather than each merging onto the same stale copy and one silently undoing the other. Same
- * ownership and `deletedAt` predicates as `update` below, so a foreign-owned or deactivated
- * profile matches nothing. The relational query API has no `FOR UPDATE`, so this uses the plain
+ * ownership predicate as `update` below, so a foreign-owned profile matches nothing. The relational query API has no `FOR UPDATE`, so this uses the plain
  * query builder, like `registrations/repository.ts::findByIdForUpdate`.
  */
 export async function findDetailsForUpdate(
@@ -159,7 +152,7 @@ export async function findDetailsForUpdate(
   const rows = await db
     .select({ details: profile.details })
     .from(profile)
-    .where(and(eq(profile.id, id), isNull(profile.deletedAt), ownerUserId ? eq(profile.userId, ownerUserId) : undefined))
+    .where(and(eq(profile.id, id), ownerUserId ? eq(profile.userId, ownerUserId) : undefined))
     .for('update')
   return rows.at(0)?.details
 }
@@ -167,8 +160,7 @@ export async function findDetailsForUpdate(
 /**
  * `ownerUserId` enforces ownership in SQL when the caller isn't a school admin (`null` for an
  * admin — any profile in the school is fair game); a foreign-owned profile matches zero rows for a
- * non-admin caller rather than being fetched and checked afterward. The `deletedAt IS NULL` guard
- * keeps a deactivated profile un-editable by anyone, admin included — an edit can't revive one.
+ * non-admin caller rather than being fetched and checked afterward.
  * Accepts `countryTimeZone` on top of `UpdateProfileData`'s own fields — that column is never
  * client-writable (see `UpdateProfileSchema`'s doc comment), but `service.ts::updateProfile`
  * re-derives and includes it server-side whenever the location changes. `details` is likewise
@@ -187,29 +179,8 @@ export async function update(
   const rows = await db
     .update(profile)
     .set(data)
-    .where(and(eq(profile.id, id), isNull(profile.deletedAt), ownerUserId ? eq(profile.userId, ownerUserId) : undefined))
+    .where(and(eq(profile.id, id), ownerUserId ? eq(profile.userId, ownerUserId) : undefined))
     .returning(profileColumns)
 
   return rows.at(0)
-}
-
-/**
- * Deactivates a profile: stamps `deletedAt` only. Every other column — name, phone, city
- * — and every `enrollment`/`exam`/`evaluation` row referencing this profile stay exactly as they
- * were, so historical queries ("which batches was this user in", "what did they score there") keep
- * working after deactivation. `ownerUserId` enforces ownership when the caller isn't a school
- * admin (`null` for an admin deactivating someone else's profile). The `deletedAt IS NULL`
- * predicate makes a repeat call match zero rows regardless of actor, so the service's 404 covers
- * missing, foreign-owned (for a non-admin caller), and already-deactivated alike.
- */
-export async function softDelete(
-  db: SchoolDb,
-  id: string,
-  ownerUserId: string | null,
-): Promise<{ id: string }[]> {
-  return db
-    .update(profile)
-    .set({ deletedAt: new Date() })
-    .where(and(eq(profile.id, id), isNull(profile.deletedAt), ownerUserId ? eq(profile.userId, ownerUserId) : undefined))
-    .returning({ id: profile.id })
 }

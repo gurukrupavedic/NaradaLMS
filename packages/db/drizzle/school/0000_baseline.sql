@@ -220,7 +220,6 @@ CREATE TABLE "profile" (
 	"noAlcoholAgreed" boolean DEFAULT false NOT NULL,
 	"noSmokingAgreed" boolean DEFAULT false NOT NULL,
 	"details" jsonb DEFAULT '{}'::jsonb NOT NULL,
-	"deletedAt" timestamp,
 	"updatedAt" timestamp DEFAULT now() NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
