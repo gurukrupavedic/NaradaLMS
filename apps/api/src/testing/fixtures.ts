@@ -200,6 +200,7 @@ export async function createProfile(
     email?: string | null
     yearOfBirth?: number | null
     details?: ProfileRow['details']
+    countryTimeZone?: string | null
   },
 ): Promise<ProfileRow> {
   const rows = await world.schoolDb
@@ -212,6 +213,7 @@ export async function createProfile(
       email: overrides?.email ?? null,
       yearOfBirth: overrides?.yearOfBirth ?? null,
       details: overrides?.details ?? {},
+      countryTimeZone: overrides?.countryTimeZone ?? null,
     })
     .returning()
 

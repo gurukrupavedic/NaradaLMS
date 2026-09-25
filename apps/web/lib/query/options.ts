@@ -13,6 +13,7 @@ import {
   fetchCatalogTracks,
   fetchChapter,
   fetchChapterDetail,
+  fetchCounter,
   fetchCourse,
   fetchCourses,
   fetchDashboard,
@@ -130,6 +131,21 @@ export const keys = {
     // this to catch every status tab at once.
     all: ['enrollmentRequests'] as const,
     list: (status: ApiEnrollmentRequestStatus) => ['enrollmentRequests', 'list', status] as const,
+  },
+
+  counters: {
+    // Prefix key — every cached counter of one profile (any course, any window), for a log or a
+    // correction that changes what its totals and recent days show.
+    profile: (profileId: string) => ['counters', profileId] as const,
+    // A window of one counter, in one course: the course is part of the key because the same
+    // profile keeps a separate count in each course that has the counter.
+    window: (
+      profileId: string,
+      courseSlug: string,
+      key: string,
+      from: string | undefined,
+      to: string | undefined,
+    ) => ['counters', profileId, courseSlug, key, { from, to }] as const,
   },
 
   profiles: {
@@ -338,6 +354,21 @@ export const enrollmentRequestsQuery = (status: ApiEnrollmentRequestStatus) =>
   queryOptions({
     queryKey: keys.enrollmentRequests.list(status),
     queryFn: () => fetchEnrollmentRequests(status),
+  })
+
+// One counter of a profile over one window (`from`/`to` inclusive; neither is a lifetime), in the
+// course named by `courseSlug` — which is also what the request itself carries (`x-course-slug`, from
+// the URL). Not the profile page's own query: only a course that keeps the counter asks for it, and
+// it changes far more often.
+export const counterQuery = (
+  profileId: string,
+  courseSlug: string,
+  key: string,
+  window: { from?: string; to?: string } = {},
+) =>
+  queryOptions({
+    queryKey: keys.counters.window(profileId, courseSlug, key, window.from, window.to),
+    queryFn: () => fetchCounter(profileId, key, window),
   })
 
 export const profileDetailQuery = (profileId: string) =>

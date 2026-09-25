@@ -3,6 +3,7 @@ import type { Router } from 'express'
 
 import batchesRouter from './batches'
 import chaptersRouter from './chapters'
+import countersRouter from './counters'
 import coursesRouter, { myCoursesRouter } from './courses'
 import dashboardRouter from './dashboard'
 import enrollmentRouter from './enrollment'
@@ -33,6 +34,7 @@ export default function setupRoutes(router: Router) {
     .use('/me/courses', myCoursesRouter)
     .use('/schools', schoolsRouter)
     .use('/profiles', profilesRouter)
+    .use('/profiles/:profileId/counters', countersRouter)
     .use('/registrations', registrationsRouter)
     .use('/enrollment-requests', enrollmentRequestsRouter)
     .use('/courses', coursesRouter)

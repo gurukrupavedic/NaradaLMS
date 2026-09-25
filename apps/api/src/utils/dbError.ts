@@ -38,6 +38,8 @@ export const DbConstraint = {
   evaluationEvaluatorIdFk: 'evaluation_evaluatorId_profile_id_fk',
   chapterTrackIdFk: 'chapter_trackId_track_id_fk',
   chapterTrackIdCodeUnique: 'chapter_trackId_code_uidx',
+  // A day's count is 1..COUNTER_DAILY_MAX; an increment that would take it past the top trips this.
+  counterLogCountValid: 'counterLog_count_valid',
   // Single-seat protection on `examSlot` — at most one live claim on any one slot, regardless of
   // student (partial unique index, reported the same way a table constraint is).
   examSlotRequestOnePendingPerSlot: 'examSlotRequest_one_pending_per_slot_uidx',

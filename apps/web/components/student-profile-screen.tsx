@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { profileFieldsFor } from '@narada/profile-fields'
+import { counterFieldsFor, profileFieldsFor } from '@narada/profile-fields'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { DetailSummary } from '@/components/detail-summary'
+import { CounterCard } from '@/components/counter-card'
 import { Section } from '@/components/section'
 import { TrackLadder } from '@/components/track-ladder'
 import { CertificationRecord } from '@/components/certification-record'
@@ -21,6 +22,7 @@ import { isCertified } from '@/lib/proficiency'
 import { SELF_REPORTED_PROFICIENCY_LABEL } from '@/lib/registration-proficiency'
 import { useHasAdminAccess, useSelectedProfileId } from '@/lib/auth/profile-store'
 import { useUpdateProfile } from '@/lib/query/use-profile-mutations'
+import { useCourseSlug } from '@/lib/course'
 import { useSchoolSlug } from '@/lib/school'
 import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
@@ -50,7 +52,11 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const [editOpen, setEditOpen] = useState(false)
   const canEdit = isSelf || isAdmin
   const updating = useUpdateProfile(profileId, isSelf)
-  const detailFields = profileFieldsFor(useSchoolSlug() ?? '')
+  const schoolSlug = useSchoolSlug() ?? ''
+  const detailFields = profileFieldsFor(schoolSlug)
+  // Declared per course, not per school: what a course counts (japam, for SLMTS's Vedam) is its own.
+  const courseSlug = useCourseSlug()
+  const counters = counterFieldsFor(schoolSlug, courseSlug)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
@@ -190,6 +196,19 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
             </Section>
           </Reveal>
         )}
+
+        {counters.map((counter, i) => (
+          <Reveal key={counter.key} delay={60 + i * 10}>
+            <Section title={counter.label}>
+              <CounterCard
+                profileId={profile.id}
+                courseSlug={courseSlug}
+                counter={counter}
+                canEdit={Boolean(canEdit)}
+              />
+            </Section>
+          </Reveal>
+        ))}
 
         {learningTracks.length > 0 && (
           <Reveal delay={80}>
