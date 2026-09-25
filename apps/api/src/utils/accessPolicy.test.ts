@@ -13,6 +13,7 @@ vi.mock('@narada/db', () => ({
 // letting the real enrollment/repository.ts run) so it never needs a real Drizzle `db`.
 vi.mock('../enrollment/service', () => ({
   hasSharedInstructorEnrollment: vi.fn(),
+  isEnrolledInAnyBatch: vi.fn(),
 }))
 
 // The one course-membership query the content gate makes; its own behaviour is covered against a
@@ -28,6 +29,7 @@ import * as courseRepository from '../courses/repository'
 import { AccessPolicy } from './accessPolicy'
 import * as enrollmentService from '../enrollment/service'
 import type { User } from '../session'
+import type { Exam } from '../exams/schema'
 
 const school = { id: 'school-1' } as Parameters<typeof AccessPolicy.load>[0]['school']
 
@@ -180,6 +182,21 @@ describe('AccessPolicy — enrollment (batch roster)', () => {
 })
 
 describe('AccessPolicy — exams', () => {
+  const examOf = (studentId: string) => ({ studentId }) as Exam
+
+  // Which batches each student is enrolled in, as `isEnrolledInAnyBatch` would answer it.
+  const enrolledIn: Record<string, string[]> = {
+    'student-in-batch-1': ['batch-1'],
+    'student-in-batch-2': ['batch-2'],
+    'student-in-none': [],
+  }
+
+  beforeEach(() => {
+    vi.mocked(enrollmentService.isEnrolledInAnyBatch).mockImplementation(
+      async (_db, studentId, batchIds) => (enrolledIn[studentId] ?? []).some(b => batchIds.includes(b)),
+    )
+  })
+
   it('getExamVisibility returns "all" for a school admin with no active profile', async () => {
     mockMembership('admin')
     const access = await AccessPolicy.load({
@@ -330,6 +347,47 @@ describe('AccessPolicy — exams', () => {
       profile,
     })
     expect(() => superAdminAccess.requireCanCreateExam()).not.toThrow()
+  })
+
+  it('requireCanUpdateExam gates on exam:update in a batch the student is in (instructor/TA, not a student)', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([
+        { batchId: 'batch-1', role: 'instructor' },
+        { batchId: 'batch-2', role: 'student' },
+      ]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.requireCanUpdateExam(examOf('student-in-batch-1'))).resolves.toBeUndefined()
+    // students hold exam:read, not exam:update, in their own batch
+    await expect(access.requireCanUpdateExam(examOf('student-in-batch-2'))).rejects.toThrow()
+  })
+
+  it('requireCanUpdateExam has no school-admin fallback — a plain owner/admin needs their own batch exam:update role', async () => {
+    mockMembership('owner')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user(),
+      profile,
+    })
+
+    await expect(access.requireCanUpdateExam(examOf('student-in-batch-1'))).rejects.toThrow()
+  })
+
+  it('requireCanUpdateExam allows a super admin for any student', async () => {
+    mockMembership('member')
+    const access = await AccessPolicy.load({
+      db: schoolDbWithEnrollments([]),
+      school,
+      user: user({ isSuperAdmin: true }),
+      profile,
+    })
+
+    await expect(access.requireCanUpdateExam(examOf('student-in-none'))).resolves.toBeUndefined()
   })
 
   it('requireCanRecordEvaluation is school-admin only — an instructor/TA can update the exam but not certify a result', async () => {

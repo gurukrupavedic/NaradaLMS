@@ -3,7 +3,7 @@ import * as z from 'zod'
 import { batchStatus, enrollmentRole, enrollmentStatus } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
-import { httpsUrl, isoInstant } from '../utils/validate'
+import { httpsUrl, isoInstant, requireNonEmpty } from '../utils/validate'
 
 const PAGE_SIZE = 20
 
@@ -122,6 +122,18 @@ export const CreateBatchSchema = BatchSchema.pick({
       .regex(/^[A-Za-z0-9]+$/, 'classifier must be letters/digits only, no spaces or punctuation')
       .transform(value => value.toUpperCase()),
   })
+
+// No `trackId` — a batch's track is set once at creation; the real API never allowed moving it
+// after the fact, and nothing downstream (schedule, enrollment, evaluations) expects it to move.
+export type UpdateBatchData = z.infer<typeof UpdateBatchSchema>
+export const UpdateBatchSchema = requireNonEmpty(
+  BatchSchema.pick({
+    code: true,
+    status: true,
+    startDate: true,
+    meetingUrl: true,
+  }).partial(),
+)
 
 // GET /batches/open — deliberately its own shape, not `BatchDetail`: a student browsing batches to
 // join should see the schedule, never the existing roster (who's already in it). `trackName` is

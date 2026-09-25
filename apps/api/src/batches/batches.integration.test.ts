@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { batch, track } from '@narada/db'
+import { track } from '@narada/db'
 
 import * as examRepository from '../exams/repository'
 import { destroyTestWorld } from '../testing/cleanup'
@@ -24,11 +24,12 @@ import {
   findAccessibleWithDetail,
   insertClassSlots,
 } from './repository'
-import { CreateBatchSchema } from './schema'
+import { CreateBatchSchema, UpdateBatchSchema } from './schema'
 import {
   createBatch as createBatchViaService,
   findClassifiers,
   setClassSlots,
+  updateBatch,
 } from './service'
 
 let world: TestWorld | undefined
@@ -574,6 +575,23 @@ describe(
   },
 )
 
+describe('updateBatch (real gap: PATCH /batches/:batchId must not accept trackId)', () => {
+  it("a trackId in the request body never reaches the DB — the batch's real track is unchanged", async () => {
+    world = await createTestSchool()
+    const originalTrack = await createTrack(world)
+    const otherTrack = await createTrack(world)
+    const batchRow = await createBatch(world, originalTrack)
+
+    // Mirrors exactly what the route does: parse the request body through the real schema, then
+    // hand the (already-stripped) result to the service — not a hand-constructed service call, same convention as the `updateBatch` test above.
+    const data = await parse(UpdateBatchSchema, { trackId: otherTrack.id, code: 'renamed' })
+    const updated = await updateBatch({ db: world.schoolDb }, batchRow.id, data)
+
+    expect(updated.code).toBe('renamed')
+    expect(updated.trackId).toBe(originalTrack.id)
+  })
+})
+
 describe('createBatch generates the code (real gap: manual code entry replaced)', () => {
   const YEAR = new Date().getUTCFullYear()
 
@@ -649,7 +667,7 @@ describe('createBatch generates the code (real gap: manual code entry replaced)'
     const course = await createCourse(world, { slug: 'ved' })
     const track = await createTrack(world, { course, order: 1 })
     const first = await create(world, track.id, 'CH', course.slug)
-    await world.schoolDb.update(batch).set({ code: `VED-${YEAR}-CH-1-9` }).where(eq(batch.id, first.id))
+    await updateBatch({ db: world.schoolDb }, first.id, { code: `VED-${YEAR}-CH-1-9` })
 
     const second = await create(world, track.id, 'CH', course.slug)
 

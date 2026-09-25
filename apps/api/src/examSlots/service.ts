@@ -196,7 +196,9 @@ export async function reject(
 /**
  * Withdraws a slot outright (an examiner is no longer free, a track was retired, ...) — school-admin
  * only. Only ever allowed from `open` or `requested`: a `booked` slot has already produced a real
- * `exam` row, which is the source of truth from there on.
+ * `exam` row, which is the source of truth from there on — cancel *that* sitting instead
+ * (`exams/service.ts::updateExam` with `status: 'cancelled'`), rather than this reaching in to do
+ * it too and giving the same outcome two different call paths.
  *
  * Cancelling a `requested` slot also rejects the pending request holding it (inside the same
  * transaction as the slot's own status change) — otherwise that request would sit `pending`
@@ -214,7 +216,7 @@ export async function cancelSlot(
   if (existing.status !== 'open' && existing.status !== 'requested') {
     throw conflict(
       existing.status === 'booked'
-        ? 'this slot is already booked'
+        ? 'this slot is already booked — cancel the exam itself instead'
         : 'this slot has already been cancelled',
     )
   }

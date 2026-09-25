@@ -13,7 +13,8 @@ import {
 
 import { isProfilePartOfCourse } from '../courses/repository'
 import { forbidden } from '../error'
-import { hasSharedInstructorEnrollment } from '../enrollment/service'
+import { hasSharedInstructorEnrollment, isEnrolledInAnyBatch } from '../enrollment/service'
+import type { Exam } from '../exams/schema'
 import type { User } from '../session'
 
 type School = typeof organization.$inferSelect
@@ -281,12 +282,14 @@ export class AccessPolicy {
   }
 
   // -- Exams ------------------------------------------------------------------
-  // Instructor/TA exam visibility is scoped through the student: an instructor/TA with `exam:update`
-  // in a batch may see the sittings of any student enrolled in that batch (past or present) — not
-  // "school admin or nothing." An exam carries no batch of its own.
+  // Instructor/TA exam authorization is scoped through the student: an instructor/TA with
+  // `exam:update` in a batch may see and reschedule the sittings of any student enrolled in that
+  // batch (past or present) — not "school admin or nothing." An exam carries no batch of its own;
+  // see `teachesStudent`.
   //
-  // Booking a sitting (requireCanCreateExam) is a school-admin (or super-admin) decision that
-  // doesn't touch batch roles at all — see its own doc comment.
+  // Booking a sitting (requireCanCreateExam) is the one exception: it was originally a batch-role
+  // check like the others, but exam bookings are now a school-admin (or super-admin) decision, so
+  // it no longer touches batch roles at all — see its own doc comment.
   //
   // The "can see every exam in this batch" checks below deliberately test EXAM_UPDATE_PERMISSION,
   // not EXAM_READ_PERMISSION: the batch ACL grants `exam:read` to students too (so they can read
@@ -294,22 +297,40 @@ export class AccessPolicy {
   // `exam:update`. Using `read` here would let a student see every other student's exam in a
   // batch they merely happen to also be enrolled in.
 
+  /** Whether the actor holds `exam:update` (instructor/TA) in a batch `studentId` is enrolled in. */
+  private async teachesStudent(studentId: string): Promise<boolean> {
+    return isEnrolledInAnyBatch(this.db, studentId, this.batchIdsWithPermission(EXAM_UPDATE_PERMISSION))
+  }
+
   /**
    * Booking a sitting is a school-admin (or super-admin) decision, not a batch role — revises the
    * exam-booking feature's prior "instructor/TA with exam:create in the qualifying batch" rule.
    * `exam:create` no longer exists as a batch permission at all (packages/auth/src/permissions/
-   * batch.ts), so this doesn't need the exam's batchId; it runs first in
-   * `exams/service.ts::createExam`, before the qualifying batch is even resolved. Matches
-   * `requireCanRecordEvaluation`'s shape for the same reason: booking and grading a certification
-   * sitting are both school-level decisions.
+   * batch.ts), so this doesn't need the exam's batchId the way requireCanUpdateExam still does; it
+   * runs first in `exams/service.ts::createExam`, before the qualifying batch is even resolved.
+   * Matches `requireCanRecordEvaluation`'s shape for the same reason: booking and grading a
+   * certification sitting are both school-level decisions, unlike rescheduling one.
    */
   public requireCanCreateExam(): void {
     this.requireSchoolAdmin()
   }
 
-  // Recording a result is what grants `level4` (and L1–L3 across the whole track), so it's gated on
-  // school-admin status alone, independent of any batch role. See evaluations/schema.ts's
-  // teacherGradableLevelSchema for the other half of that split.
+  // No school-admin fallback: a plain owner/admin who isn't also enrolled as instructor/TA in a
+  // batch the student is in cannot update it here — unlike requireCanCreateExam above,
+  // rescheduling/cancelling stays a batch-role decision.
+  public async requireCanUpdateExam(exam: Exam): Promise<void> {
+    if (this.isSuperAdmin || (await this.teachesStudent(exam.studentId))) {
+      return
+    }
+
+    throw forbidden()
+  }
+
+  // Deliberately narrower than requireCanUpdateExam (a batch instructor/TA can reschedule or
+  // cancel their own exam, but not grade one) — recording a result is what grants `level4` (and
+  // L1–L3 across the whole track), so it's gated on school-admin status alone, independent of any
+  // batch role. See evaluations/schema.ts's teacherGradableLevelSchema for the other half of
+  // that split.
   public requireCanRecordEvaluation(): void {
     this.requireSchoolAdmin()
   }

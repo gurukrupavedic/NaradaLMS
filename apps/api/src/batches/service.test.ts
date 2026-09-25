@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SchoolDbClient } from '@narada/db'
 
 import { DbConstraint } from '../utils/dbError'
-import { createBatch, setClassSlots } from './service'
+import { createBatch, setClassSlots, updateBatch } from './service'
 import * as repository from './repository'
 import { CreateBatchSchema } from './schema'
 
@@ -14,9 +14,11 @@ vi.mock('./repository', () => ({
   nextBatchIndex: vi.fn(),
   findClassifiers: vi.fn(),
   insert: vi.fn(),
+  update: vi.fn(),
   findById: vi.fn(),
   deleteClassSlots: vi.fn(),
   insertClassSlots: vi.fn(),
+  endActiveStudentSeats: vi.fn(),
   findExistingProfileIds: vi.fn(),
   insertInstructors: vi.fn(),
 }))
@@ -146,6 +148,72 @@ describe('createBatch', () => {
     await expect(
       createBatch(context, { trackId: 'track-1', classifier: 'BR', instructorIds: ['teacher-1'] }, 'ved'),
     ).rejects.toBe(original)
+  })
+})
+
+describe('updateBatch', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('maps batch_code_unique to a 409 with a duplicate-code message', async () => {
+    vi.mocked(repository.update).mockRejectedValue({
+      cause: { code: '23505', constraint: DbConstraint.batchCodeUnique },
+    })
+
+    await expect(updateBatch(context, 'batch-1', { code: 'DUP' })).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'a batch with this code already exists',
+    })
+  })
+
+  describe('marking a batch completed', () => {
+    const tx = {}
+    const transactionMock = vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback(tx))
+    const txContext = { db: { transaction: transactionMock } as unknown as SchoolDbClient }
+    const completed = {
+      id: 'batch-1',
+      trackId: 'track-1',
+      courseId: 'course-1',
+      code: 'B1',
+      status: 'completed' as const,
+      startDate: null,
+      meetingUrl: null,
+    }
+
+    beforeEach(() => {
+      transactionMock.mockImplementation(async callback => callback(tx))
+    })
+
+    it("ends the students' active seats in the same transaction, after the batch itself is updated", async () => {
+      vi.mocked(repository.update).mockResolvedValue(completed)
+
+      await updateBatch(txContext, 'batch-1', { status: 'completed' })
+
+      expect(transactionMock).toHaveBeenCalledTimes(1)
+      expect(repository.update).toHaveBeenCalledWith(tx, 'batch-1', { status: 'completed' })
+      expect(repository.endActiveStudentSeats).toHaveBeenCalledWith(tx, 'batch-1')
+      expect(vi.mocked(repository.update).mock.invocationCallOrder[0]).toBeLessThan(
+        vi.mocked(repository.endActiveStudentSeats).mock.invocationCallOrder[0]!,
+      )
+    })
+
+    it('404s for a batch that does not exist, without touching any seats', async () => {
+      vi.mocked(repository.update).mockResolvedValue(undefined)
+
+      await expect(updateBatch(txContext, 'batch-1', { status: 'completed' })).rejects.toMatchObject({
+        statusCode: 404,
+      })
+      expect(repository.endActiveStudentSeats).not.toHaveBeenCalled()
+    })
+
+    it.each(['upcoming', 'active'] as const)('leaves seats alone when the status becomes %s', async status => {
+      vi.mocked(repository.update).mockResolvedValue({ ...completed, status })
+
+      await updateBatch(context, 'batch-1', { status })
+
+      expect(repository.endActiveStudentSeats).not.toHaveBeenCalled()
+    })
   })
 })
 

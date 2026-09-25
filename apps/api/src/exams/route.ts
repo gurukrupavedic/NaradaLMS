@@ -3,8 +3,20 @@ import * as z from 'zod'
 
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { CreateExamSchema, FindExamsSchema, RecordExamResultSchema } from './schema'
-import { correctExamResult, createExam, findExams, recordExamResult } from './service'
+import {
+  CreateExamSchema,
+  FindExamsSchema,
+  RecordExamResultSchema,
+  UpdateExamSchema,
+} from './schema'
+import {
+  correctExamResult,
+  createExam,
+  findById,
+  findExams,
+  recordExamResult,
+  updateExam,
+} from './service'
 
 const router = Router()
 
@@ -26,6 +38,18 @@ router.post(
     const data = await parse(CreateExamSchema, req.body)
     const exam = await createExam({ db, access }, data)
     res.status(201).json({ data: exam })
+  }),
+)
+
+router.patch(
+  '/:examId',
+  profileRoute(async ({ req, res, db, access }) => {
+    const { examId } = await parse(z.object({ examId: z.uuid() }), req.params)
+    const existing = await findById({ db }, examId)
+    await access.requireCanUpdateExam(existing)
+    const data = await parse(UpdateExamSchema, req.body)
+    const exam = await updateExam({ db }, examId, data)
+    res.status(200).json({ data: exam })
   }),
 )
 

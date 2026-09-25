@@ -13,7 +13,9 @@ import type {
   ExamWithDetail,
   FindExamsData,
   RecordExamResultData,
+  UpdateExamData,
 } from './schema'
+import { assertValidTransition } from './transitions'
 
 const RECORDABLE_STATUSES: Exam['status'][] = ['scheduled', 'inProgress']
 
@@ -28,7 +30,7 @@ export async function findExams(
   return repository.findMany(context.db, params, scope, courseId)
 }
 
-/** Bare exam row — internal use only (the guards in the result-recording flow); see `findByIdWithDetail` for the read path. */
+/** Bare exam row — internal use only (authorization checks, transition guards); see `findByIdWithDetail` for the read path. */
 export async function findById(context: ExamServiceContext, id: string): Promise<Exam> {
   return orNotFound(await repository.findById(context.db, id))
 }
@@ -81,6 +83,32 @@ async function assertValidExamAssignment(
   }
 
   await assertEnrolledInTrack(db, studentId, trackId)
+}
+
+/**
+ * Reads the exam once, then applies `data` guarded by a compare-and-set on the status read at
+ * that point (not re-read afterward) — this is what makes a concurrent status change lose rather
+ * than silently overwrite. A lost race and a since-deleted exam both fail the guarded update, so
+ * a follow-up read distinguishes 409 (still exists, status moved) from 404 (gone).
+ */
+export async function updateExam(
+  context: ExamServiceContext,
+  id: string,
+  data: UpdateExamData,
+): Promise<Exam> {
+  const existing = await findById(context, id)
+  if (data.status && data.status !== existing.status) {
+    assertValidTransition(existing.status, data.status)
+  }
+
+  const row = await repository.updateGuarded(context.db, id, data, existing.status)
+  if (!row) {
+    // Either the exam was deleted, or its status changed since we read it.
+    const stillExists = await repository.findById(context.db, id)
+    throw stillExists ? conflict('exam status changed concurrently') : notFound()
+  }
+
+  return row
 }
 
 /**

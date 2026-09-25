@@ -15,6 +15,7 @@ import type {
   FindBatchesData,
   OpenBatch,
   SetClassSlotsData,
+  UpdateBatchData,
 } from './schema'
 
 // Teachers first, then TAs, then students — every consumer of a roster lists staff before learners.
@@ -384,4 +385,32 @@ export async function insertInstructors(
   await db
     .insert(enrollment)
     .values(profileIds.map(profileId => ({ batchId, courseId, profileId, role: 'instructor' as const })))
+}
+
+/**
+ * Ends every `active` student seat in a batch — what marking the batch `completed` does to its
+ * roster. Without this a finished batch would keep its students' one-seat-per-course slot, and they
+ * could never join their next batch. Only students: instructors and TAs aren't limited to one batch
+ * per course, and the teaching history views still list a completed batch under its staff.
+ */
+export async function endActiveStudentSeats(db: SchoolDb, batchId: string): Promise<void> {
+  await db
+    .update(enrollment)
+    .set({ status: 'inactive', leftDate: sql`coalesce(${enrollment.leftDate}, now())` })
+    .where(
+      and(
+        eq(enrollment.batchId, batchId),
+        eq(enrollment.role, 'student'),
+        eq(enrollment.status, 'active'),
+      ),
+    )
+}
+
+export async function update(
+  db: SchoolDb,
+  id: string,
+  data: UpdateBatchData,
+): Promise<Batch | undefined> {
+  const rows = await db.update(batch).set(data).where(eq(batch.id, id)).returning()
+  return rows.at(0)
 }
