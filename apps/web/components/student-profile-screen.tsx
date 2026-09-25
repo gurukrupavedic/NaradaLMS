@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { profileFieldsFor } from '@narada/profile-fields'
+import { profileFieldsFor, schoolHasFeature } from '@narada/profile-fields'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
 import { Standing } from '@/components/standing'
 import { DetailSummary } from '@/components/detail-summary'
+import { JapamCard } from '@/components/japam-card'
 import { Section } from '@/components/section'
 import { TrackLadder } from '@/components/track-ladder'
 import { CertificationRecord } from '@/components/certification-record'
@@ -50,7 +51,8 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const [editOpen, setEditOpen] = useState(false)
   const canEdit = isSelf || isAdmin
   const updating = useUpdateProfile(profileId, isSelf)
-  const detailFields = profileFieldsFor(useSchoolSlug() ?? '')
+  const schoolSlug = useSchoolSlug() ?? ''
+  const detailFields = profileFieldsFor(schoolSlug)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
@@ -187,6 +189,14 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
                   </dd>
                 </div>
               </dl>
+            </Section>
+          </Reveal>
+        )}
+
+        {schoolHasFeature(schoolSlug, 'japam') && (
+          <Reveal delay={60}>
+            <Section title="Japam">
+              <JapamCard profileId={profile.id} canEdit={Boolean(canEdit)} />
             </Section>
           </Reveal>
         )}

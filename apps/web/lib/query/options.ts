@@ -21,6 +21,7 @@ import {
   fetchExams,
   fetchExamSlotRequests,
   fetchExamSlots,
+  fetchJapam,
   fetchMyCourses,
   fetchMyExamSlotRequests,
   fetchOpenBatches,
@@ -130,6 +131,14 @@ export const keys = {
     // this to catch every status tab at once.
     all: ['enrollmentRequests'] as const,
     list: (status: ApiEnrollmentRequestStatus) => ['enrollmentRequests', 'list', status] as const,
+  },
+
+  japam: {
+    // Prefix key — every window cached for one profile, for a log or a correction that changes
+    // all of them (this year's total, the lifetime, the recent days).
+    profile: (profileId: string) => ['japam', profileId] as const,
+    window: (profileId: string, from: string | undefined, to: string | undefined) =>
+      ['japam', profileId, { from, to }] as const,
   },
 
   profiles: {
@@ -338,6 +347,14 @@ export const enrollmentRequestsQuery = (status: ApiEnrollmentRequestStatus) =>
   queryOptions({
     queryKey: keys.enrollmentRequests.list(status),
     queryFn: () => fetchEnrollmentRequests(status),
+  })
+
+// A profile's japam over one window (`from`/`to` inclusive; neither is a lifetime). Not the profile
+// page's own query: only schools that keep a count ask for it, and it changes far more often.
+export const japamQuery = (profileId: string, window: { from?: string; to?: string } = {}) =>
+  queryOptions({
+    queryKey: keys.japam.window(profileId, window.from, window.to),
+    queryFn: () => fetchJapam(profileId, window),
   })
 
 export const profileDetailQuery = (profileId: string) =>

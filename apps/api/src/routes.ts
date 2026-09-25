@@ -11,6 +11,7 @@ import evaluationsRouter from './evaluations'
 import examsRouter from './exams'
 import examSlotsRouter from './examSlots'
 import healthRouter from './health'
+import japamRouter from './japam'
 import profileRouter from './profile'
 import profilesRouter from './profiles'
 import registrationsRouter from './registrations'
@@ -33,6 +34,7 @@ export default function setupRoutes(router: Router) {
     .use('/me/courses', myCoursesRouter)
     .use('/schools', schoolsRouter)
     .use('/profiles', profilesRouter)
+    .use('/profiles/:profileId/japam', japamRouter)
     .use('/registrations', registrationsRouter)
     .use('/enrollment-requests', enrollmentRequestsRouter)
     .use('/courses', coursesRouter)

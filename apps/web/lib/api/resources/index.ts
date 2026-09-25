@@ -5,6 +5,7 @@
  * store in `lib/api/store.ts`, with no real endpoint behind it.
  */
 export * from './profiles'
+export * from './japam'
 export * from './registrations'
 export * from './dashboard'
 export * from './exams'

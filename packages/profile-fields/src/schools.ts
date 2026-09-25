@@ -39,3 +39,20 @@ export function profileFieldsFor(schoolSlug: string): readonly FieldDefinition[]
     ? PROFILE_FIELDS_BY_SCHOOL[schoolSlug]!
     : NO_FIELDS
 }
+
+/**
+ * Whole profile widgets a school opts into, beyond the fields above — the same per-school switch
+ * (a school with no entry has none). `japam` is a counter students keep, which RR does not have.
+ */
+export type SchoolFeature = 'japam'
+
+const FEATURES_BY_SCHOOL: Record<string, readonly SchoolFeature[]> = {
+  slmts: ['japam'],
+}
+
+export function schoolHasFeature(schoolSlug: string, feature: SchoolFeature): boolean {
+  return (
+    Object.hasOwn(FEATURES_BY_SCHOOL, schoolSlug) &&
+    FEATURES_BY_SCHOOL[schoolSlug]!.includes(feature)
+  )
+}

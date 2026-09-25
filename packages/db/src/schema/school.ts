@@ -8,6 +8,7 @@ import {
   boolean,
   timestamp,
   time,
+  date,
   jsonb,
   uuid,
   index,
@@ -18,6 +19,7 @@ import {
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
 import { COURSE_SLUG_PATTERN, RESERVED_COURSE_SLUGS } from '../courseSlug'
+import { JAPAM_DAILY_MAX } from '../japam'
 
 // Declared before `profile` (below) since `profile.currentProficiency` references it — a pgEnum
 // value must exist before a pgTable call closes over it.
@@ -94,6 +96,43 @@ export const profile = pgTable(
 )
 
 export type SchoolProfile = typeof profile.$inferSelect
+
+// A student's japam (chanting) count, one row per profile per day they logged any. The running total
+// is a sum over whatever window is asked for — a year, a lifetime, a range — so nothing here (or in
+// the API) assumes the count resets annually. A day's row is created and grown by an atomic upsert
+// (`count = count + n`), which is why this is a table and not a counter inside `profile.details`:
+// concurrent increments would otherwise be a lost-update race, and every increment would rewrite the
+// whole profile row. Only the school's own analytics read the rest of this; it feeds no grading.
+export const japamLog = pgTable(
+  'japamLog',
+  {
+    profileId: uuid('profileId')
+      .notNull()
+      .references(() => profile.id),
+    // A calendar date in the *profile's own* time zone (`profile.countryTimeZone`), as
+    // 'YYYY-MM-DD' — not an instant. "Today" is the student's today, so a late-evening sitting
+    // counts for the day they sat it, wherever the server or an admin viewing it happens to be.
+    loggedOn: date('loggedOn', { mode: 'string' }).notNull(),
+    count: integer('count').notNull(),
+    updatedAt: timestamp('updatedAt')
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => new Date()),
+  },
+  table => [
+    // One row per profile per day: the upsert's conflict target, and the index every read by
+    // profile (and date range) uses.
+    primaryKey({ columns: [table.profileId, table.loggedOn] }),
+    // A day with nothing logged has no row at all (setting a day to 0 deletes it), so every
+    // stored count is positive.
+    check(
+      'japamLog_count_valid',
+      sql`${table.count} > 0 AND ${table.count} <= ${sql.raw(String(JAPAM_DAILY_MAX))}`,
+    ),
+  ],
+)
+
+export type JapamLogRow = typeof japamLog.$inferSelect
 
 export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { assertValidDefinitions, mergeDetails, normalizeDetails, visibleFields } from './details'
-import { profileFieldsFor } from './schools'
+import { profileFieldsFor, schoolHasFeature } from './schools'
 import type { FieldDefinition } from './types'
 
 const ALL = { enforceRequiredFor: 'all' } as const
@@ -260,5 +260,17 @@ describe('assertValidDefinitions', () => {
         { key: 'a', label: 'A', type: 'boolean' },
       ]),
     ).toThrow(/must be defined before/)
+  })
+})
+
+describe('schoolHasFeature', () => {
+  it('gives SLMTS the japam counter and RR not', () => {
+    expect(schoolHasFeature('slmts', 'japam')).toBe(true)
+    expect(schoolHasFeature('rr', 'japam')).toBe(false)
+  })
+
+  it('gives an unknown school nothing, including inherited object keys', () => {
+    expect(schoolHasFeature('nope', 'japam')).toBe(false)
+    expect(schoolHasFeature('constructor', 'japam')).toBe(false)
   })
 })

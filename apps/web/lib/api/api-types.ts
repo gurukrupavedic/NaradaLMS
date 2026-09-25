@@ -44,6 +44,20 @@ export type ApiProfile = {
   updatedAt: string
 }
 
+// GET /v1/profiles/:profileId/japam — a student's chanting count (apps/api's `japam/`), for the
+// schools that keep one. `total` is for whatever window was asked for, `lifetime` is always
+// everything, and nothing here assumes a yearly reset: the caller picks the window.
+export type ApiJapamDay = { loggedOn: string; count: number }
+
+export type ApiJapamSummary = {
+  // The *student's* calendar date right now (their time zone, not this browser's).
+  today: string
+  total: number
+  lifetime: number
+  // Every day in the window that has any, newest first.
+  days: ApiJapamDay[]
+}
+
 // GET /v1/profile (singular) — the signed-in *account*'s own authorization facts: global
 // super-admin, plus its org-level role in every school it belongs to. Distinct from `ApiProfile`
 // above, which is a business entity (a student/teacher record) the account can act as — this is
