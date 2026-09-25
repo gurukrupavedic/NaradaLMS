@@ -13,12 +13,12 @@ const router = Router()
 // valid school (X-School-Slug) is required, same as any other schoolRoute endpoint.
 router.post(
   '/',
-  schoolRoute(async ({ req, res, db }) => {
+  schoolRoute(async ({ req, res, db, school }) => {
     const data = await parse(CreateRegistrationSchema, req.body)
     // The course being applied to comes from the request's course context, not the body. With one
     // course it is that course; see `resolveCourse`.
     const course = await resolveCourse(db, req.get('x-course-slug'))
-    const created = await submit({ db }, data, course.id)
+    const created = await submit({ db, school }, data, course.id)
     res.status(201).json({ data: created })
   }),
 )

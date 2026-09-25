@@ -43,6 +43,7 @@ const validProfile = {
   noAlcoholAgreed: true,
   noSmokingAgreed: true,
   comments: null,
+  details: { gothram: 'Bharadwaja' },
   updatedAt: new Date().toISOString(),
   createdAt: new Date().toISOString(),
 }
@@ -119,6 +120,21 @@ describe('UpdateProfileSchema (student self-edit)', () => {
   it('rejects an empty update', () => {
     const result = UpdateProfileSchema.safeParse({})
     expect(result.success).toBe(false)
+  })
+
+  it('accepts a details patch of scalars, and nothing nested', () => {
+    expect(
+      UpdateProfileSchema.safeParse({ details: { gothram: 'A', married: true } }).success,
+    ).toBe(true)
+    expect(UpdateProfileSchema.safeParse({ details: { gothram: { nested: 'A' } } }).success).toBe(
+      false,
+    )
+    expect(UpdateProfileSchema.safeParse({ details: { gothram: null } }).success).toBe(false)
+  })
+
+  it('rejects an empty details patch, alone or beside other fields', () => {
+    expect(UpdateProfileSchema.safeParse({ details: {} }).success).toBe(false)
+    expect(UpdateProfileSchema.safeParse({ name: 'Anjali Rao', details: {} }).success).toBe(false)
   })
 })
 

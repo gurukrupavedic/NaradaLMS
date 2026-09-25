@@ -2,6 +2,7 @@ import * as z from 'zod'
 
 import { FindBatchesSchema } from '../batches/schema'
 import { proficiencyLevelSchema } from '../evaluations/schema'
+import { DetailsSchema } from '../utils/details'
 import { requireNonEmpty } from '../utils/validate'
 
 export type Profile = z.infer<typeof ProfileSchema>
@@ -35,6 +36,9 @@ export const ProfileSchema = z.object({
   noAlcoholAgreed: z.boolean(),
   noSmokingAgreed: z.boolean(),
   comments: z.string().nullable(),
+  // The school-specific answers (`@narada/profile-fields`), copied from the registration on
+  // approval. Editable through `UpdateProfileSchema` as a *patch*: only the keys sent change.
+  details: DetailsSchema,
   updatedAt: z.coerce.date(),
   createdAt: z.coerce.date(),
 })
@@ -75,7 +79,15 @@ export const UpdateProfileSchema = requireNonEmpty(
     noAlcoholAgreed: true,
     noSmokingAgreed: true,
     comments: true,
-  }).partial(),
+  })
+    .partial()
+    .extend({
+      // A non-empty patch — `{}` would be an edit that changes nothing.
+      details: DetailsSchema.refine(
+        patch => Object.keys(patch).length > 0,
+        'no fields to update',
+      ).optional(),
+    }),
 )
 
 export type SearchProfilesQuery = z.infer<typeof SearchProfilesQuerySchema>

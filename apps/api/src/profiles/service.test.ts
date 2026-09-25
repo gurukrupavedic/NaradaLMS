@@ -12,6 +12,7 @@ import type { Profile } from './schema'
 vi.mock('./repository', () => ({
   findById: vi.fn(),
   findByUserId: vi.fn(),
+  findDetailsForUpdate: vi.fn(),
   findMembership: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
@@ -62,6 +63,7 @@ const baseProfile: Profile = {
   noAlcoholAgreed: false,
   noSmokingAgreed: false,
   comments: null,
+  details: {},
   updatedAt: new Date(),
   createdAt: new Date(),
 }
@@ -162,6 +164,119 @@ describe('updateProfile', () => {
     await expect(updateProfile(adminContext, 'profile-1', { name: 'X' })).rejects.toMatchObject({
       statusCode: 404,
     })
+  })
+})
+
+describe('updateProfile details', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  // A details edit runs in a transaction; `tx` stands in for the transaction-scoped client so the
+  // assertions can check the lock and the write both went through it, not the outer `db`.
+  const tx = {} as SchoolDbClient
+  const slmts = {
+    db: { transaction: (run: (t: SchoolDbClient) => unknown) => run(tx) } as unknown as SchoolDbClient,
+    school: { slug: 'slmts' } as School,
+    user,
+    access: access(false),
+  }
+  const stored = { gothram: 'Bharadwaja', married: false, gothramMother: 'Vasishta' }
+
+  it('merges the patch onto the stored details, in the same transaction that locked them', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue(stored)
+    vi.mocked(repository.update).mockResolvedValue(baseProfile)
+
+    await updateProfile(slmts, 'profile-1', { details: { gothramMother: 'Kashyapa' } })
+
+    expect(repository.findDetailsForUpdate).toHaveBeenCalledWith(tx, 'profile-1', 'user-1')
+    expect(repository.update).toHaveBeenCalledWith(tx, 'profile-1', 'user-1', {
+      details: { gothram: 'Bharadwaja', married: false, gothramMother: 'Kashyapa' },
+    })
+  })
+
+  it('writes the details alongside column changes in the one update', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue(stored)
+    vi.mocked(repository.update).mockResolvedValue(baseProfile)
+
+    await updateProfile(slmts, 'profile-1', { name: 'Ada', details: { gothram: 'Atreya' } })
+
+    expect(repository.update).toHaveBeenCalledWith(tx, 'profile-1', 'user-1', {
+      name: 'Ada',
+      details: { gothram: 'Atreya', married: false, gothramMother: 'Vasishta' },
+    })
+  })
+
+  it('requires the spouse gothram the moment married is ticked, and does not write without it', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue(stored)
+
+    await expect(updateProfile(slmts, 'profile-1', { details: { married: true } })).rejects.toMatchObject({
+      statusCode: 400,
+      message: 'details.gothramSpouse: is required',
+    })
+    expect(repository.update).not.toHaveBeenCalled()
+  })
+
+  it('drops the spouse gothram when married is unticked', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue({
+      ...stored,
+      married: true,
+      gothramSpouse: 'Kashyapa',
+    })
+    vi.mocked(repository.update).mockResolvedValue(baseProfile)
+
+    await updateProfile(slmts, 'profile-1', { details: { married: false } })
+
+    expect(repository.update).toHaveBeenCalledWith(tx, 'profile-1', 'user-1', { details: stored })
+  })
+
+  it('lets a profile that predates the required fields change one of them without answering the rest', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue({})
+    vi.mocked(repository.update).mockResolvedValue(baseProfile)
+
+    await updateProfile(slmts, 'profile-1', { details: { gothramMother: 'Vasishta' } })
+
+    expect(repository.update).toHaveBeenCalledWith(tx, 'profile-1', 'user-1', {
+      details: { married: false, gothramMother: 'Vasishta' },
+    })
+  })
+
+  it('refuses to blank a required field it is being asked to write', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue(stored)
+
+    await expect(updateProfile(slmts, 'profile-1', { details: { gothram: '  ' } })).rejects.toMatchObject({
+      statusCode: 400,
+      message: 'details.gothram: is required',
+    })
+  })
+
+  it('carries a stored key its school no longer defines through an edit untouched', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue({ ...stored, retiredField: 'kept' })
+    vi.mocked(repository.update).mockResolvedValue(baseProfile)
+
+    await updateProfile(slmts, 'profile-1', { details: { gothram: 'Atreya' } })
+
+    expect(repository.update).toHaveBeenCalledWith(tx, 'profile-1', 'user-1', {
+      details: { retiredField: 'kept', gothram: 'Atreya', married: false, gothramMother: 'Vasishta' },
+    })
+  })
+
+  it('rejects a key the school does not define', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue(stored)
+
+    await expect(updateProfile(slmts, 'profile-1', { details: { favouriteColour: 'red' } })).rejects.toMatchObject({
+      statusCode: 400,
+      message: 'details.favouriteColour: is not a field for this school',
+    })
+  })
+
+  it('404s when the row to lock is missing, foreign-owned, or deactivated', async () => {
+    vi.mocked(repository.findDetailsForUpdate).mockResolvedValue(undefined)
+
+    await expect(updateProfile(slmts, 'profile-1', { details: { gothram: 'A' } })).rejects.toMatchObject({
+      statusCode: 404,
+    })
+    expect(repository.update).not.toHaveBeenCalled()
   })
 })
 

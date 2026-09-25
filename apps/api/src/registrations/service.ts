@@ -2,11 +2,13 @@ import { publicDb, type SchoolDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, orInternalError, orNotFound } from '../error'
 import { insert as insertProfile } from '../profiles/repository'
+import { resolveDetails } from '../utils/details'
 import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
 import type { CreateRegistrationData, FindRegistrationsData, Registration } from './schema'
 
 type RegistrationServiceContext = { db: SchoolDbClient }
+type SubmitContext = RegistrationServiceContext & { school: { slug: string } }
 type ReviewContext = RegistrationServiceContext & { school: { id: string } }
 
 export async function findAll(
@@ -22,12 +24,14 @@ export async function findById(context: RegistrationServiceContext, id: string):
 }
 
 export async function submit(
-  context: RegistrationServiceContext,
+  context: SubmitContext,
   data: CreateRegistrationData,
   courseId: string,
 ): Promise<Registration> {
   const row = await repository.insert(context.db, {
     ...data,
+    // The whole form is being submitted, so every visible required field must be answered.
+    details: resolveDetails(context.school.slug, data.details ?? {}, 'all'),
     courseId,
     countryTimeZone: deriveTimeZone({ city: data.city, state: data.state, country: data.country }),
   })
@@ -85,6 +89,7 @@ async function provisionApprovedApplicant(
     noAlcoholAgreed: registration.noAlcoholAgreed,
     noSmokingAgreed: registration.noSmokingAgreed,
     comments: registration.comments,
+    details: registration.details,
   })
   if (!profile) {
     throw internalError()

@@ -8,6 +8,7 @@ import {
   boolean,
   timestamp,
   time,
+  jsonb,
   uuid,
   index,
   primaryKey,
@@ -70,6 +71,15 @@ export const profile = pgTable(
     noAlcoholAgreed: boolean('noAlcoholAgreed').notNull().default(false),
     noSmokingAgreed: boolean('noSmokingAgreed').notNull().default(false),
     comments: text('comments'),
+    // What this school collects on top of the columns above (gothrams, ...), keyed by the field keys
+    // in `@narada/profile-fields`. Validated against that school's definitions on every write
+    // (`apps/api/src/details.ts`) — the database only guarantees it is a JSON object. Copied
+    // unchanged from `registration.details` on approval. Keys are permanent: renaming one strands
+    // the values already stored under it.
+    details: jsonb('details')
+      .$type<Record<string, string | number | boolean>>()
+      .notNull()
+      .default({}),
     // Soft-delete marker (DD-011): NULL = active. Deliberately has no `.$onUpdateFn` —
     // unlike `updatedAt`, this is set exactly once, explicitly, by the soft-delete write,
     // and must never be auto-touched by an unrelated UPDATE.
@@ -652,6 +662,11 @@ export const registration = pgTable(
     noAlcoholAgreed: boolean('noAlcoholAgreed').notNull().default(false),
     noSmokingAgreed: boolean('noSmokingAgreed').notNull().default(false),
     comments: text('comments'),
+    // The school-specific answers — see `profile.details`.
+    details: jsonb('details')
+      .$type<Record<string, string | number | boolean>>()
+      .notNull()
+      .default({}),
 
     reviewedAt: timestamp('reviewedAt'),
     reviewedBy: uuid('reviewedBy').references(() => profile.id),

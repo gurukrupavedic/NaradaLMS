@@ -45,6 +45,20 @@ describe('CreateRegistrationSchema', () => {
     expect(result.success).toBe(true)
   })
 
+  it('accepts a details payload of scalars and defaults it to absent', () => {
+    expect(CreateRegistrationSchema.safeParse(validBody).success).toBe(true)
+    const result = CreateRegistrationSchema.safeParse({ ...validBody, details: { gothram: 'A', married: true } })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.details).toEqual({ gothram: 'A', married: true })
+    }
+  })
+
+  it('rejects a details payload that is not a flat map of scalars', () => {
+    expect(CreateRegistrationSchema.safeParse({ ...validBody, details: ['A'] }).success).toBe(false)
+    expect(CreateRegistrationSchema.safeParse({ ...validBody, details: { gothram: ['A'] } }).success).toBe(false)
+  })
+
   it('rejects a missing firstName', () => {
     const { firstName: _firstName, ...rest } = validBody
     expect(CreateRegistrationSchema.safeParse(rest).success).toBe(false)

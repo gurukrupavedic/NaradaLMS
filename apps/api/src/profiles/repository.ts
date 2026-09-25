@@ -33,6 +33,7 @@ const profileColumns = {
   noAlcoholAgreed: profile.noAlcoholAgreed,
   noSmokingAgreed: profile.noSmokingAgreed,
   comments: profile.comments,
+  details: profile.details,
   updatedAt: profile.updatedAt,
   createdAt: profile.createdAt,
 }
@@ -159,19 +160,45 @@ export async function findLocationFields(
 }
 
 /**
+ * The current `details`, row-locked for `service.ts::updateProfile`'s transaction — a details edit
+ * is a read-merge-validate-write, so two concurrent edits (the student and an admin) must queue
+ * rather than each merging onto the same stale copy and one silently undoing the other. Same
+ * ownership and `deletedAt` predicates as `update` below, so a foreign-owned or deactivated
+ * profile matches nothing. The relational query API has no `FOR UPDATE`, so this uses the plain
+ * query builder, like `registrations/repository.ts::findByIdForUpdate`.
+ */
+export async function findDetailsForUpdate(
+  db: SchoolDb,
+  id: string,
+  ownerUserId: string | null,
+): Promise<Profile['details'] | undefined> {
+  const rows = await db
+    .select({ details: profile.details })
+    .from(profile)
+    .where(and(eq(profile.id, id), isNull(profile.deletedAt), ownerUserId ? eq(profile.userId, ownerUserId) : undefined))
+    .for('update')
+  return rows.at(0)?.details
+}
+
+/**
  * `ownerUserId` enforces ownership in SQL when the caller isn't a school admin (`null` for an
  * admin — any profile in the school is fair game); a foreign-owned profile matches zero rows for a
  * non-admin caller rather than being fetched and checked afterward. The `deletedAt IS NULL` guard
  * keeps a deactivated profile un-editable by anyone, admin included — an edit can't revive one.
  * Accepts `countryTimeZone` on top of `UpdateProfileData`'s own fields — that column is never
  * client-writable (see `UpdateProfileSchema`'s doc comment), but `service.ts::updateProfile`
- * re-derives and includes it server-side whenever the location changes.
+ * re-derives and includes it server-side whenever the location changes. `details` is likewise
+ * replaced wholesale here, having been merged and validated by the service first.
  */
 export async function update(
   db: SchoolDb,
   id: string,
   ownerUserId: string | null,
-  data: UpdateProfileData & { countryTimeZone?: string | null },
+  data: Omit<UpdateProfileData, 'details'> & {
+    countryTimeZone?: string | null
+    // The *merged, already-validated* result, never the client's patch — see `service.ts::updateProfile`.
+    details?: Profile['details']
+  },
 ): Promise<Profile | undefined> {
   const rows = await db
     .update(profile)

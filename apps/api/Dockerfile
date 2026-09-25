@@ -17,6 +17,7 @@ COPY packages/auth/package.json    packages/auth/package.json
 COPY packages/db/package.json      packages/db/package.json
 COPY packages/env/package.json     packages/env/package.json
 COPY packages/otp/package.json     packages/otp/package.json
+COPY packages/profile-fields/package.json packages/profile-fields/package.json
 COPY packages/storage/package.json packages/storage/package.json
 COPY tools/package.json            tools/package.json
 
