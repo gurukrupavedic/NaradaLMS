@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatCount, formatDay, parseCount } from './japam'
+import { formatCount, formatDay, parseCount } from './counter'
 
 describe('formatCount', () => {
   it('groups thousands, the same everywhere', () => {

@@ -1,5 +1,5 @@
 /**
- * Small pure helpers for `components/japam-card.tsx`, kept here so they are tested (see
+ * Small pure helpers for `components/counter-card.tsx`, kept here so they are tested (see
  * `vitest.config.ts`: the components themselves aren't).
  */
 

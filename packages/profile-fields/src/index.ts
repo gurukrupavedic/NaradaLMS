@@ -1,7 +1,7 @@
 export { assertValidDefinitions, mergeDetails, normalizeDetails, visibleFields } from './details'
 export type { NormalizeOptions, NormalizeResult } from './details'
-export { profileFieldsFor, schoolHasFeature } from './schools'
-export type { SchoolFeature } from './schools'
+export { counterFieldFor, counterFieldsFor, profileFieldsFor } from './schools'
+export type { CounterDefinition } from './schools'
 export type {
   BooleanField,
   DetailValue,

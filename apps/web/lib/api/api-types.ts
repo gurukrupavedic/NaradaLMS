@@ -44,18 +44,20 @@ export type ApiProfile = {
   updatedAt: string
 }
 
-// GET /v1/profiles/:profileId/japam — a student's chanting count (apps/api's `japam/`), for the
-// schools that keep one. `total` is for whatever window was asked for, `lifetime` is always
-// everything, and nothing here assumes a yearly reset: the caller picks the window.
-export type ApiJapamDay = { loggedOn: string; count: number }
+// GET /v1/profiles/:profileId/counters/:key — a running total a student keeps within a course
+// (japam, for SLMTS's Vedam), from apps/api's `counters/`. Which counters a course keeps is
+// declared in `@narada/profile-fields` (`counterFieldsFor`). `total` is for whatever window was
+// asked for, `lifetime` is always everything, and nothing here assumes a yearly reset: the caller
+// picks the window.
+export type ApiCounterDay = { loggedOn: string; count: number }
 
-export type ApiJapamSummary = {
+export type ApiCounterSummary = {
   // The *student's* calendar date right now (their time zone, not this browser's).
   today: string
   total: number
   lifetime: number
   // Every day in the window that has any, newest first.
-  days: ApiJapamDay[]
+  days: ApiCounterDay[]
 }
 
 // GET /v1/profile (singular) — the signed-in *account*'s own authorization facts: global

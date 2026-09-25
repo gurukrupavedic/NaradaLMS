@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { assertValidDefinitions, mergeDetails, normalizeDetails, visibleFields } from './details'
-import { profileFieldsFor, schoolHasFeature } from './schools'
+import { counterFieldFor, counterFieldsFor, profileFieldsFor } from './schools'
 import type { FieldDefinition } from './types'
 
 const ALL = { enforceRequiredFor: 'all' } as const
@@ -263,14 +263,25 @@ describe('assertValidDefinitions', () => {
   })
 })
 
-describe('schoolHasFeature', () => {
-  it('gives SLMTS the japam counter and RR not', () => {
-    expect(schoolHasFeature('slmts', 'japam')).toBe(true)
-    expect(schoolHasFeature('rr', 'japam')).toBe(false)
+describe('counters', () => {
+  it("gives SLMTS's Vedam course a japam counter, and RR's course none", () => {
+    expect(counterFieldsFor('slmts', 'ved')).toEqual([{ key: 'japam', label: 'Japam' }])
+    expect(counterFieldsFor('rr', 'pur')).toEqual([])
   })
 
-  it('gives an unknown school nothing, including inherited object keys', () => {
-    expect(schoolHasFeature('nope', 'japam')).toBe(false)
-    expect(schoolHasFeature('constructor', 'japam')).toBe(false)
+  it('is declared per course: another course in the same school keeps none', () => {
+    expect(counterFieldsFor('slmts', 'some-other-course')).toEqual([])
+  })
+
+  it('finds one counter by key', () => {
+    expect(counterFieldFor('slmts', 'ved', 'japam')).toEqual({ key: 'japam', label: 'Japam' })
+    expect(counterFieldFor('slmts', 'ved', 'nope')).toBeUndefined()
+    expect(counterFieldFor('rr', 'pur', 'japam')).toBeUndefined()
+  })
+
+  it('gives an unknown school or course nothing, including inherited object keys', () => {
+    expect(counterFieldsFor('nope', 'ved')).toEqual([])
+    expect(counterFieldsFor('constructor', 'ved')).toEqual([])
+    expect(counterFieldsFor('slmts', 'constructor')).toEqual([])
   })
 })

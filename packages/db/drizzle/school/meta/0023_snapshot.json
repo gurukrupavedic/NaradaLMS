@@ -1,5 +1,5 @@
 {
-  "id": "6815dee7-e449-455d-afb6-45b4054d685e",
+  "id": "c0e43186-9d80-4e51-9328-c805a6f7a661",
   "prevId": "99eadd07-924e-4321-86f0-c4f041737eac",
   "version": "7",
   "dialect": "postgresql",
@@ -735,6 +735,98 @@
         "chapterScriptSegment_bounds_valid": {
           "name": "chapterScriptSegment_bounds_valid",
           "value": "\"chapterScriptSegment\".\"start\" < \"chapterScriptSegment\".\"end\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.counterLog": {
+      "name": "counterLog",
+      "schema": "",
+      "columns": {
+        "profileId": {
+          "name": "profileId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "courseId": {
+          "name": "courseId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "counterKey": {
+          "name": "counterKey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "loggedOn": {
+          "name": "loggedOn",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "counterLog_profileId_profile_id_fk": {
+          "name": "counterLog_profileId_profile_id_fk",
+          "tableFrom": "counterLog",
+          "tableTo": "profile",
+          "columnsFrom": [
+            "profileId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "counterLog_courseId_course_id_fk": {
+          "name": "counterLog_courseId_course_id_fk",
+          "tableFrom": "counterLog",
+          "tableTo": "course",
+          "columnsFrom": [
+            "courseId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "counterLog_profileId_courseId_counterKey_loggedOn_pk": {
+          "name": "counterLog_profileId_courseId_counterKey_loggedOn_pk",
+          "columns": [
+            "profileId",
+            "courseId",
+            "counterKey",
+            "loggedOn"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "counterLog_count_valid": {
+          "name": "counterLog_count_valid",
+          "value": "\"counterLog\".\"count\" > 0 AND \"counterLog\".\"count\" <= 1000000"
         }
       },
       "isRLSEnabled": false
@@ -1825,71 +1917,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.japamLog": {
-      "name": "japamLog",
-      "schema": "",
-      "columns": {
-        "profileId": {
-          "name": "profileId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "loggedOn": {
-          "name": "loggedOn",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "count": {
-          "name": "count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "japamLog_profileId_profile_id_fk": {
-          "name": "japamLog_profileId_profile_id_fk",
-          "tableFrom": "japamLog",
-          "tableTo": "profile",
-          "columnsFrom": [
-            "profileId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "japamLog_profileId_loggedOn_pk": {
-          "name": "japamLog_profileId_loggedOn_pk",
-          "columns": [
-            "profileId",
-            "loggedOn"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "japamLog_count_valid": {
-          "name": "japamLog_count_valid",
-          "value": "\"japamLog\".\"count\" > 0 AND \"japamLog\".\"count\" <= 1000000"
-        }
-      },
       "isRLSEnabled": false
     },
     "public.profile": {

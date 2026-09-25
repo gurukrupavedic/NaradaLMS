@@ -19,7 +19,7 @@ import {
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
 import { COURSE_SLUG_PATTERN, RESERVED_COURSE_SLUGS } from '../courseSlug'
-import { JAPAM_DAILY_MAX } from '../japam'
+import { COUNTER_DAILY_MAX } from '../counter'
 
 // Declared before `profile` (below) since `profile.currentProficiency` references it — a pgEnum
 // value must exist before a pgTable call closes over it.
@@ -97,18 +97,27 @@ export const profile = pgTable(
 
 export type SchoolProfile = typeof profile.$inferSelect
 
-// A student's japam (chanting) count, one row per profile per day they logged any. The running total
-// is a sum over whatever window is asked for — a year, a lifetime, a range — so nothing here (or in
-// the API) assumes the count resets annually. A day's row is created and grown by an atomic upsert
-// (`count = count + n`), which is why this is a table and not a counter inside `profile.details`:
-// concurrent increments would otherwise be a lost-update race, and every increment would rewrite the
-// whole profile row. Only the school's own analytics read the rest of this; it feeds no grading.
-export const japamLog = pgTable(
-  'japamLog',
+// A running total a student keeps within a course — japam, today — as a dated log: one row per
+// profile, course, counter and day they logged any. Which counters exist (and what they are called)
+// is declared per school and course in `@narada/profile-fields` (`counterFieldsFor`); `counterKey` is
+// that declaration's permanent key. The total is a sum over whatever window is asked for — a year,
+// a lifetime, a range — so nothing here (or in the API) assumes the count resets annually. A day's
+// row is created and grown by an atomic upsert (`count = count + n`), which is why this is a table
+// and not a number in `profile.details`: a single number has no history to window, and would have
+// nowhere to keep "this year" once a total is being reset. Only the school's own analytics read
+// it beyond the profile page; it feeds no grading.
+export const counterLog = pgTable(
+  'counterLog',
   {
     profileId: uuid('profileId')
       .notNull()
       .references(() => profile.id),
+    // A profile belongs to the school, but a counter belongs to a course: the same student keeps a
+    // separate count in each course that defines one.
+    courseId: uuid('courseId')
+      .notNull()
+      .references(() => course.id),
+    counterKey: text('counterKey').notNull(),
     // A calendar date in the *profile's own* time zone (`profile.countryTimeZone`), as
     // 'YYYY-MM-DD' — not an instant. "Today" is the student's today, so a late-evening sitting
     // counts for the day they sat it, wherever the server or an admin viewing it happens to be.
@@ -120,19 +129,19 @@ export const japamLog = pgTable(
       .$onUpdateFn(() => new Date()),
   },
   table => [
-    // One row per profile per day: the upsert's conflict target, and the index every read by
-    // profile (and date range) uses.
-    primaryKey({ columns: [table.profileId, table.loggedOn] }),
+    // One row per profile, course, counter and day: the upsert's conflict target, and the index
+    // every read of one counter (and a date range of it) uses.
+    primaryKey({ columns: [table.profileId, table.courseId, table.counterKey, table.loggedOn] }),
     // A day with nothing logged has no row at all (setting a day to 0 deletes it), so every
     // stored count is positive.
     check(
-      'japamLog_count_valid',
-      sql`${table.count} > 0 AND ${table.count} <= ${sql.raw(String(JAPAM_DAILY_MAX))}`,
+      'counterLog_count_valid',
+      sql`${table.count} > 0 AND ${table.count} <= ${sql.raw(String(COUNTER_DAILY_MAX))}`,
     ),
   ],
 )
 
-export type JapamLogRow = typeof japamLog.$inferSelect
+export type CounterLogRow = typeof counterLog.$inferSelect
 
 export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])

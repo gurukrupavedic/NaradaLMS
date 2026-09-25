@@ -1,8 +1,18 @@
 import { and, desc, eq, gte, isNull, lte, sql, type SQL } from 'drizzle-orm'
 
-import { japamLog, profile, type SchoolDb } from '@narada/db'
+import { counterLog, profile, type SchoolDb } from '@narada/db'
 
-import type { FindJapamQuery, JapamDay } from './schema'
+import type { CounterDay, FindCounterQuery } from './schema'
+
+/** Which counter a row belongs to: one profile's one counter in one course. */
+export type CounterScope = { profileId: string; courseId: string; counterKey: string }
+
+const inScope = (scope: CounterScope) =>
+  and(
+    eq(counterLog.profileId, scope.profileId),
+    eq(counterLog.courseId, scope.courseId),
+    eq(counterLog.counterKey, scope.counterKey),
+  )
 
 /**
  * The profile's time zone, if it's a profile the caller may log for. `ownerUserId` is
@@ -32,71 +42,79 @@ export async function findLoggableProfile(
  * Adds `count` to the day, creating it if need be — one atomic statement, so concurrent logs
  * (two devices, a student and an admin) each land rather than the later one overwriting the
  * earlier. `updatedAt` is set by hand: an `ON CONFLICT DO UPDATE` bypasses the column's
- * `$onUpdateFn`. Throws the `japamLog_count_valid` violation if that takes the day past its cap.
+ * `$onUpdateFn`. Throws the `counterLog_count_valid` violation if that takes the day past its cap.
  */
 export async function addToDay(
   db: SchoolDb,
-  profileId: string,
+  scope: CounterScope,
   loggedOn: string,
   count: number,
-): Promise<JapamDay> {
+): Promise<CounterDay> {
   const rows = await db
-    .insert(japamLog)
-    .values({ profileId, loggedOn, count })
+    .insert(counterLog)
+    .values({ ...scope, loggedOn, count })
     .onConflictDoUpdate({
-      target: [japamLog.profileId, japamLog.loggedOn],
-      set: { count: sql`${japamLog.count} + ${count}`, updatedAt: new Date() },
+      target: [
+        counterLog.profileId,
+        counterLog.courseId,
+        counterLog.counterKey,
+        counterLog.loggedOn,
+      ],
+      set: { count: sql`${counterLog.count} + ${count}`, updatedAt: new Date() },
     })
-    .returning({ loggedOn: japamLog.loggedOn, count: japamLog.count })
+    .returning({ loggedOn: counterLog.loggedOn, count: counterLog.count })
   return rows[0]!
 }
 
 /** Sets the day's total outright (a correction). 0 removes the row: no row means nothing logged. */
 export async function setDay(
   db: SchoolDb,
-  profileId: string,
+  scope: CounterScope,
   loggedOn: string,
   count: number,
-): Promise<JapamDay> {
+): Promise<CounterDay> {
   if (count === 0) {
-    await db
-      .delete(japamLog)
-      .where(and(eq(japamLog.profileId, profileId), eq(japamLog.loggedOn, loggedOn)))
+    await db.delete(counterLog).where(and(inScope(scope), eq(counterLog.loggedOn, loggedOn)))
     return { loggedOn, count: 0 }
   }
 
   const rows = await db
-    .insert(japamLog)
-    .values({ profileId, loggedOn, count })
+    .insert(counterLog)
+    .values({ ...scope, loggedOn, count })
     .onConflictDoUpdate({
-      target: [japamLog.profileId, japamLog.loggedOn],
+      target: [
+        counterLog.profileId,
+        counterLog.courseId,
+        counterLog.counterKey,
+        counterLog.loggedOn,
+      ],
       set: { count, updatedAt: new Date() },
     })
-    .returning({ loggedOn: japamLog.loggedOn, count: japamLog.count })
+    .returning({ loggedOn: counterLog.loggedOn, count: counterLog.count })
   return rows[0]!
 }
 
-/** The days in the window (newest first), their sum, and the profile's lifetime sum. */
+/** The days in the window (newest first), their sum, and the counter's lifetime sum. */
 export async function summarize(
   db: SchoolDb,
-  profileId: string,
-  { from, to }: FindJapamQuery,
-): Promise<{ total: number; lifetime: number; days: JapamDay[] }> {
-  const conditions: SQL[] = [eq(japamLog.profileId, profileId)]
-  if (from) conditions.push(gte(japamLog.loggedOn, from))
-  if (to) conditions.push(lte(japamLog.loggedOn, to))
+  scope: CounterScope,
+  { from, to }: FindCounterQuery,
+): Promise<{ total: number; lifetime: number; days: CounterDay[] }> {
+  const conditions: SQL[] = []
+  if (from) conditions.push(gte(counterLog.loggedOn, from))
+  if (to) conditions.push(lte(counterLog.loggedOn, to))
 
   const days = await db
-    .select({ loggedOn: japamLog.loggedOn, count: japamLog.count })
-    .from(japamLog)
-    .where(and(...conditions))
-    .orderBy(desc(japamLog.loggedOn))
+    .select({ loggedOn: counterLog.loggedOn, count: counterLog.count })
+    .from(counterLog)
+    .where(and(inScope(scope), ...conditions))
+    .orderBy(desc(counterLog.loggedOn))
 
   // `sum` of an integer column comes back as a bigint, which node-postgres hands over as a string.
   const [everything] = await db
-    .select({ lifetime: sql<string>`coalesce(sum(${japamLog.count}), 0)` })
-    .from(japamLog)
-    .where(eq(japamLog.profileId, profileId))
+    .select({ lifetime: sql<string>`coalesce(sum(${counterLog.count}), 0)` })
+    .from(counterLog)
+    .where(inScope(scope))
 
   return {
     total: days.reduce((sum, day) => sum + day.count, 0),
