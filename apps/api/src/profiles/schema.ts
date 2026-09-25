@@ -12,11 +12,10 @@ export const ProfileSchema = z.object({
   name: z.string().min(1),
   phone: z.string().nullable(),
   city: z.string().nullable(),
-  // The rest of these mirror `registration`'s own fields exactly and are only ever populated at
-  // creation by `registrations/service.ts::provisionApprovedApplicant` copying an approved
-  // application across — `CreateProfileSchema` below never accepts them, so a profile created
-  // directly via `POST /profiles` simply carries the empty/null defaults. All but `yearOfBirth`
-  // are later self-editable via `UpdateProfileSchema` (see its own doc comment).
+  // The rest of these mirror `registration`'s own fields and are only ever populated at creation by
+  // `registrations/service.ts::provisionApprovedApplicant` copying an approved application across
+  // (there is no route that creates a profile any other way). All but `yearOfBirth` are later
+  // self-editable via `UpdateProfileSchema` (see its own doc comment).
   email: z.email().nullable(),
   yearOfBirth: z.number().int().nullable(),
   // ISO 3166-2 subdivision code and ISO 3166-1 alpha-2 country code — see the `profile` table's
@@ -41,16 +40,6 @@ export const ProfileSchema = z.object({
   details: DetailsSchema,
   updatedAt: z.coerce.date(),
   createdAt: z.coerce.date(),
-})
-
-export type CreateProfileData = z.infer<typeof CreateProfileSchema>
-export const CreateProfileSchema = ProfileSchema.pick({
-  name: true,
-  phone: true,
-  city: true,
-}).partial({
-  phone: true,
-  city: true,
 })
 
 // The student's own "edit my profile" surface: every registration-derived field — all originally

@@ -52,7 +52,7 @@ describe('HTTP server (supertest, real app + real Postgres)', () => {
   it('a request with no X-School-Slug header on a school-scoped route gets a 400, not a 500', async () => {
     const app = createServer()
 
-    const response = await request(app).get(`/v${env.API_VERSION}/batches`)
+    const response = await request(app).get(`/v${env.API_VERSION}/batches/open`)
 
     expect(response.status).toBe(400)
     expect(response.body).toEqual({

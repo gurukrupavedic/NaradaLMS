@@ -1,6 +1,6 @@
-import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
+import type { organization, SchoolDbClient } from '@narada/db'
 
-import { forbidden, internalError, notFound, orNotFound } from '../error'
+import { notFound, orNotFound } from '../error'
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
 import { profileFieldsFor } from '@narada/profile-fields'
@@ -8,7 +8,7 @@ import { profileFieldsFor } from '@narada/profile-fields'
 import { mergeDetailsPatch } from '../utils/details'
 import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
-import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
+import type { Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
 
 type School = typeof organization.$inferSelect
 
@@ -30,36 +30,6 @@ export async function searchProfiles(
 
 export async function findById(context: ProfileServiceContext, id: string): Promise<Profile> {
   return orNotFound(await repository.findById(context.db, id))
-}
-
-/**
- * A super admin may create a profile in any school; everyone else must already hold an
- * organization membership for this school (checked against the public schema, not this
- * school's own tables).
- */
-export async function createProfile(
-  context: ProfileServiceContext,
-  data: CreateProfileData,
-): Promise<Profile> {
-  if (!context.user.isSuperAdmin) {
-    const membership = await repository.findMembership(publicDb, context.school.id, context.user.id)
-    if (!membership) {
-      throw forbidden()
-    }
-  }
-
-  const row = await repository.insert(context.db, {
-    userId: context.user.id,
-    phone: null,
-    city: null,
-    ...data,
-  })
-
-  if (!row) {
-    throw internalError()
-  }
-
-  return row
 }
 
 /**

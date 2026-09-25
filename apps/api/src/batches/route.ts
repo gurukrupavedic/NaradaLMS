@@ -4,10 +4,9 @@ import * as z from 'zod'
 import { request as requestEnrollment } from '../enrollmentRequests/service'
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { CreateBatchSchema, FindBatchesSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
+import { CreateBatchSchema, SetClassSlotsSchema, UpdateBatchSchema } from './schema'
 import {
   createBatch,
-  findAllAccessible,
   findClassifiers,
   findOpenBatches,
   setClassSlots,
@@ -16,21 +15,14 @@ import {
 
 const router = Router()
 
-router.get(
-  '/',
-  optionalProfileRoute(async ({ req, res, db, access, getCourse }) => {
-    const query = await parse(FindBatchesSchema, req.query)
-    const visibility = await access.getBatchVisibility()
-    const batches = await findAllAccessible({ db }, query, visibility, (await getCourse()).id)
-    res.status(200).json({ data: batches })
-  }),
-)
+// There is no plain list here: "which batches is this profile in" is `GET /profiles/:profileId/batches`
+// (profiles/route.ts), which names the profile it asks about rather than inferring it from the caller.
 
 // Mounted before `/:batchId` below so Express never tries to parse "open" as a batch UUID — same
 // reasoning as profiles/route.ts's `/search`. Any signed-in profile, not gated by a batch
-// permission: "which batches can I join" is a different question from "which batches am I
-// already in or administer" (access.getBatchVisibility) — every batch not yet marked completed
-// is requestable, no school role required to see the list.
+// permission: "which batches can I join" is a different question from "which batches is this
+// profile in" — every batch not yet marked completed is requestable, no school role required to
+// see the list.
 router.get(
   '/open',
   profileRoute(async ({ res, db, getCourse, profile }) => {

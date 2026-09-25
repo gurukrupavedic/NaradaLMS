@@ -1,9 +1,9 @@
 import { and, eq, isNull, notInArray } from 'drizzle-orm'
 
-import { enrollment, profile, type PublicDb, type SchoolDb } from '@narada/db'
+import { enrollment, profile, type SchoolDb } from '@narada/db'
 
 import { tokenMatch } from '../utils/search'
-import type { CreateProfileData, Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
+import type { Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
 
 const SEARCH_LIMIT = 25
 
@@ -106,30 +106,17 @@ export async function search(db: SchoolDb, options: SearchProfilesQuery): Promis
   })
 }
 
-/** Public-schema lookup: does `userId` have any organization membership at all? */
-export async function findMembership(
-  db: PublicDb,
-  organizationId: string,
-  userId: string,
-): Promise<{ id: string } | undefined> {
-  return db.query.member.findFirst({
-    where: (t, { and, eq }) => and(eq(t.organizationId, organizationId), eq(t.userId, userId)),
-    columns: { id: true },
-  })
-}
-
-// The registration-derived fields (see `ProfileSchema`'s own doc comment) are always optional here
-// — `registrations/service.ts::provisionApprovedApplicant` passes them all, while the plain
-// self-serve `createProfile` (no registration behind it) passes none and leaves them at their
-// column defaults.
+// The registration-derived fields (see `ProfileSchema`'s own doc comment) are optional here, so a
+// caller that has none of them leaves them at their column defaults.
 type ProfileRegistrationFields = Partial<
   Omit<Profile, 'id' | 'userId' | 'name' | 'phone' | 'city' | 'updatedAt' | 'createdAt'>
 >
 
 export async function insert(
   db: SchoolDb,
-  values: CreateProfileData & {
+  values: {
     userId: string
+    name: string
     phone: string | null
     city: string | null
   } & ProfileRegistrationFields,

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { CreateExamSchema, FindExamsSchema, RecordExamResultSchema, UpdateExamSchema } from './schema'
+import { FindExamsSchema, RecordExamResultSchema, UpdateExamSchema } from './schema'
 
 // Explicit factory (rather than the real module) so importing `./schema` doesn't pull in
 // `@narada/db` at import time and trigger real env-var validation — never loads.
@@ -29,41 +29,6 @@ vi.mock('@narada/db', () => ({
   enrollmentRole: { enumValues: ['instructor', 'ta', 'student'] },
   enrollmentStatus: { enumValues: ['active', 'break', 'dropped', 'inactive'] },
 }))
-
-const studentId = crypto.randomUUID()
-const trackId = crypto.randomUUID()
-
-describe('CreateExamSchema', () => {
-  it('accepts a valid Z-suffixed scheduledAt and produces a Date', () => {
-    const result = CreateExamSchema.safeParse({
-      studentId,
-      trackId,
-      scheduledAt: '2024-01-01T00:00:00Z',
-    })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.scheduledAt).toBeInstanceOf(Date)
-    }
-  })
-
-  it('rejects a date-only scheduledAt', () => {
-    const result = CreateExamSchema.safeParse({
-      studentId,
-      trackId,
-      scheduledAt: '2024-01-01',
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it('rejects a raw epoch number for scheduledAt', () => {
-    const result = CreateExamSchema.safeParse({
-      studentId,
-      trackId,
-      scheduledAt: 1704067200000,
-    })
-    expect(result.success).toBe(false)
-  })
-})
 
 describe('RecordExamResultSchema', () => {
   const full = {

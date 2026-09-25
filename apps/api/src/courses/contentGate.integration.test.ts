@@ -127,7 +127,7 @@ describe('a course-scoped read always names its course', () => {
     for (const path of [
       '/tracks',
       '/me/dashboard',
-      '/batches',
+      `/profiles/${s.admin.profile.id}/batches`,
       '/batches/open',
       '/exams',
       '/enrollment-requests',
