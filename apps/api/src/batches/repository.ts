@@ -100,7 +100,7 @@ function batchListConditions(
 
 /**
  * Lists batches visible under `scope`, ordered `(startDate desc nulls last, id asc)` with a
- * matching compound cursor (PARITY_PLAN.md §3.4/§9.1) — see `utils/keyset.ts::findNullsLastPage`.
+ * matching compound cursor — see `utils/keyset.ts::findNullsLastPage`.
  * The tie-break direction differs from `evaluations/repository.ts` (id ascending here, descending
  * there) because that's what the reference implementations for each actually do — not a typo.
  */

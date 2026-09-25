@@ -32,7 +32,7 @@ type CachedDb = { db: SchoolDbClient; pool: Pool }
 // can race to close the same pool without double-closing it.
 const closedPools = new WeakSet<Pool>()
 // Pools evicted from the cache close asynchronously; shutdownPools must be able to await an
-// eviction that started just before shutdown (DD-015 §3.3).
+// eviction that started just before shutdown.
 const closingPools = new Set<Promise<void>>()
 
 // Caches one connection pool per organization. Evicting the least-recently-used

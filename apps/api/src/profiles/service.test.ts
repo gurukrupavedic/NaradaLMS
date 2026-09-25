@@ -73,7 +73,7 @@ describe('deleteProfile', () => {
     vi.resetAllMocks()
   })
 
-  it('soft-deletes the caller\'s own profile (pure soft-delete, DD-011: only deletedAt changes)', async () => {
+  it('soft-deletes the caller\'s own profile (pure soft-delete: only deletedAt changes)', async () => {
     vi.mocked(repository.softDelete).mockResolvedValue([{ id: 'profile-1' }])
 
     await expect(deleteProfile(ownContext, 'profile-1')).resolves.toBeUndefined()
@@ -87,7 +87,7 @@ describe('deleteProfile', () => {
     await expect(deleteProfile(ownContext, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
   })
 
-  it('a school admin soft-deletes any profile, with no owner check (DD-011 §9)', async () => {
+  it('a school admin soft-deletes any profile, with no owner check', async () => {
     vi.mocked(repository.softDelete).mockResolvedValue([{ id: 'profile-1' }])
 
     await expect(deleteProfile(adminContext, 'profile-1')).resolves.toBeUndefined()

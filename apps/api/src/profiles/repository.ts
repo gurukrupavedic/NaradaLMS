@@ -9,7 +9,7 @@ const SEARCH_LIMIT = 25
 
 /**
  * Explicit projection matching `Profile` exactly. `profile.deletedAt` is an internal lifecycle
- * column (DD-011) and is deliberately never returned to API consumers, which serialize these
+ * column and is deliberately never returned to API consumers, which serialize these
  * rows directly.
  */
 const profileColumns = {
@@ -38,7 +38,7 @@ const profileColumns = {
   createdAt: profile.createdAt,
 }
 
-/** Lists only active profiles; a soft-deleted profile (DD-011) is invisible to its own owner. */
+/** Lists only active profiles; a soft-deleted profile is invisible to its own owner. */
 export async function findByUserId(db: SchoolDb, userId: string): Promise<Profile[]> {
   return db.query.profile.findMany({
     where: (t, { and, eq, isNull }) => and(eq(t.userId, userId), isNull(t.deletedAt)),
@@ -210,7 +210,7 @@ export async function update(
 }
 
 /**
- * Deactivates a profile (DD-011): stamps `deletedAt` only. Every other column — name, phone, city
+ * Deactivates a profile: stamps `deletedAt` only. Every other column — name, phone, city
  * — and every `enrollment`/`exam`/`evaluation` row referencing this profile stay exactly as they
  * were, so historical queries ("which batches was this user in", "what did they score there") keep
  * working after deactivation. `ownerUserId` enforces ownership when the caller isn't a school

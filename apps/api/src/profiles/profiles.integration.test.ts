@@ -36,7 +36,7 @@ afterEach(async () => {
   }
 })
 
-describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft-delete)', () => {
+describe('profile deactivation (pure soft-delete)', () => {
   it('soft-deletes a profile: deletedAt set, every other column retained unchanged', async () => {
     world = await createTestSchool()
     const profileRow = await createProfile(world, {
@@ -53,7 +53,7 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
     })
     expect(found).toBeDefined()
     expect(found?.deletedAt).not.toBeNull()
-    // Pure soft-delete (DD-011, revised): phone/city are NOT critical PII for this product and
+    // Pure soft-delete: phone/city are NOT critical PII for this product and
     // are retained, not cleared.
     expect(found?.phone).toBe('555-0100')
     expect(found?.city).toBe('Springfield')
@@ -61,7 +61,7 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
   })
 
   it(
-    'soft-deletes a profile referenced by evaluation.evaluatorId — DD-011 lifted the old ' +
+    'soft-deletes a profile referenced by evaluation.evaluatorId — the ' +
       "restrict-FK block (evaluation.evaluatorId's onDelete: 'restrict' is never hit since " +
       'this is an UPDATE, not a physical DELETE)',
     async () => {
@@ -121,7 +121,7 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
 
   it(
     'a deactivated student can no longer be the target of a NEW exam, even though their ' +
-      'enrollment row still exists (DD-011 §4.6 gap fix)',
+      'enrollment row still exists',
     async () => {
       world = await createTestSchool()
       const trackRow = await createTrack(world)
@@ -300,7 +300,7 @@ describe('updateProfile details (school-specific fields)', () => {
   })
 })
 
-describe('updateProfile (school admin correcting another profile, DD-011-adjacent)', () => {
+describe('updateProfile (school admin correcting another profile)', () => {
   function actor(userId: string): User {
     return { id: userId, isSuperAdmin: false } as User
   }
@@ -351,7 +351,7 @@ describe('updateProfile (school admin correcting another profile, DD-011-adjacen
   })
 })
 
-describe('admin-deactivation (DD-011 §9)', () => {
+describe('admin-deactivation', () => {
   it('deactivates a profile with no ownership check — every other column, and its enrollment history, survive unchanged', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)

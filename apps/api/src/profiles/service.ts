@@ -114,7 +114,7 @@ export async function updateProfile(
 }
 
 /**
- * Deactivates a profile (DD-011) instead of physically deleting it: only `deletedAt` is set.
+ * Deactivates a profile instead of physically deleting it: only `deletedAt` is set.
  * Every other column, and every `enrollment`/`exam`/`evaluation` row referencing this profile, is
  * left exactly as it was, so historical queries keep working. Same owner-vs-admin split as
  * `updateProfile` above: a school admin deactivates any profile, anyone else only their own.

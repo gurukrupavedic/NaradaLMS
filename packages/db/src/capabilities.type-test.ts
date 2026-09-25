@@ -1,7 +1,7 @@
 /**
- * Compile-time proof of the SchoolDb/PublicDb capability boundary (HARDENING_PLAN.md §2.4,
- * §6.1). Not a runtime test — there's nothing to execute. `pnpm --filter @narada/db typecheck`
- * is the only thing that "runs" this file; a broken assertion below surfaces as a `tsc` error.
+ * Compile-time proof of the SchoolDb/PublicDb capability boundary. Not a runtime test — there's
+ * nothing to execute. `pnpm --filter @narada/db typecheck` is the only thing that "runs" this file;
+ * a broken assertion below surfaces as a `tsc` error.
  */
 import type { PublicDb, PublicDbClient, SchoolDb, SchoolDbClient } from './index'
 
@@ -44,7 +44,7 @@ void _publicFromSchool
 const _schoolFromPublic: SchoolDb = null as unknown as PublicDb
 void _schoolFromPublic
 
-// H8 acceptance (HARDENING_PLAN §12.2): cross-schema table access must not typecheck.
+// Cross-schema table access must not typecheck.
 declare const schoolDbForQuery: SchoolDbClient
 // @ts-expect-error the school schema has no `member` table
 void schoolDbForQuery.query.member

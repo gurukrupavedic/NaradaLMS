@@ -178,15 +178,16 @@ apps/
   api/          @narada/api        Express backend
   web/          @narada/web        Next.js 16 frontend
 packages/
-  auth/         @narada/auth    BetterAuth config, permissions, ids
-  db/           @narada/db      Drizzle ORM, schema definitions, connection pooling
-  env/          @narada/env     Env validation (t3-oss/env-core + zod), .env.sops storage
-  storage/      @narada/storage Cloudflare R2 client (AWS SDK v3)
+  auth/           @narada/auth           BetterAuth config, permissions, ids
+  db/             @narada/db             Drizzle ORM, schema definitions, connection pooling, migrations
+  env/            @narada/env            Env validation (t3-oss/env-core + zod), .env.sops storage
+  otp/            @narada/otp            Phone one-time-code delivery (Twilio)
+  profile-fields/ @narada/profile-fields What each school and course collects about a person, and the rules that validate it
+  storage/        @narada/storage        Cloudflare R2 client (AWS SDK v3)
 tools/          @narada/tools   Internal CLI utilities (env management, seed/operator setup, spreadsheet import)
 docs/
-  api.md        HTTP API reference
-  data-model.md Database schema, roles, multi-tenancy strategy
-  architecture-review.md Outstanding work items
+  courses.md                   How a request knows which course it is about
+  production-import-runbook.md Applying migrations and importing a school's roster
 ```
 
 All packages are ESM (`"type": "module"`) with `NodeNext` module resolution. TypeScript sources are executed directly via `tsx` during development; the API is compiled with `tsc` for production.
@@ -195,13 +196,13 @@ All packages are ESM (`"type": "module"`) with `NodeNext` module resolution. Typ
 
 ### Multi-tenancy
 
-Each school gets its own Postgres schema (`school_<organizationId>`). The `public` schema holds shared data: BetterAuth tables, the school (organization) registry, and user accounts.
+Each school gets its own Postgres schema (`school-<organizationId>`). The `public` schema holds shared data: BetterAuth tables, the school (organization) registry, and user accounts.
 
-`packages/db` exports two branded database types:
-- `PublicDatabase` — `search_path=public`, for auth and cross-school operations
-- `SchoolDatabase` — `search_path=school_<id>,public`, for per-school domain data
+`packages/db` exports two database types that can't be mixed up at compile time:
+- `PublicDb` / `PublicDbClient` — the `public` schema, for auth and cross-school operations
+- `SchoolDb` / `SchoolDbClient` — one school's schema, for per-school domain data
 
-School databases are created lazily and cached in an LRU cache (`getScopedDatabase(organizationId)`). The API middleware resolves the school from the `X-School-Slug` header and attaches the scoped database to the request context.
+School databases are created lazily and cached in an LRU cache (`getSchoolDb(organizationId)`). The API middleware resolves the school from the `X-School-Slug` header and attaches the scoped database to the request context.
 
 ### Authentication and roles
 
@@ -223,7 +224,7 @@ Authorization is done with utility functions, not middleware. There are no value
 - School-scoped routes require `X-School-Slug`.
 - Every response uses the envelope `{ ok: true, data }` or `{ ok: false, error: { code, message, details? } }`.
 - Paginated lists use cursor-based pagination: `?cursor=&limit=` in, `{ items, nextCursor }` out.
-- Error codes are machine-readable strings (`RESOURCE_NOT_FOUND`, `PERMISSION_DENIED`, etc.). See `docs/api.md` for the full reference.
+- Error codes are machine-readable strings (`RESOURCE_NOT_FOUND`, `PERMISSION_DENIED`, etc.), defined in `apps/api/src/error.ts`.
 
 ### File storage
 
@@ -240,7 +241,7 @@ Uploads use a staged presign → upload → complete flow: the API first creates
 
 **Env access:** import `env` from `@narada/env`. Never read `process.env` directly inside application code.
 
-**Database access:** use `publicDb` for public-schema queries, `getScopedDatabase(organizationId)` for school-scoped queries. Service functions that must work inside transactions accept `SchoolDbExecutor` (union of `SchoolDatabase | SchoolTransaction`).
+**Database access:** use `publicDb` for public-schema queries, `getSchoolDb(organizationId)` for school-scoped queries. Service functions that must work inside a transaction take a `SchoolDb`, which both the client and a transaction satisfy.
 
 **IDs:** domain records use UUIDv7 (time-ordered). BetterAuth-managed records use BetterAuth's own ID generation (text). See `packages/db/src/ids.ts` and `packages/auth/src/ids.ts`.
 

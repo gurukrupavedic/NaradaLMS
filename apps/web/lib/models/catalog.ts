@@ -45,11 +45,10 @@ export type CatalogTrack = {
   chapters: CatalogChapter[]
 }
 
-// Every real chapter's content state, since none of `hasText`/`segments`/`audioCount`/`mapped`
-// exist on `ApiChapter` — the rewrite deliberately never took on staged uploads/segments/audio
-// mapping (apps/api/PARITY_PLAN.md §17). Exported so `lib/api/reshape.ts`'s
-// `buildCatalogTrack` can give every real chapter this exact state — honestly, not a placeholder:
-// the live database's chapters are all genuinely in it (see this file's header comment).
+// Every real chapter's content state. None of `hasText`/`segments`/`audioCount`/`mapped` exist on
+// `ApiChapter` (the track list doesn't carry them), so `lib/api/reshape.ts`'s `buildCatalogTrack`
+// gives every real chapter this exact empty state — which means the pipeline view under-reports any
+// chapter that does have authored content. It stays empty until the API returns real content state.
 export const EMPTY: ChapterContentState = {
   script: null,
   hasText: false,

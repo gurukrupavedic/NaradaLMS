@@ -61,7 +61,7 @@ const EXAM_UPDATE_PERMISSION: BatchPermissions = { exam: ['update'] }
 const EVALUATION_CREATE_PERMISSION: BatchPermissions = { evaluation: ['create'] }
 
 /**
- * The single authorization vocabulary for domain services (HARDENING_PLAN.md §4.4). Holds an
+ * The single authorization vocabulary for domain services. Holds an
  * actor's resolved school role and, if a profile is active, their per-batch roles, so a service
  * asks a typed `require*`/`get*Visibility` question instead of re-deriving permissions itself.
  */
@@ -193,8 +193,7 @@ export class AccessPolicy {
 
   /**
    * The read scope for "list `targetProfileId`'s batches" — a *different* question from
-   * `getBatchVisibility()`, which is "list batches" with no target in mind. Corrected 2026-08-28
-   * (see PARITY_PLAN.md addendum §0): school-wide access grants 'all' only for a **self** lookup
+   * `getBatchVisibility()`, which is "list batches" with no target in mind. School-wide access grants 'all' only for a **self** lookup
    * (an admin looking at their own batches) — looking up someone else's batches is always scoped
    * to that person's own enrollments, never the whole school, whether the caller is a super
    * admin, owner, admin, or a shared instructor/TA. School-wide status there only grants
@@ -482,7 +481,7 @@ export class AccessPolicy {
   }
 }
 
-// DD-010 (approved 2026-08-28): a *missing* membership row is not this function's concern — it's
+// A *missing* membership row is not this function's concern — it's
 // already rejected in `load()` before this runs, except for a super admin, for whom the return
 // value here is never actually consulted (isSchoolAdmin() short-circuits on
 // isSuperAdmin first). A *present* role value outside owner/admin/member fails closed instead

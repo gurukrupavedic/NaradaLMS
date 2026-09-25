@@ -80,7 +80,7 @@ export const profile = pgTable(
       .$type<Record<string, string | number | boolean>>()
       .notNull()
       .default({}),
-    // Soft-delete marker (DD-011): NULL = active. Deliberately has no `.$onUpdateFn` —
+    // Soft-delete marker: NULL = active. Deliberately has no `.$onUpdateFn` —
     // unlike `updatedAt`, this is set exactly once, explicitly, by the soft-delete write,
     // and must never be auto-touched by an unrelated UPDATE.
     deletedAt: timestamp('deletedAt'),

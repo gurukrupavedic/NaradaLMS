@@ -26,7 +26,7 @@ export async function findByBatch(
  * grid on screen). Both go through the same validation and the same certified-chapter guard below
  * — there's exactly one write path into `evaluation`, not a bulk one and a single-item one.
  *
- * Validation order per item matches PARITY_PLAN.md §10.5 exactly: enrollment-role first (422),
+ * Validation order per item: enrollment-role first (422),
  * then chapter existence (404), then batch/track match (422) — preserved because it's an
  * externally meaningful error-precedence contract, not an implementation detail. A structural
  * problem with any item throws and nothing is inserted, same as the old single-item endpoint.
