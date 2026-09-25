@@ -1,6 +1,6 @@
 'use client'
 
-import { visibleFields, type FieldDefinition } from '@narada/profile-fields'
+import { isPlainField, visibleFields, type FieldDefinition } from '@narada/profile-fields'
 
 import { CheckboxField, SelectField, TextField, type FieldVariant } from '@/components/form-fields'
 import { detailsFromDraft, draftValue, type DetailDraft } from '@/lib/profile-details'
@@ -31,7 +31,7 @@ export function DetailFields({
   editing?: boolean
 }) {
   const shown = visibleFields(fields, detailsFromDraft(fields, draft)).filter(
-    field => !editing || field.editable !== false,
+    field => isPlainField(field) && (!editing || field.editable !== false),
   )
 
   return (
@@ -84,6 +84,9 @@ function DetailField({
           options={field.options}
         />
       )
+    case 'counter':
+      // Never a form field: a counter is bumped from its own card, and starts at 0.
+      return null
     case 'number':
     case 'text':
       return (

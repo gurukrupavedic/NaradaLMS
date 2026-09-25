@@ -44,22 +44,6 @@ export type ApiProfile = {
   updatedAt: string
 }
 
-// GET /v1/profiles/:profileId/counters/:key — a running total a student keeps within a course
-// (japam, for SLMTS's Vedam), from apps/api's `counters/`. Which counters a course keeps is
-// declared in `@narada/profile-fields` (`counterFieldsFor`). `total` is for whatever window was
-// asked for, `lifetime` is always everything, and nothing here assumes a yearly reset: the caller
-// picks the window.
-export type ApiCounterDay = { loggedOn: string; count: number }
-
-export type ApiCounterSummary = {
-  // The *student's* calendar date right now (their time zone, not this browser's).
-  today: string
-  total: number
-  lifetime: number
-  // Every day in the window that has any, newest first.
-  days: ApiCounterDay[]
-}
-
 // GET /v1/profile (singular) — the signed-in *account*'s own authorization facts: global
 // super-admin, plus its org-level role in every school it belongs to. Distinct from `ApiProfile`
 // above, which is a business entity (a student/teacher record) the account can act as — this is
@@ -362,5 +346,9 @@ export type ApiEnrollmentRequest = {
 // for any profile the caller is allowed to view (self, a teacher sharing a batch, or an admin).
 export type ApiProfileDetail = {
   profile: ApiProfile
+  // What this person has in the course the request names (the course-level component, from
+  // `courseProfile`) — keyed by field key like `ApiProfile.details`; counters (japam) are plain
+  // numbers here, absent until first written (read that as 0). Empty for a course with none.
+  courseDetails: Details
   dashboard: ApiDashboard
 }

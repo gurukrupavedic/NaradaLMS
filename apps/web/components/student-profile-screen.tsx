@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { counterFieldsFor, profileFieldsFor } from '@narada/profile-fields'
+import { courseFieldsFor, isCounter, isPlainField, profileFieldsFor } from '@narada/profile-fields'
 
 import { ScreenSkeleton } from '@/components/skeletons'
 import { ScreenError } from '@/components/screen-error'
@@ -54,15 +54,16 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const updating = useUpdateProfile(profileId, isSelf)
   const schoolSlug = useSchoolSlug() ?? ''
   const detailFields = profileFieldsFor(schoolSlug)
-  // Declared per course, not per school: what a course counts (japam, for SLMTS's Vedam) is its own.
-  const courseSlug = useCourseSlug()
-  const counters = counterFieldsFor(schoolSlug, courseSlug)
+  // The course-level component's rules — what a course adds (japam, for SLMTS's Vedam) is its own.
+  const courseFields = courseFieldsFor(schoolSlug, useCourseSlug())
+  const counters = courseFields.filter(isCounter)
+  const courseDetailFields = courseFields.filter(isPlainField)
 
   // No hooks below this point, so the early return is safe.
   if (error) return <ScreenError error={error} />
   if (!data) return <ScreenSkeleton rows={9} />
 
-  const { profile, dashboard } = data
+  const { profile, dashboard, courseDetails } = data
   const learningTracks = buildLearningTracks(dashboard).sort((a, b) => a.order - b.order)
   const certifications = buildCertificationRows(dashboard)
   const certifiedCount = certifications.filter(c => isCertified(c.level)).length
@@ -197,13 +198,21 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           </Reveal>
         )}
 
+        {courseDetailFields.length > 0 && (
+          <Reveal delay={50}>
+            <Section title="Course details">
+              <DetailSummary fields={courseDetailFields} details={courseDetails} />
+            </Section>
+          </Reveal>
+        )}
+
         {counters.map((counter, i) => (
           <Reveal key={counter.key} delay={60 + i * 10}>
             <Section title={counter.label}>
               <CounterCard
                 profileId={profile.id}
-                courseSlug={courseSlug}
                 counter={counter}
+                total={typeof courseDetails[counter.key] === 'number' ? Number(courseDetails[counter.key]) : 0}
                 canEdit={Boolean(canEdit)}
               />
             </Section>

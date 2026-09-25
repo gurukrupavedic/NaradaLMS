@@ -1,110 +1,50 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import type { CounterDefinition } from '@narada/profile-fields'
+import type { CounterField } from '@narada/profile-fields'
 
 import { Spinner } from '@/components/spinner'
-import { formatCount, formatDay, parseCount } from '@/lib/counter'
-import { counterQuery } from '@/lib/query/options'
-import { useLogCounter, useSetCounterDay } from '@/lib/query/use-counter-mutations'
-import type { ApiCounterDay } from '@/lib/api/api-types'
-
-const RECENT_DAYS = 7
+import { formatCount, parseCount } from '@/lib/counter'
+import { useAddToCounter, useUpdateCourseDetails } from '@/lib/query/use-counter-mutations'
 
 const INPUT =
   'border border-rule bg-transparent p-2.5 text-[0.8125rem] focus:border-vermilion focus:outline-none'
 
 /**
- * One of a course's counters (`@narada/profile-fields`' `counterFieldsFor` — japam, for SLMTS's
- * Vedam), as a card: this calendar year's total and the all-time one, the recent days, and for
- * someone who may edit (the student themselves, or a school admin) a form to add to it and a way to
- * correct a day. The year is only this card's choice of window; the API sums whatever window it is
- * asked for and assumes no yearly reset. The count is the current course's: the same student keeps
- * a separate one in each course that has the counter.
+ * One of a course's counters (`@narada/profile-fields`' course-level rules — japam, for SLMTS's
+ * Vedam): its running total, and for someone who may edit (the student themselves, or a school
+ * admin) a box to add to it and a way to set it outright. `total` is the profile page's
+ * `courseDetails[counter.key]` — a counter that was never written reads 0. The count is the current
+ * course's: the same student keeps a separate one in each course that has the counter. It keeps no
+ * history; it's a number.
  */
 export function CounterCard({
   profileId,
-  courseSlug,
   counter,
+  total,
   canEdit,
 }: {
   profileId: string
-  /** The course the counter belongs to — the page's own, which is also what the request carries. */
-  courseSlug: string
-  counter: CounterDefinition
+  counter: CounterField
+  total: number
   canEdit: boolean
 }) {
-  // The browser's year picks the window; the server's `today` (the *student's* date) is what the
-  // rest of the card uses, so only the New Year's-Eve edge between two time zones can disagree.
-  const { data, error } = useQuery(
-    counterQuery(profileId, courseSlug, counter.key, { from: `${new Date().getFullYear()}-01-01` }),
-  )
-
-  if (error) {
-    return (
-      <p className="sheet px-4 py-5 text-[0.875rem] text-ink-muted">{"Couldn't load the count."}</p>
-    )
-  }
-  if (!data) {
-    return (
-      <div className="sheet h-40 animate-pulse" aria-busy aria-label={`Loading ${counter.label}`} />
-    )
-  }
-
-  const recent = data.days.slice(0, RECENT_DAYS)
-
   return (
-    <div className="space-y-5">
-      <dl className="sheet grid grid-cols-2 divide-x divide-rule-soft">
-        <div className="px-4 py-4">
-          <dt className="label text-ink-muted">This year</dt>
-          <dd className="display mt-2 text-[1.75rem]">{formatCount(data.total)}</dd>
-        </div>
-        <div className="px-4 py-4">
-          <dt className="label text-ink-muted">All time</dt>
-          <dd className="display mt-2 text-[1.75rem]">{formatCount(data.lifetime)}</dd>
-        </div>
+    <div className="space-y-4">
+      <dl className="sheet px-4 py-4">
+        <dt className="label text-ink-muted">Total</dt>
+        <dd className="display mt-2 text-[1.75rem]">{formatCount(total)}</dd>
       </dl>
-
-      {canEdit && <LogForm profileId={profileId} counterKey={counter.key} today={data.today} />}
-
-      <div>
-        <p className="label text-ink-muted">Recent days</p>
-        {recent.length === 0 ? (
-          <p className="mt-3 text-[0.875rem] text-ink-muted">Nothing logged yet this year.</p>
-        ) : (
-          <ol className="sheet mt-3">
-            {recent.map(day => (
-              <DayRow
-                key={day.loggedOn}
-                profileId={profileId}
-                counterKey={counter.key}
-                day={day}
-                isToday={day.loggedOn === data.today}
-                canEdit={canEdit}
-              />
-            ))}
-          </ol>
-        )}
-      </div>
+      {canEdit && <AddForm profileId={profileId} counterKey={counter.key} />}
+      {canEdit && <SetTotal profileId={profileId} counterKey={counter.key} total={total} />}
     </div>
   )
 }
 
-/** Add to today — or to an earlier day, for a sitting that was forgotten. */
-function LogForm({
-  profileId,
-  counterKey,
-  today,
-}: {
-  profileId: string
-  counterKey: string
-  today: string
-}) {
-  const logging = useLogCounter(profileId, counterKey)
+/** Add to the count. */
+function AddForm({ profileId, counterKey }: { profileId: string; counterKey: string }) {
+  const adding = useAddToCounter(profileId, counterKey)
   const [count, setCount] = useState('')
-  const [day, setDay] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   function handleSubmit(e: React.FormEvent) {
@@ -116,15 +56,7 @@ function LogForm({
     }
 
     setError(null)
-    logging.mutate(
-      { count: parsed, ...(day && { loggedOn: day }) },
-      {
-        onSuccess: () => {
-          setCount('')
-          setDay('')
-        },
-      },
-    )
+    adding.mutate(parsed, { onSuccess: () => setCount('') })
   }
 
   return (
@@ -141,125 +73,92 @@ function LogForm({
             className={`${INPUT} mt-2 w-32`}
           />
         </label>
-        <label className="block">
-          <span className="label block text-ink-muted">Day</span>
-          <input
-            type="date"
-            value={day}
-            max={today}
-            onChange={e => setDay(e.target.value)}
-            className={`${INPUT} mt-2`}
-          />
-        </label>
         <button
           type="submit"
-          disabled={logging.isPending}
-          aria-busy={logging.isPending}
+          disabled={adding.isPending}
+          aria-busy={adding.isPending}
           className="label inline-flex items-center gap-2 bg-ink px-4 py-2.5 text-paper transition-opacity disabled:opacity-50"
         >
-          {logging.isPending && <Spinner />}
-          {logging.isPending ? 'Adding…' : 'Add'}
+          {adding.isPending && <Spinner />}
+          {adding.isPending ? 'Adding…' : 'Add'}
         </button>
       </div>
-      <p className="mt-2 text-[0.75rem] text-ink-muted">
-        {day ? `Adds to ${formatDay(day)}.` : 'Adds to today unless you pick another day.'}
-      </p>
       {error && <p className="mt-2 text-[0.8125rem] text-vermilion">{error}</p>}
     </form>
   )
 }
 
-/** One logged day, with — for someone who may edit — a way to correct its total. */
-function DayRow({
+/** Set the total outright — for a miscount, or a reset (0). */
+function SetTotal({
   profileId,
   counterKey,
-  day,
-  isToday,
-  canEdit,
+  total,
 }: {
   profileId: string
   counterKey: string
-  day: ApiCounterDay
-  isToday: boolean
-  canEdit: boolean
+  total: number
 }) {
-  const setting = useSetCounterDay(profileId, counterKey)
+  const setting = useUpdateCourseDetails(profileId)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(String(total))
+          setError(null)
+          setEditing(true)
+        }}
+        className="label text-ink-muted transition-colors hover:text-vermilion"
+      >
+        Set total
+      </button>
+    )
+  }
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
     const parsed = parseCount(draft)
     if (parsed === null) {
-      setError('Enter a whole number, or 0 to clear the day.')
+      setError('Enter a whole number, or 0 to reset.')
       return
     }
 
     setError(null)
-    setting.mutate(
-      { loggedOn: day.loggedOn, count: parsed },
-      { onSuccess: () => setEditing(false) },
-    )
+    setting.mutate({ [counterKey]: parsed }, { onSuccess: () => setEditing(false) })
   }
 
   return (
-    <li className="border-b border-rule-soft px-4 py-3 last:border-0">
-      {editing ? (
-        <form onSubmit={handleSave} className="flex flex-wrap items-center gap-3">
-          <span className="min-w-0 flex-1 font-mono text-[0.75rem] text-ink-muted">
-            {formatDay(day.loggedOn)}
-          </span>
-          <input
-            type="text"
-            inputMode="numeric"
-            autoFocus
-            aria-label={`Total for ${formatDay(day.loggedOn)}`}
-            value={draft}
-            onChange={e => setDraft(e.target.value.replace(/\D/g, ''))}
-            className={`${INPUT} w-28 py-1.5`}
-          />
-          <button
-            type="submit"
-            disabled={setting.isPending}
-            aria-busy={setting.isPending}
-            className="label inline-flex items-center gap-2 bg-ink px-3 py-1.5 text-paper disabled:opacity-50"
-          >
-            {setting.isPending && <Spinner />}
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            className="label border border-ink/25 px-3 py-1.5 text-ink"
-          >
-            Cancel
-          </button>
-          <p className="basis-full text-[0.75rem] text-ink-muted">0 clears the day.</p>
-          {error && <p className="basis-full text-[0.8125rem] text-vermilion">{error}</p>}
-        </form>
-      ) : (
-        <div className="flex items-center gap-4">
-          <span className="min-w-0 flex-1 font-mono text-[0.75rem] text-ink-muted">
-            {formatDay(day.loggedOn)}
-            {isToday && <span className="label ml-2 text-vermilion">Today</span>}
-          </span>
-          <span className="text-[0.9375rem] font-medium">{formatCount(day.count)}</span>
-          {canEdit && (
-            <button
-              type="button"
-              onClick={() => {
-                setDraft(String(day.count))
-                setError(null)
-                setEditing(true)
-              }}
-              className="label text-ink-muted transition-colors hover:text-vermilion"
-            >
-              Edit
-            </button>
-          )}
-        </div>
-      )}
-    </li>
+    <form onSubmit={handleSave} className="flex flex-wrap items-center gap-3">
+      <input
+        type="text"
+        inputMode="numeric"
+        autoFocus
+        aria-label="Total"
+        value={draft}
+        onChange={e => setDraft(e.target.value.replace(/\D/g, ''))}
+        className={`${INPUT} w-36 py-1.5`}
+      />
+      <button
+        type="submit"
+        disabled={setting.isPending}
+        aria-busy={setting.isPending}
+        className="label inline-flex items-center gap-2 bg-ink px-3 py-1.5 text-paper disabled:opacity-50"
+      >
+        {setting.isPending && <Spinner />}
+        Save
+      </button>
+      <button
+        type="button"
+        onClick={() => setEditing(false)}
+        className="label border border-ink/25 px-3 py-1.5 text-ink"
+      >
+        Cancel
+      </button>
+      {error && <p className="basis-full text-[0.8125rem] text-vermilion">{error}</p>}
+    </form>
   )
 }

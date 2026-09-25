@@ -17,24 +17,3 @@ export function parseCount(text: string): number | null {
   const trimmed = text.trim()
   return /^\d+$/.test(trimmed) ? Number(trimmed) : null
 }
-
-/** '2026-03-02' → "2 Mar 2026". Formats the date's own parts, never through a `Date`, so no time
- * zone can shift it by a day. */
-export function formatDay(date: string): string {
-  const [year, month, day] = date.split('-').map(Number)
-  const MONTHS = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]
-  return `${day} ${MONTHS[(month ?? 1) - 1]} ${year}`
-}

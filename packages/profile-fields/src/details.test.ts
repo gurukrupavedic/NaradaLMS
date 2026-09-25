@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import { assertValidDefinitions, mergeDetails, normalizeDetails, visibleFields } from './details'
-import { counterFieldFor, counterFieldsFor, profileFieldsFor } from './schools'
+import {
+  courseCounterFor,
+  courseCountersFor,
+  courseFieldsFor,
+  isCounter,
+  profileFieldsFor,
+  registrationFieldsFor,
+  splitDetails,
+} from './schools'
 import type { FieldDefinition } from './types'
 
 const ALL = { enforceRequiredFor: 'all' } as const
@@ -263,25 +271,74 @@ describe('assertValidDefinitions', () => {
   })
 })
 
-describe('counters', () => {
-  it("gives SLMTS's Vedam course a japam counter, and RR's course none", () => {
-    expect(counterFieldsFor('slmts', 'ved')).toEqual([{ key: 'japam', label: 'Japam' }])
-    expect(counterFieldsFor('rr', 'pur')).toEqual([])
+describe('the two levels', () => {
+  it('puts gothram at the school level and japam at the course level', () => {
+    expect(profileFieldsFor('slmts').map(f => f.key)).toEqual([
+      'gothram',
+      'married',
+      'gothramSpouse',
+      'gothramMother',
+    ])
+    expect(courseFieldsFor('slmts', 'ved')).toEqual([
+      { key: 'japam', label: 'Japam', type: 'counter' },
+    ])
   })
 
-  it('is declared per course: another course in the same school keeps none', () => {
-    expect(counterFieldsFor('slmts', 'some-other-course')).toEqual([])
+  it('gives a course or school with no entry nothing, including inherited object keys', () => {
+    expect(courseFieldsFor('rr', 'pur')).toEqual([])
+    expect(courseFieldsFor('slmts', 'other')).toEqual([])
+    expect(courseFieldsFor('nope', 'ved')).toEqual([])
+    expect(courseFieldsFor('constructor', 'ved')).toEqual([])
+    expect(courseFieldsFor('slmts', 'constructor')).toEqual([])
+    expect(profileFieldsFor('constructor')).toEqual([])
   })
 
-  it('finds one counter by key', () => {
-    expect(counterFieldFor('slmts', 'ved', 'japam')).toEqual({ key: 'japam', label: 'Japam' })
-    expect(counterFieldFor('slmts', 'ved', 'nope')).toBeUndefined()
-    expect(counterFieldFor('rr', 'pur', 'japam')).toBeUndefined()
+  it('asks a registration both levels, but never a counter', () => {
+    expect(registrationFieldsFor('slmts', 'ved').map(f => f.key)).toEqual([
+      'gothram',
+      'married',
+      'gothramSpouse',
+      'gothramMother',
+    ])
+    expect(registrationFieldsFor('rr', 'pur').map(f => f.key)).toEqual(['gothram'])
   })
 
-  it('gives an unknown school or course nothing, including inherited object keys', () => {
-    expect(counterFieldsFor('nope', 'ved')).toEqual([])
-    expect(counterFieldsFor('constructor', 'ved')).toEqual([])
-    expect(counterFieldsFor('slmts', 'constructor')).toEqual([])
+  it('finds this course’s counters by key', () => {
+    expect(courseCountersFor('slmts', 'ved').map(c => c.key)).toEqual(['japam'])
+    expect(courseCounterFor('slmts', 'ved', 'japam')).toMatchObject({ type: 'counter' })
+    expect(courseCounterFor('slmts', 'ved', 'gothram')).toBeUndefined()
+    expect(courseCounterFor('slmts', 'other', 'japam')).toBeUndefined()
+    expect(courseCounterFor('rr', 'pur', 'japam')).toBeUndefined()
+    expect(isCounter(courseFieldsFor('slmts', 'ved')[0]!)).toBe(true)
+    expect(isCounter(profileFieldsFor('rr')[0]!)).toBe(false)
+  })
+
+  it('sends each answer to the level that declares it', () => {
+    expect(
+      splitDetails('slmts', 'ved', { gothram: 'A', married: false, japam: 5, unknown: 'x' }),
+    ).toEqual({ profile: { gothram: 'A', married: false }, course: { japam: 5 } })
+  })
+})
+
+describe('the counter key type', () => {
+  const counter: FieldDefinition[] = [{ key: 'japam', label: 'Japam', type: 'counter' }]
+
+  it('holds a whole number, 0 or more', () => {
+    expect(normalizeDetails(counter, { japam: 0 }, ALL)).toEqual({
+      values: { japam: 0 },
+      errors: {},
+    })
+    expect(normalizeDetails(counter, { japam: 108 }, ALL).values).toEqual({ japam: 108 })
+    for (const japam of [-1, 1.5, '5', true]) {
+      expect(normalizeDetails(counter, { japam }, ALL).errors, String(japam)).toHaveProperty(
+        'japam',
+      )
+    }
+    expect(normalizeDetails(counter, { japam: 1_000_000_001 }, ALL).errors).toHaveProperty('japam')
+  })
+
+  it('can be set outright through an ordinary merge, and is left alone by one that does not name it', () => {
+    expect(mergeDetails(counter, { japam: 100 }, { japam: 40 }).values).toEqual({ japam: 40 })
+    expect(mergeDetails(counter, { japam: 100 }, {}).values).toEqual({ japam: 100 })
   })
 })

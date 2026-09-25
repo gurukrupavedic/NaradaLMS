@@ -46,4 +46,15 @@ export type SelectField = FieldBase & {
 /** Never "required" — an unticked box is a valid answer, so it is stored as `false`. */
 export type BooleanField = FieldBase & { type: 'boolean' }
 
-export type FieldDefinition = TextField | NumberField | SelectField | BooleanField
+/**
+ * A running total a student keeps (japam): a whole number ≥ 0 that starts at 0. Stored like any other
+ * value, but it is bumped with an atomic add (`POST …/course-details/counters/:key`) rather than
+ * typed into a form, so forms and registration never ask for it; setting it outright is an ordinary
+ * edit. It keeps no history — that is left to whatever collects data later.
+ */
+export type CounterField = FieldBase & { type: 'counter' }
+
+export type FieldDefinition = TextField | NumberField | SelectField | BooleanField | CounterField
+
+/** The largest a counter can be — far past anything a person counts; a typo guard, not a target. */
+export const COUNTER_MAX = 1_000_000_000

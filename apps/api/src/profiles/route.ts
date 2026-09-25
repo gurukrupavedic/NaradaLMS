@@ -4,6 +4,7 @@ import * as z from 'zod'
 import { optionalProfileRoute, userRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { findAllAccessible, findAllAccessibleWithDetail } from '../batches/service'
+import { findDetails as findCourseDetails } from '../courseDetails/repository'
 import { getDashboardData } from '../dashboard/service'
 import {
   CreateProfileSchema,
@@ -76,7 +77,10 @@ router.get(
     // being viewed) has to be part of the course the request names.
     await access.requireCanReadCourseContent(course.id)
     const dashboard = await getDashboardData({ db }, profile.id, profile.name, course.id)
-    res.status(200).json({ data: { profile, dashboard } })
+    // What this person has in *this* course (the course-level component); empty until something is
+    // written there — a student an admin put on a roster has no row yet.
+    const courseDetails = (await findCourseDetails(db, profile.id, course.id)) ?? {}
+    res.status(200).json({ data: { profile, courseDetails, dashboard } })
   }),
 )
 

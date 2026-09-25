@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, type SQL } from 'drizzle-orm'
 
-import { member, registration, user, uuidv7, type PublicDb, type SchoolDb } from '@narada/db'
+import { course, member, registration, user, uuidv7, type PublicDb, type SchoolDb } from '@narada/db'
 
 import { paginateResponse } from '../utils/cursor'
 import { keysetAfter } from '../utils/keyset'
@@ -185,4 +185,10 @@ export async function ensureSchoolMembership(
     role: 'member',
     createdAt: new Date(),
   })
+}
+
+/** The slug of the course a registration was filed for — the rules that apply to its answers are keyed by it. */
+export async function findCourseSlug(db: SchoolDb, courseId: string): Promise<string | undefined> {
+  const rows = await db.select({ slug: course.slug }).from(course).where(eq(course.id, courseId))
+  return rows.at(0)?.slug
 }

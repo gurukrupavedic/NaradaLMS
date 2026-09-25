@@ -45,6 +45,7 @@ export function draftFromDetails(
 export function detailsFromDraft(fields: readonly FieldDefinition[], draft: DetailDraft): Details {
   const answers: Details = {}
   for (const field of fields) {
+    if (field.type === 'counter') continue
     if (field.type === 'boolean') {
       answers[field.key] = draft[field.key] === true
       continue

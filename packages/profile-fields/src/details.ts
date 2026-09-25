@@ -1,4 +1,4 @@
-import type { Details, DetailValue, FieldDefinition } from './types'
+import { COUNTER_MAX, type Details, type DetailValue, type FieldDefinition } from './types'
 
 const DEFAULT_TEXT_MAX_LENGTH = 200
 
@@ -97,6 +97,12 @@ function coerce(field: FieldDefinition, raw: unknown): Coerced {
         return { error: `must be at most ${field.max}` }
       }
       return { value: raw }
+    }
+    case 'counter': {
+      if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 0) {
+        return { error: 'must be a whole number, 0 or more' }
+      }
+      return raw > COUNTER_MAX ? { error: `must be at most ${COUNTER_MAX}` } : { value: raw }
     }
     case 'select': {
       return field.options.some(option => option.value === raw)
