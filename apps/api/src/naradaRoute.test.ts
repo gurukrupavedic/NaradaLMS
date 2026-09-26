@@ -174,8 +174,8 @@ describe('userRoute', () => {
 
 // optionalProfileRoute shares resolveOptionalProfile with profileRoute's resolveProfile — the
 // only behavioral difference is what happens when X-Profile-Id is simply absent (undefined vs.
-// 400), so these tests focus on that difference; validation of a *present* header (ownership,
-// deactivation) is already covered by profileRoute's tests below since it's the same code path.
+// 400), so these tests focus on that difference; validation of a *present* header (ownership) is already covered
+// by profileRoute's tests below since it's the same code path.
 describe('optionalProfileRoute', () => {
   const findFirst = vi.fn()
 
@@ -197,7 +197,7 @@ describe('optionalProfileRoute', () => {
   })
 
   it('still resolves and validates a supplied profile, same as profileRoute', async () => {
-    findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1', deletedAt: null })
+    findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1' })
     const handler = vi.fn(async () => {})
 
     await optionalProfileRoute(handler)(makeRequest('known', 'profile-1'), res, next)
@@ -208,7 +208,7 @@ describe('optionalProfileRoute', () => {
   })
 
   it('still rejects a profile owned by another user with 403', async () => {
-    findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-2', deletedAt: null })
+    findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-2' })
     const handler = vi.fn(async () => {})
 
     await expect(
@@ -218,16 +218,6 @@ describe('optionalProfileRoute', () => {
     expect(handler).not.toHaveBeenCalled()
   })
 
-  it('still rejects a soft-deleted profile with 403', async () => {
-    findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1', deletedAt: new Date() })
-    const handler = vi.fn(async () => {})
-
-    await expect(
-      optionalProfileRoute(handler)(makeRequest('known', 'profile-1'), res, next),
-    ).rejects.toMatchObject({ statusCode: 403 })
-
-    expect(handler).not.toHaveBeenCalled()
-  })
 })
 
 // profileRoute applies the identical requireSchoolSlug -> session -> resolveSchool ordering
@@ -271,20 +261,8 @@ describe('profileRoute', () => {
       vi.mocked(AccessPolicy.load).mockResolvedValue({} as never)
     })
 
-    it('rejects a soft-deleted profile with 403', async () => {
-      findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1', deletedAt: new Date() })
-      const handler = vi.fn(async () => {})
-
-      await expect(
-        profileRoute(handler)(makeRequest('known', 'profile-1'), res, next),
-      ).rejects.toMatchObject({ statusCode: 403 })
-
-      expect(handler).not.toHaveBeenCalled()
-      expect(AccessPolicy.load).not.toHaveBeenCalled()
-    })
-
     it('passes an active profile through to the handler', async () => {
-      findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1', deletedAt: null })
+      findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1' })
       const handler = vi.fn(async () => {})
 
       await profileRoute(handler)(makeRequest('known', 'profile-1'), res, next)
@@ -297,7 +275,7 @@ describe('profileRoute', () => {
     })
 
     it('rejects a profile owned by another user with 403', async () => {
-      findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-2', deletedAt: null })
+      findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-2' })
       const handler = vi.fn(async () => {})
 
       await expect(

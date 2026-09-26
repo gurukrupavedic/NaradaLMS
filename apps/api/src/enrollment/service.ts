@@ -88,8 +88,7 @@ export async function enroll(
 /**
  * Puts a student's enrollment in this batch on a break: `apps/web`'s roster views only render
  * `'active'` members, so they drop off the mark book teachers see — but the
- * enrollment row itself survives (same "status transition, not delete" shape as a profile
- * deactivation — see `repository.ts::findQualifyingBatches`'s own doc comment), so their history
+ * enrollment row itself survives (a status transition, not a delete), so their history
  * stays intact and `enroll` above can reactivate them later (see its own doc comment) instead of
  * re-enrolling from scratch. 404 if no such enrollment exists.
  */

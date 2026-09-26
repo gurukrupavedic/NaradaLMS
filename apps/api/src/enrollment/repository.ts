@@ -1,6 +1,6 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 
-import { batch, enrollment, profile, type SchoolDb } from '@narada/db'
+import { batch, enrollment, type SchoolDb } from '@narada/db'
 
 import type { CreateEnrollmentData } from './schema'
 
@@ -12,11 +12,6 @@ const LEARNER_ROLES: Enrollment['role'][] = ['student', 'ta']
 
 // Every batch on `trackId` that `studentId` is enrolled in as a student — callers only need to
 // know whether there is one (`assertEnrolledInTrack`).
-//
-// Requires the target student's own profile to still be active: profile
-// deactivation deliberately leaves `enrollment` rows untouched so historical queries keep
-// working, which means a deactivated student's stale enrollment would otherwise still "qualify"
-// them for a brand-new exam/evaluation.
 export async function findQualifyingBatches(
   db: SchoolDb,
   studentId: string,
@@ -26,13 +21,11 @@ export async function findQualifyingBatches(
     .select({ batchId: enrollment.batchId })
     .from(enrollment)
     .innerJoin(batch, eq(enrollment.batchId, batch.id))
-    .innerJoin(profile, eq(enrollment.profileId, profile.id))
     .where(
       and(
         eq(enrollment.profileId, studentId),
         inArray(enrollment.role, LEARNER_ROLES),
         eq(batch.trackId, trackId),
-        isNull(profile.deletedAt),
       ),
     )
 }

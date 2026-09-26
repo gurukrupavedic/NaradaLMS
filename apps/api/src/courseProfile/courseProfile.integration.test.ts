@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { courseProfile, profile } from '@narada/db'
+import { courseProfile } from '@narada/db'
 
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
@@ -336,21 +336,5 @@ describe('who may write', () => {
     await updateCourseProfile(as(s, stranger, true), p.id, { details: { japam: 20 } })
 
     expect(await detailsOf(s, p.id)).toEqual({ japam: 20 })
-  })
-
-  it('will not write for a deactivated profile', async () => {
-    const s = await seed()
-    world = s.w
-    const p = await createProfile(s.w, { userId: owner.id })
-    await s.w.schoolDb.update(profile).set({ deletedAt: new Date() })
-
-    await expect(addToCounter(as(s, owner), p.id, 'japam', 1)).rejects.toMatchObject({
-      statusCode: 404,
-    })
-    await expect(
-      updateCourseProfile(as(s, stranger, true), p.id, { details: { japam: 1 } }),
-    ).rejects.toMatchObject({
-      statusCode: 404,
-    })
   })
 })

@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 
 import { courseProfile, profile, type SchoolDb } from '@narada/db'
 
@@ -6,9 +6,8 @@ import type { CourseProfile } from './schema'
 
 /**
  * The profile, if it's one the caller may write to. `ownerUserId` is `null` for a school admin (any
- * active profile) and the caller's own user id otherwise, so someone else's profile matches nothing —
- * the same ownership predicate `profiles/repository.ts::update` uses. A deactivated profile matches
- * nothing either: an edit can't revive one.
+ * profile) and the caller's own user id otherwise, so someone else's profile matches nothing —
+ * the same ownership predicate `profiles/repository.ts::update` uses.
  */
 export async function findWritableProfile(
   db: SchoolDb,
@@ -19,11 +18,7 @@ export async function findWritableProfile(
     .select({ id: profile.id })
     .from(profile)
     .where(
-      and(
-        eq(profile.id, profileId),
-        isNull(profile.deletedAt),
-        ownerUserId ? eq(profile.userId, ownerUserId) : undefined,
-      ),
+      and(eq(profile.id, profileId), ownerUserId ? eq(profile.userId, ownerUserId) : undefined),
     )
   return rows.at(0)
 }

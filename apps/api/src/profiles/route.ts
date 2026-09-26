@@ -8,7 +8,7 @@ import { find as findCourseProfile } from '../courseProfile/repository'
 import { EMPTY_COURSE_PROFILE } from '../courseProfile/schema'
 import { getDashboardData } from '../dashboard/service'
 import { ProfileBatchesQuerySchema, SearchProfilesQuerySchema, UpdateProfileSchema } from './schema'
-import { deleteProfile, findById, findByUserId, searchProfiles, updateProfile } from './service'
+import { findById, findByUserId, searchProfiles, updateProfile } from './service'
 
 const router = Router()
 
@@ -86,17 +86,6 @@ router.patch(
     const data = await parse(UpdateProfileSchema, req.body)
     const profile = await updateProfile({ db, school, user, access }, profileId, data)
     res.status(200).json({ data: profile })
-  }),
-)
-
-// Same split as the PATCH above, in one route: `service.ts::deleteProfile` deactivates the
-// caller's own profile, or (school admin) anyone else's.
-router.delete(
-  '/:profileId',
-  optionalProfileRoute(async ({ req, res, db, school, user, access }) => {
-    const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
-    await deleteProfile({ db, school, user, access }, profileId)
-    res.status(204).send()
   }),
 )
 
