@@ -234,10 +234,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setMenuOpen(o => !o)}
-              className="label text-ink-muted md:hidden"
+              className="label relative text-ink-muted md:hidden"
               aria-expanded={menuOpen}
             >
-              {menuOpen ? 'Close' : 'Menu'}
+              {/* Sized to the wider of the two words so toggling the label doesn't change
+                  the button's width and shift the rest of this right-aligned group. */}
+              <span aria-hidden className="invisible">
+                Close
+              </span>
+              <span className="absolute inset-0">{menuOpen ? 'Close' : 'Menu'}</span>
             </button>
           </div>
         </div>
