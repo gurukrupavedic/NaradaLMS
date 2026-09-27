@@ -81,7 +81,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
         headline={profile.name}
         meta={[profile.phone, profile.city].filter(Boolean).join(' · ') || 'No contact details on file'}
         stats={[
-          { value: String(dashboard.memberships.length), label: 'Batches' },
+          { value: String(dashboard.teaching.length), label: 'Teaching' },
           { value: `${certifiedCount}/${certifications.length}`, label: 'Certified' },
         ]}
         action={
