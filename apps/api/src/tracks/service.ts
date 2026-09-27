@@ -26,12 +26,11 @@ export async function findById(
 
 /**
  * Full reorder of a track's active (non-archived) chapters — the admin UI's ▲/▼ move sends the
- * whole post-move ordered id list, not a single swap (mirrors `resegmentChapter`'s "every script
- * together" shape for the same reason: a partial reorder can't safely know how the rest should
- * shift). `chapterIds` must be exactly the track's current active set — not a subset (a chapter
- * left out would keep a stale `order` no longer consistent with its siblings') and not a superset
- * (an id that isn't active, e.g. archived or belonging to another track). Mismatch → 422 naming
- * which ids are missing/unexpected, same style as `resegmentChapter`.
+ * whole post-move ordered id list, not a single swap (a partial reorder can't safely know how the
+ * rest should shift). `chapterIds` must be exactly the track's current active set — not a subset
+ * (a chapter left out would keep a stale `order` no longer consistent with its siblings') and not
+ * a superset (an id that isn't active, e.g. archived or belonging to another track). Mismatch →
+ * 422 naming which ids are missing/unexpected.
  */
 export async function reorderChapters(
   context: TrackServiceContext,
