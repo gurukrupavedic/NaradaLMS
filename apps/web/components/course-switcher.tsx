@@ -34,12 +34,12 @@ export function CourseSwitcher() {
   const mark = <span className="label text-ink-muted transition-colors group-hover:text-ink">{current.name}</span>
 
   if (others.length === 0) {
-    return <span className="border-l border-rule pl-4">{mark}</span>
+    return <span className="sm:border-l sm:border-rule sm:pl-4">{mark}</span>
   }
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="group flex items-center gap-1.5 border-l border-rule pl-4 outline-none">
+      <DropdownMenuTrigger className="group flex items-center gap-1.5 outline-none sm:border-l sm:border-rule sm:pl-4">
         {mark}
         <ChevronDown
           aria-hidden

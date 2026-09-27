@@ -129,9 +129,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 border-b border-rule bg-paper/92 backdrop-blur-[2px]">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-8 px-5">
-          <Wordmark />
-          <CourseSwitcher />
+        <div className="mx-auto flex h-auto min-h-14 max-w-5xl items-center gap-8 px-5 py-2.5 sm:h-14 sm:py-0">
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-8">
+            <Wordmark />
+            <CourseSwitcher />
+          </div>
 
           <nav className="hidden flex-1 items-center gap-7 md:flex" aria-label="Primary">
             {nav.map(item => {
