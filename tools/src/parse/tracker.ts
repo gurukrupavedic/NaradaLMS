@@ -1,7 +1,10 @@
 import type { BatchRow, EnrollmentRow, EvaluationRow, ProfileRow, TrackRow } from '../seed-types'
 import { clean, columns, rowNumber, stableId, type Ctx, type Sheet } from './sheet'
 
-const GURU_COLUMNS = ['GURUVU GARU 1', 'GURUVU GARU 2', 'GURUVU GARU 3', 'GURUVU GARU 4']
+// Each holds a guru's PRIMARY KEY (despite "PHONE" in the header); the first is the batch's instructor.
+const GURU_COLUMNS = ['GURUVU GARU 1 PHONE', 'GURUVU GARU 2 PHONE', 'TA 1 PHONE', 'TA 2 PHONE']
+// Excel error values that a lookup formula leaves in an empty guru cell.
+const EMPTY_CELL = /^#N\/A$/i
 const ROLE_RANK = { instructor: 3, ta: 2, student: 1 } as const
 
 // The sheet's own scale: 1-4 are levels 1-4, -1 is L0 (taught, not yet graded) and -2 is absent. Zero
@@ -110,7 +113,7 @@ export function parseTracker(
     const gurus: ProfileRow[] = []
     GURU_COLUMNS.forEach((column, g) => {
       const guruKey = clean(row[col.index(column)])
-      if (!guruKey) return
+      if (!guruKey || EMPTY_CELL.test(guruKey)) return
       const byColumn = gurusByBatch.get(batchCode) ?? new Map<string, Set<string>>()
       byColumn.set(column, (byColumn.get(column) ?? new Set<string>()).add(guruKey))
       gurusByBatch.set(batchCode, byColumn)
@@ -125,7 +128,7 @@ export function parseTracker(
       enroll(guruKey, batchCode, { profileId: guru.id, batchId: batch.id, role: g === 0 ? 'instructor' : 'ta', status: 'active', joinedAt })
     })
 
-    // Whoever grades a student is the batch's first guru — what GURUVU GARU 1 has always meant.
+    // Whoever grades a student is the batch's first guru — what GURUVU GARU 1 PHONE has always meant.
     if (!gurus.length) return block(where, "no GURUVU GARU column names anyone, so the student's grades and exams have no evaluator")
     const evaluatorId = gurus[0].id
     seats.set(key, { batchId: batch.id, evaluatorId })
