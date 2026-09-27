@@ -221,10 +221,13 @@ export function buildCertificationRows(dashboard: ApiDashboard): CertificationRo
       const result = resultByTrackId.get(track.id)
       return {
         track: track.name,
+        trackId: track.id,
         level: result?.level ? narrowLevel(result.level) : 'notStarted',
         outcome: result?.outcome ?? null,
         total: result?.total ?? null,
         awardedAt: result?.evaluatedAt ?? null,
+        result: result ?? null,
+        scheduledAt: result?.scheduledAt ?? null,
       }
     })
 }

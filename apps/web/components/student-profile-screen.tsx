@@ -16,6 +16,7 @@ import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
 import { MoveBatchDrawer } from '@/components/admin/move-batch-drawer'
 import { EditProfileDialog } from '@/components/edit-profile-dialog'
+import { RecordExamResultDialog } from '@/components/admin/record-exam-result-dialog'
 import { profileDetailQuery } from '@/lib/query/options'
 import { buildCertificationRows, buildLearningTracks } from '@/lib/api/reshape'
 import { isCertified } from '@/lib/proficiency'
@@ -27,7 +28,28 @@ import { useSchoolSlug } from '@/lib/school'
 import { formatLocation } from '@/lib/geo'
 import { formatTimeZone } from '@/lib/timezone'
 import type { ApiProfile } from '@/lib/api/api-types'
+import type { AdminSittingRow } from '@/lib/api/resources'
+import type { CertificationRow } from '@/lib/models/dashboard'
 import { pluralize } from '@/lib/pluralize'
+
+// `CertificationRow` carries the raw graded result and the exam's scheduled date precisely so this
+// can be built without a second fetch — `RecordExamResultDialog` (components/admin/record-exam-
+// result-dialog.tsx) only otherwise sees a sitting shaped this way from the admin exams screen's
+// own `AdminSittingRow` list. `status: 'completed'` is synthetic (this row has a result, so the
+// real exam is certainly completed) — the form never reads it.
+function toSittingRow(row: CertificationRow, profile: ApiProfile): AdminSittingRow | null {
+  if (!row.result || !row.scheduledAt) return null
+  return {
+    id: row.result.examId,
+    studentId: profile.id,
+    studentName: profile.name,
+    trackId: row.trackId,
+    track: row.track,
+    when: row.scheduledAt,
+    status: 'completed',
+    result: row.result,
+  }
+}
 
 const AGREEMENT_LABELS: { key: keyof ApiProfile; label: string }[] = [
   { key: 'dressCodeAgreed', label: 'Dress code' },
@@ -50,6 +72,8 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const isSelf = useSelectedProfileId() === profileId
   const [moveOpen, setMoveOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [resultTarget, setResultTarget] = useState<AdminSittingRow | null>(null)
+  const [resultOpen, setResultOpen] = useState(false)
   const canEdit = isSelf || isAdmin
   const updating = useUpdateProfile(profileId, isSelf)
   const schoolSlug = useSchoolSlug() ?? ''
@@ -236,7 +260,20 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
         {certifications.length > 0 && (
           <Reveal delay={120}>
             <Section title="Certification record" count={`${certifiedCount}/${pluralize(certifications.length, 'track')}`}>
-              <CertificationRecord rows={certifications} />
+              <CertificationRecord
+                rows={certifications}
+                onEdit={
+                  isAdmin
+                    ? row => {
+                        const sitting = toSittingRow(row, profile)
+                        if (sitting) {
+                          setResultTarget(sitting)
+                          setResultOpen(true)
+                        }
+                      }
+                    : undefined
+                }
+              />
             </Section>
           </Reveal>
         )}
@@ -287,6 +324,10 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           updating={updating}
           isSelf={isSelf}
         />
+      )}
+
+      {isAdmin && (
+        <RecordExamResultDialog open={resultOpen} onOpenChange={setResultOpen} sitting={resultTarget} />
       )}
     </>
   )

@@ -187,7 +187,7 @@ export async function findResultsForStudent(
   courseId: string,
 ): Promise<StudentExamResult[]> {
   const rows = await db
-    .select({ ...getTableColumns(examResult), trackId: exam.trackId })
+    .select({ ...getTableColumns(examResult), trackId: exam.trackId, scheduledAt: exam.scheduledAt })
     .from(examResult)
     .innerJoin(exam, eq(exam.id, examResult.examId))
     .where(

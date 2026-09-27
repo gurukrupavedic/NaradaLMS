@@ -111,9 +111,11 @@ export const ExamResultSchema = z.object({
   evaluatedAt: isoInstant,
 })
 
-// A result plus the track it was sat on — the dashboard's flat, all-tracks history has no
-// surrounding exam to say which track a result belongs to.
-export type StudentExamResult = ExamResult & { trackId: string }
+// A result plus the track it was sat on and the sitting's own scheduled date — the dashboard's
+// flat, all-tracks history has no surrounding exam to say which track a result belongs to, and
+// `scheduledAt` is what apps/web needs to recompute the children's bonus when an admin corrects a
+// result from outside the admin exams screen (which fetches `ApiExam` rows, not results).
+export type StudentExamResult = ExamResult & { trackId: string; scheduledAt: Date }
 
 // Enough to render an exam on its own — a bare Exam row has only `trackId`, no track name or
 // result. `result` is null until the sitting is completed.
