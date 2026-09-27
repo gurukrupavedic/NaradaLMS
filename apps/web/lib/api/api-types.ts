@@ -229,10 +229,13 @@ export type ApiExam = {
   student: { id: string; name: string }
 }
 
-// One entry of the dashboard's `examResults` — a graded sitting, with the track it was on (the
-// dashboard's list is flat across tracks). Full history like ApiEvaluation, newest first; a
-// track's certification is the latest of these for it.
-export type ApiStudentExamResult = ApiExamResult & { trackId: string }
+// One entry of the dashboard's `examResults` — a graded sitting, with the track it was on and the
+// exam's own scheduled date (the dashboard's list is flat across tracks, and a bare result has no
+// surrounding exam to read either off of). Full history like ApiEvaluation, newest first; a
+// track's certification is the latest of these for it. `scheduledAt` exists here so an admin can
+// correct a result from the student's profile page (student-profile-screen.tsx) without a second
+// fetch of the exam itself — it's what record-exam-result-dialog.tsx needs for its bonus preview.
+export type ApiStudentExamResult = ApiExamResult & { trackId: string; scheduledAt: string }
 
 // GET/POST /v1/exam-slots — a school-admin-opened, single-seat appointment to sit a track's
 // certification exam. Independent of `ApiExam`: booking one only creates a real `ApiExam` row once

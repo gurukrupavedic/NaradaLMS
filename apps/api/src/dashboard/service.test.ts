@@ -252,6 +252,7 @@ describe('getDashboardData', () => {
       {
         examId: 'exam-0',
         trackId: 'track-1',
+        scheduledAt: new Date(),
         aksharaShuddhi: 45,
         swaraShuddhi: 27,
         niyantranaAnargalata: 18,

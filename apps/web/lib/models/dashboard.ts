@@ -34,13 +34,19 @@ export type TeachingBatch = {
 
 // A track's standing, read off its latest graded exam. `level` is `notStarted` both for a track
 // never sat and for a `reappear` (which grants no level) — `outcome` is what tells the two apart:
-// null means never sat.
+// null means never sat. `result`/`scheduledAt` mirror the raw graded sitting (null until one
+// exists) — carried through so a school admin can correct it right from this row
+// (student-profile-screen.tsx) with the same record-exam-result-dialog.tsx the admin exams screen
+// uses, instead of duplicating a form that already exists.
 export type CertificationRow = {
   track: string
+  trackId: string
   level: ProficiencyLevel
   outcome: ApiExamOutcome | null
   total: number | null
   awardedAt: string | null
+  result: ApiExamResult | null
+  scheduledAt: string | null
 }
 
 // One track exam sitting. `result` is null while it's still booked.

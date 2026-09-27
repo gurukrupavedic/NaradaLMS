@@ -13,8 +13,18 @@ import type { CertificationRow } from '@/lib/models/dashboard'
  * reappear is shown as exactly that). It is the page a student
  * screenshots and sends to their family, so it is worth letting it look like
  * something issued.
+ *
+ * `onEdit`, when given, adds a school-admin-only "Edit score" control to every graded row — this
+ * is the same view a student sees of their own record, so a row with nothing sat yet never gets
+ * one, and the plain student/teacher view (components/exams-screen.tsx) simply never passes it.
  */
-export function CertificationRecord({ rows }: { rows: CertificationRow[] }) {
+export function CertificationRecord({
+  rows,
+  onEdit,
+}: {
+  rows: CertificationRow[]
+  onEdit?: (row: CertificationRow) => void
+}) {
   return (
     <ol className="sheet">
       {rows.map(row => {
@@ -55,6 +65,16 @@ export function CertificationRecord({ rows }: { rows: CertificationRow[] }) {
             <span className="hidden w-24 shrink-0 text-right font-mono text-[0.6875rem] text-ink-muted/80 sm:block">
               <Timestamp value={row.awardedAt} />
             </span>
+
+            {sat && onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(row)}
+                className="label shrink-0 text-ink-muted transition-colors hover:text-vermilion"
+              >
+                Edit score
+              </button>
+            )}
 
             <Pill level={row.level} size="lg" className="shrink-0" />
           </li>
