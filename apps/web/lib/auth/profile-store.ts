@@ -23,6 +23,15 @@ import { authProfileQuery } from '@/lib/query/options'
  * no use for it.
  */
 
+/**
+ * Stands in for "signed in with no profile of my own" — a super-admin reaches every school without
+ * holding a profile in it. `proxy.ts` gates on the profile cookie being present, so it needs a
+ * value; the nil UUID keeps `/profiles/:profileId/...` paths parseable, and is never sent as
+ * `X-Profile-Id` (see `lib/api/client.ts`). apps/api reads the nil target from a profile-less
+ * admin as "school-wide" (`AccessPolicy#getProfileBatchListScope`).
+ */
+export const NO_PROFILE_ID = '00000000-0000-0000-0000-000000000000'
+
 const PROFILE_ID_COOKIE = 'narada-profile-id'
 const PROFILE_NAME_KEY = 'narada-profile-name'
 
