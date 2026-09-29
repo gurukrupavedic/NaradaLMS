@@ -4,9 +4,9 @@ import {
   batch,
   batchClassSlot,
   chapter,
-  chapterScript,
-  chapterScriptSegment,
   course,
+  docChapter,
+  docChapterUpload,
   enrollment,
   enrollmentRequest,
   evaluation,
@@ -23,6 +23,7 @@ import {
   registration,
   schoolSchemaName,
   segment,
+  segmentText,
   session,
   track,
   user,
@@ -39,9 +40,10 @@ export type ProfileRow = typeof profile.$inferSelect
 export type CourseRow = typeof course.$inferSelect
 export type TrackRow = typeof track.$inferSelect
 export type ChapterRow = typeof chapter.$inferSelect
-export type ChapterScriptRow = typeof chapterScript.$inferSelect
+export type DocChapterUploadRow = typeof docChapterUpload.$inferSelect
+export type DocChapterRow = typeof docChapter.$inferSelect
 export type SegmentRow = typeof segment.$inferSelect
-export type ChapterScriptSegmentRow = typeof chapterScriptSegment.$inferSelect
+export type SegmentTextRow = typeof segmentText.$inferSelect
 export type AudioAssetRow = typeof audioAsset.$inferSelect
 export type AudioMappingRow = typeof audioMapping.$inferSelect
 export type BatchRow = typeof batch.$inferSelect
@@ -316,39 +318,43 @@ export async function createChapter(
   return row
 }
 
-let scriptOrderCounter = 0
-function nextScriptOrder(): number {
-  scriptOrderCounter += 1
-  return scriptOrderCounter
-}
-
-export async function createChapterScript(
+export async function createDocChapterUpload(
   world: TestWorld,
-  chapter_: ChapterRow,
-  overrides?: {
-    script?: ChapterScriptRow['script']
-    label?: string
-    shortLabel?: string
-    fontClass?: string
-    text?: string
-    order?: number
-  },
-): Promise<ChapterScriptRow> {
+  overrides?: { course?: CourseRow; saObjectKey?: string; teObjectKey?: string; enObjectKey?: string },
+): Promise<DocChapterUploadRow> {
+  const courseId = overrides?.course?.id ?? (await defaultCourse(world)).id
   const rows = await world.schoolDb
-    .insert(chapterScript)
+    .insert(docChapterUpload)
     .values({
-      chapterId: chapter_.id,
-      script: overrides?.script ?? 'sa',
-      label: overrides?.label ?? 'Devanagari',
-      shortLabel: overrides?.shortLabel ?? 'SA',
-      fontClass: overrides?.fontClass ?? 'font-deva',
-      text: overrides?.text ?? `Text ${nextUnique()}`,
-      order: overrides?.order ?? nextScriptOrder(),
+      courseId,
+      saObjectKey: overrides?.saObjectKey ?? `schools/test/uploads/${nextUnique()}/sanskrit.docx`,
+      teObjectKey: overrides?.teObjectKey ?? `schools/test/uploads/${nextUnique()}/telugu.docx`,
+      enObjectKey: overrides?.enObjectKey ?? `schools/test/uploads/${nextUnique()}/english.docx`,
     })
     .returning()
 
   const row = rows.at(0)
-  if (!row) throw new Error('createChapterScript: insert returned no row')
+  if (!row) throw new Error('createDocChapterUpload: insert returned no row')
+  return row
+}
+
+export async function createDocChapter(
+  world: TestWorld,
+  overrides?: { course?: CourseRow; title?: string; track?: string; sourceUpload?: DocChapterUploadRow },
+): Promise<DocChapterRow> {
+  const courseId = overrides?.course?.id ?? (await defaultCourse(world)).id
+  const rows = await world.schoolDb
+    .insert(docChapter)
+    .values({
+      courseId,
+      title: overrides?.title ?? `Doc Chapter ${nextUnique()}`,
+      track: overrides?.track ?? 'TRACK 1',
+      sourceUploadId: overrides?.sourceUpload?.id,
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createDocChapter: insert returned no row')
   return row
 }
 
@@ -358,16 +364,19 @@ function nextSegmentOrder(): number {
   return segmentOrderCounter
 }
 
+/** `chapter_` omitted leaves the segment unassigned (`chapterId: null`) — a fresh doc-chapter segment before anyone has assigned it to a course chapter. */
 export async function createSegment(
   world: TestWorld,
-  chapter_: ChapterRow,
-  overrides?: { order?: number },
+  docChapter_: DocChapterRow,
+  overrides?: { order?: number; chapter?: ChapterRow; flaggedForReview?: boolean },
 ): Promise<SegmentRow> {
   const rows = await world.schoolDb
     .insert(segment)
     .values({
-      chapterId: chapter_.id,
+      docChapterId: docChapter_.id,
+      chapterId: overrides?.chapter?.id,
       order: overrides?.order ?? nextSegmentOrder(),
+      flaggedForReview: overrides?.flaggedForReview ?? false,
     })
     .returning()
 
@@ -376,25 +385,23 @@ export async function createSegment(
   return row
 }
 
-/** One script's own offsets (`start`/`end`) into its own text, for a segment shared across scripts. */
-export async function createChapterScriptSegment(
+/** One script's own text for a segment shared across scripts by id. */
+export async function createSegmentText(
   world: TestWorld,
-  chapterScript_: ChapterScriptRow,
   segment_: SegmentRow,
-  overrides: { start: number; end: number },
-): Promise<ChapterScriptSegmentRow> {
+  overrides: { script: SegmentTextRow['script']; text: string },
+): Promise<SegmentTextRow> {
   const rows = await world.schoolDb
-    .insert(chapterScriptSegment)
+    .insert(segmentText)
     .values({
-      chapterScriptId: chapterScript_.id,
       segmentId: segment_.id,
-      start: overrides.start,
-      end: overrides.end,
+      script: overrides.script,
+      text: overrides.text,
     })
     .returning()
 
   const row = rows.at(0)
-  if (!row) throw new Error('createChapterScriptSegment: insert returned no row')
+  if (!row) throw new Error('createSegmentText: insert returned no row')
   return row
 }
 

@@ -263,64 +263,90 @@ export const chapter = pgTable(
   ],
 )
 
-// A chapter's recitation, written out in parallel scripts (Devanagari, Telugu, transliteration —
-// same recitation, different readers). Segments (below) are shared across a chapter's scripts by
-// id; this table only holds each script's own text and label, not offsets into it.
-export const chapterScript = pgTable(
-  'chapterScript',
+// One upload of the three parallel-script source documents for a course — kept as an audit trail
+// (which docx produced which doc chapters), not read on any hot path.
+export const docChapterUpload = pgTable(
+  'docChapterUpload',
   {
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    chapterId: uuid('chapterId')
+    courseId: uuid('courseId')
       .notNull()
-      .references(() => chapter.id, { onDelete: 'cascade' }),
-    script: script('script').notNull(),
-    label: text('label').notNull(),
-    shortLabel: text('shortLabel').notNull(),
-    fontClass: text('fontClass').notNull(),
-    text: text('text').notNull(),
-    order: integer('order').notNull(),
+      .references(() => course.id, { onDelete: 'cascade' }),
+    uploadedByProfileId: uuid('uploadedByProfileId').references(() => profile.id),
+    saObjectKey: text('saObjectKey').notNull(),
+    teObjectKey: text('teObjectKey').notNull(),
+    enObjectKey: text('enObjectKey').notNull(),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [index('docChapterUpload_courseId_idx').on(table.courseId)],
+)
+
+// One parsed heading from the source documents — the unit cleanup and course-chapter assignment
+// operate on. Deliberately not tied 1:1 to a real `chapter`: a heading may cover several chapters
+// (a long stotra split into numbered parts) or none at all (front matter, an appendix) — see
+// `segment.chapterId` below, which is where that assignment actually happens, per segment.
+export const docChapter = pgTable(
+  'docChapter',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    courseId: uuid('courseId')
+      .notNull()
+      .references(() => course.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    // Descriptive label copied from the doc ("TRACK 4") — not a FK. A doc's heading structure
+    // doesn't necessarily line up with this course's real `track` rows.
+    track: text('track').notNull(),
+    sourceUploadId: uuid('sourceUploadId').references(() => docChapterUpload.id),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
   },
   table => [
-    index('chapterScript_chapterId_idx').on(table.chapterId),
-    uniqueIndex('chapterScript_chapterId_script_uidx').on(table.chapterId, table.script),
+    index('docChapter_courseId_idx').on(table.courseId),
+    // Re-uploading the source docs upserts by this key, so a heading a course chapter is already
+    // assigned from isn't duplicated by a later upload.
+    uniqueIndex('docChapter_courseId_title_uidx').on(table.courseId, table.title),
   ],
 )
 
-// One logical line of a chapter's recitation — the identity a chapter's several scripts share, so
-// one `audioMapping` row stays valid no matter which script is on screen. Carries no offsets of
-// its own: `chapterScriptSegment` gives each script its own slice into its own text for the same
-// segment, since a Devanagari line and its Telugu/transliteration equivalent aren't the same
-// length.
+// One logical line of a doc chapter's recitation — always belongs to the doc chapter it was parsed
+// from (`docChapterId`), and belongs to a real course `chapter` only once an admin has assigned it
+// there (`chapterId`, nullable). One `audioMapping` row stays valid no matter which script is on
+// screen; `segmentText` (below) gives each script its own text for the same segment, since a
+// Devanagari line and its Telugu/transliteration equivalent aren't the same length and are never
+// stored as offsets into a shared blob — merging, splitting or deleting a segment is a plain row
+// operation, never an offset recalculation.
 export const segment = pgTable(
   'segment',
   {
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    chapterId: uuid('chapterId')
+    docChapterId: uuid('docChapterId')
       .notNull()
-      .references(() => chapter.id, { onDelete: 'cascade' }),
+      .references(() => docChapter.id, { onDelete: 'cascade' }),
+    chapterId: uuid('chapterId').references(() => chapter.id, { onDelete: 'cascade' }),
     order: integer('order').notNull(),
+    // Set on a low-confidence cross-script alignment at import time, or on a segment just created
+    // by a split (whose non-active-script text isn't re-aligned yet) — a hint for the cleanup UI,
+    // not a gate anything else in the API enforces.
+    flaggedForReview: boolean('flaggedForReview').notNull().default(false),
   },
   table => [
+    index('segment_docChapterId_idx').on(table.docChapterId),
     index('segment_chapterId_idx').on(table.chapterId),
-    uniqueIndex('segment_chapterId_order_uidx').on(table.chapterId, table.order),
+    uniqueIndex('segment_docChapterId_order_uidx').on(table.docChapterId, table.order),
   ],
 )
 
-export const chapterScriptSegment = pgTable(
-  'chapterScriptSegment',
+export const segmentText = pgTable(
+  'segmentText',
   {
-    chapterScriptId: uuid('chapterScriptId')
-      .notNull()
-      .references(() => chapterScript.id, { onDelete: 'cascade' }),
     segmentId: uuid('segmentId')
       .notNull()
       .references(() => segment.id, { onDelete: 'cascade' }),
-    start: integer('start').notNull(),
-    end: integer('end').notNull(),
+    script: script('script').notNull(),
+    text: text('text').notNull(),
   },
   table => [
-    primaryKey({ columns: [table.chapterScriptId, table.segmentId] }),
-    check('chapterScriptSegment_bounds_valid', sql`${table.start} < ${table.end}`),
+    primaryKey({ columns: [table.segmentId, table.script] }),
+    check('segmentText_text_nonempty', sql`length(trim(${table.text})) > 0`),
   ],
 )
 

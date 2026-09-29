@@ -5,9 +5,10 @@ import {
   course,
   track,
   chapter,
-  chapterScript,
+  docChapterUpload,
+  docChapter,
   segment,
-  chapterScriptSegment,
+  segmentText,
   audioAsset,
   audioMapping,
   batch,
@@ -79,28 +80,31 @@ export const trackRelations = relations(track, ({ one, many }) => ({
 export const chapterRelations = relations(chapter, ({ one, many }) => ({
   track: one(track, { fields: [chapter.trackId], references: [track.id] }),
   evaluations: many(evaluation),
-  scripts: many(chapterScript),
   segments: many(segment),
   audioAssets: many(audioAsset),
 }))
 
-export const chapterScriptRelations = relations(chapterScript, ({ one, many }) => ({
-  chapter: one(chapter, { fields: [chapterScript.chapterId], references: [chapter.id] }),
-  scriptSegments: many(chapterScriptSegment),
+export const docChapterUploadRelations = relations(docChapterUpload, ({ one, many }) => ({
+  course: one(course, { fields: [docChapterUpload.courseId], references: [course.id] }),
+  uploadedByProfile: one(profile, { fields: [docChapterUpload.uploadedByProfileId], references: [profile.id] }),
+  docChapters: many(docChapter),
+}))
+
+export const docChapterRelations = relations(docChapter, ({ one, many }) => ({
+  course: one(course, { fields: [docChapter.courseId], references: [course.id] }),
+  sourceUpload: one(docChapterUpload, { fields: [docChapter.sourceUploadId], references: [docChapterUpload.id] }),
+  segments: many(segment),
 }))
 
 export const segmentRelations = relations(segment, ({ one, many }) => ({
+  docChapter: one(docChapter, { fields: [segment.docChapterId], references: [docChapter.id] }),
   chapter: one(chapter, { fields: [segment.chapterId], references: [chapter.id] }),
-  scriptSegments: many(chapterScriptSegment),
+  segmentTexts: many(segmentText),
   audioMappings: many(audioMapping),
 }))
 
-export const chapterScriptSegmentRelations = relations(chapterScriptSegment, ({ one }) => ({
-  chapterScript: one(chapterScript, {
-    fields: [chapterScriptSegment.chapterScriptId],
-    references: [chapterScript.id],
-  }),
-  segment: one(segment, { fields: [chapterScriptSegment.segmentId], references: [segment.id] }),
+export const segmentTextRelations = relations(segmentText, ({ one }) => ({
+  segment: one(segment, { fields: [segmentText.segmentId], references: [segment.id] }),
 }))
 
 export const audioAssetRelations = relations(audioAsset, ({ one, many }) => ({

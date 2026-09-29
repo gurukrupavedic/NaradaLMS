@@ -33,7 +33,7 @@ describe('findById', () => {
       order: 1,
       script: null,
       archived: false,
-      scripts: [],
+      segments: [],
       audioAssets: [],
     }
     vi.mocked(repository.findById).mockResolvedValue(row)
@@ -46,7 +46,11 @@ describe('findById', () => {
       status: 'published',
       order: 1,
       script: null,
-      scripts: [],
+      scripts: [
+        { key: 'sa', label: 'Sanskrit', short: 'SA', fontClass: 'font-deva', segments: [] },
+        { key: 'te', label: 'Telugu', short: 'TE', fontClass: 'font-telugu', segments: [] },
+        { key: 'en', label: 'English', short: 'EN', fontClass: '', segments: [] },
+      ],
       audio: [],
     })
     expect(repository.findById).toHaveBeenCalledWith(db, 'chapter-1', { kind: 'learnerPreview' })

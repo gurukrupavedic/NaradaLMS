@@ -5,9 +5,9 @@ import {
   createAudioAsset,
   createAudioMapping,
   createChapter as createChapterFixture,
-  createChapterScript,
-  createChapterScriptSegment,
+  createDocChapter,
   createSegment,
+  createSegmentText,
   createTestSchool,
   createTrack,
   type TestWorld,
@@ -63,27 +63,19 @@ describe('findById', () => {
 })
 
 describe('findById (service) — content', () => {
-  it('returns scripts sharing segment ids with their own per-script offsets, and audio with a signed url', async () => {
+  it('returns scripts sharing segment ids with their own per-script text, and audio with a signed url', async () => {
     world = await createTestSchool()
     const trackRow = await createTrack(world)
     const chapterRow = await createChapterFixture(world, trackRow, { status: 'published' })
+    const docChapterRow = await createDocChapter(world)
 
-    const sanskrit = await createChapterScript(world, chapterRow, {
-      script: 'sa',
-      text: 'ॐ सह नाववतु',
-    })
-    const telugu = await createChapterScript(world, chapterRow, {
-      script: 'te',
-      text: 'ఓం సహ నావవతు',
-    })
+    const segment1 = await createSegment(world, docChapterRow, { order: 1, chapter: chapterRow })
+    const segment2 = await createSegment(world, docChapterRow, { order: 2, chapter: chapterRow })
 
-    const segment1 = await createSegment(world, chapterRow, { order: 1 })
-    const segment2 = await createSegment(world, chapterRow, { order: 2 })
-
-    await createChapterScriptSegment(world, sanskrit, segment1, { start: 0, end: 2 })
-    await createChapterScriptSegment(world, sanskrit, segment2, { start: 3, end: 6 })
-    await createChapterScriptSegment(world, telugu, segment1, { start: 0, end: 2 })
-    await createChapterScriptSegment(world, telugu, segment2, { start: 3, end: 7 })
+    await createSegmentText(world, segment1, { script: 'sa', text: 'ॐ सह नाववतु' })
+    await createSegmentText(world, segment2, { script: 'sa', text: 'सह नौ भुनक्तु' })
+    await createSegmentText(world, segment1, { script: 'te', text: 'ఓం సహ నావవతు' })
+    await createSegmentText(world, segment2, { script: 'te', text: 'సహ నౌ భునక్తు' })
 
     const audioAssetRow = await createAudioAsset(world, chapterRow, {
       objectKey: 'schools/test/audio.mp3',
@@ -97,21 +89,24 @@ describe('findById (service) — content', () => {
       { kind: 'learnerPreview' },
     )
 
-    expect(detail.scripts).toHaveLength(2)
     const sa = detail.scripts.find(s => s.key === 'sa')
     const te = detail.scripts.find(s => s.key === 'te')
+    const en = detail.scripts.find(s => s.key === 'en')
 
     // Same segment ids on both scripts, in reading order — this is the part that makes a script
-    // switch keep your place: only the offsets differ per script, never the ids.
+    // switch keep your place: only the text differs per script, never the ids.
     expect(sa?.segments.map(s => s.id)).toEqual(te?.segments.map(s => s.id))
     expect(sa?.segments).toEqual([
-      { id: segment1.id, start: 0, end: 2 },
-      { id: segment2.id, start: 3, end: 6 },
+      { id: segment1.id, text: 'ॐ सह नाववतु' },
+      { id: segment2.id, text: 'सह नौ भुनक्तु' },
     ])
     expect(te?.segments).toEqual([
-      { id: segment1.id, start: 0, end: 2 },
-      { id: segment2.id, start: 3, end: 7 },
+      { id: segment1.id, text: 'ఓం సహ నావవతు' },
+      { id: segment2.id, text: 'సహ నౌ భునక్తు' },
     ])
+    // No English text was ever imported for this chapter — the script still appears (its
+    // label/short/fontClass are constant, not data-dependent), just with no segments yet.
+    expect(en?.segments).toEqual([])
 
     expect(detail.audio).toHaveLength(1)
     const audio = detail.audio[0]

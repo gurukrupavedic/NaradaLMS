@@ -5,7 +5,22 @@ import { signedDownloadUrl } from '../utils/contentStorage'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import type { AccessPolicy, ContentReadView } from '../utils/accessPolicy'
 import * as repository from './repository'
-import type { AudioAsset, Chapter, ChapterDetail, CreateChapterData, UpdateChapterData } from './schema'
+import type {
+  AudioAsset,
+  Chapter,
+  ChapterDetail,
+  CreateChapterData,
+  ScriptText,
+  UpdateChapterData,
+} from './schema'
+
+// Constant per script code — nothing has ever varied these per chapter, so they're a static
+// lookup rather than a per-chapter DB row (the now-removed `chapterScript` table).
+const SCRIPT_META: Record<'sa' | 'te' | 'en', { label: string; short: string; fontClass: string }> = {
+  sa: { label: 'Sanskrit', short: 'SA', fontClass: 'font-deva' },
+  te: { label: 'Telugu', short: 'TE', fontClass: 'font-telugu' },
+  en: { label: 'English', short: 'EN', fontClass: '' },
+}
 
 type ChapterServiceContext = { db: SchoolDbClient }
 
@@ -39,6 +54,19 @@ export async function findById(
 ): Promise<ChapterDetail> {
   const row = orNotFound(await repository.findById(context.db, id, view))
 
+  // `row.segments` is already ordered (the repository query's own `orderBy`) — each script's list
+  // just filters to the segments that happen to have text for it, keeping that same order. A
+  // segment with no confident text for a script yet (see `segmentText`'s own doc comment) simply
+  // has no entry in that script's list.
+  const scripts: ScriptText[] = (['sa', 'te', 'en'] as const).map(key => ({
+    key,
+    ...SCRIPT_META[key],
+    segments: row.segments.flatMap(seg => {
+      const text = seg.segmentTexts.find(st => st.script === key)?.text
+      return text === undefined ? [] : [{ id: seg.id, text }]
+    }),
+  }))
+
   return {
     id: row.id,
     trackId: row.trackId,
@@ -47,19 +75,7 @@ export async function findById(
     status: row.status,
     order: row.order,
     script: row.script,
-    scripts: row.scripts.map(s => ({
-      key: s.script,
-      label: s.label,
-      short: s.shortLabel,
-      fontClass: s.fontClass,
-      text: s.text,
-      // The relational query builder can only order by the table it's querying, not a joined
-      // one — `scriptSegments` comes back in no particular order, so the shared segment's own
-      // `order` (not `chapterScriptSegment`'s own, which doesn't exist) is applied here instead.
-      segments: [...s.scriptSegments]
-        .sort((a, b) => a.segment.order - b.segment.order)
-        .map(ss => ({ id: ss.segment.id, start: ss.start, end: ss.end })),
-    })),
+    scripts,
     // Signed in parallel, not one at a time — a chapter with several takes shouldn't pay for N
     // sequential round trips to R2.
     audio: await Promise.all(row.audioAssets.map(toAudioAssetResponse)),
