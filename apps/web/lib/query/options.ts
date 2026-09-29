@@ -12,7 +12,6 @@ import {
   fetchProfiles,
   fetchCatalogTracks,
   fetchChapter,
-  fetchChapterDetail,
   fetchCourse,
   fetchCourses,
   fetchDashboard,
@@ -61,12 +60,6 @@ export const keys = {
   chapters: {
     all: ['chapters'] as const,
     detail: (id: string) => ['chapters', id] as const,
-    // Deliberately its own key, not `detail(id)` — the admin authoring panel and the student
-    // practice room can both be open for the same chapter id in one session, and they fetch
-    // different shapes (`ApiChapterDetail` vs `ChapterContent`) from different resource functions.
-    // Sharing a key would mean whichever query mounted last silently overwrites the other's cache
-    // entry with the wrong shape.
-    authoringDetail: (id: string) => ['chapters', id, 'authoring'] as const,
   },
 
   exams: ['exams'] as const,
@@ -183,14 +176,6 @@ export const chapterQuery = (chapterId: string) =>
     // Chapter text and audio mappings are immutable once published — there is
     // nothing to refetch for.
     staleTime: Infinity,
-  })
-
-// The authoring panel's own view of a chapter — unlike `chapterQuery` above, this is the thing
-// being edited, so it refetches normally (the 60s default) rather than sitting at `Infinity`.
-export const chapterAuthoringDetailQuery = (chapterId: string) =>
-  queryOptions({
-    queryKey: keys.chapters.authoringDetail(chapterId),
-    queryFn: () => fetchChapterDetail(chapterId),
   })
 
 export const coursesQuery = () =>

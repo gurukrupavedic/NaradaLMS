@@ -97,11 +97,3 @@ export async function fetchChapter(chapterId: string): Promise<ChapterContent> {
   const detail = await fetchApi<ApiChapterDetail>(`/chapters/${chapter.id}`)
   return buildChapterContent(dashboard, chapter, detail)
 }
-
-// GET /v1/chapters/:chapterId, raw — for the admin authoring panel, which already has the real
-// chapter UUID from `CatalogChapter.id` (`lib/mock-catalog.ts`'s `buildCatalogTrack` reshape reads
-// it straight off `ApiChapter.id`) and needs the *authoring* view's full scripts/audio, not the
-// student-facing `ChapterContent` shape `fetchChapter` above builds.
-export async function fetchChapterDetail(chapterId: string): Promise<ApiChapterDetail> {
-  return fetchApi<ApiChapterDetail>(`/chapters/${chapterId}`)
-}
