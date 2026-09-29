@@ -3,13 +3,14 @@
 import { useEffect, useReducer, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
 import { PHONE_REGEX } from '@/lib/phone-countries'
 import { SHLOKA, SHLOKA_TRANSLATION, TAGLINE } from '@/lib/brand'
 import { getAuthSession, sendOtp, signInWithGoogle, verifyOtp } from '@/lib/auth/client'
-import { setSelectedProfile } from '@/lib/auth/profile-store'
+import { NO_PROFILE_ID, setSelectedProfile } from '@/lib/auth/profile-store'
+import { authProfileQuery } from '@/lib/query/options'
 import { fetchProfiles } from '@/lib/api/resources'
 import type { ApiProfile } from '@/lib/api/api-types'
 import { GoogleIcon } from '@/components/google-icon'
@@ -108,6 +109,11 @@ export default function LoginPage() {
   const [cooldown, setCooldown] = useState(0)
   const router = useRouter()
   const queryClient = useQueryClient()
+  // A super-admin reaches every school without a profile in it, so "no profiles" isn't a dead end
+  // for them. Only asked once we know there is nobody to pick.
+  const noProfiles = state.step === 'profile' && state.profiles.length === 0
+  const { data: account } = useQuery({ ...authProfileQuery(), enabled: noProfiles })
+  const canSkipProfile = noProfiles && account?.isSuperAdmin === true
 
   const stepIndex = state.step === 'checking' || state.step === 'phone' ? 0 : state.step === 'code' ? 1 : 2
 
@@ -218,10 +224,14 @@ export default function LoginPage() {
   }
 
   function handleContinue() {
-    if (state.step !== 'profile' || !state.selected) return
-    const profile = state.profiles.find(p => p.id === state.selected)
-    if (!profile) return
-    setSelectedProfile(profile.id, profile.name)
+    if (state.step !== 'profile') return
+    if (canSkipProfile) {
+      setSelectedProfile(NO_PROFILE_ID, 'Super admin')
+    } else {
+      const profile = state.profiles.find(p => p.id === state.selected)
+      if (!profile) return
+      setSelectedProfile(profile.id, profile.name)
+    }
     // Every cached query is scoped to the profile that was active when it was fetched — clear
     // before navigating so a household switching between profiles (or signing back in without
     // an explicit sign-out first) never sees a moment of the previous profile's dashboard, exam
@@ -398,7 +408,9 @@ export default function LoginPage() {
 
               {state.profiles.length === 0 ? (
                 <p className="mt-7 text-[0.875rem] text-ink-muted">
-                  No profiles are registered to this number. Ask your batch teacher.
+                  {canSkipProfile
+                    ? 'You have no profile in this school. As a super-admin you can continue without one.'
+                    : 'No profiles are registered to this number. Ask your batch teacher.'}
                 </p>
               ) : (
                 <ul className="mt-7 space-y-2.5">
@@ -452,10 +464,10 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleContinue}
-                disabled={!state.selected}
+                disabled={!state.selected && !canSkipProfile}
                 className={cn(
                   'label mt-7 flex w-full items-center justify-center bg-ink px-5 py-3.5 text-paper transition-opacity',
-                  !state.selected && 'pointer-events-none opacity-35',
+                  !state.selected && !canSkipProfile && 'pointer-events-none opacity-35',
                 )}
               >
                 Continue

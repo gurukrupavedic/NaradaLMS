@@ -23,6 +23,8 @@ type BatchRole = typeof enrollment.$inferSelect.role
 
 // AccessPolicy is the single owner of the read-scope vocabulary; domain
 // services accept these types as parameters rather than defining their own.
+const NIL_PROFILE_ID = '00000000-0000-0000-0000-000000000000'
+
 export type BatchReadScope = { kind: 'all' } | { kind: 'enrolled'; profileId: string }
 // 'own' is a profile with no batch where they hold exam:read (e.g. a plain student) — every exam
 // visible to them has studentId === profileId. 'manageable' adds every batch where they do hold
@@ -192,6 +194,12 @@ export class AccessPolicy {
    * which profile was actually asked for.
    */
   public async getProfileBatchListScope(targetProfileId: string): Promise<BatchReadScope> {
+    // A school admin with no profile of their own (a super-admin in a school they aren't in) has
+    // no id to put in this path; the web sends the nil UUID, meaning "the school's batches".
+    if (!this.profileId && targetProfileId === NIL_PROFILE_ID && this.isSchoolAdmin()) {
+      return { kind: 'all' }
+    }
+
     if (targetProfileId === this.profileId) {
       return this.isSchoolAdmin()
         ? { kind: 'all' }

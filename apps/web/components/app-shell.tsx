@@ -17,6 +17,7 @@ import { useCoursePath } from '@/lib/course'
 import { coursePath } from '@/lib/course-path'
 import { myProfilesQuery } from '@/lib/query/options'
 import {
+  NO_PROFILE_ID,
   useHasAdminAccess,
   useSelectedProfileId,
   useSelectedProfileName,
@@ -124,7 +125,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }))
   // No cookie yet (a page rendered ahead of the client picking one up) means no destination to
   // link to, so "Profile" is simply absent from the menu rather than pointing at `/students/`.
-  const profileHref = selectedProfileId ? cp(`/students/${selectedProfileId}`) : null
+  const profileHref =
+    selectedProfileId && selectedProfileId !== NO_PROFILE_ID ? cp(`/students/${selectedProfileId}`) : null
 
   return (
     <div className="flex min-h-dvh flex-col">

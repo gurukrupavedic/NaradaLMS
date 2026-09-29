@@ -12,7 +12,7 @@
  * Every read (`fetchApi`) and write (`mutateApi`) goes through a real fetch.
  */
 
-import { clearSelectedProfile, getSelectedProfileId } from '@/lib/auth/profile-store'
+import { clearSelectedProfile, getSelectedProfileId, NO_PROFILE_ID } from '@/lib/auth/profile-store'
 import { courseFromPathname } from '@/lib/course-path'
 import { currentSchoolSlug } from '@/lib/school'
 
@@ -41,7 +41,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       'x-school-slug': schoolSlug ?? '',
-      ...(profileId ? { 'x-profile-id': profileId } : {}),
+      ...(profileId && profileId !== NO_PROFILE_ID ? { 'x-profile-id': profileId } : {}),
       ...(courseSlug ? { 'x-course-slug': courseSlug } : {}),
       ...init?.headers,
     },
