@@ -2,7 +2,7 @@ import type { BatchRow, EnrollmentRow, EvaluationRow, ProfileRow, TrackRow } fro
 import { clean, columns, rowNumber, stableId, type Ctx, type Sheet } from './sheet'
 
 // Each holds a guru's PRIMARY KEY (despite "PHONE" in the header); the first is the batch's instructor.
-const GURU_COLUMNS = ['GURUVU GARU 1 PHONE', 'GURUVU GARU 2 PHONE', 'TA 1 PHONE', 'TA 2 PHONE']
+const GURU_COLUMNS = ['GURUVU GARU 1 PHONE', 'GURUVU GARU 2 PHONE', 'GURUVU GARU 3 PHONE', 'TA 1 PHONE', 'TA 2 PHONE', 'TA 3 PHONE']
 // Excel error values that a lookup formula leaves in an empty guru cell.
 const EMPTY_CELL = /^#N\/A$/i
 const ROLE_RANK = { instructor: 3, ta: 2, student: 1 } as const
