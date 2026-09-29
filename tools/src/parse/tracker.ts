@@ -1,8 +1,16 @@
 import type { BatchRow, EnrollmentRow, EvaluationRow, ProfileRow, TrackRow } from '../seed-types'
 import { clean, columns, rowNumber, stableId, type Ctx, type Sheet } from './sheet'
 
-// Each holds a guru's PRIMARY KEY (despite "PHONE" in the header); the first is the batch's instructor.
-const GURU_COLUMNS = ['GURUVU GARU 1 PHONE', 'GURUVU GARU 2 PHONE', 'GURUVU GARU 3 PHONE', 'TA 1 PHONE', 'TA 2 PHONE', 'TA 3 PHONE']
+// Each holds a guru's PRIMARY KEY (despite "PHONE" in the header). Anyone in a GURUVU GARU column is an
+// instructor of the batch, anyone in a TA column its TA; the first guru named grades the students.
+const GURU_COLUMNS = [
+  { name: 'GURUVU GARU 1 PHONE', role: 'instructor' },
+  { name: 'GURUVU GARU 2 PHONE', role: 'instructor' },
+  { name: 'GURUVU GARU 3 PHONE', role: 'instructor' },
+  { name: 'TA 1 PHONE', role: 'ta' },
+  { name: 'TA 2 PHONE', role: 'ta' },
+  { name: 'TA 3 PHONE', role: 'ta' },
+] as const
 // Excel error values that a lookup formula leaves in an empty guru cell.
 const EMPTY_CELL = /^#N\/A$/i
 const ROLE_RANK = { instructor: 3, ta: 2, student: 1 } as const
@@ -111,7 +119,7 @@ export function parseTracker(
 
     // The gurus are PRIMARY KEYs, so the same people as in the registration sheet.
     const gurus: ProfileRow[] = []
-    GURU_COLUMNS.forEach((column, g) => {
+    GURU_COLUMNS.forEach(({ name: column, role }) => {
       const guruKey = clean(row[col.index(column)])
       if (!guruKey || EMPTY_CELL.test(guruKey)) return
       const byColumn = gurusByBatch.get(batchCode) ?? new Map<string, Set<string>>()
@@ -125,7 +133,7 @@ export function parseTracker(
         return block({ ...where, key: guruKey }, `${column} of batch ${batchCode} is a PRIMARY KEY in no registration row${hint}`)
       }
       gurus.push(guru)
-      enroll(guruKey, batchCode, { profileId: guru.id, batchId: batch.id, role: g === 0 ? 'instructor' : 'ta', status: 'active', joinedAt })
+      enroll(guruKey, batchCode, { profileId: guru.id, batchId: batch.id, role, status: 'active', joinedAt })
     })
 
     // Whoever grades a student is the batch's first guru — what GURUVU GARU 1 PHONE has always meant.
