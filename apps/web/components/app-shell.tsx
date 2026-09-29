@@ -40,11 +40,13 @@ import {
  */
 
 // Paths within the course — `useCoursePath()` puts the course in front (`/dashboard` → `/vedam/dashboard`).
+// `ownPractice` marks the pages about the signed-in profile's own work, which a super-admin who
+// continued without a profile has none of.
 const NAV = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Practice', path: '/practice' },
-  { label: 'Exams', path: '/exams' },
-  { label: 'Admin', path: '/admin' },
+  { label: 'Dashboard', path: '/dashboard', ownPractice: true },
+  { label: 'Practice', path: '/practice', ownPractice: true },
+  { label: 'Exams', path: '/exams', ownPractice: true },
+  { label: 'Admin', path: '/admin', ownPractice: false },
 ]
 
 // The theme lives on <html>, put there before paint by the root layout. Mirroring
@@ -119,10 +121,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const otherProfiles = (myProfiles ?? []).filter(profile => profile.id !== selectedProfileId)
   // Hidden until access resolves, not just when it's false — showing the link and then
   // yanking it away a moment later reads as more broken than a one-tick-later appearance.
-  const nav = NAV.filter(item => item.path !== '/admin' || hasAdminAccess).map(item => ({
-    ...item,
-    href: cp(item.path),
-  }))
+  const hasNoProfile = selectedProfileId === NO_PROFILE_ID
+  const nav = NAV.filter(item => (item.path !== '/admin' || hasAdminAccess) && !(item.ownPractice && hasNoProfile)).map(
+    item => ({ ...item, href: cp(item.path) }),
+  )
   // No cookie yet (a page rendered ahead of the client picking one up) means no destination to
   // link to, so "Profile" is simply absent from the menu rather than pointing at `/students/`.
   const profileHref =
