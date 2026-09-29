@@ -5,18 +5,18 @@ import type { ContentReadView } from '../utils/accessPolicy'
 
 /**
  * The chapter row plus its content, nested exactly as `chapters/service.ts::findById` needs to
- * reshape it — draft-chapter gating needs no extra work here: scripts/audio only exist as children
- * of a chapter row, so a `where` clause that already excludes a draft chapter for `learnerPreview`
- * means its content is never fetched at all, not merely hidden.
+ * reshape it — draft-chapter gating needs no extra work here: segments/audio only exist as
+ * children of a chapter row, so a `where` clause that already excludes a draft chapter for
+ * `learnerPreview` means its content is never fetched at all, not merely hidden.
  */
 export async function findById(db: SchoolDb, id: string, view: ContentReadView) {
   return db.query.chapter.findFirst({
     where: (t, { and, eq }) =>
       view.kind === 'authoring' ? eq(t.id, id) : and(eq(t.id, id), eq(t.status, 'published')),
     with: {
-      scripts: {
+      segments: {
         orderBy: (s, { asc }) => asc(s.order),
-        with: { scriptSegments: { with: { segment: true } } },
+        with: { segmentTexts: true },
       },
       audioAssets: {
         orderBy: (a, { asc }) => asc(a.order),

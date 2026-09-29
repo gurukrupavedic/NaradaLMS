@@ -19,20 +19,20 @@ export const ChapterSchema = z.object({
 export type ScriptSegment = z.infer<typeof scriptSegmentSchema>
 export const scriptSegmentSchema = z.object({
   id: z.uuid(),
-  start: z.number().int(),
-  end: z.number().int(),
+  text: z.string(),
 })
 
 // One parallel script of a chapter's recitation — segments share ids with the chapter's other
 // scripts (see `packages/db/src/schema/school.ts`'s `segment` table doc comment), each carrying
-// this script's own offsets into this script's own `text`.
+// its own text for this script directly. A segment with no confident text for this script yet
+// (a low-confidence cross-script alignment, or a fresh split not yet re-aligned) is simply absent
+// from this array rather than present with empty text.
 export type ScriptText = z.infer<typeof scriptTextSchema>
 export const scriptTextSchema = z.object({
   key: chapterScriptSchema,
   label: z.string(),
   short: z.string(),
   fontClass: z.string(),
-  text: z.string(),
   segments: z.array(scriptSegmentSchema),
 })
 
