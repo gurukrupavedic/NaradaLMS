@@ -223,10 +223,12 @@ export default function LoginPage() {
     }
   }
 
-  function handleContinue() {
+  async function handleContinue() {
     if (state.step !== 'profile') return
     if (canSkipProfile) {
-      setSelectedProfile(NO_PROFILE_ID, 'Super admin')
+      // The header shows this name; there is no profile to take one from, so use the account's own.
+      const session = await getAuthSession()
+      setSelectedProfile(NO_PROFILE_ID, session?.user.name?.trim() || 'Super admin')
     } else {
       const profile = state.profiles.find(p => p.id === state.selected)
       if (!profile) return
