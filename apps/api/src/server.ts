@@ -18,7 +18,11 @@ import { translateDbError } from './utils/dbError'
 
 interface ServerOptions {
   port: number
+  /** Awaited inside the same shutdown sequence as the DB pools, before `process.exit()` — so a caller with its own long-running resource (the doc-chapter worker) can be given a chance to drain instead of being killed mid-job. */
+  onShutdown?: () => Promise<void>
 }
+
+let shutdownHook: (() => Promise<void>) | undefined
 
 const CORS_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 const SHUTDOWN_TIMEOUT_MS = 10_000
@@ -87,6 +91,7 @@ export function createServer() {
 }
 
 export function runServer(app: Express, options: ServerOptions) {
+  shutdownHook = options.onShutdown
   const server = app.listen(options.port, () => {
     getLogger().info(`Started rewrite HTTP server on port ${options.port}.`)
   })
@@ -197,9 +202,9 @@ async function shutdownAndExit(exitCode: number) {
   shutdownExitStarted = true
 
   try {
-    await shutdownPools()
+    await Promise.all([shutdownPools(), shutdownHook?.()])
   } catch (error) {
-    logger.error(error, 'encountered an error when closing database pools.')
+    logger.error(error, 'encountered an error when closing database pools or the shutdown hook.')
     exitCode = 1
   }
 

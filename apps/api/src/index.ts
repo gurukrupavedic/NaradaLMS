@@ -3,6 +3,7 @@ import '@narada/env/load'
 import { migrateAllSchoolSchemas, migratePublicSchema } from '@narada/db'
 import { env } from '@narada/env'
 
+import { startDocChapterWorker } from './docChapters/worker'
 import logger from './logger'
 import { createServer, runServer } from './server'
 
@@ -16,5 +17,11 @@ await migratePublicSchema()
 const migratedSchools = await migrateAllSchoolSchemas()
 logger.info({ event: 'startup.migrated', schools: migratedSchools.length }, 'applied pending database migrations')
 
+// In-process — no separate deployed worker service. Same container, same lifecycle as the HTTP
+// server: `onShutdown` below is awaited inside the server's own shutdown sequence, before
+// `process.exit()`, so an in-flight parse gets to finish (or fail and retry) instead of being
+// killed mid-job.
+const docChapterWorker = startDocChapterWorker()
+
 const server = createServer()
-runServer(server, { port: env.PORT })
+runServer(server, { port: env.PORT, onShutdown: () => docChapterWorker.close() })

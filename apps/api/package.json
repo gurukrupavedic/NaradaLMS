@@ -21,6 +21,7 @@
     "@narada/profile-fields": "workspace:*",
     "@narada/storage": "workspace:*",
     "better-auth": "1.6.22",
+    "bullmq": "^6",
     "cors": "^2.8.6",
     "country-state-city": "^3.2.1",
     "drizzle-orm": "^0.45.2",
@@ -29,6 +30,7 @@
     "fast-xml-parser": "^5.11.2",
     "geo-tz": "^8.1.9",
     "helmet": "^8.1.0",
+    "ioredis": "^6.0.0",
     "jszip": "^3.10.2",
     "pino": "^10.3.1",
     "zod": "^4.4.3"
