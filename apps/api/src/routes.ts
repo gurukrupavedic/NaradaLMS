@@ -6,7 +6,7 @@ import chaptersRouter from './chapters'
 import courseProfileRouter from './courseProfile'
 import coursesRouter, { myCoursesRouter } from './courses'
 import dashboardRouter from './dashboard'
-import docChaptersRouter from './docChapters'
+import docChaptersRouter, { docChapterRouter } from './docChapters'
 import enrollmentRouter from './enrollment'
 import enrollmentRequestsRouter from './enrollmentRequests'
 import evaluationsRouter from './evaluations'
@@ -38,6 +38,7 @@ export default function setupRoutes(router: Router) {
     .use('/enrollment-requests', enrollmentRequestsRouter)
     .use('/courses', coursesRouter)
     .use('/courses/:courseId/doc-chapters', docChaptersRouter)
+    .use('/doc-chapters', docChapterRouter)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
     .use('/batches', batchesRouter)

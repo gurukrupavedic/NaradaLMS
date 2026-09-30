@@ -1,8 +1,9 @@
-import { and, count, eq, ilike, or, sql } from 'drizzle-orm'
+import { and, count, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 
 import { docChapter, docChapterUpload, segment, segmentText, uuidv7, type SchoolDb } from '@narada/db'
 
 import type { ParsedHeading } from './parse'
+import type { ScriptKey } from './schema'
 
 export async function insertUpload(
   db: SchoolDb,
@@ -153,4 +154,100 @@ export async function listDocChapters(db: SchoolDb, courseId: string, q?: string
     .orderBy(docChapter.title)
 
   return rows
+}
+
+// ── Doc chapter workspace (segment cleanup) ────────────────────────────────
+
+export function findDocChapterDetail(db: SchoolDb, docChapterId: string) {
+  return db.query.docChapter.findFirst({
+    where: (t, { eq: eqCol }) => eqCol(t.id, docChapterId),
+    with: {
+      segments: {
+        orderBy: (s, { asc }) => asc(s.order),
+        with: { segmentTexts: true },
+      },
+    },
+  })
+}
+
+/** A segment row, only if it actually belongs to `docChapterId` — guards a segment id from a different doc chapter reaching a mutation through a mismatched URL. */
+export function findSegmentInDocChapter(db: SchoolDb, docChapterId: string, segmentId: string) {
+  return db.query.segment.findFirst({
+    where: (t, { and: andCol, eq: eqCol }) => andCol(eqCol(t.id, segmentId), eqCol(t.docChapterId, docChapterId)),
+    with: { segmentTexts: true },
+  })
+}
+
+/** The segment immediately after `order` in the same doc chapter, if any — for merge-next. */
+export function findNextSegment(db: SchoolDb, docChapterId: string, order: number) {
+  return db.query.segment.findFirst({
+    where: (t, { and: andCol, eq: eqCol, gt }) => andCol(eqCol(t.docChapterId, docChapterId), gt(t.order, order)),
+    orderBy: (t, { asc }) => asc(t.order),
+    with: { segmentTexts: true },
+  })
+}
+
+export async function findOrderedSegmentIds(db: SchoolDb, docChapterId: string): Promise<string[]> {
+  const rows = await db
+    .select({ id: segment.id })
+    .from(segment)
+    .where(eq(segment.docChapterId, docChapterId))
+    .orderBy(segment.order)
+  return rows.map(r => r.id)
+}
+
+/**
+ * Reassigns every id in `orderedIds` to its (1-based) index as the new `order`, via the same
+ * temp-offset two-phase update as `chapters/repository.ts::reorderChapters` — a single UPDATE
+ * across multiple rows isn't reliably safe against the plain (non-deferrable)
+ * `segment_docChapterId_order_uidx` unique index. Called after every split/merge/delete so a doc
+ * chapter's segment order always stays a clean, contiguous `1..N` — split's new segment in
+ * particular needs *somewhere* to go, and there's no other way to make room for it.
+ */
+export async function renumberSegments(db: SchoolDb, orderedIds: string[]): Promise<void> {
+  if (orderedIds.length === 0) return
+
+  for (const offset of [1_000_000, 0]) {
+    const cases = sql.join(
+      orderedIds.map((id, index) => sql`when ${id}::uuid then ${offset + index + 1}::int`),
+      sql` `,
+    )
+    await db
+      .update(segment)
+      .set({ order: sql`case ${segment.id} ${cases} end` })
+      .where(inArray(segment.id, orderedIds))
+  }
+}
+
+/** `order` is a placeholder (0, never used by a real segment — real orders start at 1) — the caller renumbers immediately after via `renumberSegments`. */
+export async function insertSegmentRow(
+  db: SchoolDb,
+  data: { id: string; docChapterId: string; chapterId: string | null; flaggedForReview: boolean },
+): Promise<void> {
+  await db.insert(segment).values({ ...data, order: 0 })
+}
+
+export async function updateSegment(
+  db: SchoolDb,
+  segmentId: string,
+  data: Partial<{ chapterId: string | null; flaggedForReview: boolean }>,
+): Promise<void> {
+  await db.update(segment).set(data).where(eq(segment.id, segmentId))
+}
+
+export async function upsertSegmentText(
+  db: SchoolDb,
+  segmentId: string,
+  script: ScriptKey,
+  text: string,
+): Promise<void> {
+  await db
+    .insert(segmentText)
+    .values({ segmentId, script, text })
+    .onConflictDoUpdate({ target: [segmentText.segmentId, segmentText.script], set: { text } })
+}
+
+/** Cascades `segmentText` and any `audioMapping` rows via their FKs — see `packages/db/src/schema/school.ts`. */
+export async function deleteSegmentRow(db: SchoolDb, segmentId: string): Promise<void> {
+  await db.delete(segment).where(eq(segment.id, segmentId))
 }
