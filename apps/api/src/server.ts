@@ -145,11 +145,6 @@ function isBodyParserSyntaxError(error: unknown): error is SyntaxError & { type?
   return error instanceof SyntaxError && (error as { type?: string }).type === 'entity.parse.failed'
 }
 
-/** multer rejects an oversized/unexpected upload with its own `MulterError`, not an `AppError`. */
-function isMulterError(error: unknown): error is Error & { code: string } {
-  return error instanceof Error && error.name === 'MulterError'
-}
-
 function handleErrors(error: Error, req: Request, res: Response, _next: NextFunction) {
   getLogger(req).error({ event: 'request.error', err: error })
 
@@ -157,8 +152,7 @@ function handleErrors(error: Error, req: Request, res: Response, _next: NextFunc
     error instanceof AppError
       ? error
       : (translateDbError(error) ??
-        (isBodyParserSyntaxError(error) ? badRequest('malformed JSON body') : null) ??
-        (isMulterError(error) ? badRequest(error.message) : null))
+        (isBodyParserSyntaxError(error) ? badRequest('malformed JSON body') : null))
   if (appError) {
     res.status(appError.statusCode).json({
       ok: false,

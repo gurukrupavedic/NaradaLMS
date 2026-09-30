@@ -1,54 +1,87 @@
 import { uuidv7, type SchoolDbClient } from '@narada/db'
-import { putObject } from '@narada/storage'
+import { getUploadUrl, objectExists } from '@narada/storage'
 
-import { notFound } from '../error'
+import { notFound, unprocessable } from '../error'
 import * as repository from './repository'
 import { docChapterQueue, enqueueParseDocSet } from './queue'
 import type { ParsedHeading } from './parse'
-import type { DocChapterListItem, JobStatusResponse } from './schema'
+import type { DocChapterListItem, JobStatusResponse, PresignUploadResponse } from './schema'
 
 const DOCX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
 type DocChaptersServiceContext = { db: SchoolDbClient; schoolId: string }
 
-export type UploadedDocSet = { sa: Express.Multer.File; te: Express.Multer.File; en: Express.Multer.File }
+function objectKeysFor(schoolId: string, courseId: string, uploadId: string) {
+  const basePath = `schools/${schoolId}/courses/${courseId}/doc-chapters/${uploadId}`
+  return {
+    sa: `${basePath}/sanskrit.docx`,
+    te: `${basePath}/telugu.docx`,
+    en: `${basePath}/english.docx`,
+  }
+}
 
 /**
- * Uploads the 3 source documents to R2, records the upload, and enqueues its parse job — never
- * parses inline. See `docChapters/worker.ts` for the async processor and `PARSE_DOC_SET_QUEUE`'s
- * doc comment in `queue.ts` for why this is a queue rather than a synchronous request.
+ * Issues presigned R2 PUT URLs for the 3 source documents — the client uploads directly to R2,
+ * never through this server. Writes nothing to the database yet: `uploadId` only becomes a real
+ * `docChapterUpload` row once `confirmUpload` has verified the objects actually landed, so an
+ * abandoned presign (the client never finishes, or never calls back at all) leaves nothing behind
+ * to clean up.
  */
-export async function uploadDocSet(
+export async function presignUpload(
+  context: DocChaptersServiceContext,
+  courseId: string,
+): Promise<PresignUploadResponse> {
+  const uploadId = uuidv7()
+  const keys = objectKeysFor(context.schoolId, courseId, uploadId)
+
+  const [sa, te, en] = await Promise.all([
+    getUploadUrl(keys.sa, DOCX_CONTENT_TYPE),
+    getUploadUrl(keys.te, DOCX_CONTENT_TYPE),
+    getUploadUrl(keys.en, DOCX_CONTENT_TYPE),
+  ])
+
+  return { uploadId, uploads: { sa, te, en } }
+}
+
+/**
+ * Confirms all 3 objects for `uploadId` actually exist in R2, records the upload, and enqueues its
+ * parse job — never parses inline. See `docChapters/worker.ts` for the async processor and
+ * `PARSE_DOC_SET_QUEUE`'s doc comment in `queue.ts` for why this is a queue rather than a
+ * synchronous request.
+ */
+export async function confirmUpload(
   context: DocChaptersServiceContext,
   courseId: string,
   uploadedByProfileId: string | undefined,
-  files: UploadedDocSet,
+  uploadId: string,
 ): Promise<{ jobId: string }> {
-  const uploadId = uuidv7()
-  const basePath = `schools/${context.schoolId}/courses/${courseId}/doc-chapters/${uploadId}`
-  const [saObjectKey, teObjectKey, enObjectKey] = await Promise.all([
-    storeUpload(`${basePath}/sanskrit.docx`, files.sa),
-    storeUpload(`${basePath}/telugu.docx`, files.te),
-    storeUpload(`${basePath}/english.docx`, files.en),
+  const keys = objectKeysFor(context.schoolId, courseId, uploadId)
+
+  const [saExists, teExists, enExists] = await Promise.all([
+    objectExists(keys.sa),
+    objectExists(keys.te),
+    objectExists(keys.en),
   ])
+
+  const missing = (['sa', 'te', 'en'] as const).filter(
+    script => !{ sa: saExists, te: teExists, en: enExists }[script],
+  )
+  if (missing.length > 0) {
+    throw unprocessable(`upload incomplete — missing: ${missing.join(', ')}`)
+  }
 
   await repository.insertUpload(context.db, {
     id: uploadId,
     courseId,
     uploadedByProfileId,
-    saObjectKey,
-    teObjectKey,
-    enObjectKey,
+    saObjectKey: keys.sa,
+    teObjectKey: keys.te,
+    enObjectKey: keys.en,
   })
 
   const job = await enqueueParseDocSet({ schoolId: context.schoolId, courseId })
   // Always set by BullMQ on a successful add — the fallback only guards the type (`string | undefined`).
   return { jobId: job.id ?? uploadId }
-}
-
-async function storeUpload(key: string, file: Express.Multer.File): Promise<string> {
-  await putObject(key, file.buffer, DOCX_CONTENT_TYPE)
-  return key
 }
 
 /**

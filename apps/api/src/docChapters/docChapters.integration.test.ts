@@ -1,9 +1,9 @@
 import JSZip from 'jszip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@narada/storage', () => ({ getObject: vi.fn(), putObject: vi.fn() }))
+vi.mock('@narada/storage', () => ({ getObject: vi.fn(), getUploadUrl: vi.fn(), objectExists: vi.fn() }))
 
-import { getObject } from '@narada/storage'
+import { getObject, getUploadUrl, objectExists } from '@narada/storage'
 import type { Job } from 'bullmq'
 
 import { destroyTestWorld } from '../testing/cleanup'
@@ -19,8 +19,12 @@ import {
 } from '../testing/fixtures'
 import type { ParsedHeading } from './parse'
 import { docChapterQueue, enqueueParseDocSet, type ParseDocSetJobData, type ParseDocSetJobResult } from './queue'
-import { getJobStatus, listDocChapters, upsertParsedHeading } from './service'
+import { confirmUpload, getJobStatus, listDocChapters, presignUpload, upsertParsedHeading } from './service'
 import { processParseDocSet } from './worker'
+
+function mockUploadUrl(key: string) {
+  return Promise.resolve({ uploadUrl: `https://r2.example.test/${key}?signed=1` })
+}
 
 let world: TestWorld | undefined
 
@@ -30,6 +34,8 @@ afterEach(async () => {
     world = undefined
   }
   vi.mocked(getObject).mockReset()
+  vi.mocked(getUploadUrl).mockReset()
+  vi.mocked(objectExists).mockReset()
 })
 
 function heading(overrides?: Partial<ParsedHeading>): ParsedHeading {
@@ -111,6 +117,58 @@ describe('listDocChapters (service)', () => {
     const items = await listDocChapters({ db: world.schoolDb, schoolId: world.orgId }, courseId, 'vishnu')
 
     expect(items.map(i => i.title)).toEqual(['Vishnu Sahasranama'])
+  })
+})
+
+describe('presignUpload / confirmUpload (service)', () => {
+  afterEach(async () => {
+    const jobs = await docChapterQueue.getJobs(['waiting', 'active', 'completed', 'failed'])
+    await Promise.all(jobs.map(job => job.remove()))
+  })
+
+  it('presigns 3 distinct object keys under the same upload id, without writing anything to the database', async () => {
+    world = await createTestSchool()
+    const courseId = await defaultCourseId(world)
+    vi.mocked(getUploadUrl).mockImplementation(mockUploadUrl)
+
+    const result = await presignUpload({ db: world.schoolDb, schoolId: world.orgId }, courseId)
+
+    expect(result.uploads.sa.uploadUrl).not.toBe(result.uploads.te.uploadUrl)
+    expect(result.uploads.sa.uploadUrl).not.toBe(result.uploads.en.uploadUrl)
+    const items = await listDocChapters({ db: world.schoolDb, schoolId: world.orgId }, courseId)
+    expect(items).toEqual([])
+  })
+
+  it('confirms, records the upload, and enqueues a job once all 3 objects exist', async () => {
+    world = await createTestSchool()
+    const courseId = await defaultCourseId(world)
+    vi.mocked(getUploadUrl).mockImplementation(mockUploadUrl)
+    vi.mocked(objectExists).mockResolvedValue(true)
+
+    const { uploadId } = await presignUpload({ db: world.schoolDb, schoolId: world.orgId }, courseId)
+    const { jobId } = await confirmUpload({ db: world.schoolDb, schoolId: world.orgId }, courseId, undefined, uploadId)
+
+    expect(jobId).toBeTruthy()
+    await expect(
+      getJobStatus({ db: world.schoolDb, schoolId: world.orgId }, courseId, jobId),
+    ).resolves.toMatchObject({ status: 'queued' })
+  })
+
+  it('rejects confirmation while any of the 3 objects is still missing, without enqueueing anything', async () => {
+    world = await createTestSchool()
+    const courseId = await defaultCourseId(world)
+    vi.mocked(getUploadUrl).mockImplementation(mockUploadUrl)
+    // sa and te landed, en never did (client abandoned the upload, or is still mid-transfer).
+    vi.mocked(objectExists).mockImplementation(async (key: string) => !key.endsWith('english.docx'))
+
+    const { uploadId } = await presignUpload({ db: world.schoolDb, schoolId: world.orgId }, courseId)
+
+    await expect(
+      confirmUpload({ db: world.schoolDb, schoolId: world.orgId }, courseId, undefined, uploadId),
+    ).rejects.toMatchObject({ statusCode: 422 })
+
+    const items = await listDocChapters({ db: world.schoolDb, schoolId: world.orgId }, courseId)
+    expect(items).toEqual([])
   })
 })
 

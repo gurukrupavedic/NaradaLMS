@@ -1,7 +1,20 @@
 import * as z from 'zod'
 
-export type UploadDocSetResponse = z.infer<typeof uploadDocSetResponseSchema>
-export const uploadDocSetResponseSchema = z.object({ jobId: z.string() })
+export type PresignUploadResponse = z.infer<typeof presignUploadResponseSchema>
+export const presignUploadResponseSchema = z.object({
+  uploadId: z.string(),
+  uploads: z.object({
+    sa: z.object({ uploadUrl: z.string() }),
+    te: z.object({ uploadUrl: z.string() }),
+    en: z.object({ uploadUrl: z.string() }),
+  }),
+})
+
+export type ConfirmUploadRequest = z.infer<typeof confirmUploadRequestSchema>
+export const confirmUploadRequestSchema = z.object({ uploadId: z.uuid() })
+
+export type ConfirmUploadResponse = z.infer<typeof confirmUploadResponseSchema>
+export const confirmUploadResponseSchema = z.object({ jobId: z.string() })
 
 export const jobStateSchema = z.enum(['queued', 'active', 'completed', 'failed'])
 export type JobState = z.infer<typeof jobStateSchema>
