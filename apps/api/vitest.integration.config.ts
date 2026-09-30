@@ -10,6 +10,10 @@ const databaseUrl = requireTestDatabaseUrl()
 // these are read by the test/harness code itself.
 const testEnv: Record<string, string> = {
   DATABASE_URL: databaseUrl,
+  // Read by docChapters' queue/worker tests, which run against a real Redis (docker-compose's
+  // narada-redis, or CI's redis service container) — unlike the DB, there's no per-suite isolation
+  // for it, so those tests key everything they enqueue off a freshly created test school/course id.
+  REDIS_URL: process.env.REDIS_URL ?? 'redis://localhost:6379',
   API_BASE_URL: 'http://localhost:3000',
   API_VERSION: '1',
   TRUSTED_ORIGINS: 'http://localhost:3000',

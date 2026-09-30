@@ -18,6 +18,19 @@ services:
       timeout: 5s
       retries: 10
 
+  narada-redis:
+    container_name: narada-redis
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   narada-api:
     container_name: narada-api
     build:
@@ -31,7 +44,10 @@ services:
     depends_on:
       narada-db:
         condition: service_healthy
+      narada-redis:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   pgdata:
+  redisdata:

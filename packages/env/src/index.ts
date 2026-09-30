@@ -78,6 +78,10 @@ export const env = createEnv({
     R2_SECRET_ACCESS_KEY: z.string(),
     R2_BUCKET_NAME: z.string(),
 
+    // Backs BullMQ (doc-chapter import job queue) today; the intent is to also back rate limiting
+    // and caching later, so this is a general-purpose connection, not a queue-specific one.
+    REDIS_URL: z.url(),
+
     USE_TWILIO_API: z.stringbool().default(false),
     TWILIO_ACCOUNT_SID: z.string().optional(),
     TWILIO_AUTH_TOKEN: z.string().optional(),

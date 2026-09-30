@@ -13,6 +13,7 @@ env:
   API_BASE_URL: http://localhost:3000
   API_VERSION: '1'
   DATABASE_URL: postgresql://user:password@localhost:5432/narada
+  REDIS_URL: redis://localhost:6379
   TRUSTED_ORIGINS: http://localhost:3000
   AUTH_SECRET: ci-build-placeholder-secret-value-not-real-12345
   GOOGLE_CLIENT_ID: ci-placeholder
@@ -65,8 +66,18 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       TEST_DATABASE_URL: postgresql://narada:narada@localhost:5432/narada_test
+      REDIS_URL: redis://localhost:6379
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
