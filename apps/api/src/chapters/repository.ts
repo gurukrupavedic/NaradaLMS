@@ -1,5 +1,5 @@
 import { and, eq, inArray, max, min, sql } from 'drizzle-orm'
-import { chapter, type SchoolDb } from '@narada/db'
+import { audioAsset, audioMapping, chapter, segment, stagedUpload, type SchoolDb } from '@narada/db'
 
 import type { ContentReadView } from '../utils/accessPolicy'
 
@@ -35,6 +35,98 @@ export async function findCourseId(db: SchoolDb, chapterId: string): Promise<str
   })
 
   return row?.track.courseId
+}
+
+// ── Staged uploads ───────────────────────────────────────────────────────────
+
+export async function createStagedUpload(
+  db: SchoolDb,
+  data: {
+    chapterId: string
+    purpose: 'audio'
+    objectKey: string
+    contentType: string
+    createdByUserId: string
+    expiresAt: Date
+  },
+) {
+  const rows = await db.insert(stagedUpload).values(data).returning()
+  return rows.at(0)
+}
+
+export async function findStagedUpload(db: SchoolDb, id: string, chapterId: string, purpose: 'audio') {
+  return db.query.stagedUpload.findFirst({
+    where: (t, { and: andCol, eq: eqCol }) => andCol(eqCol(t.id, id), eqCol(t.chapterId, chapterId), eqCol(t.purpose, purpose)),
+  })
+}
+
+export async function markStagedUploadExpired(db: SchoolDb, id: string): Promise<void> {
+  await db.update(stagedUpload).set({ status: 'expired' }).where(eq(stagedUpload.id, id))
+}
+
+export async function markStagedUploadCompleted(db: SchoolDb, id: string): Promise<void> {
+  await db.update(stagedUpload).set({ status: 'completed', completedAt: new Date() }).where(eq(stagedUpload.id, id))
+}
+
+// ── Audio assets + mappings ──────────────────────────────────────────────────
+
+export async function nextAudioAssetOrder(db: SchoolDb, chapterId: string): Promise<number> {
+  const rows = await db.select({ id: audioAsset.id }).from(audioAsset).where(eq(audioAsset.chapterId, chapterId))
+  return rows.length + 1
+}
+
+/** `onConflictDoNothing` on `(chapterId, objectKey)` makes a retried confirm-upload call idempotent — see `findAudioAssetByObjectKey` for the re-fetch half of that. */
+export async function insertAudioAsset(
+  db: SchoolDb,
+  data: { chapterId: string; objectKey: string; label: string | null; reciter: string; duration: number; order: number },
+) {
+  const rows = await db.insert(audioAsset).values(data).onConflictDoNothing().returning()
+  return rows.at(0)
+}
+
+export async function findAudioAssetByObjectKey(db: SchoolDb, chapterId: string, objectKey: string) {
+  return db.query.audioAsset.findFirst({
+    where: (t, { and: andCol, eq: eqCol }) => andCol(eqCol(t.chapterId, chapterId), eqCol(t.objectKey, objectKey)),
+    with: { audioMappings: true },
+  })
+}
+
+export async function findAudioAssetById(db: SchoolDb, audioId: string, chapterId: string) {
+  return db.query.audioAsset.findFirst({
+    where: (t, { and: andCol, eq: eqCol }) => andCol(eqCol(t.id, audioId), eqCol(t.chapterId, chapterId)),
+  })
+}
+
+export async function deleteAudioAssetRow(db: SchoolDb, audioId: string): Promise<void> {
+  await db.delete(audioAsset).where(eq(audioAsset.id, audioId))
+}
+
+/** Whether each of `segmentIds` is currently assigned to `chapterId` (`segment.chapterId` — nullable, and may since have been reassigned elsewhere via the doc-chapter assignment endpoint) — the guard against mapping audio onto a segment that doesn't (or no longer) belongs to this chapter. */
+export async function countSegmentsBelongingToChapter(
+  db: SchoolDb,
+  chapterId: string,
+  segmentIds: string[],
+): Promise<number> {
+  if (segmentIds.length === 0) return 0
+  const rows = await db
+    .select({ id: segment.id })
+    .from(segment)
+    .where(and(eq(segment.chapterId, chapterId), inArray(segment.id, segmentIds)))
+  return rows.length
+}
+
+/** Full replace, scoped to one `audioAssetId` — safe unconditionally, since a mapping has no downstream dependents of its own. */
+export async function replaceAudioMappings(
+  db: SchoolDb,
+  audioAssetId: string,
+  pairs: { segmentId: string; audioStart: number; audioEnd: number }[],
+) {
+  await db.delete(audioMapping).where(eq(audioMapping.audioAssetId, audioAssetId))
+  if (pairs.length === 0) return []
+  return db
+    .insert(audioMapping)
+    .values(pairs.map(p => ({ audioAssetId, segmentId: p.segmentId, audioStart: p.audioStart, audioEnd: p.audioEnd })))
+    .returning()
 }
 
 // ── Chapter catalog management (title/order/status/archive) ────────────────

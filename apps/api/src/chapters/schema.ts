@@ -60,6 +60,44 @@ export const ChapterDetailSchema = ChapterSchema.extend({
   audio: z.array(audioAssetSchema),
 })
 
+// ── Audio upload + mapping (write side) ─────────────────────────────────────
+
+const audioContentTypeSchema = z.enum(['audio/mpeg', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/mp4'])
+
+export type CreateAudioUploadData = z.infer<typeof CreateAudioUploadSchema>
+export const CreateAudioUploadSchema = z.object({
+  contentType: audioContentTypeSchema,
+})
+
+export type CreateAudioAssetData = z.infer<typeof CreateAudioAssetSchema>
+export const CreateAudioAssetSchema = z.object({
+  uploadId: z.uuid(),
+  label: z.string().min(1).nullable().default(null),
+  reciter: z.string().min(1),
+  // No client-reported `duration` — the server derives it from the uploaded bytes themselves
+  // (`utils/audioMetadata.ts`), so a client-supplied number would just be dead input never used
+  // for anything.
+})
+
+const audioMappingInputSchema = z
+  .object({
+    segmentId: z.uuid(),
+    audioStart: z.number().nonnegative(),
+    audioEnd: z.number().positive(),
+  })
+  .refine(d => d.audioEnd > d.audioStart, { message: 'audioEnd must be greater than audioStart' })
+
+export type SetAudioMappingsData = z.infer<typeof SetAudioMappingsSchema>
+export const SetAudioMappingsSchema = z.object({
+  mappings: z.array(audioMappingInputSchema).refine(
+    ms => {
+      const sorted = [...ms].sort((a, b) => a.audioStart - b.audioStart)
+      return sorted.every((m, i) => i === 0 || m.audioStart >= sorted[i - 1]!.audioEnd)
+    },
+    { message: 'mappings must not overlap' },
+  ),
+})
+
 // ── Chapter catalog management (title/order/status/delete) ─────────────────
 
 export type CreateChapterData = z.infer<typeof CreateChapterSchema>

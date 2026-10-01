@@ -25,6 +25,7 @@ import {
   segment,
   segmentText,
   session,
+  stagedUpload,
   track,
   user,
   type SchoolDbClient,
@@ -46,6 +47,7 @@ export type SegmentRow = typeof segment.$inferSelect
 export type SegmentTextRow = typeof segmentText.$inferSelect
 export type AudioAssetRow = typeof audioAsset.$inferSelect
 export type AudioMappingRow = typeof audioMapping.$inferSelect
+export type StagedUploadRow = typeof stagedUpload.$inferSelect
 export type BatchRow = typeof batch.$inferSelect
 export type BatchClassSlotRow = typeof batchClassSlot.$inferSelect
 export type EnrollmentRow = typeof enrollment.$inferSelect
@@ -457,6 +459,36 @@ export async function createAudioMapping(
 
   const row = rows.at(0)
   if (!row) throw new Error('createAudioMapping: insert returned no row')
+  return row
+}
+
+export async function createStagedUpload(
+  world: TestWorld,
+  chapter_: ChapterRow,
+  overrides?: {
+    purpose?: StagedUploadRow['purpose']
+    status?: StagedUploadRow['status']
+    objectKey?: string
+    contentType?: string
+    createdByUserId?: string
+    expiresAt?: Date
+  },
+): Promise<StagedUploadRow> {
+  const rows = await world.schoolDb
+    .insert(stagedUpload)
+    .values({
+      chapterId: chapter_.id,
+      purpose: overrides?.purpose ?? 'audio',
+      status: overrides?.status ?? 'pending',
+      objectKey: overrides?.objectKey ?? `schools/test/chapters/${chapter_.id}/audio/${nextUnique()}.mp3`,
+      contentType: overrides?.contentType ?? 'audio/mpeg',
+      createdByUserId: overrides?.createdByUserId ?? newUserId(),
+      expiresAt: overrides?.expiresAt ?? new Date(Date.now() + 60 * 60 * 1000),
+    })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw new Error('createStagedUpload: insert returned no row')
   return row
 }
 

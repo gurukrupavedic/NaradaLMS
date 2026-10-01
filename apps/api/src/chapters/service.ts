@@ -1,7 +1,18 @@
+import { randomUUID } from 'crypto'
+
 import type { SchoolDbClient } from '@narada/db'
 
-import { conflict, internalError, notFound, orNotFound, unprocessable } from '../error'
-import { signedDownloadUrl } from '../utils/contentStorage'
+import { conflict, internalError, notFound, orInternalError, orNotFound, unprocessable } from '../error'
+import { getLogger } from '../requestContext'
+import { readAudioDuration } from '../utils/audioMetadata'
+import {
+  audioObjectKey,
+  deleteStoredObject,
+  readStoredObjectBytes,
+  signedDownloadUrl,
+  signedUploadUrl,
+  storedObjectExists,
+} from '../utils/contentStorage'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import type { AccessPolicy, ContentReadView } from '../utils/accessPolicy'
 import * as repository from './repository'
@@ -9,8 +20,11 @@ import type {
   AudioAsset,
   Chapter,
   ChapterDetail,
+  CreateAudioAssetData,
+  CreateAudioUploadData,
   CreateChapterData,
   ScriptText,
+  SetAudioMappingsData,
   UpdateChapterData,
 } from './schema'
 
@@ -181,4 +195,130 @@ export async function updateChapter(
 
   if (!row) throw internalError()
   return toChapter(row)
+}
+
+// ── Audio upload + mapping (write side) ─────────────────────────────────────
+
+export async function createAudioUpload(
+  context: ChapterServiceContext,
+  chapterId: string,
+  userId: string,
+  schoolSlug: string,
+  data: CreateAudioUploadData,
+): Promise<{ uploadId: string; uploadUrl: string; expiresAt: string }> {
+  orNotFound(await repository.findById(context.db, chapterId, { kind: 'authoring' }))
+
+  const uploadId = randomUUID()
+  const objectKey = audioObjectKey({ schoolSlug, chapterId, uploadId, contentType: data.contentType })
+  // Bookkeeping TTL for the `stagedUpload` row itself — distinct from the presigned URL's own
+  // ~30 minute validity (`contentStorage.ts`'s `signedUploadUrl`).
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000)
+
+  const staged = await repository.createStagedUpload(context.db, {
+    chapterId,
+    purpose: 'audio',
+    objectKey,
+    contentType: data.contentType,
+    createdByUserId: userId,
+    expiresAt,
+  })
+  if (!staged) throw internalError()
+
+  const { uploadUrl } = await signedUploadUrl(objectKey, data.contentType)
+  return { uploadId: staged.id, uploadUrl, expiresAt: expiresAt.toISOString() }
+}
+
+export async function createAudioAsset(
+  context: ChapterServiceContext,
+  chapterId: string,
+  data: CreateAudioAssetData,
+): Promise<AudioAsset> {
+  return context.db.transaction(async tx => {
+    const staged = orNotFound(await repository.findStagedUpload(tx, data.uploadId, chapterId, 'audio'))
+
+    if (staged.status === 'completed') {
+      // Idempotent retry: a confirm call that already succeeded once just returns the same asset.
+      const existing = orInternalError(await repository.findAudioAssetByObjectKey(tx, chapterId, staged.objectKey))
+      return toAudioAssetResponse(existing)
+    }
+    if (staged.status !== 'pending') {
+      throw unprocessable('upload has already been completed or expired')
+    }
+    if (staged.expiresAt <= new Date()) {
+      await repository.markStagedUploadExpired(tx, staged.id)
+      throw unprocessable('upload has expired')
+    }
+    if (!(await storedObjectExists(staged.objectKey))) {
+      throw unprocessable('uploaded object does not exist')
+    }
+
+    // The server's own read of what was actually uploaded — never the client's word for it. A
+    // file that doesn't decode as real audio (wrong content, corrupt, mislabeled) is rejected
+    // here rather than landing as an asset with a made-up duration.
+    let duration: number
+    try {
+      const bytes = await readStoredObjectBytes(staged.objectKey)
+      duration = await readAudioDuration(bytes, staged.contentType)
+    } catch {
+      throw unprocessable('could not read this file as audio — it may be corrupt or not a supported format')
+    }
+
+    await repository.markStagedUploadCompleted(tx, staged.id)
+
+    const order = await repository.nextAudioAssetOrder(tx, chapterId)
+    await repository.insertAudioAsset(tx, {
+      chapterId,
+      objectKey: staged.objectKey,
+      label: data.label,
+      reciter: data.reciter,
+      duration,
+      order,
+    })
+
+    // Re-fetched rather than trusting the insert's own `.returning()` (which is empty on the
+    // `onConflictDoNothing` no-op path a racing retry can hit) — this way both paths return the
+    // same shape through the same code.
+    const row = orInternalError(await repository.findAudioAssetByObjectKey(tx, chapterId, staged.objectKey))
+    return toAudioAssetResponse(row)
+  })
+}
+
+export async function setAudioMappings(
+  context: ChapterServiceContext,
+  chapterId: string,
+  audioId: string,
+  data: SetAudioMappingsData,
+): Promise<AudioAsset> {
+  return context.db.transaction(async tx => {
+    const asset = orNotFound(await repository.findAudioAssetById(tx, audioId, chapterId))
+
+    const segmentIds = [...new Set(data.mappings.map(m => m.segmentId))]
+    const belongingCount = await repository.countSegmentsBelongingToChapter(tx, chapterId, segmentIds)
+    if (belongingCount !== segmentIds.length) {
+      throw unprocessable('one or more segments do not belong to this chapter')
+    }
+
+    await repository.replaceAudioMappings(tx, audioId, data.mappings)
+
+    const row = orInternalError(await repository.findAudioAssetByObjectKey(tx, chapterId, asset.objectKey))
+    return toAudioAssetResponse(row)
+  })
+}
+
+export async function deleteAudioAsset(
+  context: ChapterServiceContext,
+  chapterId: string,
+  audioId: string,
+): Promise<void> {
+  const asset = orNotFound(await repository.findAudioAssetById(context.db, audioId, chapterId))
+
+  await repository.deleteAudioAssetRow(context.db, audioId)
+
+  // Best-effort, after the DB delete has already committed — an orphaned R2 object is cheap and
+  // recoverable; a chapter that can't be edited because R2 hiccuped is not.
+  try {
+    await deleteStoredObject(asset.objectKey)
+  } catch (err) {
+    getLogger().warn({ err, objectKey: asset.objectKey }, 'failed to delete R2 object after audio asset deletion')
+  }
 }

@@ -3,12 +3,27 @@ import * as z from 'zod'
 
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { createChapter, findByIdForReader, updateChapter } from './service'
-import { CreateChapterSchema, UpdateChapterSchema } from './schema'
+import {
+  createAudioAsset,
+  createAudioUpload,
+  createChapter,
+  deleteAudioAsset,
+  findByIdForReader,
+  setAudioMappings,
+  updateChapter,
+} from './service'
+import {
+  CreateAudioAssetSchema,
+  CreateAudioUploadSchema,
+  CreateChapterSchema,
+  SetAudioMappingsSchema,
+  UpdateChapterSchema,
+} from './schema'
 
 const router = Router()
 
 const chapterIdParams = z.object({ chapterId: z.uuid() })
+const audioIdParams = chapterIdParams.extend({ audioId: z.uuid() })
 
 router.get(
   '/:chapterId',
@@ -38,6 +53,49 @@ router.patch(
     const data = await parse(UpdateChapterSchema, req.body)
     const chapter = await updateChapter({ db }, chapterId, data)
     res.status(200).json({ data: chapter })
+  }),
+)
+
+router.post(
+  '/:chapterId/audio/presign',
+  optionalProfileRoute(async ({ req, res, db, access, school, user }) => {
+    const { chapterId } = await parse(chapterIdParams, req.params)
+    access.requireCanUpdateContent()
+    const data = await parse(CreateAudioUploadSchema, req.body)
+    const result = await createAudioUpload({ db }, chapterId, user.id, school.slug, data)
+    res.status(201).json({ data: result })
+  }),
+)
+
+router.post(
+  '/:chapterId/audio',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { chapterId } = await parse(chapterIdParams, req.params)
+    access.requireCanUpdateContent()
+    const data = await parse(CreateAudioAssetSchema, req.body)
+    const asset = await createAudioAsset({ db }, chapterId, data)
+    res.status(201).json({ data: asset })
+  }),
+)
+
+router.put(
+  '/:chapterId/audio/:audioId/mappings',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { chapterId, audioId } = await parse(audioIdParams, req.params)
+    access.requireCanUpdateContent()
+    const data = await parse(SetAudioMappingsSchema, req.body)
+    const asset = await setAudioMappings({ db }, chapterId, audioId, data)
+    res.status(200).json({ data: asset })
+  }),
+)
+
+router.delete(
+  '/:chapterId/audio/:audioId',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { chapterId, audioId } = await parse(audioIdParams, req.params)
+    access.requireCanUpdateContent()
+    await deleteAudioAsset({ db }, chapterId, audioId)
+    res.status(204).send()
   }),
 )
 

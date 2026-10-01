@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { destroyTestWorld } from '../testing/cleanup'
 import {
+  createAudioAsset,
+  createAudioMapping,
   createChapter,
   createCourse,
   createDocChapter,
@@ -130,6 +132,31 @@ describe('setAssignments (service)', () => {
         { segmentId: segment1.id, chapterId: chapterInOtherCourse.id },
       ]),
     ).rejects.toMatchObject({ statusCode: 422 })
+  })
+
+  it('deletes an existing audioMapping when its segment is reassigned away from the mapping\'s chapter', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterA = await createChapter(world, trackRow)
+    const chapterB = await createChapter(world, trackRow)
+    const docChapterRow = await createDocChapter(world)
+    const segment1 = await createSegment(world, docChapterRow, { order: 1, chapter: chapterA })
+    const segment2 = await createSegment(world, docChapterRow, { order: 2, chapter: chapterA })
+    const audioAssetRow = await createAudioAsset(world, chapterA)
+    await createAudioMapping(world, segment1, audioAssetRow, { audioStart: 0, audioEnd: 1 })
+    await createAudioMapping(world, segment2, audioAssetRow, { audioStart: 1, audioEnd: 2 })
+
+    // segment1 moves to chapterB, segment2 stays on chapterA (a no-op reassignment) — only
+    // segment1's mapping (now stale: it was made against chapterA's audio) should be gone.
+    await setAssignments(world.schoolDb, docChapterRow.id, [
+      { segmentId: segment1.id, chapterId: chapterB.id },
+      { segmentId: segment2.id, chapterId: chapterA.id },
+    ])
+
+    const remaining = await world.schoolDb.query.audioMapping.findMany({
+      where: (t, { eq }) => eq(t.audioAssetId, audioAssetRow.id),
+    })
+    expect(remaining.map(m => m.segmentId)).toEqual([segment2.id])
   })
 
   it('404s an unknown doc chapter', async () => {
