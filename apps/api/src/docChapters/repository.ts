@@ -1,6 +1,6 @@
 import { and, count, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 
-import { docChapter, docChapterUpload, segment, segmentText, uuidv7, type SchoolDb } from '@narada/db'
+import { chapter, docChapter, docChapterUpload, segment, segmentText, track, uuidv7, type SchoolDb } from '@narada/db'
 
 import type { ParsedHeading } from './parse'
 import type { ScriptKey } from './schema'
@@ -250,4 +250,44 @@ export async function upsertSegmentText(
 /** Cascades `segmentText` and any `audioMapping` rows via their FKs — see `packages/db/src/schema/school.ts`. */
 export async function deleteSegmentRow(db: SchoolDb, segmentId: string): Promise<void> {
   await db.delete(segment).where(eq(segment.id, segmentId))
+}
+
+// ── Assignment (doc chapter segments → course chapters) ────────────────────
+
+/**
+ * `chapterId -> courseId` for whichever of `chapterIds` exist, through their track — the one place
+ * this domain needs to reach into `chapter`/`track` at all, to confirm an assignment's target
+ * chapter actually belongs to the same course as the doc chapter being assigned from.
+ */
+export async function findChapterCourseIds(db: SchoolDb, chapterIds: string[]): Promise<Map<string, string>> {
+  if (chapterIds.length === 0) return new Map()
+
+  const rows = await db
+    .select({ chapterId: chapter.id, courseId: track.courseId })
+    .from(chapter)
+    .innerJoin(track, eq(track.id, chapter.trackId))
+    .where(inArray(chapter.id, chapterIds))
+  return new Map(rows.map(r => [r.chapterId, r.courseId]))
+}
+
+/**
+ * Bulk-sets `segment.chapterId`, grouped by distinct target value into one `UPDATE ... WHERE id IN
+ * (...)` per group — cheap at this scale (a doc chapter has at most a few hundred segments, and
+ * real assignments cluster into just a handful of distinct chapters plus maybe one "unassigned"
+ * group), and far simpler than a single giant CASE expression for no real benefit.
+ */
+export async function setSegmentAssignments(
+  db: SchoolDb,
+  assignments: { segmentId: string; chapterId: string | null }[],
+): Promise<void> {
+  const segmentIdsByChapterId = new Map<string | null, string[]>()
+  for (const { segmentId, chapterId } of assignments) {
+    const group = segmentIdsByChapterId.get(chapterId)
+    if (group) group.push(segmentId)
+    else segmentIdsByChapterId.set(chapterId, [segmentId])
+  }
+
+  for (const [chapterId, segmentIds] of segmentIdsByChapterId) {
+    await db.update(segment).set({ chapterId }).where(inArray(segment.id, segmentIds))
+  }
 }
