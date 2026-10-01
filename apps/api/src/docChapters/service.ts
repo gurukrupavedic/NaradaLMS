@@ -361,7 +361,21 @@ export async function setAssignments(
       }
     }
 
+    // An existing `audioMapping` only makes sense while its segment is still assigned to the same
+    // chapter its audio asset belongs to — `setAudioMappings` (chapters/service.ts) only checks
+    // that at write time, and nothing re-checks it afterward. So the moment a segment's assignment
+    // actually *changes* (to a different chapter, or to unassigned), any mapping already made
+    // against it is stale and must go here — there is no other place in the system that will ever
+    // notice or clean it up otherwise.
+    const previousChapterIdBySegmentId = new Map(row.segments.map(s => [s.id, s.chapterId]))
+    const reassignedSegmentIds = assignments
+      .filter(a => previousChapterIdBySegmentId.get(a.segmentId) !== a.chapterId)
+      .map(a => a.segmentId)
+
     await repository.setSegmentAssignments(tx, assignments)
+    if (reassignedSegmentIds.length > 0) {
+      await repository.deleteAudioMappingsForSegments(tx, reassignedSegmentIds)
+    }
 
     return toDetail(orNotFound(await repository.findDocChapterDetail(tx, docChapterId)))
   })

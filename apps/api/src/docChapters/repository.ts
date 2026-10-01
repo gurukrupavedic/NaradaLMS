@@ -1,6 +1,16 @@
 import { and, count, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 
-import { chapter, docChapter, docChapterUpload, segment, segmentText, track, uuidv7, type SchoolDb } from '@narada/db'
+import {
+  audioMapping,
+  chapter,
+  docChapter,
+  docChapterUpload,
+  segment,
+  segmentText,
+  track,
+  uuidv7,
+  type SchoolDb,
+} from '@narada/db'
 
 import type { ParsedHeading } from './parse'
 import type { ScriptKey } from './schema'
@@ -290,4 +300,10 @@ export async function setSegmentAssignments(
   for (const [chapterId, segmentIds] of segmentIdsByChapterId) {
     await db.update(segment).set({ chapterId }).where(inArray(segment.id, segmentIds))
   }
+}
+
+/** Called when a segment's chapter assignment changes — any `audioMapping` already made against it belonged to its *previous* chapter's audio and makes no sense attached to whatever it's assigned to now (or to nothing). See `service.ts::setAssignments`'s doc comment. */
+export async function deleteAudioMappingsForSegments(db: SchoolDb, segmentIds: string[]): Promise<void> {
+  if (segmentIds.length === 0) return
+  await db.delete(audioMapping).where(inArray(audioMapping.segmentId, segmentIds))
 }
