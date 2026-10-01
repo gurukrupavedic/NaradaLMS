@@ -3,31 +3,32 @@ import type { ProficiencyLevel } from '@/lib/proficiency'
 /**
  * The practice room's content types and pure helpers.
  *
- * `lib/api/reshape.ts`'s `buildChapterContent` builds this from real data — real chapter, real track, real proficiency, real scripts/audio when
- * a chapter has them. Today no chapter in the imported syllabus actually has any (text, segments or
- * audio), so `scripts`/`audio` come back empty in practice — but the capability is real:
- * apps/api's chapters domain persists all three and `components/admin/*` writes them for real.
- * `components/practice-room.tsx` renders an honest empty state for the no-content case rather than
- * pretending otherwise.
+ * `lib/api/reshape.ts`'s `buildChapterContent` builds this from real data — real chapter, real
+ * track, real proficiency, real scripts/audio when a chapter has them. A chapter's content comes
+ * from importing Word docs through apps/api's `docChapters` pipeline (parse → segment cleanup →
+ * assign to a chapter → map audio) and isn't wired up from this app yet, so `scripts`/`audio` still
+ * come back empty for most chapters in practice — `components/practice-room.tsx` renders an honest
+ * empty state for that case rather than pretending otherwise.
  *
- * The shapes below are what a chapter's content *would* be once a chapter has any: text,
- * `segments` addressed as character offsets into that text, and `audio` assets whose `mappings`
- * tie a segment id to a time range in the recording. One deliberate extension over a single
- * `script` per chapter: a student reading Devanagari and a student reading Telugu are looking at
- * the *same* recitation, so scripts are modelled as parallel texts sharing one set of segment ids
- * — which is what lets the audio mapping stay valid across a script switch.
+ * The shapes below are what a chapter's content looks like once it has any: `segments` each carry
+ * their own text for that script directly (never offsets into some shared blob — splitting or
+ * merging a segment server-side is a plain row operation, not something this side ever has to
+ * recompute), and `audio` assets whose `mappings` tie a segment id to a time range in the
+ * recording. One deliberate extension over a single `script` per chapter: a student reading
+ * Devanagari and a student reading Telugu are looking at the *same* recitation, so scripts are
+ * modelled as parallel texts sharing one set of segment ids — which is what lets the audio mapping
+ * stay valid across a script switch.
  */
 
 export type ScriptKey = 'sa' | 'te' | 'en'
 
-export type Segment = { id: string; start: number; end: number }
+export type Segment = { id: string; text: string }
 
 export type ScriptText = {
   key: ScriptKey
   label: string
   short: string
   fontClass: string
-  text: string
   segments: Segment[]
 }
 

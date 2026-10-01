@@ -72,17 +72,17 @@ export type ApiChapter = {
 // load never eagerly fetches and signs every chapter's content.
 export type ApiScriptKey = 'te' | 'sa' | 'en'
 
-export type ApiScriptSegment = { id: string; start: number; end: number }
+export type ApiScriptSegment = { id: string; text: string }
 
 // One parallel script of a chapter's recitation — segments share ids with the chapter's other
-// scripts, each carrying this script's own offsets into this script's own `text`, which is what
-// lets a script switch keep its place in the audio.
+// scripts, each carrying its own text for this script directly, which is what lets a script switch
+// keep its place in the audio. A segment with no confident text for this script yet is simply
+// absent from the array, never present with empty text.
 export type ApiScriptText = {
   key: ApiScriptKey
   label: string
   short: string
   fontClass: string
-  text: string
   segments: ApiScriptSegment[]
 }
 
