@@ -313,3 +313,56 @@ export async function deleteSegment(
     return toDetail(orNotFound(await repository.findDocChapterDetail(tx, docChapterId)))
   })
 }
+
+/**
+ * Bulk-sets which course chapter each of a doc chapter's segments is assigned to — also how a
+ * chapter boundary "moves" in the assign-to-chapters UI, since there's no separate move operation:
+ * the client just recomputes which segments belong to which range and sends the whole new mapping.
+ *
+ * `assignments` must be the *complete* mapping — every segment currently in this doc chapter,
+ * exactly once, no more, no fewer. A partial list is rejected outright rather than treating an
+ * omitted segment as "leave unassigned": silently unassigning a segment nobody meant to touch,
+ * just because the client's recomputed range happened to leave it out, would be a much worse
+ * failure mode than a clear 422 telling the client its mapping is incomplete.
+ */
+export async function setAssignments(
+  db: SchoolDbClient,
+  docChapterId: string,
+  assignments: { segmentId: string; chapterId: string | null }[],
+): Promise<DocChapterDetail> {
+  return db.transaction(async tx => {
+    const row = orNotFound(await repository.findDocChapterDetail(tx, docChapterId))
+
+    const existingIds = new Set(row.segments.map(s => s.id))
+    const submittedIds = new Set(assignments.map(a => a.segmentId))
+    // `assignments.length === submittedIds.size` catches a duplicate segmentId directly, rather
+    // than relying on the route's zod schema having already rejected one — this function is also
+    // called directly (see docChapterAssignments.integration.test.ts), not only reached via HTTP,
+    // and a Set-only comparison can't see a duplicate at all: `[{A,X},{A,Y},{B,Z}]` has the same
+    // `submittedIds` as `[{A,X},{B,Z}]`, just with A's final chapterId decided arbitrarily by
+    // repository.ts::setSegmentAssignments's grouping order instead of being rejected outright.
+    const coversExactly =
+      assignments.length === submittedIds.size &&
+      existingIds.size === submittedIds.size &&
+      [...existingIds].every(id => submittedIds.has(id))
+    if (!coversExactly) {
+      throw unprocessable(
+        "assignments must cover exactly this doc chapter's segments, no more, no fewer, each named once",
+      )
+    }
+
+    const chapterIds = [...new Set(assignments.map(a => a.chapterId).filter((id): id is string => id !== null))]
+    if (chapterIds.length > 0) {
+      const courseIdByChapterId = await repository.findChapterCourseIds(tx, chapterIds)
+      for (const chapterId of chapterIds) {
+        if (courseIdByChapterId.get(chapterId) !== row.courseId) {
+          throw unprocessable(`chapter ${chapterId} does not belong to this doc chapter's course`)
+        }
+      }
+    }
+
+    await repository.setSegmentAssignments(tx, assignments)
+
+    return toDetail(orNotFound(await repository.findDocChapterDetail(tx, docChapterId)))
+  })
+}

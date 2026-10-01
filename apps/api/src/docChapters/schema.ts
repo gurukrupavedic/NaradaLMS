@@ -71,3 +71,15 @@ export const splitSegmentRequestSchema = z.object({
   // rejected at the service layer, where the actual word count is known.
   wordIndex: z.number().int().min(1),
 })
+
+export type SetAssignmentsRequest = z.infer<typeof setAssignmentsRequestSchema>
+export const setAssignmentsRequestSchema = z
+  .object({
+    // The *complete* mapping for this doc chapter, not a diff — see
+    // `service.ts::setAssignments`'s doc comment for why a partial list is rejected rather than
+    // treating an omitted segment as "leave unassigned."
+    assignments: z.array(z.object({ segmentId: z.uuid(), chapterId: z.uuid().nullable() })).min(1),
+  })
+  .refine(data => new Set(data.assignments.map(a => a.segmentId)).size === data.assignments.length, {
+    message: 'duplicate segmentId in assignments',
+  })

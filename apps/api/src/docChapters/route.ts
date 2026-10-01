@@ -3,7 +3,12 @@ import * as z from 'zod'
 
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { confirmUploadRequestSchema, listDocChaptersQuerySchema, splitSegmentRequestSchema } from './schema'
+import {
+  confirmUploadRequestSchema,
+  listDocChaptersQuerySchema,
+  setAssignmentsRequestSchema,
+  splitSegmentRequestSchema,
+} from './schema'
 import {
   confirmUpload,
   deleteSegment,
@@ -12,6 +17,7 @@ import {
   listDocChapters,
   mergeSegmentWithNext,
   presignUpload,
+  setAssignments,
   splitSegment,
 } from './service'
 
@@ -109,5 +115,15 @@ docChapterRouter.delete(
     const { docChapterId, segmentId } = await parse(SegmentParamsSchema, req.params)
     access.requireCanUpdateContent()
     res.status(200).json({ data: await deleteSegment(db, docChapterId, segmentId) })
+  }),
+)
+
+docChapterRouter.put(
+  '/:docChapterId/assignments',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { docChapterId } = await parse(DocChapterParamsSchema, req.params)
+    access.requireCanUpdateContent()
+    const { assignments } = await parse(setAssignmentsRequestSchema, req.body)
+    res.status(200).json({ data: await setAssignments(db, docChapterId, assignments) })
   }),
 )
