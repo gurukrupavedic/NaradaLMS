@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ApiBatchWithRole, ApiDashboard, ApiEvaluation, ApiTrack } from '@/lib/api/api-types'
-import { buildLearningTracks, buildRoster, isArchivedTrack, isRosterStudent } from './reshape'
+import type {
+  ApiBatchWithRole,
+  ApiChapterDetail,
+  ApiDashboard,
+  ApiEvaluation,
+  ApiTrack,
+} from '@/lib/api/api-types'
+import { buildChapterContent, buildLearningTracks, buildRoster, isArchivedTrack, isRosterStudent } from './reshape'
 
 const chapter = (id: string, trackId: string, order: number) => ({
   id,
@@ -170,6 +176,55 @@ describe('a student seat that is not live', () => {
       const [ladder] = buildLearningTracks(baseDashboard({ tracks: [t1], memberships }))
       expect(ladder.batchCode).toBe('CODE-track-1-student-active')
     }
+  })
+})
+
+describe('buildChapterContent', () => {
+  it('passes each script\'s segments through with their own text, not an offset pair', () => {
+    const chapterRow = chapter('chapter-1', 'track-1', 0)
+    const dashboard = baseDashboard({ tracks: [track('track-1', 1, 1)] })
+    const detail: ApiChapterDetail = {
+      ...chapterRow,
+      scripts: [
+        {
+          key: 'sa',
+          label: 'Sanskrit',
+          short: 'SA',
+          fontClass: 'font-deva',
+          segments: [
+            { id: 'seg-1', text: 'ॐ शुक्लांबरधरं' },
+            { id: 'seg-2', text: 'सह नौ भुनक्तु' },
+          ],
+        },
+      ],
+      audio: [],
+    }
+
+    const content = buildChapterContent(dashboard, chapterRow, detail)
+
+    expect(content.scripts).toEqual([
+      {
+        key: 'sa',
+        label: 'Sanskrit',
+        short: 'SA',
+        fontClass: 'font-deva',
+        segments: [
+          { id: 'seg-1', text: 'ॐ शुक्लांबरधरं' },
+          { id: 'seg-2', text: 'सह नौ भुनक्तु' },
+        ],
+      },
+    ])
+  })
+
+  it('comes back with empty scripts/audio for a chapter with no content imported yet', () => {
+    const chapterRow = chapter('chapter-1', 'track-1', 0)
+    const dashboard = baseDashboard({ tracks: [track('track-1', 1, 1)] })
+    const detail: ApiChapterDetail = { ...chapterRow, scripts: [], audio: [] }
+
+    const content = buildChapterContent(dashboard, chapterRow, detail)
+
+    expect(content.scripts).toEqual([])
+    expect(content.audio).toEqual([])
   })
 })
 

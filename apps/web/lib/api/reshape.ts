@@ -265,7 +265,6 @@ export function buildChapterContent(
       label: s.label,
       short: s.short,
       fontClass: s.fontClass,
-      text: s.text,
       segments: s.segments,
     })),
     audio: detail.audio.map(a => ({

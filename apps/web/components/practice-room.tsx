@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useEffectEvent, useMemo, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { Select } from '@base-ui/react/select'
@@ -29,9 +29,10 @@ const RATES = [0.5, 0.75, 1] as const
  * This is the loop the product exists for and the one screen the app didn't have: a chapter's
  * real title, track and mark load from the real API (`lib/api/reshape.ts`'s `buildChapterContent`),
  * and `scripts`/`audio` are real too (`lib/use-transport.ts` plays the actual uploaded recording,
- * not a simulated clock) — they just always come back empty today, since no chapter in the imported
- * syllabus has text, segments or audio uploaded yet. `EmptyPracticeRoom` below is what that renders
- * today; `PracticeRoomView` is what it renders the day a chapter has both.
+ * not a simulated clock) — they just still come back empty for most chapters today, since the
+ * doc-import pipeline that produces them (apps/api's `docChapters` domain) isn't wired up from an
+ * admin screen in this app yet. `EmptyPracticeRoom` below is what that renders today;
+ * `PracticeRoomView` is what it renders once a chapter has both.
  *
  * Three things drive that second layout, all of them from how chant is actually learned rather
  * than from how a media player usually looks:
@@ -122,17 +123,6 @@ function PracticeRoomView({ chapter }: { chapter: ChapterContent }) {
   const { time, duration, playing, rate, loop, toggle, seek, setRate, setLoop } = transport
 
   const currentSegmentId = segmentAt(audio.mappings, time)
-
-  // Segments address the text by character offset, exactly as the API returns
-  // them — this slice is the whole of what "render a segment" means.
-  const lines = useMemo(
-    () =>
-      script.segments.map(segment => ({
-        id: segment.id,
-        text: script.text.slice(segment.start, segment.end),
-      })),
-    [script],
-  )
 
   // Switching recordings keeps your place in the *text*, not on the clock: the
   // practice take is 45% longer, so carrying the raw second count over would
@@ -262,7 +252,7 @@ function PracticeRoomView({ chapter }: { chapter: ChapterContent }) {
       {/* ── The text ─────────────────────────────────────────────────────── */}
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-10 pb-44">
         <ol className="space-y-1">
-          {lines.map((line, i) => {
+          {script.segments.map((line, i) => {
             const isCurrent = line.id === currentSegmentId
             const isLooped = line.id === loopedSegmentId
 
