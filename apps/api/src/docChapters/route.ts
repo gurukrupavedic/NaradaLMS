@@ -3,8 +3,17 @@ import * as z from 'zod'
 
 import { optionalProfileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { confirmUploadRequestSchema, listDocChaptersQuerySchema } from './schema'
-import { confirmUpload, getJobStatus, listDocChapters, presignUpload } from './service'
+import { confirmUploadRequestSchema, listDocChaptersQuerySchema, splitSegmentRequestSchema } from './schema'
+import {
+  confirmUpload,
+  deleteSegment,
+  getDocChapterDetail,
+  getJobStatus,
+  listDocChapters,
+  mergeSegmentWithNext,
+  presignUpload,
+  splitSegment,
+} from './service'
 
 // mergeParams: mounted at /courses/:courseId/doc-chapters in routes.ts.
 const router = Router({ mergeParams: true })
@@ -56,3 +65,49 @@ router.get(
 )
 
 export default router
+
+// A second router, mounted separately and flat at /doc-chapters (not nested under a course) —
+// matching chapters/route.ts's GET /:chapterId convention: a doc chapter's id alone is enough to
+// operate on it, and every endpoint here is admin-only, so there's no reader-facing course-scoping
+// to enforce.
+export const docChapterRouter = Router()
+
+const DocChapterParamsSchema = z.object({ docChapterId: z.uuid() })
+const SegmentParamsSchema = DocChapterParamsSchema.extend({ segmentId: z.uuid() })
+
+docChapterRouter.get(
+  '/:docChapterId',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { docChapterId } = await parse(DocChapterParamsSchema, req.params)
+    access.requireCanUpdateContent()
+    res.status(200).json({ data: await getDocChapterDetail(db, docChapterId) })
+  }),
+)
+
+docChapterRouter.post(
+  '/:docChapterId/segments/:segmentId/split',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { docChapterId, segmentId } = await parse(SegmentParamsSchema, req.params)
+    access.requireCanUpdateContent()
+    const data = await parse(splitSegmentRequestSchema, req.body)
+    res.status(200).json({ data: await splitSegment(db, docChapterId, segmentId, data) })
+  }),
+)
+
+docChapterRouter.post(
+  '/:docChapterId/segments/:segmentId/merge-next',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { docChapterId, segmentId } = await parse(SegmentParamsSchema, req.params)
+    access.requireCanUpdateContent()
+    res.status(200).json({ data: await mergeSegmentWithNext(db, docChapterId, segmentId) })
+  }),
+)
+
+docChapterRouter.delete(
+  '/:docChapterId/segments/:segmentId',
+  optionalProfileRoute(async ({ req, res, db, access }) => {
+    const { docChapterId, segmentId } = await parse(SegmentParamsSchema, req.params)
+    access.requireCanUpdateContent()
+    res.status(200).json({ data: await deleteSegment(db, docChapterId, segmentId) })
+  }),
+)

@@ -1,11 +1,11 @@
-import { uuidv7, type SchoolDbClient } from '@narada/db'
+import { uuidv7, type SchoolDb, type SchoolDbClient } from '@narada/db'
 import { getUploadUrl, objectExists } from '@narada/storage'
 
-import { notFound, unprocessable } from '../error'
+import { notFound, orNotFound, unprocessable } from '../error'
 import * as repository from './repository'
 import { docChapterQueue, enqueueParseDocSet } from './queue'
 import type { ParsedHeading } from './parse'
-import type { DocChapterListItem, JobStatusResponse, PresignUploadResponse } from './schema'
+import type { DocChapterDetail, DocChapterListItem, JobStatusResponse, PresignUploadResponse, ScriptKey } from './schema'
 
 const DOCX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
@@ -159,5 +159,157 @@ export async function upsertParsedHeading(
     }
 
     return true
+  })
+}
+
+// ── Doc chapter workspace (segment cleanup) ─────────────────────────────────
+// split/merge/delete below each read-then-write a doc chapter's segment order with no row lock —
+// two genuinely concurrent mutations of the *same* doc chapter (a double-click, or two admins on
+// it at once) could race under READ COMMITTED. Acceptable for now (admin-only, low-traffic, no
+// reports of it happening); a `.for('update')` lock on the doc chapter's segments is the fix if it
+// ever becomes real, same as the note on `findExistingHeading` above.
+
+type DocChapterDetailRow = NonNullable<Awaited<ReturnType<typeof repository.findDocChapterDetail>>>
+type SegmentRow = NonNullable<Awaited<ReturnType<typeof repository.findSegmentInDocChapter>>>
+
+function toDetail(row: DocChapterDetailRow): DocChapterDetail {
+  return {
+    id: row.id,
+    title: row.title,
+    track: row.track,
+    segments: row.segments.map(s => ({
+      id: s.id,
+      order: s.order,
+      chapterId: s.chapterId,
+      flaggedForReview: s.flaggedForReview,
+      scripts: Object.fromEntries(s.segmentTexts.map(t => [t.script, t.text])),
+    })),
+  }
+}
+
+function wordsOf(text: string): string[] {
+  return text.trim().split(/\s+/).filter(Boolean)
+}
+
+/** `undefined` when neither side has text for this script — never an empty string, which `segmentText`'s own non-empty check would reject anyway. */
+function concatText(a: string | undefined, b: string | undefined): string | undefined {
+  if (a && b) return `${a} ${b}`
+  return a ?? b
+}
+
+export async function getDocChapterDetail(db: SchoolDb, docChapterId: string): Promise<DocChapterDetail> {
+  return toDetail(orNotFound(await repository.findDocChapterDetail(db, docChapterId)))
+}
+
+/**
+ * Splits a segment in two at a word boundary within one script's text — the script currently shown
+ * in the cleanup UI, never all three at once, since word boundaries don't line up across scripts.
+ * The first segment keeps its id (and every other script's text, untouched); the second is brand
+ * new and starts with no text at all for the other scripts. Both come out `flaggedForReview`: the
+ * first because its other-script text may now cover more than its own half, the second because it
+ * has none yet — see `segment.flaggedForReview`'s own doc comment.
+ */
+export async function splitSegment(
+  db: SchoolDbClient,
+  docChapterId: string,
+  segmentId: string,
+  data: { script: ScriptKey; wordIndex: number },
+): Promise<DocChapterDetail> {
+  return db.transaction(async tx => {
+    const seg = orNotFound(await repository.findSegmentInDocChapter(tx, docChapterId, segmentId))
+    const textRow = seg.segmentTexts.find(t => t.script === data.script)
+    if (!textRow) throw unprocessable(`segment has no ${data.script} text to split`)
+
+    const words = wordsOf(textRow.text)
+    if (data.wordIndex < 1 || data.wordIndex >= words.length) {
+      throw unprocessable("wordIndex is out of range for this segment's text")
+    }
+
+    const before = words.slice(0, data.wordIndex).join(' ')
+    const after = words.slice(data.wordIndex).join(' ')
+
+    const orderedIds = await repository.findOrderedSegmentIds(tx, docChapterId)
+    const insertAt = orderedIds.indexOf(segmentId)
+    const newSegmentId = uuidv7()
+    const nextOrderedIds = [...orderedIds.slice(0, insertAt + 1), newSegmentId, ...orderedIds.slice(insertAt + 1)]
+
+    await repository.insertSegmentRow(tx, {
+      id: newSegmentId,
+      docChapterId,
+      chapterId: seg.chapterId,
+      flaggedForReview: true,
+    })
+    await repository.renumberSegments(tx, nextOrderedIds)
+    await repository.upsertSegmentText(tx, segmentId, data.script, before)
+    await repository.upsertSegmentText(tx, newSegmentId, data.script, after)
+    await repository.updateSegment(tx, segmentId, { flaggedForReview: true })
+
+    return toDetail(orNotFound(await repository.findDocChapterDetail(tx, docChapterId)))
+  })
+}
+
+function mergedChapterIdOf(a: SegmentRow, b: SegmentRow): string | null {
+  if (a.chapterId && b.chapterId && a.chapterId !== b.chapterId) {
+    throw unprocessable('cannot merge segments assigned to different chapters')
+  }
+  return a.chapterId ?? b.chapterId
+}
+
+/**
+ * Merges a segment with the one immediately after it (by `order`) — concatenating each script's
+ * text (space-joined; a script neither side has stays absent) and keeping the first segment's id,
+ * so any existing assignment on it survives. Inverse of `splitSegment`, so a misclick can be undone
+ * immediately.
+ *
+ * Does NOT preserve the second segment's `audioMapping` rows — they cascade away with it (see
+ * `deleteSegmentRow`). Fine today (no audio endpoints exist yet to have created any), but revisit
+ * this once they do: merging two segments that both already have mapped audio currently has no way
+ * to shift/reconcile the second half's timing onto the survivor, so it would silently disappear.
+ */
+export async function mergeSegmentWithNext(
+  db: SchoolDbClient,
+  docChapterId: string,
+  segmentId: string,
+): Promise<DocChapterDetail> {
+  return db.transaction(async tx => {
+    const seg = orNotFound(await repository.findSegmentInDocChapter(tx, docChapterId, segmentId))
+    const next = await repository.findNextSegment(tx, docChapterId, seg.order)
+    if (!next) throw unprocessable('no next segment to merge with')
+
+    const mergedChapterId = mergedChapterIdOf(seg, next)
+
+    for (const script of ['sa', 'te', 'en'] as const) {
+      const merged = concatText(
+        seg.segmentTexts.find(t => t.script === script)?.text,
+        next.segmentTexts.find(t => t.script === script)?.text,
+      )
+      if (merged !== undefined) {
+        await repository.upsertSegmentText(tx, segmentId, script, merged)
+      }
+    }
+
+    await repository.updateSegment(tx, segmentId, {
+      chapterId: mergedChapterId,
+      flaggedForReview: seg.flaggedForReview || next.flaggedForReview,
+    })
+    await repository.deleteSegmentRow(tx, next.id)
+    await repository.renumberSegments(tx, await repository.findOrderedSegmentIds(tx, docChapterId))
+
+    return toDetail(orNotFound(await repository.findDocChapterDetail(tx, docChapterId)))
+  })
+}
+
+/** Hard delete — cascades `segmentText` and any `audioMapping` (see `packages/db/src/schema/school.ts`). The one genuinely destructive segment action; the client's own confirm step gates calling this at all. */
+export async function deleteSegment(
+  db: SchoolDbClient,
+  docChapterId: string,
+  segmentId: string,
+): Promise<DocChapterDetail> {
+  return db.transaction(async tx => {
+    orNotFound(await repository.findSegmentInDocChapter(tx, docChapterId, segmentId))
+    await repository.deleteSegmentRow(tx, segmentId)
+    await repository.renumberSegments(tx, await repository.findOrderedSegmentIds(tx, docChapterId))
+
+    return toDetail(orNotFound(await repository.findDocChapterDetail(tx, docChapterId)))
   })
 }
