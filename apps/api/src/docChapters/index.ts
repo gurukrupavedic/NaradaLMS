@@ -1,2 +1,1 @@
-export { default } from './route'
-export { default as docChapterRouter } from './docChapterRoute'
+export { default, docChapterRouter } from './route'
