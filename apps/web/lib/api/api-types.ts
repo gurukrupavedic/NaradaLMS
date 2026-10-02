@@ -136,6 +136,25 @@ export type ApiDocChapterListItem = {
   assignedCount: number
 }
 
+// GET /v1/doc-chapters/:docChapterId — the cleanup/assignment workspace's full segment list. A
+// segment's per-script text is absent (never present with empty text) for a script it has no
+// confident text for yet — a low-confidence cross-script alignment, or a fresh split not yet
+// re-aligned for the scripts other than the one it was split on.
+export type ApiDocChapterSegment = {
+  id: string
+  order: number
+  chapterId: string | null
+  flaggedForReview: boolean
+  scripts: { sa?: string; te?: string; en?: string }
+}
+
+export type ApiDocChapterDetail = {
+  id: string
+  title: string
+  track: string
+  segments: ApiDocChapterSegment[]
+}
+
 // GET /v1/courses — a school runs one or more courses (Vedam, Smartam, ...), each under its
 // own path: `slug` is the first path segment (`<school>.naradas.app/vedam/…`).
 export type ApiCourse = {
