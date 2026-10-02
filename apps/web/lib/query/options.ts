@@ -15,6 +15,7 @@ import {
   fetchCourse,
   fetchCourses,
   fetchDashboard,
+  fetchDocChapterDetail,
   fetchDocChapters,
   fetchDocChapterUploadStatus,
   fetchEligibleTrackIds,
@@ -119,6 +120,7 @@ export const keys = {
     all: ['docChapters'] as const,
     list: (courseId: string, q: string) => ['docChapters', 'list', courseId, q] as const,
     uploadJob: (courseId: string, jobId: string) => ['docChapters', 'uploadJob', courseId, jobId] as const,
+    detail: (docChapterId: string) => ['docChapters', 'detail', docChapterId] as const,
   },
 
   registrations: {
@@ -326,6 +328,16 @@ export const docChapterUploadJobQuery = (courseId: string, jobId: string) =>
       const status: ApiJobState | undefined = query.state.data?.status
       return status === 'completed' || status === 'failed' ? false : 2000
     },
+  })
+
+// The cleanup/assignment workspace (components/admin/doc-chapter-workspace.tsx). Segment
+// mutations (split/merge/delete) write their response straight into this same cache entry
+// (`queryClient.setQueryData`) rather than invalidating — each one already returns the complete,
+// authoritative post-edit detail, so there's nothing a refetch would add beyond a round trip.
+export const docChapterDetailQuery = (docChapterId: string) =>
+  queryOptions({
+    queryKey: keys.docChapters.detail(docChapterId),
+    queryFn: () => fetchDocChapterDetail(docChapterId),
   })
 
 // app-shell.tsx's profile switcher: who else this account could switch to. A household's set of
