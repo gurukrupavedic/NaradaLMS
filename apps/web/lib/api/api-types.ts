@@ -103,6 +103,39 @@ export type ApiChapterDetail = ApiChapter & {
   audio: ApiAudioAsset[]
 }
 
+// POST /v1/courses/:courseId/doc-chapters/upload/presign — one presigned R2 PUT URL per source
+// document; the browser uploads straight to R2 with these, never through this server.
+export type ApiPresignUploadResponse = {
+  uploadId: string
+  uploads: {
+    sa: { uploadUrl: string }
+    te: { uploadUrl: string }
+    en: { uploadUrl: string }
+  }
+}
+
+// GET /v1/courses/:courseId/doc-chapters/upload/:jobId — the async parse job's status, polled
+// after POST .../upload/confirm returns its `jobId`.
+export type ApiJobState = 'queued' | 'active' | 'completed' | 'failed'
+
+export type ApiJobStatus = {
+  status: ApiJobState
+  progress: number
+  result: { headingsUpserted: number; headingsSkipped: number } | null
+  error: string | null
+}
+
+// GET /v1/courses/:courseId/doc-chapters — one parsed heading (a "doc chapter"), the unit the
+// cleanup/assignment workspace operates on. `verseCount`/`assignedCount` are both over this doc
+// chapter's segments — `assignedCount` is how many already have a real course chapter.
+export type ApiDocChapterListItem = {
+  id: string
+  title: string
+  track: string
+  verseCount: number
+  assignedCount: number
+}
+
 // GET /v1/courses — a school runs one or more courses (Vedam, Smartam, ...), each under its
 // own path: `slug` is the first path segment (`<school>.naradas.app/vedam/…`).
 export type ApiCourse = {
