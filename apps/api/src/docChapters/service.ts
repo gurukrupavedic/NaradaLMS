@@ -118,12 +118,19 @@ function toJobState(state: string): JobStatusResponse['status'] {
   return 'queued'
 }
 
-export function listDocChapters(
+export async function listDocChapters(
   context: DocChaptersServiceContext,
   courseId: string,
   q?: string,
 ): Promise<DocChapterListItem[]> {
-  return repository.listDocChapters(context.db, courseId, q)
+  const rows = await repository.listDocChapters(context.db, courseId, q)
+  return rows.map(row => ({
+    id: row.id,
+    titles: { sa: row.title, te: row.titleTe, en: row.titleEn },
+    track: row.track,
+    verseCount: row.verseCount,
+    assignedCount: row.assignedCount,
+  }))
 }
 
 /**
@@ -137,13 +144,14 @@ export async function upsertParsedHeading(
   data: { courseId: string; sourceUploadId: string; heading: ParsedHeading },
 ): Promise<boolean> {
   return context.db.transaction(async tx => {
-    const existing = await repository.findExistingHeading(tx, data.courseId, data.heading.title)
+    const existing = await repository.findExistingHeading(tx, data.courseId, data.heading.title.sa)
     if (existing?.hasAssignedSegment) {
       return false
     }
 
     if (existing) {
       await repository.replaceHeadingSegments(tx, existing.id, {
+        title: data.heading.title,
         track: data.heading.track,
         sourceUploadId: data.sourceUploadId,
         verses: data.heading.verses,
@@ -175,7 +183,7 @@ type SegmentRow = NonNullable<Awaited<ReturnType<typeof repository.findSegmentIn
 function toDetail(row: DocChapterDetailRow): DocChapterDetail {
   return {
     id: row.id,
-    title: row.title,
+    titles: { sa: row.title, te: row.titleTe, en: row.titleEn },
     track: row.track,
     segments: row.segments.map(s => ({
       id: s.id,

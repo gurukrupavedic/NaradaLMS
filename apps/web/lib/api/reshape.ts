@@ -296,7 +296,9 @@ export function buildCatalogTrack(track: ApiTrack, batchCodes: string[]): Catalo
       code: chapter.code,
       title: chapter.title,
       status: chapter.status,
-      content: { ...EMPTY, script: chapter.script },
+      content: chapter.content
+        ? { ...chapter.content, script: chapter.script }
+        : { ...EMPTY, script: chapter.script },
     }))
 
   return {

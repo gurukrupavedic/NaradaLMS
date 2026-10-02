@@ -27,10 +27,21 @@ export const jobStatusResponseSchema = z.object({
   error: z.string().nullable(),
 })
 
+// The heading's title in each script — `te`/`en` are null only for a doc chapter parsed before
+// per-script titles existed; a fresh upload always gets all three (see `parse/index.ts`'s
+// `ParsedHeading['title']` doc comment — headings are matched positionally, never by title text,
+// so there's no alignment confidence gate here the way there is for verse text).
+export type DocChapterTitles = z.infer<typeof docChapterTitlesSchema>
+export const docChapterTitlesSchema = z.object({
+  sa: z.string(),
+  te: z.string().nullable(),
+  en: z.string().nullable(),
+})
+
 export type DocChapterListItem = z.infer<typeof docChapterListItemSchema>
 export const docChapterListItemSchema = z.object({
   id: z.uuid(),
-  title: z.string(),
+  titles: docChapterTitlesSchema,
   track: z.string(),
   verseCount: z.number().int(),
   assignedCount: z.number().int(),
@@ -58,7 +69,7 @@ export const docChapterSegmentSchema = z.object({
 export type DocChapterDetail = z.infer<typeof docChapterDetailSchema>
 export const docChapterDetailSchema = z.object({
   id: z.uuid(),
-  title: z.string(),
+  titles: docChapterTitlesSchema,
   track: z.string(),
   segments: z.array(docChapterSegmentSchema),
 })

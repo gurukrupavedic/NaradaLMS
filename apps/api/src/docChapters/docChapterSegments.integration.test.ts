@@ -35,7 +35,7 @@ describe('getDocChapterDetail', () => {
 
     expect(detail).toEqual({
       id: docChapterRow.id,
-      title: 'Chapter One',
+      titles: { sa: 'Chapter One', te: null, en: null },
       track: 'TRACK 1',
       segments: [
         { id: segment1.id, order: 1, chapterId: null, flaggedForReview: false, scripts: { sa: 'ॐ शुक्लांबरधरं', te: 'ఓం శుక్లాంబరధరం' } },

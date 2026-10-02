@@ -57,6 +57,13 @@ export type ApiAuthProfile = {
   }[]
 }
 
+export type ApiChapterContentState = {
+  hasText: boolean
+  segments: number
+  audioCount: number
+  mapped: boolean
+}
+
 export type ApiChapter = {
   id: string
   trackId: string
@@ -65,6 +72,10 @@ export type ApiChapter = {
   status: 'draft' | 'published'
   order: number
   script: 'te' | 'sa' | 'en' | null
+  // Only present on `GET /tracks`' authoring view (the admin catalog screens) — the learner
+  // dashboard's own tracks list shares this same row shape but never populates it
+  // (apps/api/src/tracks/repository.ts only computes it for an admin's `view.kind === 'authoring'`).
+  content?: ApiChapterContentState
 }
 
 // GET /v1/chapters/:chapterId — the heavier response only this one endpoint returns; `ApiChapter`
@@ -133,12 +144,18 @@ export type ApiJobStatus = {
   error: string | null
 }
 
+// The heading's title in each script. `te`/`en` are null only for a doc chapter parsed before
+// per-script titles existed — a fresh upload always gets all three (headings are matched
+// positionally across the three source docs, never by title text, so there's no alignment
+// confidence gate here the way there is for a segment's `scripts`).
+export type ApiDocChapterTitles = { sa: string; te: string | null; en: string | null }
+
 // GET /v1/courses/:courseId/doc-chapters — one parsed heading (a "doc chapter"), the unit the
 // cleanup/assignment workspace operates on. `verseCount`/`assignedCount` are both over this doc
 // chapter's segments — `assignedCount` is how many already have a real course chapter.
 export type ApiDocChapterListItem = {
   id: string
-  title: string
+  titles: ApiDocChapterTitles
   track: string
   verseCount: number
   assignedCount: number
@@ -158,7 +175,7 @@ export type ApiDocChapterSegment = {
 
 export type ApiDocChapterDetail = {
   id: string
-  title: string
+  titles: ApiDocChapterTitles
   track: string
   segments: ApiDocChapterSegment[]
 }

@@ -15,6 +15,13 @@
       "when": 1790723476128,
       "tag": "0001_next_the_professor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790909389035,
+      "tag": "0002_smiling_albert_cleary",
+      "breakpoints": true
     }
   ]
 }

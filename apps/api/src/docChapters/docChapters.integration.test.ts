@@ -40,7 +40,7 @@ afterEach(async () => {
 
 function heading(overrides?: Partial<ParsedHeading>): ParsedHeading {
   return {
-    title: 'Chapter One',
+    title: { sa: 'Chapter One', te: 'Chapter One TE', en: 'Chapter One EN' },
     track: 'TRACK 1',
     verses: [
       { sa: 'ॐ शुक्लांबरधरं', te: 'ఓం శుక్లాంబరధరం', en: 'om shuklambaradharam', flaggedForReview: false },
@@ -63,7 +63,13 @@ describe('upsertParsedHeading (service)', () => {
     expect(upserted).toBe(true)
     const items = await listDocChapters({ db: world.schoolDb, schoolId: world.orgId }, courseId)
     expect(items).toEqual([
-      { id: expect.any(String), title: 'Chapter One', track: 'TRACK 1', verseCount: 2, assignedCount: 0 },
+      {
+        id: expect.any(String),
+        titles: { sa: 'Chapter One', te: 'Chapter One TE', en: 'Chapter One EN' },
+        track: 'TRACK 1',
+        verseCount: 2,
+        assignedCount: 0,
+      },
     ])
   })
 
@@ -81,8 +87,15 @@ describe('upsertParsedHeading (service)', () => {
     expect(upserted).toBe(true)
     const items = await listDocChapters({ db: world.schoolDb, schoolId: world.orgId }, courseId)
     // The stale, unassigned segment created above is gone — replaced wholesale by the 2 fresh ones.
+    // `titleTe`/`titleEn` are refreshed by the replace too, same as `track`.
     expect(items).toEqual([
-      { id: docChapterRow.id, title: 'Chapter One', track: 'TRACK 1', verseCount: 2, assignedCount: 0 },
+      {
+        id: docChapterRow.id,
+        titles: { sa: 'Chapter One', te: 'Chapter One TE', en: 'Chapter One EN' },
+        track: 'TRACK 1',
+        verseCount: 2,
+        assignedCount: 0,
+      },
     ])
   })
 
@@ -101,8 +114,15 @@ describe('upsertParsedHeading (service)', () => {
 
     expect(upserted).toBe(false)
     const items = await listDocChapters({ db: world.schoolDb, schoolId: world.orgId }, courseId)
+    // Untouched means untouched — the fixture never set titleTe/titleEn, so they're still null.
     expect(items).toEqual([
-      { id: docChapterRow.id, title: 'Chapter One', track: 'TRACK 1', verseCount: 1, assignedCount: 1 },
+      {
+        id: docChapterRow.id,
+        titles: { sa: 'Chapter One', te: null, en: null },
+        track: 'TRACK 1',
+        verseCount: 1,
+        assignedCount: 1,
+      },
     ])
   })
 })
@@ -116,7 +136,7 @@ describe('listDocChapters (service)', () => {
 
     const items = await listDocChapters({ db: world.schoolDb, schoolId: world.orgId }, courseId, 'vishnu')
 
-    expect(items.map(i => i.title)).toEqual(['Vishnu Sahasranama'])
+    expect(items.map(i => i.titles.sa)).toEqual(['Vishnu Sahasranama'])
   })
 })
 
@@ -262,7 +282,13 @@ describe('processParseDocSet (worker)', () => {
 
     const items = await listDocChapters({ db: world.schoolDb, schoolId: world.orgId }, courseId)
     expect(items).toEqual([
-      { id: expect.any(String), title: 'Chapter One', track: 'TRACK 1', verseCount: 1, assignedCount: 0 },
+      {
+        id: expect.any(String),
+        titles: { sa: 'Chapter One', te: 'Chapter One', en: 'Chapter One' },
+        track: 'TRACK 1',
+        verseCount: 1,
+        assignedCount: 0,
+      },
     ])
   })
 

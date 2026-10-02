@@ -16,7 +16,10 @@ export { transliterateToSkeleton } from './transliterate'
 
 /** One heading's chant text, canonical (sa) order, each verse's confidently-aligned text per script. */
 export type ParsedHeading = {
-  title: string
+  // Headings are matched positionally across the three source docs (see `assertSameSectionCount`'s
+  // own doc comment), never by title text — so unlike a verse, there's no alignment confidence to
+  // gate on here: all three are read directly off their own document's Heading2 paragraph.
+  title: { sa: string; te: string; en: string }
   track: string
   verses: {
     sa: string
@@ -68,7 +71,7 @@ export async function parseDocSet(buffers: { sa: Buffer; te: Buffer; en: Buffer 
     const enAligned = alignToCanonical(saVerses, enVerses, 'en')
 
     return {
-      title: saSection.title,
+      title: { sa: saSection.title, te: teSections[i]!.title, en: enSections[i]!.title },
       track: saSection.track,
       verses: saVerses.map((sa, verseIndex) => {
         const te = teAligned[verseIndex]
