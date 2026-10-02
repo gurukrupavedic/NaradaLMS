@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   deleteDocChapterSegment,
   mergeDocChapterSegmentWithNext,
+  setDocChapterAssignments,
   splitDocChapterSegment,
 } from '@/lib/api/resources'
 import type { ApiDocChapterDetail, ApiScriptKey } from '@/lib/api/api-types'
@@ -56,5 +57,18 @@ export function useMergeSegmentWithNext(docChapterId: string) {
 export function useDeleteSegment(docChapterId: string) {
   return useDocChapterDetailMutation(docChapterId, (segmentId: string) =>
     deleteDocChapterSegment(docChapterId, segmentId),
+  )
+}
+
+/**
+ * The assign-to-chapters stage's one mutation — bulk-sets every segment's chapter at once. The
+ * caller always sends the *complete*, freshly-recomputed mapping (never a diff): there's no
+ * separate "move a boundary" endpoint, so moving one is just resending the whole mapping with that
+ * boundary recomputed, the same as every other assign-stage edit (reassign a range, split a range,
+ * merge a range into the one above).
+ */
+export function useSetAssignments(docChapterId: string) {
+  return useDocChapterDetailMutation(docChapterId, (assignments: { segmentId: string; chapterId: string | null }[]) =>
+    setDocChapterAssignments(docChapterId, assignments),
   )
 }

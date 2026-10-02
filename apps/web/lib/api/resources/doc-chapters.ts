@@ -80,3 +80,15 @@ export async function deleteDocChapterSegment(
     'DELETE',
   )
 }
+
+/** The complete segment→chapter mapping for the whole doc chapter, not a diff — see `apps/api/src/docChapters/service.ts::setAssignments`'s doc comment for why a partial list is rejected rather than treated as "leave unassigned." */
+export async function setDocChapterAssignments(
+  docChapterId: string,
+  assignments: { segmentId: string; chapterId: string | null }[],
+): Promise<ApiDocChapterDetail> {
+  return mutateApi<ApiDocChapterDetail>(
+    `/doc-chapters/${encodeURIComponent(docChapterId)}/assignments`,
+    'PUT',
+    { assignments },
+  )
+}
