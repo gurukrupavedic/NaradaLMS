@@ -12,6 +12,7 @@ import {
   fetchProfiles,
   fetchCatalogTracks,
   fetchChapter,
+  fetchChapterAudioDetail,
   fetchCourse,
   fetchCourses,
   fetchDashboard,
@@ -64,6 +65,13 @@ export const keys = {
   chapters: {
     all: ['chapters'] as const,
     detail: (id: string) => ['chapters', id] as const,
+  },
+
+  // The admin audio-mapping workspace's own cache entry — distinct from `chapters` above, which
+  // is the reader's reshaped, effectively-immutable view (`chapterQuery`'s `staleTime: Infinity`
+  // would be wrong here: this is the raw detail, actively edited while the screen is open).
+  chapterAudio: {
+    detail: (chapterId: string) => ['chapterAudio', chapterId] as const,
   },
 
   exams: ['exams'] as const,
@@ -196,6 +204,15 @@ export const coursesQuery = () =>
     queryKey: keys.courses,
     queryFn: fetchCourses,
     staleTime: CATALOG_STALE_TIME,
+  })
+
+// The audio-mapping workspace (components/admin/chapter-audio-workspace.tsx) — the default 60s
+// staleTime is fine as-is, every edit here goes through `use-chapter-audio-mutations.ts`'s
+// optimistic writes to this same cache entry rather than waiting on a refetch.
+export const chapterAudioDetailQuery = (chapterId: string) =>
+  queryOptions({
+    queryKey: keys.chapterAudio.detail(chapterId),
+    queryFn: () => fetchChapterAudioDetail(chapterId),
   })
 
 export const courseQuery = (slug: string) =>

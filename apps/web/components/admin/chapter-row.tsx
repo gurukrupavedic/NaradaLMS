@@ -1,7 +1,10 @@
 'use client'
 
+import Link from 'next/link'
+
 import { cn } from '@/lib/utils'
 import { Pipeline } from '@/components/admin/pipeline'
+import { useCoursePath } from '@/lib/course'
 import type { CatalogChapter, ScriptCode } from '@/lib/models/catalog'
 
 const SCRIPTS: ScriptCode[] = ['sa', 'te', 'en']
@@ -39,6 +42,7 @@ export function ChapterRow({
   onAskDelete: () => void
   onDelete: () => void
 }) {
+  const cp = useCoursePath()
   const published = chapter.status === 'published'
 
   return (
@@ -85,6 +89,13 @@ export function ChapterRow({
             Edit staying stranded on the line above). */}
         <span className="ml-auto flex shrink-0 items-center gap-3.5">
           <Pipeline chapter={chapter} />
+
+          <Link
+            href={cp(`/admin/chapters/${chapter.id}/audio`)}
+            className="label whitespace-nowrap text-ink-muted transition-colors hover:text-vermilion"
+          >
+            Map audio
+          </Link>
 
           <button
             type="button"
