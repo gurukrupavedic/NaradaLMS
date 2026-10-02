@@ -2,7 +2,12 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { destroyTestWorld } from '../testing/cleanup'
 import {
+  createAudioAsset,
+  createAudioMapping,
   createChapter,
+  createDocChapter,
+  createSegment,
+  createSegmentText,
   createTestSchool,
   createTrack,
   type TestWorld,
@@ -59,6 +64,52 @@ describe('findAll', () => {
 
     expect(learnerView.map(t => t.id)).toContain(trackRow.id)
     expect(learnerView.find(t => t.id === trackRow.id)?.chapters).toEqual([])
+  })
+})
+
+describe('findAll — authoring content state', () => {
+  it('reports hasText/segments/audioCount/mapped from real rows, and only in the authoring view', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow, { status: 'published' })
+    const docChapterRow = await createDocChapter(world)
+    const seg1 = await createSegment(world, docChapterRow, { chapter: chapterRow })
+    const seg2 = await createSegment(world, docChapterRow, { chapter: chapterRow })
+    await createSegmentText(world, seg1, { script: 'sa', text: 'verse one' })
+    const asset = await createAudioAsset(world, chapterRow)
+    await createAudioMapping(world, seg1, asset, { audioStart: 0, audioEnd: 10 })
+
+    const authoringView = await findAll(world.schoolDb, { kind: 'authoring' }, await defaultCourseId(world))
+    const authoringChapter = authoringView[0]?.chapters.find(c => c.id === chapterRow.id)
+    expect(authoringChapter?.content).toEqual({
+      hasText: true,
+      segments: 2,
+      audioCount: 1,
+      // Only one of the chapter's two segments has a mapping on the one audio asset — not fully covered yet.
+      mapped: false,
+    })
+
+    // Mapping the second segment on the same asset completes coverage.
+    await createAudioMapping(world, seg2, asset, { audioStart: 10, audioEnd: 20 })
+    const completed = await findAll(world.schoolDb, { kind: 'authoring' }, await defaultCourseId(world))
+    expect(completed[0]?.chapters.find(c => c.id === chapterRow.id)?.content?.mapped).toBe(true)
+
+    const learnerView = await findAll(world.schoolDb, { kind: 'learnerPreview' }, await defaultCourseId(world))
+    expect(learnerView[0]?.chapters.find(c => c.id === chapterRow.id)?.content).toBeUndefined()
+  })
+
+  it('a chapter with no segments or audio gets zeroed content, not undefined, in the authoring view', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const chapterRow = await createChapter(world, trackRow, { status: 'published' })
+
+    const authoringView = await findAll(world.schoolDb, { kind: 'authoring' }, await defaultCourseId(world))
+    expect(authoringView[0]?.chapters.find(c => c.id === chapterRow.id)?.content).toEqual({
+      hasText: false,
+      segments: 0,
+      audioCount: 0,
+      mapped: false,
+    })
   })
 })
 

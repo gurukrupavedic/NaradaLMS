@@ -58,7 +58,9 @@ export function DocChapterWorkspace({ docChapterId }: { docChapterId: string }) 
     <>
       <Standing
         eyebrow={detail.track}
-        headline={detail.title}
+        // Same script switcher the body text uses — a heading is parsed from each of the three
+        // source docs just like a verse is, so switching script should move the title with it.
+        headline={detail.titles[script] ?? detail.titles.sa}
         meta={`${pluralize(detail.segments.length, 'segment')}${flaggedCount > 0 ? ` · ${flaggedCount} flagged for review` : ''}`}
         action={
           <div className="flex items-center gap-px border border-rule">

@@ -292,7 +292,14 @@ export const docChapter = pgTable(
     courseId: uuid('courseId')
       .notNull()
       .references(() => course.id, { onDelete: 'cascade' }),
+    // Canonical heading text (sa) — the upsert key below and what `segment`/the parser treat as
+    // this doc chapter's identity. `titleTe`/`titleEn` are the same heading read from the other two
+    // source docs, purely for display (the admin screens' language selector) — headings are matched
+    // positionally across scripts, never by title text, so these never participate in alignment or
+    // lookup.
     title: text('title').notNull(),
+    titleTe: text('titleTe'),
+    titleEn: text('titleEn'),
     // Descriptive label copied from the doc ("TRACK 4") — not a FK. A doc's heading structure
     // doesn't necessarily line up with this course's real `track` rows.
     track: text('track').notNull(),

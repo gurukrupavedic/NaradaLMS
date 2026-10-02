@@ -8,14 +8,16 @@
  * full catalog including drafts, and the state of the content pipeline behind
  * each chapter.
  *
- * That pipeline is the point. The live database has 113 published chapters and
- * not one of them has `script`, `textUrl`, segments or audio — so every student
- * sees a syllabus of titles with nothing behind them. Nothing else in the app
- * surfaces that; the catalog puts it in the primary column.
+ * That pipeline is the point. Most published chapters still have no real text, segments, or audio
+ * behind them — so every student sees a syllabus of titles with nothing behind them. Nothing else
+ * in the app surfaces that; the catalog puts it in the primary column.
  *
  * `lib/api/resources/catalog.ts` builds real `CatalogTrack`s from `GET /v1/tracks` (via
- * `lib/api/reshape.ts`'s `buildCatalogTrack`). This module is their shape, plus the derivations
- * (`pipelineOf`/`isReady`/`summariseTrack`) that read it.
+ * `lib/api/reshape.ts`'s `buildCatalogTrack`) — `ApiChapter.content`, populated only for an admin's
+ * authoring view (`apps/api/src/tracks/repository.ts::findChapterContentState`), is where
+ * `hasText`/`segments`/`audioCount`/`mapped` actually come from; `EMPTY` below is only the
+ * fallback for a chapter row that somehow arrives without it. This module is their shape, plus the
+ * derivations (`pipelineOf`/`isReady`/`summariseTrack`) that read it.
  */
 
 export type ScriptCode = 'te' | 'sa' | 'en'
@@ -45,10 +47,9 @@ export type CatalogTrack = {
   chapters: CatalogChapter[]
 }
 
-// Every real chapter's content state. None of `hasText`/`segments`/`audioCount`/`mapped` exist on
-// `ApiChapter` (the track list doesn't carry them), so `lib/api/reshape.ts`'s `buildCatalogTrack`
-// gives every real chapter this exact empty state — which means the pipeline view under-reports any
-// chapter that does have authored content. It stays empty until the API returns real content state.
+// The fallback for a chapter whose `ApiChapter.content` is absent — in practice only ever a
+// not-yet-authoring view reaching `buildCatalogTrack` by mistake, since the real admin catalog
+// screens always get a populated `content` from `GET /tracks`'s authoring view.
 export const EMPTY: ChapterContentState = {
   script: null,
   hasText: false,

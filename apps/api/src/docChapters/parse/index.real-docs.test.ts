@@ -33,7 +33,9 @@ describe.skipIf(!hasSeedData)('parseDocSet — against the real seed-data docume
     // Confirmed by direct inspection of the source documents (grepping their raw XML for
     // w:pStyle values): exactly 109 Heading2 paragraphs in each of the three docs.
     expect(headings).toHaveLength(109)
-    expect(headings.every(h => h.title.length > 0)).toBe(true)
+    expect(headings.every(h => h.title.sa.length > 0)).toBe(true)
+    expect(headings.every(h => h.title.te.length > 0)).toBe(true)
+    expect(headings.every(h => h.title.en.length > 0)).toBe(true)
     expect(headings.every(h => h.track.length > 0)).toBe(true)
 
     const totalVerses = headings.reduce((sum, h) => sum + h.verses.length, 0)
@@ -43,7 +45,7 @@ describe.skipIf(!hasSeedData)('parseDocSet — against the real seed-data docume
     // (VSN 1/2/3) — should align very cleanly across all three scripts; this is the strongest
     // available signal that transliteration + alignment are behaving on real content, not just the
     // synthetic examples in the other test files.
-    const vsn = headings.find(h => h.title.includes('विष्णु सहस्र नाम'))
+    const vsn = headings.find(h => h.title.sa.includes('विष्णु सहस्र नाम'))
     expect(vsn).toBeDefined()
     expect(vsn!.verses.length).toBeGreaterThan(150)
     const vsnFullyAligned = vsn!.verses.filter(v => v.te !== null && v.en !== null).length

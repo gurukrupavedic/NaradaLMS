@@ -77,11 +77,11 @@ export async function findExistingHeading(
 export async function replaceHeadingSegments(
   db: SchoolDb,
   docChapterId: string,
-  data: { track: string; sourceUploadId: string; verses: ParsedHeading['verses'] },
+  data: { title: ParsedHeading['title']; track: string; sourceUploadId: string; verses: ParsedHeading['verses'] },
 ): Promise<void> {
   await db
     .update(docChapter)
-    .set({ track: data.track, sourceUploadId: data.sourceUploadId })
+    .set({ titleTe: data.title.te, titleEn: data.title.en, track: data.track, sourceUploadId: data.sourceUploadId })
     .where(eq(docChapter.id, docChapterId))
   await db.delete(segment).where(eq(segment.docChapterId, docChapterId))
   await insertSegments(db, docChapterId, data.verses)
@@ -89,11 +89,24 @@ export async function replaceHeadingSegments(
 
 export async function createHeadingWithSegments(
   db: SchoolDb,
-  data: { courseId: string; title: string; track: string; sourceUploadId: string; verses: ParsedHeading['verses'] },
+  data: {
+    courseId: string
+    title: ParsedHeading['title']
+    track: string
+    sourceUploadId: string
+    verses: ParsedHeading['verses']
+  },
 ): Promise<void> {
   const rows = await db
     .insert(docChapter)
-    .values({ courseId: data.courseId, title: data.title, track: data.track, sourceUploadId: data.sourceUploadId })
+    .values({
+      courseId: data.courseId,
+      title: data.title.sa,
+      titleTe: data.title.te,
+      titleEn: data.title.en,
+      track: data.track,
+      sourceUploadId: data.sourceUploadId,
+    })
     .returning({ id: docChapter.id })
   const row = rows[0]
   if (!row) throw new Error('createHeadingWithSegments: insert returned no row')
@@ -138,6 +151,8 @@ async function insertSegments(db: SchoolDb, docChapterId: string, verses: Parsed
 export type DocChapterListRow = {
   id: string
   title: string
+  titleTe: string | null
+  titleEn: string | null
   track: string
   verseCount: number
   assignedCount: number
@@ -146,13 +161,20 @@ export type DocChapterListRow = {
 export async function listDocChapters(db: SchoolDb, courseId: string, q?: string): Promise<DocChapterListRow[]> {
   const searchFilter =
     q && q.trim().length > 0
-      ? or(ilike(docChapter.title, `%${q}%`), ilike(docChapter.track, `%${q}%`))
+      ? or(
+          ilike(docChapter.title, `%${q}%`),
+          ilike(docChapter.titleTe, `%${q}%`),
+          ilike(docChapter.titleEn, `%${q}%`),
+          ilike(docChapter.track, `%${q}%`),
+        )
       : undefined
 
   const rows = await db
     .select({
       id: docChapter.id,
       title: docChapter.title,
+      titleTe: docChapter.titleTe,
+      titleEn: docChapter.titleEn,
       track: docChapter.track,
       verseCount: count(segment.id),
       assignedCount: sql<number>`count(${segment.chapterId})`.mapWith(Number),
