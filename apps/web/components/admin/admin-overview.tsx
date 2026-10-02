@@ -173,7 +173,15 @@ export function AdminOverview() {
         {/* Content lives beside the batches that teach it. Without this the
             catalog is only reachable by opening a batch first, which is a
             strange way in when the thing you want to edit is the syllabus. */}
-        <Section title="Content" count={pluralize(tracks.length, 'track')}>
+        <Section
+          title="Content"
+          count={pluralize(tracks.length, 'track')}
+          action={
+            <Link href={cp('/admin/doc-chapters')} className="label ml-auto shrink-0 text-ink-muted transition-colors hover:text-ink">
+              Doc chapters →
+            </Link>
+          }
+        >
           <ol className="sheet">
             {tracks.map(track => (
               <CatalogRow key={track.id} track={track} />

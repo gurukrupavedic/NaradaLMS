@@ -15,6 +15,8 @@ import {
   fetchCourse,
   fetchCourses,
   fetchDashboard,
+  fetchDocChapters,
+  fetchDocChapterUploadStatus,
   fetchEligibleTrackIds,
   fetchEnrollmentRequests,
   fetchExams,
@@ -28,6 +30,7 @@ import {
   fetchRegistrations,
   searchProfiles,
 } from '@/lib/api/resources'
+import type { ApiJobState } from '@/lib/api/api-types'
 import type {
   ApiEnrollmentRequestStatus,
   ApiExamSlotRequestStatus,
@@ -108,6 +111,14 @@ export const keys = {
     all: ['catalog'] as const,
     list: () => ['catalog', 'list'] as const,
     track: (id: string) => ['catalog', 'track', id] as const,
+  },
+
+  docChapters: {
+    // Prefix key — a parse job finishing changes every search result for its course at once,
+    // regardless of which query text any open screen happens to be filtered to.
+    all: ['docChapters'] as const,
+    list: (courseId: string, q: string) => ['docChapters', 'list', courseId, q] as const,
+    uploadJob: (courseId: string, jobId: string) => ['docChapters', 'uploadJob', courseId, jobId] as const,
   },
 
   registrations: {
@@ -288,6 +299,33 @@ export const catalogTracksQuery = () =>
     queryKey: keys.catalog.list(),
     queryFn: fetchCatalogTracks,
     staleTime: CATALOG_STALE_TIME,
+  })
+
+// The doc-chapter search screen (components/admin/admin-doc-chapters-screen.tsx) — same
+// keyed-on-query-text shape as `profileSearchQuery`, except every keystroke's result stays worth
+// showing (there's no "nothing typed yet" case to gate on: an empty query is itself a real search —
+// every doc chapter for the course).
+export const docChaptersQuery = (courseId: string, q: string) =>
+  queryOptions({
+    queryKey: keys.docChapters.list(courseId, q),
+    queryFn: () => fetchDocChapters(courseId, q),
+    // Gated on having a real courseId, not on query text — unlike `profileSearchQuery`, an empty
+    // search here is itself a real request (every doc chapter for the course), so the only thing
+    // worth waiting on is `courseQuery` resolving first.
+    enabled: courseId !== '',
+  })
+
+// Polled from the upload screen after POST .../upload/confirm returns a jobId — stops refetching
+// once the job reaches a terminal state, so an admin who navigates away mid-parse and comes back
+// later doesn't resume hammering a job that finished hours ago.
+export const docChapterUploadJobQuery = (courseId: string, jobId: string) =>
+  queryOptions({
+    queryKey: keys.docChapters.uploadJob(courseId, jobId),
+    queryFn: () => fetchDocChapterUploadStatus(courseId, jobId),
+    refetchInterval: query => {
+      const status: ApiJobState | undefined = query.state.data?.status
+      return status === 'completed' || status === 'failed' ? false : 2000
+    },
   })
 
 // app-shell.tsx's profile switcher: who else this account could switch to. A household's set of
