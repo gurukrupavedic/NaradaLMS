@@ -98,6 +98,14 @@ export type ApiAudioAsset = {
   mappings: ApiAudioMapping[]
 }
 
+// POST /v1/chapters/:chapterId/audio/presign — one presigned R2 PUT URL for a single audio file;
+// the browser uploads straight to R2 with it, never through this server.
+export type ApiAudioPresignResponse = {
+  uploadId: string
+  uploadUrl: string
+  expiresAt: string
+}
+
 export type ApiChapterDetail = ApiChapter & {
   scripts: ApiScriptText[]
   audio: ApiAudioAsset[]
