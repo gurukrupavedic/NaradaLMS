@@ -10,7 +10,14 @@ import { Spinner } from '@/components/spinner'
 import { Standing } from '@/components/standing'
 import { catalogTracksQuery, trackTaCandidatesQuery, trackTasQuery } from '@/lib/query/options'
 import { useAddTrackTa, useRemoveTrackTa } from '@/lib/query/use-track-ta-mutations'
+import { formatLocation } from '@/lib/geo'
+import { formatTimeZone } from '@/lib/timezone'
 import type { ApiTrackTa } from '@/lib/api/api-types'
+
+// "United States · America/New York (EDT, GMT-04:00)" — whichever of the two the TA has set.
+function whereabouts(ta: { country: string | null; countryTimeZone: string | null }): string {
+  return [formatLocation(null, ta.country), formatTimeZone(ta.countryTimeZone)].filter(Boolean).join(' · ')
+}
 
 /**
  * The TAs a student is pointed to for an L3, one list per track. Students read these on their track
@@ -71,7 +78,10 @@ function ListedTa({ ta }: { ta: ApiTrackTa }) {
 
   return (
     <li className="flex items-center gap-4 border-b border-rule-soft px-4 py-3">
-      <span className="min-w-0 flex-1 truncate text-[0.9375rem]">{ta.name}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[0.9375rem]">{ta.name}</span>
+        <span className="block font-mono text-[0.6875rem] text-ink-muted">{whereabouts(ta) || 'No location on file'}</span>
+      </span>
       <button
         type="button"
         disabled={remove.isPending}
@@ -115,7 +125,7 @@ function AddTa({ trackId }: { trackId: string }) {
           <option value="">Choose a TA…</option>
           {candidates.map(candidate => (
             <option key={candidate.profileId} value={candidate.profileId}>
-              {candidate.name}
+              {[candidate.name, whereabouts(candidate)].filter(Boolean).join(' — ')}
             </option>
           ))}
         </select>

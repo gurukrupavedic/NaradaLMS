@@ -326,7 +326,12 @@ export type ApiTrackTa = {
 }
 
 // GET /v1/track-tas/candidates/:trackId — admin only: a TA who could be listed for the track now.
-export type ApiTrackTaCandidate = { profileId: string; name: string }
+export type ApiTrackTaCandidate = {
+  profileId: string
+  name: string
+  country: string | null
+  countryTimeZone: string | null
+}
 
 // GET/POST /v1/exam-slots — a school-admin-opened (or schedule-generated), single-seat time to sit a
 // certification exam. Generic: it names no track — the student picks theirs when requesting. Independent of `ApiExam`: booking one only creates a real `ApiExam` row once

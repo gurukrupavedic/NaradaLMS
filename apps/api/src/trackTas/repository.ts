@@ -48,11 +48,16 @@ export async function findAllInCourse(db: SchoolDb, courseId: string): Promise<T
 /** The course's active TAs (distinct), by name — the pool a track's list is drawn from. */
 export async function findActiveTas(db: SchoolDb, courseId: string): Promise<TrackTaCandidate[]> {
   const rows = await db
-    .select({ profileId: profile.id, name: profile.name })
+    .select({
+      profileId: profile.id,
+      name: profile.name,
+      country: profile.country,
+      countryTimeZone: profile.countryTimeZone,
+    })
     .from(enrollment)
     .innerJoin(profile, eq(profile.id, enrollment.profileId))
     .where(activeTaOf(courseId))
-    .groupBy(profile.id, profile.name)
+    .groupBy(profile.id, profile.name, profile.country, profile.countryTimeZone)
     .orderBy(asc(profile.name), asc(profile.id))
   return rows
 }

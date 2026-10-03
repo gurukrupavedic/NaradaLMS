@@ -16,6 +16,8 @@ export type TrackTaCandidate = z.infer<typeof TrackTaCandidateSchema>
 export const TrackTaCandidateSchema = z.object({
   profileId: z.uuid(),
   name: z.string(),
+  country: z.string().nullable(),
+  countryTimeZone: z.string().nullable(),
 })
 
 export type AddTrackTaData = z.infer<typeof AddTrackTaSchema>
