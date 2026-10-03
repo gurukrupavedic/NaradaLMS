@@ -17,6 +17,7 @@ import healthRouter from './health'
 import profileRouter from './profile'
 import profilesRouter from './profiles'
 import registrationsRouter from './registrations'
+import trackTasRouter from './trackTas'
 import tracksRouter from './tracks'
 
 const apiRateLimit = rateLimit({
@@ -41,6 +42,7 @@ export default function setupRoutes(router: Router) {
     .use('/courses/:courseId/doc-chapters', docChaptersRouter)
     .use('/doc-chapters', docChapterRouter)
     .use('/tracks', tracksRouter)
+    .use('/track-tas', trackTasRouter)
     .use('/chapters', chaptersRouter)
     .use('/batches', batchesRouter)
     .use('/batches/:batchId/members', enrollmentRouter)

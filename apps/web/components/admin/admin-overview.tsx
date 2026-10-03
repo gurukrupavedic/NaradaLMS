@@ -146,6 +146,15 @@ export function AdminOverview() {
                 <span className="label text-ink-muted">→</span>
               </Link>
             </li>
+            <li className="border-t border-rule-soft">
+              <Link
+                href={cp('/admin/track-tas')}
+                className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-ink/[0.03]"
+              >
+                <span className="text-[0.9375rem]">Choose the TAs for each track</span>
+                <span className="label text-ink-muted">→</span>
+              </Link>
+            </li>
           </ol>
         </Section>
 

@@ -22,6 +22,7 @@ import {
   examSlot,
   examSlotRequest,
   profile,
+  trackTa,
 } from './school'
 
 // ─── Auth relations ───────────────────────────────────────────────────────────
@@ -185,4 +186,9 @@ export const examSlotRequestRelations = relations(examSlotRequest, ({ one }) => 
     relationName: 'examSlotRequestReviewer',
   }),
   exam: one(exam, { fields: [examSlotRequest.examId], references: [exam.id] }),
+}))
+
+export const trackTaRelations = relations(trackTa, ({ one }) => ({
+  track: one(track, { fields: [trackTa.trackId], references: [track.id] }),
+  profile: one(profile, { fields: [trackTa.profileId], references: [profile.id] }),
 }))

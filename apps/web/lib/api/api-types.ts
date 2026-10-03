@@ -314,6 +314,12 @@ export type ApiExam = {
 // fetch of the exam itself — it's what record-exam-result-dialog.tsx needs for its bonus preview.
 export type ApiStudentExamResult = ApiExamResult & { trackId: string; scheduledAt: string }
 
+// GET /v1/track-tas — a TA an admin has listed for a track: who a student can go to for an L3 on it.
+export type ApiTrackTa = { trackId: string; profileId: string; name: string }
+
+// GET /v1/track-tas/candidates/:trackId — admin only: a TA who could be listed for the track now.
+export type ApiTrackTaCandidate = { profileId: string; name: string }
+
 // GET/POST /v1/exam-slots — a school-admin-opened (or schedule-generated), single-seat time to sit a
 // certification exam. Generic: it names no track — the student picks theirs when requesting. Independent of `ApiExam`: booking one only creates a real `ApiExam` row once
 // a student's request against it is approved (see `ApiExamSlotRequest` below).

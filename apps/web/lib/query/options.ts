@@ -31,6 +31,8 @@ import {
   fetchProfileDetail,
   fetchRegistration,
   fetchRegistrations,
+  fetchTrackTaCandidates,
+  fetchTrackTas,
   searchProfiles,
 } from '@/lib/api/resources'
 import type { ApiJobState } from '@/lib/api/api-types'
@@ -97,6 +99,13 @@ export const keys = {
   },
 
   examSchedules: ['examSchedules'] as const,
+
+  trackTas: {
+    // Prefix key — adding or removing a TA changes both the listed TAs and who is still a candidate.
+    all: ['trackTas'] as const,
+    list: ['trackTas', 'list'] as const,
+    candidates: (trackId: string) => ['trackTas', 'candidates', trackId] as const,
+  },
 
   examSlotRequests: {
     // Same prefix-key shape as `registrations`/`enrollmentRequests` above.
@@ -251,6 +260,20 @@ export const examSlotsQuery = (filter?: { status?: ApiExamSlotStatus }) =>
   queryOptions({
     queryKey: keys.examSlots.list(filter?.status),
     queryFn: () => fetchExamSlots(filter),
+  })
+
+// The student ladder and the admin screen share this one entry — the endpoint returns every track's
+// TAs at once, so a ladder per track costs no extra request.
+export const trackTasQuery = () =>
+  queryOptions({
+    queryKey: keys.trackTas.list,
+    queryFn: fetchTrackTas,
+  })
+
+export const trackTaCandidatesQuery = (trackId: string) =>
+  queryOptions({
+    queryKey: keys.trackTas.candidates(trackId),
+    queryFn: () => fetchTrackTaCandidates(trackId),
   })
 
 export const examSchedulesQuery = () =>

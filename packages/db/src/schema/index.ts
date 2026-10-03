@@ -25,6 +25,7 @@ import {
   examSchedule,
   examSlot,
   examSlotRequest,
+  trackTa,
   registration,
 } from './school'
 import {
@@ -54,6 +55,7 @@ import {
   examResultRelations,
   examSlotRelations,
   examSlotRequestRelations,
+  trackTaRelations,
 } from './relations'
 
 /** BetterAuth + organization tables and their relations. Backs PublicDbClient's `.query` surface. */
@@ -98,6 +100,7 @@ export const schoolSchema = {
   examSchedule,
   examSlot,
   examSlotRequest,
+  trackTa,
   registration,
   profileRelations,
   courseRelations,
@@ -118,4 +121,5 @@ export const schoolSchema = {
   examResultRelations,
   examSlotRelations,
   examSlotRequestRelations,
+  trackTaRelations,
 }

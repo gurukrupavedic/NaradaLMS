@@ -42,6 +42,8 @@ export const DbConstraint = {
   examSlotRequestOnePendingPerSlot: 'examSlotRequest_one_pending_per_slot_uidx',
   // A student can't hold pending requests on two different slots at once.
   examSlotRequestOnePendingPerStudent: 'examSlotRequest_one_pending_per_student_uidx',
+  // A TA is listed at most once per track (the composite primary key).
+  trackTaPrimaryKey: 'trackTa_trackId_profileId_pk',
 } as const
 
 export type DbConstraint = (typeof DbConstraint)[keyof typeof DbConstraint]

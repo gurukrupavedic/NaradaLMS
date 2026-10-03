@@ -284,6 +284,54 @@ export async function findEligibleTrackIds(
   return [...(await eligibleTrackIds(db, studentId, chapters))]
 }
 
+/**
+ * Of `profileIds`, the ones currently at L3+ on every gradable chapter of `trackId` — the bulk
+ * counterpart to {@link isCertifiedAcrossTrack}, same rule and same "last write wins" reduction of
+ * each chapter's evaluation history. Backs `trackTas` (which TAs may be listed for a track).
+ */
+export async function findCertifiedProfileIds(
+  db: SchoolDb,
+  trackId: string,
+  profileIds: string[],
+): Promise<string[]> {
+  if (profileIds.length === 0) {
+    return []
+  }
+
+  const chapters = await db
+    .select({ id: chapter.id })
+    .from(chapter)
+    .where(gradableChapterOf(eq(chapter.trackId, trackId)))
+  if (chapters.length === 0) {
+    return []
+  }
+
+  const rows = await db.query.evaluation.findMany({
+    where: (t, { and: andCols, inArray: inArrayCol }) =>
+      andCols(
+        inArrayCol(t.studentId, profileIds),
+        inArrayCol(
+          t.chapterId,
+          chapters.map(c => c.id),
+        ),
+      ),
+    orderBy: (t, { asc: ascCol }) => ascCol(t.evaluatedAt),
+    columns: { studentId: true, chapterId: true, level: true },
+  })
+
+  const currentLevel = new Map<string, Evaluation['level']>()
+  for (const row of rows) {
+    currentLevel.set(`${row.studentId}:${row.chapterId}`, row.level)
+  }
+
+  return profileIds.filter(profileId =>
+    chapters.every(c => {
+      const level = currentLevel.get(`${profileId}:${c.id}`)
+      return level === 'level3' || level === 'level4'
+    }),
+  )
+}
+
 // Published and not archived — the chapters a student actually sees, and the ones a result applies to.
 function gradableChapterOf(trackFilter: SQL) {
   return and(trackFilter, eq(chapter.status, 'published'), eq(chapter.archived, false))

@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
 import { ChapterLine } from '@/components/chapter-line'
 import type { ProficiencyLevel } from '@/lib/proficiency'
+import { trackTasQuery } from '@/lib/query/options'
 
 export type ChapterRow = {
   id: string
@@ -52,6 +54,9 @@ export function TrackLadder({
   defaultOpen?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  // One request for every track's TAs, shared by all ladders on the page; a failed load just hides the line.
+  const { data: allTas } = useQuery(trackTasQuery())
+  const tas = allTas?.filter(ta => ta.trackId === track.id) ?? []
 
   return (
     <article className="sheet">
@@ -98,6 +103,13 @@ export function TrackLadder({
             <ChapterLine key={chapter.id} chapter={chapter} isResume={chapter.id === resumeChapterId} />
           ))}
         </ol>
+      )}
+
+      {open && tas.length > 0 && (
+        <p className="border-t border-rule-soft px-4 py-3 text-[0.8125rem] text-ink-muted">
+          <span className="label mr-2">For an L3, see</span>
+          {tas.map(ta => ta.name).join(', ')}
+        </p>
       )}
     </article>
   )

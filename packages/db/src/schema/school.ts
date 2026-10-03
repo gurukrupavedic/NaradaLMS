@@ -626,6 +626,24 @@ export const examResult = pgTable(
   ],
 )
 
+// The TAs a student can go to for an L3 on a track — a curated, admin-edited list per track. Who may
+// be put on it is checked when an admin adds them (an active TA in the course with L3+ on every
+// gradable chapter of the track, `apps/api/src/trackTas/service.ts`); the row itself is only the
+// listing, so a TA stays listed until an admin removes them.
+export const trackTa = pgTable(
+  'trackTa',
+  {
+    trackId: uuid('trackId')
+      .notNull()
+      .references(() => track.id, { onDelete: 'cascade' }),
+    profileId: uuid('profileId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [primaryKey({ columns: [table.trackId, table.profileId] })],
+)
+
 // A recurring weekly rule for exam sittings, e.g. "Saturdays 10:00, four sittings 30 minutes apart".
 // `apps/api/src/examSchedules` materialises it into concrete `examSlot` rows over a rolling horizon,
 // so requests/approval/cancellation keep operating on real slot rows and a one-off slot is simply a
