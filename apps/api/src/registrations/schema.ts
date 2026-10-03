@@ -1,8 +1,10 @@
+import { State } from 'country-state-city'
 import * as z from 'zod'
 
 import { registrationStatus } from '@narada/db'
 
 import { courseAnswerShape } from '../courseProfile/schema'
+import { proficiencyLevelSchema } from '../evaluations/schema'
 import { asCursor } from '../utils/cursor'
 import { DetailsSchema } from '../utils/details'
 import { e164Phone, isoInstant } from '../utils/validate'
@@ -76,23 +78,32 @@ export const CreateRegistrationSchema = RegistrationSchema.pick({
   noSmokingAgreed: true,
   comments: true,
   details: true,
-}).partial({
-  email: true,
-  city: true,
-  state: true,
-  country: true,
-  learningGoal: true,
-  currentProficiency: true,
-  spokenLanguages: true,
-  readLanguages: true,
-  parentNames: true,
-  dressCodeAgreed: true,
-  noMeatAgreed: true,
-  noAlcoholAgreed: true,
-  noSmokingAgreed: true,
-  comments: true,
-  details: true,
 })
+  .partial({
+    email: true,
+    city: true,
+    state: true,
+    learningGoal: true,
+    spokenLanguages: true,
+    readLanguages: true,
+    parentNames: true,
+    dressCodeAgreed: true,
+    noMeatAgreed: true,
+    noAlcoholAgreed: true,
+    noSmokingAgreed: true,
+    comments: true,
+    details: true,
+  })
+  // The form has no "prefer not to say": a country and a starting point are always answered, and so
+  // is the state/province whenever the country has any (a country with none has nothing to pick).
+  .safeExtend({
+    country: z.string().trim().min(1),
+    currentProficiency: proficiencyLevelSchema,
+  })
+  .refine(data => data.state || State.getStatesOfCountry(data.country).length === 0, {
+    path: ['state'],
+    message: 'state is required for this country',
+  })
 
 export type FindRegistrationsData = z.infer<typeof FindRegistrationsSchema>
 export const FindRegistrationsSchema = RegistrationSchema.pick({

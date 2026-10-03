@@ -44,6 +44,8 @@ export const UpdateCourseProfileSchema = requireNonEmpty(
     .object(courseAnswerShape)
     .partial()
     .extend({
+      // Answered once, never cleared back to "prefer not to say" (registration requires it too).
+      currentProficiency: proficiencyLevelSchema.optional(),
       details: DetailsSchema.refine(
         patch => Object.keys(patch).length > 0,
         'no fields to update',

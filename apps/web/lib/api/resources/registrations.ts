@@ -13,9 +13,9 @@ export type SubmitRegistrationInput = {
   email?: string | null
   city?: string | null
   state?: string | null
-  country?: string | null
+  country: string
   learningGoal?: string | null
-  currentProficiency?: ApiProficiencyLevel | null
+  currentProficiency: ApiProficiencyLevel
   spokenLanguages?: string[]
   readLanguages?: string[]
   parentNames?: string[]

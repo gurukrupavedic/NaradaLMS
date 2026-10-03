@@ -1,6 +1,6 @@
 import { and, eq, notInArray, type SQL } from 'drizzle-orm'
 
-import { enrollment, profile, type SchoolDb } from '@narada/db'
+import { enrollment, profile, user, type PublicDb, type SchoolDb } from '@narada/db'
 
 import { tokenMatch } from '../utils/search'
 import type { Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
@@ -183,4 +183,61 @@ export async function update(
     .returning(profileColumns)
 
   return rows.at(0)
+}
+
+/** The caller's own profile's phone, for the contact-change flow — a profile owned by anyone else matches nothing. */
+export async function findOwnedPhone(
+  db: SchoolDb,
+  id: string,
+  ownerUserId: string,
+): Promise<{ phone: string | null } | undefined> {
+  return db.query.profile.findFirst({
+    where: (t, { and, eq }) => and(eq(t.id, id), eq(t.userId, ownerUserId)),
+    columns: { phone: true },
+  })
+}
+
+/** Whether a *different* account already signs in with this phone (`user.phoneNumber` is unique). */
+export async function isPhoneTakenByOtherUser(
+  db: PublicDb,
+  phone: string,
+  userId: string,
+): Promise<boolean> {
+  const row = await db.query.user.findFirst({
+    where: (t, { eq }) => eq(t.phoneNumber, phone),
+    columns: { id: true },
+  })
+  return row !== undefined && row.id !== userId
+}
+
+/**
+ * Applies a verified year-of-birth change to the one profile. Ownership is in the predicate, as in
+ * `update`.
+ */
+export async function updateYearOfBirth(
+  db: SchoolDb,
+  id: string,
+  ownerUserId: string,
+  yearOfBirth: number,
+): Promise<Profile | undefined> {
+  const rows = await db
+    .update(profile)
+    .set({ yearOfBirth })
+    .where(and(eq(profile.id, id), eq(profile.userId, ownerUserId)))
+    .returning(profileColumns)
+  return rows.at(0)
+}
+
+/**
+ * A phone change moves the *login*: the account's `phoneNumber`, and the copy every one of its
+ * profiles in this school carries (siblings sharing a number share the account, so they all follow).
+ */
+export async function updatePhone(
+  schoolDb: SchoolDb,
+  publicDb: PublicDb,
+  userId: string,
+  phone: string,
+): Promise<void> {
+  await publicDb.update(user).set({ phoneNumber: phone, phoneNumberVerified: true }).where(eq(user.id, userId))
+  await schoolDb.update(profile).set({ phone }).where(eq(profile.userId, userId))
 }

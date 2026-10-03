@@ -2,15 +2,30 @@ import { Router } from 'express'
 import * as z from 'zod'
 
 import { optionalProfileRoute, userRoute } from '../naradaRoute'
+import { createContactCodeRateLimit } from '../utils/serverSecurity'
 import { parse } from '../utils/validate'
 import { findAllAccessible, findAllAccessibleWithDetail } from '../batches/service'
 import { find as findCourseProfile } from '../courseProfile/repository'
 import { EMPTY_COURSE_PROFILE } from '../courseProfile/schema'
 import { getDashboardData } from '../dashboard/service'
-import { ProfileBatchesQuerySchema, SearchProfilesQuerySchema, UpdateProfileSchema } from './schema'
-import { findById, findByUserId, searchProfiles, updateProfile } from './service'
+import {
+  ContactChangeSchema,
+  ContactCodeRequestSchema,
+  ProfileBatchesQuerySchema,
+  SearchProfilesQuerySchema,
+  UpdateProfileSchema,
+} from './schema'
+import {
+  changeContact,
+  findById,
+  findByUserId,
+  requestContactCode,
+  searchProfiles,
+  updateProfile,
+} from './service'
 
 const router = Router()
+const contactCodeRateLimit = createContactCodeRateLimit()
 
 router.get(
   '/',
@@ -85,6 +100,29 @@ router.patch(
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     const data = await parse(UpdateProfileSchema, req.body)
     const profile = await updateProfile({ db, school, user, access }, profileId, data)
+    res.status(200).json({ data: profile })
+  }),
+)
+
+// Changing the phone number or year of birth takes a one-time code: request it, then submit it with
+// the change. Self only (`userRoute`, ownership keyed on `user.id` in the service) — never an admin.
+router.post(
+  '/:profileId/contact-code',
+  contactCodeRateLimit,
+  userRoute(async ({ req, res, db, school, user }) => {
+    const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
+    const data = await parse(ContactCodeRequestSchema, req.body)
+    await requestContactCode({ db, school, user }, profileId, data)
+    res.status(204).end()
+  }),
+)
+
+router.patch(
+  '/:profileId/contact',
+  userRoute(async ({ req, res, db, school, user }) => {
+    const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
+    const data = await parse(ContactChangeSchema, req.body)
+    const profile = await changeContact({ db, school, user }, profileId, data)
     res.status(200).json({ data: profile })
   }),
 )

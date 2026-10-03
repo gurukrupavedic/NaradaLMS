@@ -1,6 +1,9 @@
-import type { organization, SchoolDbClient } from '@narada/db'
+import { State } from 'country-state-city'
 
-import { orNotFound } from '../error'
+import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
+import { sendOtpMessage, verifyOtpCode } from '@narada/otp'
+
+import { conflict, orNotFound, validationError } from '../error'
 import type { User } from '../session'
 import type { AccessPolicy } from '../utils/accessPolicy'
 import { profileFieldsFor } from '@narada/profile-fields'
@@ -8,7 +11,13 @@ import { profileFieldsFor } from '@narada/profile-fields'
 import { mergeDetailsPatch } from '../utils/details'
 import { deriveTimeZone } from '../utils/timezone'
 import * as repository from './repository'
-import type { Profile, SearchProfilesQuery, UpdateProfileData } from './schema'
+import type {
+  ContactChangeData,
+  ContactCodeRequestData,
+  Profile,
+  SearchProfilesQuery,
+  UpdateProfileData,
+} from './schema'
 
 type School = typeof organization.$inferSelect
 
@@ -62,14 +71,18 @@ export async function updateProfile(
   if (data.city !== undefined || data.state !== undefined || data.country !== undefined) {
     const current = orNotFound(await repository.findLocationFields(context.db, id, ownerUserId))
 
-    patch = {
-      ...columns,
-      countryTimeZone: deriveTimeZone({
-        city: data.city !== undefined ? data.city : current.city,
-        state: data.state !== undefined ? data.state : current.state,
-        country: data.country !== undefined ? data.country : current.country,
-      }),
+    const effective = {
+      city: data.city !== undefined ? data.city : current.city,
+      state: data.state !== undefined ? data.state : current.state,
+      country: data.country !== undefined ? data.country : current.country,
     }
+    // A state is always given where the country has any — switching country without picking one
+    // of its states is rejected rather than leaving the old country's state code behind.
+    if (effective.country && !effective.state && State.getStatesOfCountry(effective.country).length > 0) {
+      throw validationError('state: required for this country')
+    }
+
+    patch = { ...columns, countryTimeZone: deriveTimeZone(effective) }
   }
 
   if (detailsPatch === undefined) {
@@ -81,4 +94,53 @@ export async function updateProfile(
     const details = mergeDetailsPatch(profileFieldsFor(context.school.slug), current, detailsPatch)
     return orNotFound(await repository.update(tx, id, ownerUserId, { ...patch, details }))
   })
+}
+
+/**
+ * Where the code for a contact change goes: the new phone when it's changing (so the caller proves
+ * they hold it), otherwise the profile's current one. Owner-only — a school admin gets the same 404
+ * as for a missing profile, since the code can only be read off the phone it was sent to.
+ */
+async function contactChangeTarget(
+  context: ProfileServiceContext,
+  profileId: string,
+  newPhone: string | undefined,
+): Promise<string> {
+  const owned = orNotFound(await repository.findOwnedPhone(context.db, profileId, context.user.id))
+  const target = newPhone ?? owned.phone
+  if (!target) throw validationError('phone: this profile has no phone number on record')
+  if (newPhone && newPhone !== owned.phone) {
+    if (await repository.isPhoneTakenByOtherUser(publicDb, newPhone, context.user.id)) {
+      throw conflict('That phone number is already used by another account.')
+    }
+  }
+  return target
+}
+
+export async function requestContactCode(
+  context: ProfileServiceContext,
+  profileId: string,
+  data: ContactCodeRequestData,
+): Promise<void> {
+  await sendOtpMessage(await contactChangeTarget(context, profileId, data.phone))
+}
+
+/** Verifies the code, then applies the phone and/or year-of-birth change it was requested for. */
+export async function changeContact(
+  context: ProfileServiceContext,
+  profileId: string,
+  data: ContactChangeData,
+): Promise<Profile> {
+  const target = await contactChangeTarget(context, profileId, data.phone)
+  if (!(await verifyOtpCode(target, data.code))) {
+    throw validationError('That code is incorrect or has expired.')
+  }
+
+  if (data.phone) {
+    await repository.updatePhone(context.db, publicDb, context.user.id, data.phone)
+  }
+  if (data.yearOfBirth !== undefined) {
+    await repository.updateYearOfBirth(context.db, profileId, context.user.id, data.yearOfBirth)
+  }
+  return findById(context, profileId)
 }

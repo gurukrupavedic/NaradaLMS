@@ -30,8 +30,8 @@ export async function fetchProfileDetail(profileId: string): Promise<ApiProfileD
 // used both by the profile's own owner and by a school admin correcting someone else's.
 // `apps/api/src/profiles/service.ts::updateProfile` decides which: a school admin's write carries
 // no ownership check, anyone else's only ever succeeds against their own profile. `phone` and
-// `yearOfBirth` are deliberately not part of this input, even for an admin — `phone` is the
-// BetterAuth login credential, `yearOfBirth` is treated as fixed once recorded — both excluded
+// `yearOfBirth` are deliberately not part of this input, even for an admin — they change only
+// through the one-time-code flow below, which only the owner can complete — and are excluded
 // server-side too (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`). `countryTimeZone`
 // is excluded for a different reason: it's derived server-side from `city`/`state`/`country`
 // whenever any of those change, never set directly.
@@ -62,6 +62,20 @@ export async function updateProfile(
   patch: UpdateProfileInput,
 ): Promise<ApiProfile> {
   return mutateApi<ApiProfile>(`/profiles/${profileId}`, 'PATCH', patch)
+}
+
+// POST /v1/profiles/:profileId/contact-code — texts a one-time code: to the new phone when `phone`
+// is given (proving the caller holds it), otherwise to the profile's current one. Owner only.
+export async function requestContactCode(profileId: string, phone?: string): Promise<void> {
+  return mutateApi<void>(`/profiles/${profileId}/contact-code`, 'POST', phone ? { phone } : {})
+}
+
+// PATCH /v1/profiles/:profileId/contact — applies a phone and/or year-of-birth change, given the
+// code `requestContactCode` sent. A phone change moves the account's sign-in number.
+export type ChangeContactInput = { code: string; phone?: string; yearOfBirth?: number }
+
+export async function changeContact(profileId: string, input: ChangeContactInput): Promise<ApiProfile> {
+  return mutateApi<ApiProfile>(`/profiles/${profileId}/contact`, 'PATCH', input)
 }
 
 // The profile page's edit form spans both components of a profile: the school-wide `profile` and this

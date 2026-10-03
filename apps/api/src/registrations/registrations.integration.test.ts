@@ -17,6 +17,9 @@ import {
 } from '../testing/fixtures'
 import { approve, findAll, findById, reject, submit } from './service'
 
+// Registration has no "prefer not to say": a country (and its state) and a starting point are always given.
+const REQUIRED = { country: 'IN', state: 'TG', currentProficiency: 'notStarted' } as const
+
 let world: TestWorld | undefined
 
 afterEach(async () => {
@@ -50,7 +53,7 @@ describe('submit', () => {
       {
         firstName: 'Anjali',
         lastName: 'Rao',
-        yearOfBirth: 2005,
+        ...REQUIRED, yearOfBirth: 2005,
         phone: '+15551234567',
         spokenLanguages: ['Telugu'],
         readLanguages: [],
@@ -71,7 +74,7 @@ describe('submit', () => {
 
     const row = await submit(
       { db: world.schoolDb, school: { slug: 'test' }, course: { slug: 'ved' } },
-      { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15551234567' },
+      { firstName: 'Anjali', lastName: 'Rao', ...REQUIRED, yearOfBirth: 2005, phone: '+15551234567' },
       (await createCourse(world)).id,
     )
 
@@ -90,7 +93,7 @@ describe('submit', () => {
       {
         firstName: 'Anjali',
         lastName: 'Rao',
-        yearOfBirth: 2005,
+        ...REQUIRED, yearOfBirth: 2005,
         phone: '+15556660099',
         city: 'Hyderabad',
         state: 'TG',
@@ -102,21 +105,9 @@ describe('submit', () => {
     expect(row.countryTimeZone).toBe('Asia/Kolkata')
   })
 
-  it('leaves countryTimeZone null when no country was given', async () => {
-    world = await createTestSchool()
-
-    const row = await submit(
-      { db: world.schoolDb, school: { slug: 'test' }, course: { slug: 'ved' } },
-      { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15556660098' },
-      (await createCourse(world)).id,
-    )
-
-    expect(row.countryTimeZone).toBeNull()
-  })
-
   // Only `school.slug` matters to `submit`'s details validation — the definitions come from
   // `@narada/profile-fields`, keyed by it — so the world's own (random-slugged) school is reused.
-  const applicant = { firstName: 'Anjali', lastName: 'Rao', yearOfBirth: 2005, phone: '+15556660096' }
+  const applicant = { firstName: 'Anjali', lastName: 'Rao', ...REQUIRED, yearOfBirth: 2005, phone: '+15556660096' }
 
   it('stores the details a school collects, dropping any its conditions hide', async () => {
     world = await createTestSchool()
@@ -266,7 +257,7 @@ describe('approve', () => {
       {
         firstName: 'Anjali',
         lastName: 'Rao',
-        yearOfBirth: 2005,
+        ...REQUIRED, yearOfBirth: 2005,
         phone: '+15556660097',
         city: 'Hyderabad',
         state: 'TG',
@@ -296,7 +287,7 @@ describe('approve', () => {
       {
         firstName: 'Anjali',
         lastName: 'Rao',
-        yearOfBirth: 2005,
+        ...REQUIRED, yearOfBirth: 2005,
         phone: '+15556660095',
         details: { gothram: 'Bharadwaja', married: true, gothramSpouse: 'Kashyapa', gothramMother: 'Vasishta' },
       },

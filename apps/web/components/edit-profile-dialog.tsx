@@ -31,9 +31,10 @@ import { useSchoolSlug } from '@/lib/school'
  * profile's own owner or by a school admin correcting someone else's — same fields, same dialog,
  * same save (`useUpdateProfile(profileId, isSelf)`, see `lib/query/use-profile-mutations.ts`);
  * `isSelf` here only changes the copy, never which fields are editable. Every registration-derived
- * field is editable here except `phone` and `yearOfBirth` — `phone` is the BetterAuth login
- * credential (changing it needs its own re-verification flow, not this form, even for an admin),
- * `yearOfBirth` is treated as fixed once recorded. The server enforces the same boundary
+ * field is editable here except `phone` and `yearOfBirth` — those change only through
+ * `components/change-contact-dialog.tsx`'s one-time-code flow (phone is the BetterAuth login
+ * credential), which only the owner can complete. Country, state (where the country has any) and
+ * the starting point are required: there is no "prefer not to say". The server enforces the same boundary
  * independently (`apps/api/src/profiles/schema.ts`'s `UpdateProfileSchema`), this is just the
  * matching client-side surface.
  *
@@ -150,7 +151,8 @@ function EditProfileForm({
         profile: {
           name: trimmedName,
           city: city.trim() || null,
-          country: country || null,
+          country,
+          // Null clears the old country's state when the new one has none.
           state: state || null,
           email: email.trim() || null,
           spokenLanguages,
@@ -165,7 +167,7 @@ function EditProfileForm({
         },
         course: {
           learningGoal: learningGoal.trim() || null,
-          currentProficiency: currentProficiency || null,
+          currentProficiency: currentProficiency || undefined,
           comments: comments.trim() || null,
         },
       },
@@ -181,8 +183,8 @@ function EditProfileForm({
         </Dialog.Title>
         <Dialog.Description className="mt-1 text-[0.8125rem] text-ink-muted">
           {isSelf
-            ? "Your phone number and year of birth can't be changed here — phone is used to sign in."
-            : "Phone number and year of birth can't be changed here — phone is used to sign in."}
+            ? 'To change your phone number or year of birth, use “Change phone or year of birth” on the profile page — it takes a one-time code.'
+            : "Phone number and year of birth can only be changed by the student, with a one-time code sent to their phone."}
         </Dialog.Description>
       </div>
 
@@ -192,7 +194,7 @@ function EditProfileForm({
         <SelectField
         variant="box"
           label="Country"
-          placeholder="Prefer not to say"
+          required
           value={country}
           onChange={handleCountryChange}
           options={COUNTRY_OPTIONS}
@@ -200,7 +202,8 @@ function EditProfileForm({
         <SelectField
         variant="box"
           label="State / province"
-          placeholder={stateOptions.length > 0 ? 'Prefer not to say' : 'No states on record'}
+          placeholder={stateOptions.length > 0 ? 'Select…' : 'No states on record'}
+          required={stateOptions.length > 0}
           value={state}
           onChange={setState}
           options={stateOptions}
@@ -229,7 +232,7 @@ function EditProfileForm({
       <SelectField
         variant="box"
         label="Self-reported starting point"
-        placeholder="Prefer not to say"
+        required
         value={currentProficiency}
         onChange={setCurrentProficiency}
         options={SELF_REPORTED_PROFICIENCY_OPTIONS}

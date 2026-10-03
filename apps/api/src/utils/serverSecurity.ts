@@ -54,3 +54,16 @@ export function createDeviceLinkRateLimit() {
     keyGenerator: (req: Request) => ipKeyGenerator(req.ip ?? ''),
   })
 }
+
+// Each code is an SMS (and, for the unauthenticated send-otp above, keyed by phone). This one sits
+// behind a session, so it's keyed by IP + target profile — a signed-in user can't be used to
+// spam SMS at an arbitrary number faster than this, whichever number they type.
+export function createContactCodeRateLimit() {
+  return rateLimit({
+    windowMs: 10 * 60 * 1000,
+    limit: 3,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    keyGenerator: (req: Request) => `${ipKeyGenerator(req.ip ?? '')}:${req.params.profileId}`,
+  })
+}

@@ -11,7 +11,7 @@ describe('UpdateCourseProfileSchema', () => {
     ).toBe(true)
   })
 
-  it('takes the three answers, alone or with details, and null to clear one', () => {
+  it('takes the three answers, alone or with details, and null to clear all but the starting point', () => {
     for (const body of [
       { learningGoal: 'recite' },
       { currentProficiency: 'level1', comments: null },
@@ -27,6 +27,7 @@ describe('UpdateCourseProfileSchema', () => {
       { details: {} },
       { learningGoal: 'x', details: {} },
       { currentProficiency: 'expert' },
+      { currentProficiency: null },
       { details: { japam: null } },
       { details: { japam: { n: 1 } } },
     ]) {
