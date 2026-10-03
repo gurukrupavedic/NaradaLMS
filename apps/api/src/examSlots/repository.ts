@@ -9,24 +9,14 @@ import type {
   ExamSlot,
   ExamSlotRequest,
   ExamSlotRequestWithDetail,
-  ExamSlotWithDetail,
   FindExamSlotRequestsData,
   FindExamSlotsData,
   OpenExamSlotData,
 } from './schema'
 
-// A slot (and, through it, a request) belongs to a course through its track.
+// A request belongs to a course through its track; a slot carries its own `courseId`.
 function tracksOfCourse(db: SchoolDb, courseId: string) {
   return db.select({ id: track.id }).from(track).where(eq(track.courseId, courseId))
-}
-
-const SLOT_DETAIL = { track: { columns: { name: true } } } as const
-
-function toSlotDetail<Row extends { track: { name: string } }>(
-  row: Row,
-): Omit<Row, 'track'> & { trackName: string } {
-  const { track: trackRow, ...rest } = row
-  return { ...rest, trackName: trackRow.name }
 }
 
 const REQUEST_DETAIL = {
@@ -53,20 +43,14 @@ function toRequestDetail<
 
 /**
  * Lists slots visible in `courseId`, soonest-first with a matching compound cursor — the same
- * shape as `exams/repository.ts::findMany`. Eager-loads the track's name (§0.4-style
- * list-detail equivalence): a bare `ExamSlot` row has only a `trackId`, not enough to render in a
- * list that isn't already narrowed to one track.
+ * shape as `exams/repository.ts::findMany`.
  */
 export async function findManySlots(
   db: SchoolDb,
-  { trackId, status, cursor, limit }: FindExamSlotsData,
+  { status, cursor, limit }: FindExamSlotsData,
   courseId: string,
-): Promise<{ items: ExamSlotWithDetail[]; nextCursor: string | null }> {
-  const conditions: SQL[] = [inArray(examSlot.trackId, tracksOfCourse(db, courseId))]
-
-  if (trackId) {
-    conditions.push(eq(examSlot.trackId, trackId))
-  }
+): Promise<{ items: ExamSlot[]; nextCursor: string | null }> {
+  const conditions: SQL[] = [eq(examSlot.courseId, courseId)]
 
   if (status) {
     conditions.push(eq(examSlot.status, status))
@@ -87,11 +71,9 @@ export async function findManySlots(
     where: and(...conditions),
     orderBy: [asc(examSlot.scheduledAt), asc(examSlot.id)],
     limit: limit + 1,
-    with: SLOT_DETAIL,
   })
 
-  const page = paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
-  return { items: page.items.map(toSlotDetail), nextCursor: page.nextCursor }
+  return paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
 }
 
 export async function findSlotById(db: SchoolDb, id: string): Promise<ExamSlot | undefined> {
@@ -151,17 +133,15 @@ export async function findRequestById(db: SchoolDb, id: string): Promise<ExamSlo
   })
 }
 
-/** Backs the "one pending request per student per track" friendly precheck in `service.ts::request`
- * — the partial unique index on `(studentId, trackId)` is the real guarantee; this is just its
- * early, clearer-error version (mirrors `enrollmentRequests/repository.ts::findPending`). */
-export async function findPendingRequestForStudentTrack(
+/** Backs the "one pending request per student" friendly precheck in `service.ts::request` — the
+ * partial unique index on `studentId` is the real guarantee; this is just its early,
+ * clearer-error version (mirrors `enrollmentRequests/repository.ts::findPending`). */
+export async function findPendingRequestForStudent(
   db: SchoolDb,
   studentId: string,
-  trackId: string,
 ): Promise<{ id: string } | undefined> {
   return db.query.examSlotRequest.findFirst({
-    where: (t, { and: andCols, eq: eqCol }) =>
-      andCols(eqCol(t.studentId, studentId), eqCol(t.trackId, trackId), eqCol(t.status, 'pending')),
+    where: (t, { and: andCols, eq: eqCol }) => andCols(eqCol(t.studentId, studentId), eqCol(t.status, 'pending')),
     columns: { id: true },
   })
 }
@@ -181,7 +161,7 @@ export async function findPendingRequestForSlot(
 
 export async function insertSlot(
   db: SchoolDb,
-  data: OpenExamSlotData & { openedBy: string },
+  data: OpenExamSlotData & { courseId: string; openedBy: string },
 ): Promise<ExamSlot | undefined> {
   const rows = await db.insert(examSlot).values(data).returning()
   return rows.at(0)

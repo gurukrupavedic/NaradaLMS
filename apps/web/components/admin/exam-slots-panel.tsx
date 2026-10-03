@@ -8,7 +8,7 @@ import { ScreenError } from '@/components/screen-error'
 import { Section } from '@/components/section'
 import { Spinner } from '@/components/spinner'
 import { Timestamp } from '@/components/timestamp'
-import { catalogTracksQuery, examSlotsQuery } from '@/lib/query/options'
+import { examSlotsQuery } from '@/lib/query/options'
 import { useCancelExamSlot, useOpenExamSlot } from '@/lib/query/use-exam-slot-mutations'
 import type { ExamSlotRow } from '@/lib/api/resources'
 import type { ApiExamSlotStatus } from '@/lib/api/api-types'
@@ -34,16 +34,14 @@ const STATUS_CLASS: Record<ApiExamSlotStatus, string> = {
 // appointments and seeing every one that exists, regardless of status. Reviewing the requests
 // against them is `ExamSlotRequestReview`'s job, not this one.
 export function ExamSlotsPanel() {
-  const { data: tracks, error: tracksError } = useQuery(catalogTracksQuery())
-  const { data: slots, error: slotsError } = useQuery(examSlotsQuery())
+  const { data: slots, error } = useQuery(examSlotsQuery())
 
-  const error = tracksError ?? slotsError
   if (error) return <ScreenError error={error} />
-  if (!tracks || !slots) return <ScreenSkeleton rows={6} />
+  if (!slots) return <ScreenSkeleton rows={6} />
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 px-5 py-9">
-      <OpenSlotForm tracks={tracks} />
+      <OpenSlotForm />
 
       <Section title="Slots" count={`${slots.length}`}>
         {slots.length === 0 ? (
@@ -62,44 +60,22 @@ export function ExamSlotsPanel() {
   )
 }
 
-function OpenSlotForm({ tracks }: { tracks: { id: string; name: string; order: number }[] }) {
+function OpenSlotForm() {
   const open = useOpenExamSlot()
-  const [trackId, setTrackId] = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!trackId || !scheduledAt) return
+    if (!scheduledAt) return
 
     open.mutate(
-      { trackId, scheduledAt: new Date(scheduledAt).toISOString() },
+      { scheduledAt: new Date(scheduledAt).toISOString() },
       { onSuccess: () => setScheduledAt('') },
     )
   }
 
-  const sortedTracks = [...tracks].sort((a, b) => a.order - b.order)
-
   return (
     <form onSubmit={handleSubmit} className="sheet flex flex-wrap items-end gap-4 px-5 py-5">
-      <label className="min-w-[10rem] flex-1">
-        <span className="label block text-ink-muted">Track</span>
-        <select
-          required
-          value={trackId}
-          onChange={e => setTrackId(e.target.value)}
-          className="mt-2 w-full border-b border-ink/25 bg-transparent py-1.5 text-[0.9375rem] focus:border-vermilion focus:outline-none"
-        >
-          <option value="" disabled>
-            Choose a track…
-          </option>
-          {sortedTracks.map(track => (
-            <option key={track.id} value={track.id}>
-              {track.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
       <label className="min-w-[12rem] flex-1">
         <span className="label block text-ink-muted">Date &amp; time</span>
         <input
@@ -113,7 +89,7 @@ function OpenSlotForm({ tracks }: { tracks: { id: string; name: string; order: n
 
       <button
         type="submit"
-        disabled={open.isPending || !trackId || !scheduledAt}
+        disabled={open.isPending || !scheduledAt}
         aria-busy={open.isPending}
         className="label inline-flex shrink-0 items-center gap-2 bg-ink px-4 py-2 text-paper transition-opacity disabled:opacity-50"
       >
@@ -131,8 +107,7 @@ function SlotRow({ slot }: { slot: ExamSlotRow }) {
   return (
     <li className="flex flex-wrap items-center gap-4 border-b border-rule-soft px-4 py-3 last:border-0">
       <div className="min-w-0 flex-1">
-        <span className="block text-[0.9375rem]">{slot.track}</span>
-        <span className="label mt-0.5 block font-mono text-ink-muted">
+        <span className="block text-[0.9375rem]">
           <Timestamp variant="dateTime" value={slot.when} />
         </span>
       </div>

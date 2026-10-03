@@ -164,7 +164,7 @@ export const examResultRelations = relations(examResult, ({ one }) => ({
 }))
 
 export const examSlotRelations = relations(examSlot, ({ one, many }) => ({
-  track: one(track, { fields: [examSlot.trackId], references: [track.id] }),
+  course: one(course, { fields: [examSlot.courseId], references: [course.id] }),
   openedByProfile: one(profile, { fields: [examSlot.openedBy], references: [profile.id] }),
   requests: many(examSlotRequest),
 }))

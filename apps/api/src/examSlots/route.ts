@@ -3,7 +3,12 @@ import * as z from 'zod'
 
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { FindExamSlotRequestsSchema, FindExamSlotsSchema, OpenExamSlotSchema } from './schema'
+import {
+  FindExamSlotRequestsSchema,
+  FindExamSlotsSchema,
+  OpenExamSlotSchema,
+  RequestExamSlotSchema,
+} from './schema'
 import {
   approve,
   cancelSlot,
@@ -17,7 +22,7 @@ import {
 
 const router = Router()
 
-// A slot carries no personal data — just a track, a time and who opened it — so listing them needs
+// A slot carries no personal data — just a time and who opened it — so listing them needs
 // no dedicated access check beyond ordinary school membership (already enforced upstream by
 // `naradaRoute`'s course/school resolution). Compare the `/requests` route below, which does check,
 // because a *request* carries a student.
@@ -52,9 +57,9 @@ router.get(
 // openSlot itself calls access.requireCanCreateExam (school-admin only) — see its doc comment.
 router.post(
   '/',
-  profileRoute(async ({ req, res, db, access, profile }) => {
+  profileRoute(async ({ req, res, db, access, profile, getCourse }) => {
     const data = await parse(OpenExamSlotSchema, req.body)
-    const slot = await openSlot({ db, access }, data, profile.id)
+    const slot = await openSlot({ db, access }, data, profile.id, (await getCourse()).id)
     res.status(201).json({ data: slot })
   }),
 )
@@ -71,13 +76,14 @@ router.post(
 
 // A student claiming a slot for themselves — `profileRoute`, not `optionalProfileRoute`: there's
 // no meaningful "request a sitting" with no self to sit it, same reasoning as
-// `batches/route.ts`'s own POST /:batchId/enroll. No access check here: eligibility (L3 across the
-// track) is the service's own gate, not a permission — any active profile may attempt it.
+// `batches/route.ts`'s own POST /:batchId/enroll. The body names the track being sat. No access check
+// here: eligibility (L3 across that track) is the service's own gate, not a permission — any active profile may attempt it.
 router.post(
   '/:examSlotId/requests',
   profileRoute(async ({ req, res, db, profile }) => {
     const { examSlotId } = await parse(z.object({ examSlotId: z.uuid() }), req.params)
-    const row = await request({ db }, examSlotId, profile.id)
+    const { trackId } = await parse(RequestExamSlotSchema, req.body)
+    const row = await request({ db }, examSlotId, profile.id, { trackId })
     res.status(201).json({ data: row })
   }),
 )

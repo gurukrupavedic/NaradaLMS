@@ -626,19 +626,20 @@ export const examResult = pgTable(
   ],
 )
 
-// A school-admin-opened appointment a student can ask to sit a track's certification exam in —
-// single-seat, so booking it is a claim on the one seat, not a capacity decrement. Independent of
-// `batch`/`enrollment`: the qualifying batch is only resolved (same as direct exam creation,
-// `enrollment/service.ts::resolveQualifyingBatch`) once a request on this slot is approved and the
-// real `exam` row is written — a slot by itself doesn't know or care which batch its eventual
-// sitting will land in.
+// A school-admin-opened (or schedule-generated) time a student can ask to sit a certification exam
+// in — single-seat, so booking it is a claim on the one seat, not a capacity decrement. A slot is
+// generic availability: it belongs to a course, not a track, and any student who has reached L3 on
+// every chapter of some track may request it for that track (the track lives on the request and,
+// once approved, on the `exam`). Independent of `batch`/`enrollment`: the qualifying batch is only
+// resolved (same as direct exam creation, `enrollment/service.ts::resolveQualifyingBatch`) once a
+// request on this slot is approved and the real `exam` row is written.
 export const examSlot = pgTable(
   'examSlot',
   {
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    trackId: uuid('trackId')
+    courseId: uuid('courseId')
       .notNull()
-      .references(() => track.id),
+      .references(() => course.id),
     scheduledAt: timestamp('scheduledAt').notNull(),
     status: examSlotStatus('status').notNull().default('open'),
     openedBy: uuid('openedBy')
@@ -648,16 +649,12 @@ export const examSlot = pgTable(
   },
   table => [
     // The core query for both "open slots a student can request" and an admin's slot list: a
-    // track's slots, filtered by status, soonest first.
-    index('examSlot_trackId_status_scheduledAt_idx').on(
-      table.trackId,
+    // course's slots, filtered by status, soonest first.
+    index('examSlot_courseId_status_scheduledAt_idx').on(
+      table.courseId,
       table.status,
       table.scheduledAt,
     ),
-    // Not a second uniqueness rule (`id` is already unique) — the target `examSlotRequest`'s
-    // composite foreign key needs, so its copy of `trackId` can never drift from the slot it's
-    // actually requesting (mirrors `track_id_courseId_uidx` doing the same for `batch`).
-    uniqueIndex('examSlot_id_trackId_uidx').on(table.id, table.trackId),
   ],
 )
 
@@ -673,10 +670,11 @@ export const examSlotRequest = pgTable(
     slotId: uuid('slotId')
       .notNull()
       .references(() => examSlot.id, { onDelete: 'cascade' }),
-    // Always the track of `slotId`'s slot — enforced by the composite foreign key below, copied
-    // here so "one pending request per student per track" (below) doesn't need to join through
-    // examSlot to check it.
-    trackId: uuid('trackId').notNull(),
+    // The track the student is sitting — chosen by them when requesting, and checked against their
+    // L3 progress then. The slot itself is generic and carries no track.
+    trackId: uuid('trackId')
+      .notNull()
+      .references(() => track.id),
     studentId: uuid('studentId')
       .notNull()
       .references(() => profile.id, { onDelete: 'cascade' }),
@@ -689,19 +687,14 @@ export const examSlotRequest = pgTable(
   table => [
     index('examSlotRequest_studentId_idx').on(table.studentId),
     index('examSlotRequest_status_createdAt_idx').on(table.status, table.createdAt),
-    foreignKey({
-      name: 'examSlotRequest_slotId_trackId_fk',
-      columns: [table.slotId, table.trackId],
-      foreignColumns: [examSlot.id, examSlot.trackId],
-    }).onDelete('cascade'),
     // Single-seat protection: at most one live claim on any one slot, regardless of student.
     uniqueIndex('examSlotRequest_one_pending_per_slot_uidx')
       .on(table.slotId)
       .where(sql`${table.status} = 'pending'`),
-    // A student can't hold pending requests on two different slots of the same track at once —
-    // has to let one resolve (approved, rejected, or its slot cancelled) before trying another.
-    uniqueIndex('examSlotRequest_one_pending_per_student_track_uidx')
-      .on(table.studentId, table.trackId)
+    // A student can't hold pending requests on two different slots at once — has to let one
+    // resolve (approved, rejected, or its slot cancelled) before trying another.
+    uniqueIndex('examSlotRequest_one_pending_per_student_uidx')
+      .on(table.studentId)
       .where(sql`${table.status} = 'pending'`),
   ],
 )

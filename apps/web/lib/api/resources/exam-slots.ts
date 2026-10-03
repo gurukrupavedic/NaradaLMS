@@ -1,27 +1,24 @@
 import { fetchApi, fetchAllPages, mutateApi } from '@/lib/api/client'
-import type { ApiExamSlot, ApiExamSlotRequest, ApiExamSlotRequestStatus, ApiExamSlotRequestWithDetail, ApiExamSlotStatus, ApiExamSlotWithDetail } from '@/lib/api/api-types'
+import type { ApiExamSlot, ApiExamSlotRequest, ApiExamSlotRequestStatus, ApiExamSlotRequestWithDetail, ApiExamSlotStatus } from '@/lib/api/api-types'
 
 export type ExamSlotRow = {
   id: string
-  trackId: string
-  track: string
   when: string
   status: ApiExamSlotStatus
 }
 
-function toExamSlotRow(slot: ApiExamSlotWithDetail): ExamSlotRow {
-  return { id: slot.id, trackId: slot.trackId, track: slot.trackName, when: slot.scheduledAt, status: slot.status }
+function toExamSlotRow(slot: ApiExamSlot): ExamSlotRow {
+  return { id: slot.id, when: slot.scheduledAt, status: slot.status }
 }
 
 // GET /v1/exam-slots — no access check server-side (a slot carries no personal data), so this is
 // used both by the admin slots panel (every status) and the student exams screen (status: 'open'
 // only, to browse what can be requested).
-export async function fetchExamSlots(filter?: { trackId?: string; status?: ApiExamSlotStatus }): Promise<ExamSlotRow[]> {
+export async function fetchExamSlots(filter?: { status?: ApiExamSlotStatus }): Promise<ExamSlotRow[]> {
   const params = new URLSearchParams({ limit: '100' })
-  if (filter?.trackId) params.set('trackId', filter.trackId)
   if (filter?.status) params.set('status', filter.status)
 
-  const slots = await fetchAllPages<ApiExamSlotWithDetail>(
+  const slots = await fetchAllPages<ApiExamSlot>(
     cursor => `/exam-slots?${params}${cursor ? `&cursor=${cursor}` : ''}`,
   )
   return slots.map(toExamSlotRow)
@@ -34,7 +31,7 @@ export async function fetchEligibleTrackIds(): Promise<string[]> {
   return fetchApi<string[]>('/exam-slots/eligibility')
 }
 
-export async function openExamSlot(input: { trackId: string; scheduledAt: string }): Promise<ApiExamSlot> {
+export async function openExamSlot(input: { scheduledAt: string }): Promise<ApiExamSlot> {
   return mutateApi<ApiExamSlot>('/exam-slots', 'POST', input)
 }
 
@@ -67,9 +64,10 @@ function toExamSlotRequestRow(request: ApiExamSlotRequestWithDetail): ExamSlotRe
 }
 
 // POST /v1/exam-slots/:slotId/requests — a student claiming a slot for themselves; the caller's own
-// profile is always the student, never something this takes as an argument.
-export async function requestExamSlot(slotId: string): Promise<ApiExamSlotRequest> {
-  return mutateApi<ApiExamSlotRequest>(`/exam-slots/${slotId}/requests`, 'POST')
+// profile is always the student, never something this takes as an argument. `trackId` is the track
+// they're sitting — the slot itself is generic.
+export async function requestExamSlot(input: { slotId: string; trackId: string }): Promise<ApiExamSlotRequest> {
+  return mutateApi<ApiExamSlotRequest>(`/exam-slots/${input.slotId}/requests`, 'POST', { trackId: input.trackId })
 }
 
 // GET /v1/exam-slots/requests, school-wide — the admin review queue
