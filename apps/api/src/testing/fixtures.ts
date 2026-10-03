@@ -641,7 +641,7 @@ export async function createExam(
 export async function createExamSlot(
   world: TestWorld,
   o: {
-    track: TrackRow
+    course?: CourseRow
     openedBy: ProfileRow
     scheduledAt?: Date
     status?: ExamSlotRow['status']
@@ -650,7 +650,7 @@ export async function createExamSlot(
   const rows = await world.schoolDb
     .insert(examSlot)
     .values({
-      trackId: o.track.id,
+      courseId: o.course?.id ?? (await defaultCourse(world)).id,
       openedBy: o.openedBy.id,
       scheduledAt: o.scheduledAt ?? new Date(),
       status: o.status ?? 'open',
@@ -666,6 +666,7 @@ export async function createExamSlotRequest(
   world: TestWorld,
   o: {
     slot: ExamSlotRow
+    track: TrackRow
     student: ProfileRow
     status?: ExamSlotRequestRow['status']
     examId?: string
@@ -675,7 +676,7 @@ export async function createExamSlotRequest(
     .insert(examSlotRequest)
     .values({
       slotId: o.slot.id,
-      trackId: o.slot.trackId,
+      trackId: o.track.id,
       studentId: o.student.id,
       status: o.status ?? 'pending',
       examId: o.examId,

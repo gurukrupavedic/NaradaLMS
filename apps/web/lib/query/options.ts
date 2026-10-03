@@ -90,10 +90,9 @@ export const keys = {
   examSlots: {
     // Prefix key — opening, cancelling, or approving/rejecting a request against a slot all
     // change what this list shows, so a mutation invalidates the whole prefix rather than
-    // enumerating every trackId/status combination a screen happens to be filtered to.
+    // enumerating every status a screen happens to be filtered to.
     all: ['examSlots'] as const,
-    list: (trackId?: string, status?: ApiExamSlotStatus) =>
-      ['examSlots', 'list', trackId ?? null, status ?? null] as const,
+    list: (status?: ApiExamSlotStatus) => ['examSlots', 'list', status ?? null] as const,
   },
 
   examSlotRequests: {
@@ -245,9 +244,9 @@ export const adminSittingsQuery = () =>
 
 // Both the admin slots panel (no filter) and the student exams screen's "Available sittings"
 // (status: 'open') go through this one factory — see `fetchExamSlots`'s own doc comment.
-export const examSlotsQuery = (filter?: { trackId?: string; status?: ApiExamSlotStatus }) =>
+export const examSlotsQuery = (filter?: { status?: ApiExamSlotStatus }) =>
   queryOptions({
-    queryKey: keys.examSlots.list(filter?.trackId, filter?.status),
+    queryKey: keys.examSlots.list(filter?.status),
     queryFn: () => fetchExamSlots(filter),
   })
 

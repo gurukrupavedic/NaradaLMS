@@ -4,17 +4,17 @@ import { conflict, forbidden, internalError, orInternalError, orNotFound, unproc
 import type { AccessPolicy, ExamSlotRequestReadScope } from '../utils/accessPolicy'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as examRepository from '../exams/repository'
-import { exists as trackExists } from '../tracks/repository'
+import { existsInCourse as trackExistsInCourse } from '../tracks/repository'
 import { createExam } from '../exams/service'
 import * as repository from './repository'
 import type {
   ExamSlot,
   ExamSlotRequest,
   ExamSlotRequestWithDetail,
-  ExamSlotWithDetail,
   FindExamSlotRequestsData,
   FindExamSlotsData,
   OpenExamSlotData,
+  RequestExamSlotData,
 } from './schema'
 
 type ExamSlotServiceContext = { db: SchoolDbClient }
@@ -23,7 +23,7 @@ export async function findManySlots(
   context: ExamSlotServiceContext,
   params: FindExamSlotsData,
   courseId: string,
-): Promise<{ items: ExamSlotWithDetail[]; nextCursor: string | null }> {
+): Promise<{ items: ExamSlot[]; nextCursor: string | null }> {
   return repository.findManySlots(context.db, params, courseId)
 }
 
@@ -58,29 +58,26 @@ export async function findRequestById(context: ExamSlotServiceContext, id: strin
 }
 
 /**
- * Opens a new bookable appointment on a track — school-admin (or super-admin) only, the same gate
- * as booking an exam directly (`AccessPolicy#requireCanCreateExam`). Deliberately independent of
- * `batch`: a sitting belongs to no batch, and the student's enrollment on the track is only checked
- * once a request on this slot is approved (`approve` below), the same way it is for a direct-admin
- * exam.
+ * Opens a new bookable appointment in a course — school-admin (or super-admin) only, the same gate
+ * as booking an exam directly (`AccessPolicy#requireCanCreateExam`). A slot is generic: it names no
+ * track, and the student picks theirs when requesting. Deliberately independent of `batch`: a
+ * sitting belongs to no batch, and the student's enrollment on the track is only checked once a
+ * request on this slot is approved (`approve` below), the same way it is for a direct-admin exam.
  */
 export async function openSlot(
   context: ExamSlotServiceContext & { access: AccessPolicy },
   data: OpenExamSlotData,
   openedBy: string,
+  courseId: string,
 ): Promise<ExamSlot> {
   context.access.requireCanCreateExam()
 
-  if (!(await trackExists(context.db, data.trackId))) {
-    throw unprocessable('track not found')
-  }
-
-  return orInternalError(await repository.insertSlot(context.db, { ...data, openedBy }))
+  return orInternalError(await repository.insertSlot(context.db, { ...data, courseId, openedBy }))
 }
 
 /**
- * A student's own request to sit `slotId` — eligible only once they've reached L3 on every
- * gradable chapter of the slot's track (chapter mastery, not a prior exam result — see
+ * A student's own request to sit `slotId` for `data.trackId` — eligible only once they've reached
+ * L3 on every gradable chapter of that track, which must belong to the slot's course (chapter mastery, not a prior exam result — see
  * `exams/repository.ts::isCertifiedAcrossTrack`'s doc comment for how that differs from
  * `hasPassedTrack`). `studentId` is always the caller's own profile, not something a route should
  * ever take from the request body — this is self-service, not an admin booking on someone's
@@ -95,15 +92,20 @@ export async function request(
   context: ExamSlotServiceContext,
   slotId: string,
   studentId: string,
+  data: RequestExamSlotData,
 ): Promise<ExamSlotRequest> {
   const slot = await findSlotById(context, slotId)
 
-  if (!(await examRepository.isCertifiedAcrossTrack(context.db, studentId, slot.trackId))) {
+  if (!(await trackExistsInCourse(context.db, data.trackId, slot.courseId))) {
+    throw unprocessable('track not found')
+  }
+
+  if (!(await examRepository.isCertifiedAcrossTrack(context.db, studentId, data.trackId))) {
     throw forbidden('you need L3 on every chapter of this track before requesting an attempt')
   }
 
-  if (await repository.findPendingRequestForStudentTrack(context.db, studentId, slot.trackId)) {
-    throw conflict('you already have a pending request for this track')
+  if (await repository.findPendingRequestForStudent(context.db, studentId)) {
+    throw conflict('you already have a pending exam request')
   }
 
   return context.db.transaction(async tx => {
@@ -113,10 +115,10 @@ export async function request(
     }
 
     const inserted = await withConstraintMapping(
-      () => repository.insertRequest(tx, { slotId, trackId: slot.trackId, studentId }),
+      () => repository.insertRequest(tx, { slotId, trackId: data.trackId, studentId }),
       {
-        [DbConstraint.examSlotRequestOnePendingPerStudentTrack]: () =>
-          conflict('you already have a pending request for this track'),
+        [DbConstraint.examSlotRequestOnePendingPerStudent]: () =>
+          conflict('you already have a pending exam request'),
       },
     )
     if (!inserted) {
@@ -203,7 +205,7 @@ export async function reject(
  * Cancelling a `requested` slot also rejects the pending request holding it (inside the same
  * transaction as the slot's own status change) — otherwise that request would sit `pending`
  * forever, pointing at a slot that no longer exists to book, and would keep blocking the student
- * from requesting any other slot on this track (`examSlotRequest_one_pending_per_student_track_uidx`).
+ * from requesting any other slot (`examSlotRequest_one_pending_per_student_uidx`).
  */
 export async function cancelSlot(
   context: ExamSlotServiceContext & { access: AccessPolicy },

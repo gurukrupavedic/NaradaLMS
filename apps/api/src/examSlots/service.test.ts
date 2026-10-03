@@ -15,7 +15,7 @@ import { createExam } from '../exams/service'
 vi.mock('./repository', () => ({
   findSlotById: vi.fn(),
   findRequestById: vi.fn(),
-  findPendingRequestForStudentTrack: vi.fn(),
+  findPendingRequestForStudent: vi.fn(),
   findPendingRequestForSlot: vi.fn(),
   insertSlot: vi.fn(),
   updateSlotStatusGuarded: vi.fn(),
@@ -28,7 +28,7 @@ vi.mock('../exams/repository', () => ({
 }))
 
 vi.mock('../tracks/repository', () => ({
-  exists: vi.fn(),
+  existsInCourse: vi.fn(),
 }))
 
 vi.mock('../exams/service', () => ({
@@ -41,10 +41,10 @@ describe('openSlot', () => {
   const access = { requireCanCreateExam } as unknown as AccessPolicy
   const context = { db, access }
 
-  const data = { trackId: 'track-1', scheduledAt: new Date() }
+  const data = { scheduledAt: new Date() }
   const created = {
     id: 'slot-1',
-    trackId: 'track-1',
+    courseId: 'course-1',
     scheduledAt: data.scheduledAt,
     status: 'open' as const,
     openedBy: 'admin-1',
@@ -53,7 +53,6 @@ describe('openSlot', () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(trackRepository.exists).mockResolvedValue(true)
   })
 
   it('checks school-admin authorization before anything else', async () => {
@@ -61,26 +60,17 @@ describe('openSlot', () => {
       throw new Error('forbidden')
     })
 
-    await expect(openSlot(context, data, 'admin-1')).rejects.toThrow('forbidden')
-
-    expect(trackRepository.exists).not.toHaveBeenCalled()
-    expect(repository.insertSlot).not.toHaveBeenCalled()
-  })
-
-  it('422s when the track does not exist', async () => {
-    vi.mocked(trackRepository.exists).mockResolvedValue(false)
-
-    await expect(openSlot(context, data, 'admin-1')).rejects.toMatchObject({ statusCode: 422 })
+    await expect(openSlot(context, data, 'admin-1', 'course-1')).rejects.toThrow('forbidden')
 
     expect(repository.insertSlot).not.toHaveBeenCalled()
   })
 
-  it('inserts the slot with the opener stamped on it', async () => {
+  it('inserts the slot with its course and the opener stamped on it', async () => {
     vi.mocked(repository.insertSlot).mockResolvedValue(created)
 
-    const result = await openSlot(context, data, 'admin-1')
+    const result = await openSlot(context, data, 'admin-1', 'course-1')
 
-    expect(repository.insertSlot).toHaveBeenCalledWith(db, { ...data, openedBy: 'admin-1' })
+    expect(repository.insertSlot).toHaveBeenCalledWith(db, { ...data, courseId: 'course-1', openedBy: 'admin-1' })
     expect(result).toBe(created)
   })
 })
@@ -94,7 +84,7 @@ describe('request', () => {
 
   const slot = {
     id: 'slot-1',
-    trackId: 'track-1',
+    courseId: 'course-1',
     scheduledAt: new Date(),
     status: 'open' as const,
     openedBy: 'admin-1',
@@ -118,7 +108,8 @@ describe('request', () => {
     transactionMock.mockImplementation(async callback => callback({}))
     vi.mocked(repository.findSlotById).mockResolvedValue(slot)
     vi.mocked(examRepository.isCertifiedAcrossTrack).mockResolvedValue(true)
-    vi.mocked(repository.findPendingRequestForStudentTrack).mockResolvedValue(undefined)
+    vi.mocked(trackRepository.existsInCourse).mockResolvedValue(true)
+    vi.mocked(repository.findPendingRequestForStudent).mockResolvedValue(undefined)
     vi.mocked(repository.updateSlotStatusGuarded).mockResolvedValue(requested)
     vi.mocked(repository.insertRequest).mockResolvedValue(createdRequest)
   })
@@ -126,29 +117,40 @@ describe('request', () => {
   it('404s when the slot does not exist, before checking eligibility', async () => {
     vi.mocked(repository.findSlotById).mockResolvedValue(undefined)
 
-    await expect(request(context, 'slot-1', 'student-1')).rejects.toMatchObject({ statusCode: 404 })
+    await expect(request(context, 'slot-1', 'student-1', { trackId: 'track-1' })).rejects.toMatchObject({ statusCode: 404 })
 
+    expect(examRepository.isCertifiedAcrossTrack).not.toHaveBeenCalled()
+  })
+
+  it('422s when the track is not in the slot\'s course, before checking eligibility', async () => {
+    vi.mocked(trackRepository.existsInCourse).mockResolvedValue(false)
+
+    await expect(request(context, 'slot-1', 'student-1', { trackId: 'track-1' })).rejects.toMatchObject({
+      statusCode: 422,
+    })
+
+    expect(trackRepository.existsInCourse).toHaveBeenCalledWith(db, 'track-1', 'course-1')
     expect(examRepository.isCertifiedAcrossTrack).not.toHaveBeenCalled()
   })
 
   it('403s when the student is not L3 across every chapter of the track', async () => {
     vi.mocked(examRepository.isCertifiedAcrossTrack).mockResolvedValue(false)
 
-    await expect(request(context, 'slot-1', 'student-1')).rejects.toMatchObject({ statusCode: 403 })
+    await expect(request(context, 'slot-1', 'student-1', { trackId: 'track-1' })).rejects.toMatchObject({ statusCode: 403 })
 
     expect(transactionMock).not.toHaveBeenCalled()
   })
 
-  it('409s when the student already has a pending request for this track', async () => {
-    vi.mocked(repository.findPendingRequestForStudentTrack).mockResolvedValue({ id: 'other-request' })
+  it('409s when the student already has a pending request', async () => {
+    vi.mocked(repository.findPendingRequestForStudent).mockResolvedValue({ id: 'other-request' })
 
-    await expect(request(context, 'slot-1', 'student-1')).rejects.toMatchObject({ statusCode: 409 })
+    await expect(request(context, 'slot-1', 'student-1', { trackId: 'track-1' })).rejects.toMatchObject({ statusCode: 409 })
 
     expect(transactionMock).not.toHaveBeenCalled()
   })
 
   it('claims the slot and inserts the request inside one transaction', async () => {
-    const result = await request(context, 'slot-1', 'student-1')
+    const result = await request(context, 'slot-1', 'student-1', { trackId: 'track-1' })
 
     expect(repository.updateSlotStatusGuarded).toHaveBeenCalledWith({}, 'slot-1', 'requested', 'open')
     expect(repository.insertRequest).toHaveBeenCalledWith({}, {
@@ -162,19 +164,19 @@ describe('request', () => {
   it('409s when the slot is no longer open (lost the claim race), without inserting a request', async () => {
     vi.mocked(repository.updateSlotStatusGuarded).mockResolvedValue(undefined)
 
-    await expect(request(context, 'slot-1', 'student-1')).rejects.toMatchObject({ statusCode: 409 })
+    await expect(request(context, 'slot-1', 'student-1', { trackId: 'track-1' })).rejects.toMatchObject({ statusCode: 409 })
 
     expect(repository.insertRequest).not.toHaveBeenCalled()
   })
 
   it('maps a unique-constraint race on the insert to a 409', async () => {
     vi.mocked(repository.insertRequest).mockRejectedValue({
-      cause: { code: '23505', constraint: DbConstraint.examSlotRequestOnePendingPerStudentTrack },
+      cause: { code: '23505', constraint: DbConstraint.examSlotRequestOnePendingPerStudent },
     })
 
-    await expect(request(context, 'slot-1', 'student-1')).rejects.toMatchObject({
+    await expect(request(context, 'slot-1', 'student-1', { trackId: 'track-1' })).rejects.toMatchObject({
       statusCode: 409,
-      message: 'you already have a pending request for this track',
+      message: 'you already have a pending exam request',
     })
   })
 })
@@ -198,7 +200,7 @@ describe('approve', () => {
   }
   const slot = {
     id: 'slot-1',
-    trackId: 'track-1',
+    courseId: 'course-1',
     scheduledAt: new Date('2026-10-01T10:00:00Z'),
     status: 'requested' as const,
     openedBy: 'admin-1',
@@ -299,7 +301,7 @@ describe('reject', () => {
   }
   const openedSlot = {
     id: 'slot-1',
-    trackId: 'track-1',
+    courseId: 'course-1',
     scheduledAt: new Date(),
     status: 'open' as const,
     openedBy: 'admin-1',
@@ -355,7 +357,7 @@ describe('cancelSlot', () => {
 
   const openSlotRow = {
     id: 'slot-1',
-    trackId: 'track-1',
+    courseId: 'course-1',
     scheduledAt: new Date(),
     status: 'open' as const,
     openedBy: 'admin-1',

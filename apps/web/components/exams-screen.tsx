@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { ScreenSkeleton } from '@/components/skeletons'
@@ -38,11 +39,16 @@ export function ExamsScreen() {
   if (!data) return <ScreenSkeleton rows={4} />
   const { certifications, scheduled, past } = data
 
-  // A track with a live claim already can't take a second one (the server's own "one pending
-  // request per track" rule) — disabling the button here just saves a guaranteed-to-fail click.
-  const pendingTrackIds = new Set(
-    (myRequests ?? []).filter(r => r.status === 'pending').map(r => r.trackId),
-  )
+  // A student can hold only one live request at a time (the server's own "one pending request per
+  // student" rule) — disabling the buttons here just saves a guaranteed-to-fail click.
+  const hasPendingRequest = (myRequests ?? []).some(r => r.status === 'pending')
+  // The tracks the reader may sit right now, named from their certification rows. A slot is generic,
+  // so they choose among these when requesting.
+  const eligibleTracks = eligibleTrackIds
+    ? certifications
+        .filter(c => eligibleTrackIds.includes(c.trackId))
+        .map(c => ({ id: c.trackId, name: c.track }))
+    : undefined
   // Approved requests already show up above as a booked sitting or, once graded, exam feedback —
   // showing them a third time here would be redundant, so this list is only the ones still moving.
   const openRequests = (myRequests ?? []).filter(r => r.status !== 'approved')
@@ -119,8 +125,8 @@ export function ExamsScreen() {
                   <AvailableSlotRow
                     key={slot.id}
                     slot={slot}
-                    alreadyRequested={pendingTrackIds.has(slot.trackId)}
-                    eligible={eligibleTrackIds ? eligibleTrackIds.includes(slot.trackId) : undefined}
+                    hasPendingRequest={hasPendingRequest}
+                    eligibleTracks={eligibleTracks}
                   />
                 ))}
               </ol>
@@ -203,42 +209,61 @@ function MyRequestRow({ request }: { request: ExamSlotRequestRow }) {
   )
 }
 
-// `eligible` is undefined while the pre-check is still loading — the button stays disabled rather
-// than flashing enabled and then locking.
+// `eligibleTracks` is undefined while the pre-check is still loading — the button stays disabled
+// rather than flashing enabled and then locking.
 function AvailableSlotRow({
   slot,
-  alreadyRequested,
-  eligible,
+  hasPendingRequest,
+  eligibleTracks,
 }: {
   slot: ExamSlotRow
-  alreadyRequested: boolean
-  eligible: boolean | undefined
+  hasPendingRequest: boolean
+  eligibleTracks: { id: string; name: string }[] | undefined
 }) {
   const request = useRequestExamSlot()
-  const blocked = eligible === false && !alreadyRequested
+  const [chosenTrackId, setChosenTrackId] = useState('')
+  const trackId = chosenTrackId || eligibleTracks?.[0]?.id || ''
+  const blocked = eligibleTracks?.length === 0 && !hasPendingRequest
 
   return (
     <li className="flex flex-wrap items-center gap-4 border-b border-rule-soft px-4 py-3.5 last:border-0">
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[0.9375rem]">{slot.track}</span>
-        <span className="label mt-0.5 block text-ink-muted">
+        <span className="block text-[0.9375rem]">
           <Timestamp variant="dateTime" value={slot.when} />
         </span>
         {blocked && (
           <span className="mt-1 block text-[0.75rem] text-ink-muted">
-            Needs L3 on every chapter of this track.
+            Needs L3 on every chapter of a track.
           </span>
         )}
       </span>
+      {eligibleTracks && eligibleTracks.length > 1 && (
+        <select
+          aria-label="Track to sit"
+          value={trackId}
+          disabled={request.isPending || hasPendingRequest}
+          onChange={e => setChosenTrackId(e.target.value)}
+          className="shrink-0 border-b border-ink/25 bg-transparent py-1 text-[0.875rem] focus:border-vermilion focus:outline-none disabled:opacity-50"
+        >
+          {eligibleTracks.map(track => (
+            <option key={track.id} value={track.id}>
+              {track.name}
+            </option>
+          ))}
+        </select>
+      )}
+      {eligibleTracks?.length === 1 && (
+        <span className="label shrink-0 text-ink-muted">{eligibleTracks[0]!.name}</span>
+      )}
       <button
         type="button"
-        disabled={request.isPending || alreadyRequested || eligible !== true}
+        disabled={request.isPending || hasPendingRequest || !trackId}
         aria-busy={request.isPending}
-        onClick={() => request.mutate(slot.id)}
+        onClick={() => request.mutate({ slotId: slot.id, trackId })}
         className="label inline-flex shrink-0 items-center gap-2 border border-ink/25 px-3 py-1.5 text-ink transition-colors hover:border-vermilion hover:text-vermilion disabled:pointer-events-none disabled:opacity-50"
       >
         {request.isPending && <Spinner />}
-        {alreadyRequested ? 'Requested' : blocked ? 'Not yet eligible' : 'Request'}
+        {hasPendingRequest ? 'Request pending' : blocked ? 'Not yet eligible' : 'Request'}
       </button>
     </li>
   )

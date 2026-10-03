@@ -33,60 +33,41 @@ afterEach(async () => {
   }
 })
 
-const slotPage = { limit: 20, trackId: undefined, status: undefined, cursor: undefined }
+const slotPage = { limit: 20, status: undefined, cursor: undefined }
 const requestPage = { limit: 20, status: undefined, cursor: undefined }
 
 describe('findManySlots', () => {
-  it('eager-loads the track name and orders soonest-first', async () => {
+  it('orders soonest-first', async () => {
     const w = await createTestSchool()
     world = w
-    const trackRow = await createTrack(w, { name: 'Rudram' })
     const admin = await createProfile(w, { name: 'Admin' })
-    const later = await createExamSlot(w, {
-      track: trackRow,
-      openedBy: admin,
-      scheduledAt: new Date('2026-03-01T10:00:00Z'),
-    })
-    const sooner = await createExamSlot(w, {
-      track: trackRow,
-      openedBy: admin,
-      scheduledAt: new Date('2026-02-01T10:00:00Z'),
-    })
+    const later = await createExamSlot(w, { openedBy: admin, scheduledAt: new Date('2026-03-01T10:00:00Z') })
+    const sooner = await createExamSlot(w, { openedBy: admin, scheduledAt: new Date('2026-02-01T10:00:00Z') })
 
     const { items } = await findManySlots(w.schoolDb, slotPage, await defaultCourseId(w))
 
     expect(items.map(item => item.id)).toEqual([sooner.id, later.id])
-    expect(items[0]!.trackName).toBe('Rudram')
   })
 
-  it('filters by trackId and by status', async () => {
+  it('filters by status', async () => {
     const w = await createTestSchool()
     world = w
-    const trackA = await createTrack(w)
-    const trackB = await createTrack(w)
     const admin = await createProfile(w, { name: 'Admin' })
-    const openInA = await createExamSlot(w, { track: trackA, openedBy: admin, status: 'open' })
-    await createExamSlot(w, { track: trackA, openedBy: admin, status: 'booked' })
-    await createExamSlot(w, { track: trackB, openedBy: admin, status: 'open' })
+    const open = await createExamSlot(w, { openedBy: admin, status: 'open' })
+    await createExamSlot(w, { openedBy: admin, status: 'booked' })
 
-    const { items } = await findManySlots(
-      w.schoolDb,
-      { ...slotPage, trackId: trackA.id, status: 'open' },
-      await defaultCourseId(w),
-    )
+    const { items } = await findManySlots(w.schoolDb, { ...slotPage, status: 'open' }, await defaultCourseId(w))
 
-    expect(items.map(item => item.id)).toEqual([openInA.id])
+    expect(items.map(item => item.id)).toEqual([open.id])
   })
 
-  it('scopes to the given course — a slot on another course\'s track never shows up', async () => {
+  it("scopes to the given course — another course's slot never shows up", async () => {
     const w = await createTestSchool()
     world = w
     const otherCourse = await createCourse(w)
-    const trackInDefaultCourse = await createTrack(w)
-    const trackInOtherCourse = await createTrack(w, { course: otherCourse })
     const admin = await createProfile(w, { name: 'Admin' })
-    const inDefault = await createExamSlot(w, { track: trackInDefaultCourse, openedBy: admin })
-    await createExamSlot(w, { track: trackInOtherCourse, openedBy: admin })
+    const inDefault = await createExamSlot(w, { openedBy: admin })
+    await createExamSlot(w, { course: otherCourse, openedBy: admin })
 
     const { items } = await findManySlots(w.schoolDb, slotPage, await defaultCourseId(w))
 
@@ -102,15 +83,15 @@ describe('findManyRequests', () => {
     const ravi = await createProfile(w, { name: 'Ravi Kumar' })
     const priya = await createProfile(w, { name: 'Priya Rao' })
     const slot = await createExamSlot(w, {
-      track: trackRow,
       openedBy: admin,
       scheduledAt: new Date('2026-04-01T09:00:00Z'),
       status: 'requested',
     })
-    const raviRequest = await createExamSlotRequest(w, { slot, student: ravi })
-    const otherSlot = await createExamSlot(w, { track: trackRow, openedBy: admin, status: 'requested' })
+    const raviRequest = await createExamSlotRequest(w, { slot, track: trackRow, student: ravi })
+    const otherSlot = await createExamSlot(w, { openedBy: admin, status: 'requested' })
     const priyaRequest = await createExamSlotRequest(w, {
       slot: otherSlot,
+      track: trackRow,
       student: priya,
       status: 'approved',
     })
@@ -180,9 +161,8 @@ describe('cancelSlot (real Postgres, end to end)', () => {
   it('cancels an open slot with no pending request to reject', async () => {
     const w = await createTestSchool()
     world = w
-    const trackRow = await createTrack(w)
     const admin = await createProfile(w, { name: 'Admin' })
-    const slot = await createExamSlot(w, { track: trackRow, openedBy: admin, status: 'open' })
+    const slot = await createExamSlot(w, { openedBy: admin, status: 'open' })
 
     const result = await cancelSlot({ db: w.schoolDb, access: grantingAccess }, slot.id, admin.id)
 
@@ -195,8 +175,8 @@ describe('cancelSlot (real Postgres, end to end)', () => {
     const trackRow = await createTrack(w)
     const admin = await createProfile(w, { name: 'Admin' })
     const student = await createProfile(w, { name: 'Student' })
-    const slot = await createExamSlot(w, { track: trackRow, openedBy: admin, status: 'requested' })
-    const pending = await createExamSlotRequest(w, { slot, student })
+    const slot = await createExamSlot(w, { openedBy: admin, status: 'requested' })
+    const pending = await createExamSlotRequest(w, { slot, track: trackRow, student })
 
     const result = await cancelSlot({ db: w.schoolDb, access: grantingAccess }, slot.id, admin.id)
 
@@ -210,9 +190,8 @@ describe('cancelSlot (real Postgres, end to end)', () => {
   it('409s a booked slot instead of touching it — cancel the exam itself there', async () => {
     const w = await createTestSchool()
     world = w
-    const trackRow = await createTrack(w)
     const admin = await createProfile(w, { name: 'Admin' })
-    const slot = await createExamSlot(w, { track: trackRow, openedBy: admin, status: 'booked' })
+    const slot = await createExamSlot(w, { openedBy: admin, status: 'booked' })
 
     await expect(
       cancelSlot({ db: w.schoolDb, access: grantingAccess }, slot.id, admin.id),

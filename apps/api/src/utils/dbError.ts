@@ -40,8 +40,8 @@ export const DbConstraint = {
   // Single-seat protection on `examSlot` — at most one live claim on any one slot, regardless of
   // student (partial unique index, reported the same way a table constraint is).
   examSlotRequestOnePendingPerSlot: 'examSlotRequest_one_pending_per_slot_uidx',
-  // A student can't hold pending requests on two different slots of the same track at once.
-  examSlotRequestOnePendingPerStudentTrack: 'examSlotRequest_one_pending_per_student_track_uidx',
+  // A student can't hold pending requests on two different slots at once.
+  examSlotRequestOnePendingPerStudent: 'examSlotRequest_one_pending_per_student_uidx',
 } as const
 
 export type DbConstraint = (typeof DbConstraint)[keyof typeof DbConstraint]

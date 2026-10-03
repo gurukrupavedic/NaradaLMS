@@ -102,6 +102,16 @@ export async function exists(db: SchoolDb, id: string): Promise<boolean> {
   return row !== undefined
 }
 
+/** Whether `id` is a track of `courseId` — a slot is course-scoped, so a request must name a track
+ * of the slot's own course. */
+export async function existsInCourse(db: SchoolDb, id: string, courseId: string): Promise<boolean> {
+  const row = await db.query.track.findFirst({
+    where: (t, { and, eq }) => and(eq(t.id, id), eq(t.courseId, courseId)),
+    columns: { id: true },
+  })
+  return row !== undefined
+}
+
 export async function findById(
   db: SchoolDb,
   id: string,
