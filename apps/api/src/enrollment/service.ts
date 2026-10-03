@@ -3,7 +3,7 @@ import type { SchoolDb, SchoolDbClient } from '@narada/db'
 import { conflict, internalError, notFound, orInternalError, orNotFound, unprocessable } from '../error'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
-import type { CreateEnrollmentData } from './schema'
+import type { ChangeRoleData, CreateEnrollmentData } from './schema'
 import type { Enrollment } from './repository'
 
 export { findStudentIdsInBatch, hasSharedInstructorEnrollment, isEnrolledInAnyBatch } from './repository'
@@ -132,5 +132,55 @@ export async function moveEnrollment(
     }
 
     return row
+  })
+}
+
+/**
+ * Promotes a student to TA, or steps a TA back to student, in place — the same enrollment row, so
+ * their marks and history carry over. 404 if they have no live seat here; 422 if they are a teacher
+ * (teachers are added and removed, never converted). Stepping a TA down takes the same
+ * one-active-student-seat-per-course 409 as any other seating, since a TA seat doesn't count
+ * against that limit but a student seat does.
+ */
+export async function changeRole(
+  db: SchoolDb,
+  batchId: string,
+  profileId: string,
+  data: ChangeRoleData,
+): Promise<Enrollment> {
+  const current = orNotFound(await repository.findEnrollment(db, profileId, batchId))
+  if (current.status !== 'active') {
+    throw notFound()
+  }
+  if (current.role === 'instructor') {
+    throw unprocessable("a teacher's role can't be changed — remove them instead")
+  }
+
+  const updated = await withConstraintMapping(
+    () => repository.updateEnrollmentRole(db, batchId, profileId, data.role),
+    seatConflictMapping,
+  )
+  return orInternalError(updated)
+}
+
+/**
+ * Takes a teacher off a batch. 404 if they aren't one of its teachers; 409 if they are the last —
+ * a batch is never left without a teacher (the create-batch form enforces the same floor).
+ */
+export async function removeInstructor(
+  db: SchoolDbClient,
+  batchId: string,
+  profileId: string,
+): Promise<void> {
+  await db.transaction(async tx => {
+    const instructorIds = await repository.lockActiveInstructorIds(tx, batchId)
+    if (!instructorIds.includes(profileId)) {
+      throw notFound()
+    }
+    if (instructorIds.length <= 1) {
+      throw conflict("a batch can't be left without a teacher")
+    }
+
+    orInternalError(await repository.deleteEnrollment(tx, batchId, profileId))
   })
 }

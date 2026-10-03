@@ -95,3 +95,21 @@ export async function moveEnrollmentToBatch(
 ): Promise<void> {
   await mutateApi(`/batches/${fromBatchId}/members/${profileId}/move`, 'POST', { toBatchId })
 }
+
+// PATCH /v1/batches/:batchId/members/:profileId — school admin only. Promotes a student to TA or
+// steps a TA back to student on the same enrollment row (apps/api/src/enrollment/service.ts::
+// changeRole), so their marks and history carry over.
+export async function changeMemberRole(
+  batchId: string,
+  profileId: string,
+  role: 'student' | 'ta',
+): Promise<void> {
+  await mutateApi(`/batches/${batchId}/members/${profileId}`, 'PATCH', { role })
+}
+
+// DELETE /v1/batches/:batchId/members/:profileId — school admin only, teachers only: the server
+// 409s on a batch's last teacher (apps/api/src/enrollment/service.ts::removeInstructor). A TA is
+// stepped down with `changeMemberRole`, a student put on a break.
+export async function removeTeacher(batchId: string, profileId: string): Promise<void> {
+  await mutateApi(`/batches/${batchId}/members/${profileId}`, 'DELETE')
+}

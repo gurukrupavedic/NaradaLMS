@@ -10,11 +10,12 @@ import { Standing } from '@/components/standing'
 import { Section } from '@/components/section'
 import { MarkBook } from '@/components/mark-book'
 import { AddStudentDrawer } from '@/components/admin/add-student-drawer'
+import { EditStaffDrawer } from '@/components/admin/edit-staff-drawer'
 import { Notice } from '@/components/notice'
 import { adminBatchQuery, catalogTrackQuery, keys } from '@/lib/query/options'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
-import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
+import { useChangeMemberRole, useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/models/dashboard'
 import { useCoursePath } from '@/lib/course'
 import { pluralize } from '@/lib/pluralize'
@@ -45,6 +46,7 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
   const cp = useCoursePath()
   const summary = summariseRoster(batch.roster)
   const catalogPrefetch = usePrefetch(catalogTrackQuery(batch.trackId))
+  const [staffOpen, setStaffOpen] = useState(false)
 
   const gaps = [
     batch.classSlots.length === 0 && 'no schedule set',
@@ -138,7 +140,16 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
             </div>
 
             <div className="px-4 py-4">
-              <dt className="label text-ink-muted">Teaching staff</dt>
+              <dt className="label flex items-center justify-between gap-3 text-ink-muted">
+                Teaching staff
+                <button
+                  type="button"
+                  onClick={() => setStaffOpen(true)}
+                  className="label shrink-0 text-ink transition-colors hover:text-vermilion"
+                >
+                  Edit staff
+                </button>
+              </dt>
               <dd className="mt-2 space-y-1.5">
                 {batch.staffRoster.length === 0 ? (
                   <span className="text-[0.875rem] text-ink-muted/70">Nobody assigned</span>
@@ -172,6 +183,7 @@ function BatchDetailView({ batch }: { batch: AdminBatchDetail }) {
         </Section>
 
         <RosterSection batch={batch} />
+        <EditStaffDrawer batch={batch} open={staffOpen} onOpenChange={setStaffOpen} />
       </div>
     </>
   )
@@ -186,6 +198,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
   const setLevel = useSetEvaluation(batch.id, keys.batches.detail(batch.code))
   const promote = useSetEvaluations(batch.id, keys.batches.detail(batch.code))
   const onBreak = useSetOnBreak(batch.id, keys.batches.detail(batch.code))
+  const changeRole = useChangeMemberRole(batch.code, batch.id)
   const [addOpen, setAddOpen] = useState(false)
 
   return (
@@ -194,10 +207,9 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
         <button
           type="button"
           onClick={() => setAddOpen(true)}
-          aria-label="Add to roster"
           className="label shrink-0 rounded-full bg-vermilion px-3.5 py-1.5 text-paper transition-colors hover:bg-vermilion/90"
         >
-          + Add
+          + Add student
         </button>
       </div>
 
@@ -215,6 +227,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
             grading={setLevel}
             promote={promote}
             onBreak={onBreak}
+            promoteToTa={changeRole}
           />
         </div>
       )}

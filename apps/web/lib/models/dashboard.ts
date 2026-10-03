@@ -14,6 +14,9 @@ export type RosterStudent = {
   city: string | null
   marks: ProficiencyLevel[]
   current: string | null
+  // A class TA is on the roster like any student; the row menu offers "Promote to TA" only to the
+  // ones who aren't one yet.
+  role: 'student' | 'ta'
 }
 
 export type TeachingBatch = {
@@ -70,7 +73,7 @@ export type AdminBatchRow = {
 
 export type ClassSlot = { day: string; time: string; durationMinutes: number }
 
-export type BatchStaff = { name: string; role: 'instructor' | 'ta' }
+export type BatchStaff = { profileId: string; name: string; role: 'instructor' | 'ta' }
 
 export type AdminBatchDetail = AdminBatchRow & {
   trackId: string

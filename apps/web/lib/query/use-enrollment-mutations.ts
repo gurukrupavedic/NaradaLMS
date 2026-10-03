@@ -4,7 +4,13 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import { keys } from '@/lib/query/options'
 import { useEditMutation } from '@/lib/query/use-edit-mutation'
-import { enrollProfile, moveEnrollmentToBatch, putStudentOnBreak } from '@/lib/api/resources'
+import {
+  changeMemberRole,
+  enrollProfile,
+  moveEnrollmentToBatch,
+  putStudentOnBreak,
+  removeTeacher,
+} from '@/lib/api/resources'
 
 /**
  * Admin "add a student" (components/admin/add-student-drawer.tsx). Besides this batch's own
@@ -92,5 +98,53 @@ export function useSetOnBreak(batchId: string, invalidateKey: readonly unknown[]
       },
     },
     { success: 'Marked on break.', failure: "Couldn't mark on break." },
+  )
+}
+
+/**
+ * Staffing a batch from its admin page (components/mark-book.tsx's "Promote to TA" and
+ * components/admin/edit-staff-drawer.tsx's TA "Remove"): the one role change the server allows, in
+ * either direction. A TA is also a roster student, so the roster and the teaching-staff list both
+ * read from the batch detail this invalidates. `profileName` is only for the toast.
+ */
+export function useChangeMemberRole(code: string, batchId: string) {
+  const queryClient = useQueryClient()
+
+  return useEditMutation(
+    {
+      mutationFn: ({ profileId, role }: { profileId: string; profileName: string; role: 'student' | 'ta' }) =>
+        changeMemberRole(batchId, profileId, role),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: keys.batches.detail(code) })
+        void queryClient.invalidateQueries({ queryKey: keys.batches.all })
+      },
+    },
+    {
+      success: (_data, { profileName, role }) =>
+        role === 'ta' ? `${profileName} is now a TA.` : `${profileName} is no longer a TA.`,
+      failure: ({ profileName, role }) =>
+        role === 'ta' ? `Couldn't promote ${profileName} to TA.` : `Couldn't remove ${profileName} as TA.`,
+    },
+  )
+}
+
+/** Admin "remove teacher" (components/admin/edit-staff-drawer.tsx). The server refuses the last one. */
+export function useRemoveTeacher(code: string, batchId: string) {
+  const queryClient = useQueryClient()
+
+  return useEditMutation(
+    {
+      mutationFn: ({ profileId }: { profileId: string; profileName: string }) =>
+        removeTeacher(batchId, profileId),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: keys.batches.detail(code) })
+        void queryClient.invalidateQueries({ queryKey: keys.batches.all })
+        void queryClient.invalidateQueries({ queryKey: keys.profiles.searchAll })
+      },
+    },
+    {
+      success: (_data, { profileName }) => `Removed ${profileName} from ${code}.`,
+      failure: ({ profileName }) => `Couldn't remove ${profileName}.`,
+    },
   )
 }

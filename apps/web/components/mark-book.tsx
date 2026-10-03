@@ -57,6 +57,12 @@ export type OnBreakMutation = {
   mutateAsync: (studentId: string) => Promise<unknown>
 }
 
+// And for "Promote to TA" — the same shape again, closing over the batch and the new role (see
+// use-enrollment-mutations.ts's `useChangeMemberRole`), so the caller supplies the toast's name too.
+export type PromoteToTaMutation = {
+  mutateAsync: (student: { profileId: string; profileName: string; role: 'ta' }) => Promise<unknown>
+}
+
 const CELL_INK: Record<ProficiencyLevel, string> = {
   notStarted: 'bg-mark-not-started text-ink-muted/35',
   absent: 'bg-mark-absent/25 text-ink-muted',
@@ -76,6 +82,7 @@ export function MarkBook({
   grading,
   promote,
   onBreak,
+  promoteToTa,
 }: {
   chapterCodes: string[]
   // Parallel to chapterCodes — both required to enable grading (see this file's own doc comment).
@@ -89,6 +96,8 @@ export function MarkBook({
   // read-only history view passes neither and gets a menu with just the one, always-safe item.
   promote?: PromoteMutation
   onBreak?: OnBreakMutation
+  // Admin-only (it's a staffing change) — omitted by the teacher's own dashboard, which gets no item.
+  promoteToTa?: PromoteToTaMutation
 }) {
   const [target, setTarget] = useState<GradeDialogTarget | null>(null)
 
@@ -158,12 +167,18 @@ export function MarkBook({
                   )}
                 >
                   <div className="flex items-center gap-1">
-                    <span className="min-w-0 flex-1 truncate">{student.name}</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {student.name}
+                      {student.role === 'ta' && (
+                        <span className="label ml-2 text-vermilion">TA</span>
+                      )}
+                    </span>
                     <StudentMenu
                       student={student}
                       promote={promote}
                       promoteItems={promoteItems}
                       onBreak={onBreak}
+                      promoteToTa={promoteToTa}
                     />
                   </div>
                   {student.city && (
@@ -242,11 +257,13 @@ function StudentMenu({
   promote,
   promoteItems,
   onBreak,
+  promoteToTa,
 }: {
   student: RosterStudent
   promote?: PromoteMutation
   promoteItems: SetLevelInput[]
   onBreak?: OnBreakMutation
+  promoteToTa?: PromoteToTaMutation
 }) {
   const cp = useCoursePath()
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle')
@@ -276,7 +293,21 @@ function StudentMenu({
     }
   }
 
-  const hasError = status === 'error' || breakStatus === 'error'
+  const [taStatus, setTaStatus] = useState<'idle' | 'pending' | 'error'>('idle')
+
+  async function handlePromoteToTa() {
+    if (!promoteToTa) return
+    setTaStatus('pending')
+    try {
+      await promoteToTa.mutateAsync({ profileId: student.id, profileName: student.name, role: 'ta' })
+      setTaStatus('idle')
+    } catch {
+      setTaStatus('error')
+    }
+  }
+
+  const hasError = status === 'error' || breakStatus === 'error' || taStatus === 'error'
+  const pending = status === 'pending' || breakStatus === 'pending' || taStatus === 'pending'
 
   return (
     <DropdownMenu>
@@ -287,7 +318,9 @@ function StudentMenu({
             ? 'Could not promote to L3 — try again'
             : breakStatus === 'error'
               ? 'Could not mark on break — try again'
-              : undefined
+              : taStatus === 'error'
+                ? 'Could not promote to TA — try again'
+                : undefined
         }
         className={cn(
           'shrink-0 rounded p-0.5 outline-none transition-colors hover:text-ink data-[popup-open]:text-ink',
@@ -296,7 +329,7 @@ function StudentMenu({
       >
         {/* The menu closes the moment an action is picked, so this trigger is the only thing left
             on screen to show the write is still in flight. */}
-        {status === 'pending' || breakStatus === 'pending' ? (
+        {pending ? (
           <Spinner className="size-4" />
         ) : (
           <MoreHorizontal className="size-4" aria-hidden />
@@ -314,6 +347,15 @@ function StudentMenu({
             className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink data-disabled:opacity-50"
           >
             {status === 'pending' ? 'Promoting…' : 'Promote to L3'}
+          </DropdownMenuItem>
+        )}
+        {promoteToTa && student.role !== 'ta' && (
+          <DropdownMenuItem
+            disabled={taStatus === 'pending'}
+            onClick={handlePromoteToTa}
+            className="rounded-none border-b border-rule-soft px-4 py-2.5 text-[0.8125rem] text-ink-muted focus:bg-ink/[0.03] focus:text-ink data-disabled:opacity-50"
+          >
+            {taStatus === 'pending' ? 'Promoting…' : 'Promote to TA'}
           </DropdownMenuItem>
         )}
         {onBreak && (
