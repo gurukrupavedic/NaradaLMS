@@ -456,6 +456,13 @@ export class AccessPolicy {
     throw forbidden()
   }
 
+  // -- Track TAs ----------------------------------------------------------------
+
+  /** Adding or removing a TA on a track's "go to a TA for L3" list is a school-admin action. */
+  public requireCanManageTrackTas(): void {
+    this.requireSchoolAdmin()
+  }
+
   // -- Registrations ------------------------------------------------------------
 
   /** Reviewing a registration (list/read/approve/reject) is a school-admin action — a prospective

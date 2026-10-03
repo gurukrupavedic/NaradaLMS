@@ -1,10 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
 import { ChapterLine } from '@/components/chapter-line'
 import type { ProficiencyLevel } from '@/lib/proficiency'
+import { formatLocation } from '@/lib/geo'
+import { trackTasQuery } from '@/lib/query/options'
+import { formatTimeZone } from '@/lib/timezone'
 
 export type ChapterRow = {
   id: string
@@ -52,6 +56,9 @@ export function TrackLadder({
   defaultOpen?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  // One request for every track's TAs, shared by all ladders on the page; a failed load just hides the line.
+  const { data: allTas } = useQuery(trackTasQuery())
+  const tas = allTas?.filter(ta => ta.trackId === track.id) ?? []
 
   return (
     <article className="sheet">
@@ -98,6 +105,29 @@ export function TrackLadder({
             <ChapterLine key={chapter.id} chapter={chapter} isResume={chapter.id === resumeChapterId} />
           ))}
         </ol>
+      )}
+
+      {open && tas.length > 0 && (
+        <div className="border-t border-rule-soft px-4 py-3">
+          <p className="label text-ink-muted">TAs for an L3</p>
+          <ul className="mt-2 space-y-2">
+            {tas.map(ta => {
+              const details = [
+                ta.phone,
+                formatLocation(null, ta.country),
+                formatTimeZone(ta.countryTimeZone),
+              ].filter(Boolean)
+              return (
+                <li key={ta.profileId} className="text-[0.875rem]">
+                  <span>{ta.name}</span>
+                  {details.length > 0 && (
+                    <span className="block font-mono text-[0.6875rem] text-ink-muted">{details.join(' · ')}</span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       )}
     </article>
   )
