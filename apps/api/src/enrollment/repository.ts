@@ -220,3 +220,40 @@ export async function hasSharedInstructorEnrollment(
 
   return shared !== undefined
 }
+
+/** Returns whether a row was actually updated — the service turns `false` into a 404. */
+export async function updateEnrollmentRole(
+  db: SchoolDb,
+  batchId: string,
+  profileId: string,
+  role: Enrollment['role'],
+): Promise<Enrollment | undefined> {
+  const rows = await db
+    .update(enrollment)
+    .set({ role })
+    .where(and(eq(enrollment.batchId, batchId), eq(enrollment.profileId, profileId)))
+    .returning()
+
+  return rows.at(0)
+}
+
+/**
+ * The batch's live teachers, locked `FOR UPDATE` so two admins removing two different teachers at
+ * once serialize on this read instead of both seeing "there's another one left". Only meaningful
+ * inside a transaction.
+ */
+export async function lockActiveInstructorIds(db: SchoolDb, batchId: string): Promise<string[]> {
+  const rows = await db
+    .select({ profileId: enrollment.profileId })
+    .from(enrollment)
+    .where(
+      and(
+        eq(enrollment.batchId, batchId),
+        eq(enrollment.role, 'instructor'),
+        eq(enrollment.status, 'active'),
+      ),
+    )
+    .for('update')
+
+  return rows.map(row => row.profileId)
+}

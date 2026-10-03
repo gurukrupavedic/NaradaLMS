@@ -103,7 +103,7 @@ export async function fetchAdminBatch(code: string): Promise<AdminBatchDetail> {
           m.role === 'instructor' || m.role === 'ta',
       )
       .sort((a, b) => Number(a.role === 'ta') - Number(b.role === 'ta'))
-      .map(m => ({ name: m.name, role: m.role })),
+      .map(m => ({ profileId: m.profileId, name: m.name, role: m.role })),
     chapterCodes: orderedChapters.map(chapter => chapter.code),
     // Parallel to chapterCodes — lets a caller (the mark book's grade editor) resolve which real
     // chapter a grid column stands for, since `RosterStudent.marks[i]` is keyed to this same order.

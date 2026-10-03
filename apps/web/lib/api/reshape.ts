@@ -365,7 +365,14 @@ export function buildRoster(
       }
     }
 
-    return { id: student.profileId, name: student.name, city: student.city, marks, current }
+    return {
+      id: student.profileId,
+      name: student.name,
+      city: student.city,
+      marks,
+      current,
+      role: student.role === 'ta' ? 'ta' : 'student',
+    }
   })
 }
 

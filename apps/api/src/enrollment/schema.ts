@@ -14,3 +14,10 @@ export type MoveEnrollmentData = z.infer<typeof MoveEnrollmentSchema>
 export const MoveEnrollmentSchema = z.object({
   toBatchId: z.uuid(),
 })
+
+// Instructors are never changed in place — they are added and removed — so the only role change
+// is between the two learner roles: a student promoted to TA, or a TA stepped back to student.
+export type ChangeRoleData = z.infer<typeof ChangeRoleSchema>
+export const ChangeRoleSchema = z.object({
+  role: z.enum(['student', 'ta']),
+})
