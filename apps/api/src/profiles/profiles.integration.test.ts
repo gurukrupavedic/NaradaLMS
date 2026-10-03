@@ -1,4 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { publicDb } from '@narada/db'
 
 import type { User } from '../session'
 import { AccessPolicy } from '../utils/accessPolicy'
@@ -16,7 +18,14 @@ import {
   defaultCourseId,
 } from '../testing/fixtures'
 import * as repository from './repository'
-import { findById, updateProfile } from './service'
+import { changeContact, findById, requestContactCode, updateProfile } from './service'
+
+// The real package keeps codes in memory and only ever logs them — a fake lets the test know the code.
+const sentCodes = vi.hoisted(() => new Map<string, string>())
+vi.mock('@narada/otp', () => ({
+  sendOtpMessage: async (phone: string) => void sentCodes.set(phone, '123456'),
+  verifyOtpCode: async (phone: string, code: string) => sentCodes.get(phone) === code,
+}))
 
 // `updateProfile` only ever calls `access.isSchoolAdmin()` — a minimal fake avoids
 // spinning up a real membership/AccessPolicy.load round trip in tests that don't otherwise need one.
@@ -399,5 +408,69 @@ describe('profile detail access (self, admin, shared teacher, stranger)', () => 
     await expect(access.requireCanViewProfile(studentProfile.id)).rejects.toMatchObject({
       statusCode: 403,
     })
+  })
+})
+
+describe('contact change (phone / year of birth) behind a one-time code', () => {
+  function context(w: TestWorld, userId: string) {
+    return {
+      db: w.schoolDb,
+      school: { id: w.orgId } as unknown as Parameters<typeof updateProfile>[0]['school'],
+      user: { id: userId, isSuperAdmin: false } as User,
+    }
+  }
+
+  it('changes the year of birth once the code sent to the current phone is given', async () => {
+    world = await createTestSchool()
+    const owner = await createUser(world, { phoneNumber: '+15550001001' })
+    const row = await createProfile(world, { userId: owner.id, phone: '+15550001001', yearOfBirth: 2000 })
+    const ctx = context(world, owner.id)
+
+    await requestContactCode(ctx, row.id, {})
+    await expect(changeContact(ctx, row.id, { code: '000000', yearOfBirth: 2001 })).rejects.toThrow()
+    expect((await findById(ctx, row.id)).yearOfBirth).toBe(2000)
+
+    const updated = await changeContact(ctx, row.id, { code: '123456', yearOfBirth: 2001 })
+    expect(updated.yearOfBirth).toBe(2001)
+  })
+
+  it('moves the login phone and every profile of the account when the new phone is verified', async () => {
+    world = await createTestSchool()
+    const owner = await createUser(world, { phoneNumber: '+15550002001' })
+    const first = await createProfile(world, { userId: owner.id, phone: '+15550002001' })
+    const sibling = await createProfile(world, { userId: owner.id, phone: '+15550002001' })
+    const ctx = context(world, owner.id)
+
+    await requestContactCode(ctx, first.id, { phone: '+15550002002' })
+    // The code went to the new number, not the old one.
+    expect(sentCodes.has('+15550002002')).toBe(true)
+
+    await changeContact(ctx, first.id, { code: '123456', phone: '+15550002002' })
+
+    expect((await findById(ctx, first.id)).phone).toBe('+15550002002')
+    expect((await findById(ctx, sibling.id)).phone).toBe('+15550002002')
+    const account = await publicDb.query.user.findFirst({ where: (t, { eq }) => eq(t.id, owner.id) })
+    expect(account?.phoneNumber).toBe('+15550002002')
+  })
+
+  it('refuses a phone another account already signs in with', async () => {
+    world = await createTestSchool()
+    await createUser(world, { phoneNumber: '+15550003002' })
+    const owner = await createUser(world, { phoneNumber: '+15550003001' })
+    const row = await createProfile(world, { userId: owner.id, phone: '+15550003001' })
+
+    await expect(
+      requestContactCode(context(world, owner.id), row.id, { phone: '+15550003002' }),
+    ).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it("404s for someone else's profile", async () => {
+    world = await createTestSchool()
+    const owner = await createUser(world, { phoneNumber: '+15550004001' })
+    const row = await createProfile(world, { userId: owner.id, phone: '+15550004001' })
+
+    await expect(
+      requestContactCode(context(world, 'someone-else'), row.id, {}),
+    ).rejects.toMatchObject({ statusCode: 404 })
   })
 })

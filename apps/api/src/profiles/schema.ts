@@ -2,7 +2,9 @@ import * as z from 'zod'
 
 import { FindBatchesSchema } from '../batches/schema'
 import { DetailsSchema } from '../utils/details'
-import { requireNonEmpty } from '../utils/validate'
+import { e164Phone, requireNonEmpty } from '../utils/validate'
+
+const CURRENT_YEAR = new Date().getFullYear()
 
 export type Profile = z.infer<typeof ProfileSchema>
 export const ProfileSchema = z.object({
@@ -42,7 +44,10 @@ export const ProfileSchema = z.object({
 // self-reported by the registrant themselves, per `registration-form.tsx`, not staff-entered —
 // except `phone` and `yearOfBirth`. `phone` is the BetterAuth login credential (phone-OTP
 // sign-in), so changing it needs its own re-verification flow, not a silent profile-details edit;
-// `yearOfBirth` is treated as fixed once recorded. `countryTimeZone` is deliberately excluded too:
+// `yearOfBirth` is likewise only changed through that flow — see `ContactChangeSchema` below.
+// `country` can be changed but never cleared, nor `state` where the country has any (there is no
+// "prefer not to say" — `service.ts::updateProfile` enforces the latter).
+// `countryTimeZone` is deliberately excluded too:
 // it's server-derived from `city`/`state`/`country` (`service.ts::updateProfile`), not something a
 // client sets directly. Zod strips these unlisted keys rather than rejecting them.
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>
@@ -63,6 +68,10 @@ export const UpdateProfileSchema = requireNonEmpty(
   })
     .partial()
     .extend({
+      country: z.string().trim().min(1).optional(),
+      // Null only to clear the old country's state when the new country has none — the service
+      // rejects a missing state for a country that has some.
+      state: z.string().trim().min(1).nullable().optional(),
       // A non-empty patch — `{}` would be an edit that changes nothing.
       details: DetailsSchema.refine(
         patch => Object.keys(patch).length > 0,
@@ -84,3 +93,21 @@ export type ProfileBatchesQuery = z.infer<typeof ProfileBatchesQuerySchema>
 export const ProfileBatchesQuerySchema = FindBatchesSchema.safeExtend({
   withDetail: z.coerce.boolean().optional().default(false),
 })
+
+// Changing `phone` or `yearOfBirth` takes a one-time code, sent first (`ContactCodeRequestSchema`)
+// and then submitted with the change (`ContactChangeSchema`). The code goes to the *new* phone when
+// the phone is changing (proving the caller holds it), otherwise to the current one. Only the
+// profile's owner can do this — an admin can't read the code off someone else's phone.
+export type ContactCodeRequestData = z.infer<typeof ContactCodeRequestSchema>
+export const ContactCodeRequestSchema = z.object({ phone: e164Phone.optional() })
+
+export type ContactChangeData = z.infer<typeof ContactChangeSchema>
+export const ContactChangeSchema = z
+  .object({
+    code: z.string().trim().min(1),
+    phone: e164Phone.optional(),
+    yearOfBirth: z.number().int().min(1900).max(CURRENT_YEAR).optional(),
+  })
+  .refine(data => data.phone !== undefined || data.yearOfBirth !== undefined, {
+    message: 'no fields to update',
+  })

@@ -16,12 +16,30 @@ const validBody = {
   lastName: 'Rao',
   yearOfBirth: 2005,
   phone: '+15551234567',
+  country: 'IN',
+  state: 'TG',
+  currentProficiency: 'notStarted',
 }
 
 describe('CreateRegistrationSchema', () => {
   it('accepts the minimal required fields', () => {
     const result = CreateRegistrationSchema.safeParse(validBody)
     expect(result.success).toBe(true)
+  })
+
+  it('requires a country and a starting point — there is no "prefer not to say"', () => {
+    const { country: _country, ...withoutCountry } = validBody
+    const { currentProficiency: _proficiency, ...withoutProficiency } = validBody
+    expect(CreateRegistrationSchema.safeParse(withoutCountry).success).toBe(false)
+    expect(CreateRegistrationSchema.safeParse(withoutProficiency).success).toBe(false)
+    expect(CreateRegistrationSchema.safeParse({ ...validBody, country: null }).success).toBe(false)
+  })
+
+  it('requires a state only for a country that has states', () => {
+    const { state: _state, ...withoutState } = validBody
+    expect(CreateRegistrationSchema.safeParse(withoutState).success).toBe(false)
+    // Antarctica has no subdivisions in the dataset, so there is nothing to pick.
+    expect(CreateRegistrationSchema.safeParse({ ...withoutState, country: 'AQ' }).success).toBe(true)
   })
 
   it('accepts a fully populated body', () => {

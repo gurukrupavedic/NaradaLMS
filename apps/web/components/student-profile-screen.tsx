@@ -15,6 +15,7 @@ import { CertificationRecord } from '@/components/certification-record'
 import { Timestamp } from '@/components/timestamp'
 import { Reveal } from '@/components/reveal'
 import { MoveBatchDrawer } from '@/components/admin/move-batch-drawer'
+import { ChangeContactDialog } from '@/components/change-contact-dialog'
 import { EditProfileDialog } from '@/components/edit-profile-dialog'
 import { RecordExamResultDialog } from '@/components/admin/record-exam-result-dialog'
 import { profileDetailQuery } from '@/lib/query/options'
@@ -72,6 +73,7 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
   const isSelf = useSelectedProfileId() === profileId
   const [moveOpen, setMoveOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [contactOpen, setContactOpen] = useState(false)
   const [resultTarget, setResultTarget] = useState<AdminSittingRow | null>(null)
   const [resultOpen, setResultOpen] = useState(false)
   const canEdit = isSelf || isAdmin
@@ -156,6 +158,16 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
 
                 <dt className="label mt-5 text-ink-muted">Year of birth</dt>
                 <dd className="mt-2 text-[0.9375rem]">{profile.yearOfBirth ?? '—'}</dd>
+
+                {isSelf && (
+                  <button
+                    type="button"
+                    onClick={() => setContactOpen(true)}
+                    className="label mt-5 text-vermilion underline underline-offset-4"
+                  >
+                    Change phone or year of birth
+                  </button>
+                )}
               </div>
 
               <div className="px-4 py-4">
@@ -325,6 +337,8 @@ export function StudentProfileScreen({ profileId }: { profileId: string }) {
           isSelf={isSelf}
         />
       )}
+
+      {isSelf && <ChangeContactDialog open={contactOpen} onOpenChange={setContactOpen} profile={profile} />}
 
       {isAdmin && (
         <RecordExamResultDialog open={resultOpen} onOpenChange={setResultOpen} sitting={resultTarget} />

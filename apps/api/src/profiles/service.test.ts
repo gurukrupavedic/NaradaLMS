@@ -18,6 +18,10 @@ vi.mock('./repository', () => ({
   search: vi.fn(),
 }))
 
+// The code flow's collaborators — `@narada/db` (the public pool) and `@narada/otp` read real env on import.
+vi.mock('@narada/db', () => ({ publicDb: {} }))
+vi.mock('@narada/otp', () => ({ sendOtpMessage: vi.fn(), verifyOtpCode: vi.fn() }))
+
 type School = typeof organization.$inferSelect
 
 const db = {} as SchoolDbClient

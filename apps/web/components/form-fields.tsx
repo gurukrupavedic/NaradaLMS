@@ -110,8 +110,9 @@ export function SelectField<T extends string = string>({
   value,
   onChange,
   options,
-  placeholder = 'Prefer not to say',
+  placeholder = 'Select…',
   disabled,
+  required,
   variant = 'underline',
 }: {
   label: string
@@ -121,6 +122,7 @@ export function SelectField<T extends string = string>({
   options: readonly { value: T; label: string }[]
   placeholder?: string
   disabled?: boolean
+  required?: boolean
   variant?: FieldVariant
 }) {
   return (
@@ -130,6 +132,7 @@ export function SelectField<T extends string = string>({
         value={value}
         onChange={e => onChange(e.target.value as T | '')}
         disabled={disabled}
+        required={required}
         className={cn(CONTROL[variant], TEXT_SIZE[variant].select, 'text-ink disabled:opacity-50')}
       >
         <option value="">{placeholder}</option>

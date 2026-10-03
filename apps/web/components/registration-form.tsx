@@ -100,12 +100,17 @@ function validateStep(step: number, form: FormState, detailFields: readonly Fiel
     if (!form.yearOfBirth.trim() || !Number.isInteger(year) || year < 1900 || year > CURRENT_YEAR) {
       return `Enter your year of birth, between 1900 and ${CURRENT_YEAR}.`
     }
+    if (!form.country) return 'Select your country.'
+    if (!form.state && getStateOptions(form.country).length > 0) return 'Select your state / province.'
     return registrationDetailsError(detailFields, form.details)
   }
+  if (step === 1 && !form.currentProficiency) return 'Select your current proficiency.'
   return null
 }
 
 function toPayload(form: FormState, detailFields: readonly FieldDefinition[]): SubmitRegistrationInput {
+  // `validateStep` has already refused an empty one; this narrows the type for the payload.
+  if (!form.currentProficiency) throw new Error('current proficiency is required')
   return {
     firstName: form.firstName.trim(),
     lastName: form.lastName.trim(),
@@ -113,10 +118,10 @@ function toPayload(form: FormState, detailFields: readonly FieldDefinition[]): S
     yearOfBirth: Number(form.yearOfBirth),
     email: form.email.trim() || undefined,
     city: form.city.trim() || undefined,
-    country: form.country || undefined,
+    country: form.country,
     state: form.state || undefined,
     learningGoal: form.learningGoal.trim() || undefined,
-    currentProficiency: form.currentProficiency || undefined,
+    currentProficiency: form.currentProficiency,
     spokenLanguages: form.spokenLanguages,
     readLanguages: form.readLanguages,
     parentNames: form.parentNames,
@@ -289,7 +294,6 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
               />
               <SelectField
                 label="Country"
-                hint="Optional"
                 value={form.country}
                 onChange={handleCountryChange}
                 options={COUNTRY_OPTIONS}
@@ -298,7 +302,6 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
             {stateOptions.length > 0 && (
               <SelectField
                 label="State / province"
-                hint="Optional"
                 value={form.state}
                 onChange={v => patch({ state: v })}
                 options={stateOptions}
@@ -319,7 +322,6 @@ export function RegistrationForm({ course }: { course: ApiCourse }) {
             />
             <SelectField
               label="Current proficiency"
-              hint="Optional"
               value={form.currentProficiency}
               onChange={v => patch({ currentProficiency: v })}
               options={SELF_REPORTED_PROFICIENCY_OPTIONS}

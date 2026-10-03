@@ -20,7 +20,12 @@ vi.mock('@narada/db', () => ({
   },
 }))
 
-import { ProfileBatchesQuerySchema, ProfileSchema, UpdateProfileSchema } from './schema'
+import {
+  ContactChangeSchema,
+  ProfileBatchesQuerySchema,
+  ProfileSchema,
+  UpdateProfileSchema,
+} from './schema'
 
 const validProfile = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -164,5 +169,36 @@ describe('ProfileBatchesQuerySchema', () => {
       expect(result.data.status).toBe('active')
       expect(result.data.limit).toBe(10)
     }
+  })
+})
+
+describe('UpdateProfileSchema — country and state are never cleared', () => {
+  it('rejects a null or blank country and a blank state', () => {
+    expect(UpdateProfileSchema.safeParse({ country: null }).success).toBe(false)
+    expect(UpdateProfileSchema.safeParse({ state: '' }).success).toBe(false)
+    expect(UpdateProfileSchema.safeParse({ country: 'IN', state: 'TG' }).success).toBe(true)
+  })
+
+  it('still ignores phone and yearOfBirth — those change only through the code flow', () => {
+    const result = UpdateProfileSchema.safeParse({ name: 'A', phone: '+15551234567', yearOfBirth: 1999 })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).not.toHaveProperty('phone')
+      expect(result.data).not.toHaveProperty('yearOfBirth')
+    }
+  })
+})
+
+describe('ContactChangeSchema', () => {
+  it('needs a code and at least one of phone / yearOfBirth', () => {
+    expect(ContactChangeSchema.safeParse({ code: '123456' }).success).toBe(false)
+    expect(ContactChangeSchema.safeParse({ yearOfBirth: 2001 }).success).toBe(false)
+    expect(ContactChangeSchema.safeParse({ code: '123456', yearOfBirth: 2001 }).success).toBe(true)
+    expect(ContactChangeSchema.safeParse({ code: '123456', phone: '+15551234567' }).success).toBe(true)
+  })
+
+  it('rejects a phone that is not E.164 and an out-of-range year', () => {
+    expect(ContactChangeSchema.safeParse({ code: '1', phone: '5551234567' }).success).toBe(false)
+    expect(ContactChangeSchema.safeParse({ code: '1', yearOfBirth: 1800 }).success).toBe(false)
   })
 })
