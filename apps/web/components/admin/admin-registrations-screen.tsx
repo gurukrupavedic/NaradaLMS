@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { Standing } from '@/components/standing'
 import { RegistrationReview } from '@/components/admin/registration-review'
+import { RegistrationLink } from '@/components/admin/registration-link'
 import { EnrollmentRequestReview } from '@/components/admin/enrollment-request-review'
 import { enrollmentRequestsQuery, registrationsQuery } from '@/lib/query/options'
 
@@ -48,7 +49,8 @@ export function AdminRegistrationsScreen() {
       />
 
       <div className="mx-auto max-w-5xl px-5 pt-9">
-        <div className="flex gap-5 border-b border-rule pb-2">
+        <RegistrationLink />
+        <div className="mt-9 flex gap-5 border-b border-rule pb-2">
           {VIEWS.map(item => {
             const count = counts[item.view]
             return (
