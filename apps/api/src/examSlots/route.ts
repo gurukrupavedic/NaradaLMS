@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
+import { ensureHorizon } from '../examSchedules/service'
 import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import {
@@ -30,7 +31,10 @@ router.get(
   '/',
   optionalProfileRoute(async ({ req, res, db, getCourse }) => {
     const query = await parse(FindExamSlotsSchema, req.query)
-    const result = await findManySlots({ db }, query, (await getCourse()).id)
+    const courseId = (await getCourse()).id
+    // Slots from a recurring schedule are generated lazily — see `examSchedules/service.ts::ensureHorizon`.
+    await ensureHorizon({ db }, courseId)
+    const result = await findManySlots({ db }, query, courseId)
     res.status(200).json({ data: result })
   }),
 )

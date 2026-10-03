@@ -14,6 +14,7 @@ export type ExamSlot = z.infer<typeof ExamSlotSchema>
 export const ExamSlotSchema = z.object({
   id: z.uuid(),
   courseId: z.uuid(),
+  scheduleId: z.uuid().nullable(),
   scheduledAt: isoInstant,
   status: examSlotStatusSchema,
   openedBy: z.uuid(),

@@ -11,6 +11,7 @@ import enrollmentRouter from './enrollment'
 import enrollmentRequestsRouter from './enrollmentRequests'
 import evaluationsRouter from './evaluations'
 import examsRouter from './exams'
+import examSchedulesRouter from './examSchedules'
 import examSlotsRouter from './examSlots'
 import healthRouter from './health'
 import profileRouter from './profile'
@@ -46,4 +47,5 @@ export default function setupRoutes(router: Router) {
     .use('/batches/:batchId/evaluations', evaluationsRouter)
     .use('/exams', examsRouter)
     .use('/exam-slots', examSlotsRouter)
+    .use('/exam-schedules', examSchedulesRouter)
 }

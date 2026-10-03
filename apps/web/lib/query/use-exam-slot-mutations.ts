@@ -5,6 +5,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   approveExamSlotRequest,
   cancelExamSlot,
+  createExamSchedule,
+  deleteExamSchedule,
+  updateExamSchedule,
   openExamSlot,
   rejectExamSlotRequest,
   requestExamSlot,
@@ -105,4 +108,43 @@ export function useRejectExamSlotRequest() {
     success: 'Request rejected.',
     failure: "Couldn't reject the request.",
   })
+}
+
+// A schedule change creates, rebuilds or removes slots, so both lists go stale together.
+function invalidateScheduleData(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: keys.examSchedules })
+  void queryClient.invalidateQueries({ queryKey: keys.examSlots.all })
+}
+
+export function useCreateExamSchedule() {
+  const queryClient = useQueryClient()
+
+  return useEditMutation(
+    { mutationFn: createExamSchedule, onSuccess: () => invalidateScheduleData(queryClient) },
+    { success: 'Schedule added.', failure: "Couldn't add the schedule." },
+  )
+}
+
+export function useUpdateExamSchedule() {
+  const queryClient = useQueryClient()
+
+  return useEditMutation(
+    { mutationFn: updateExamSchedule, onSuccess: () => invalidateScheduleData(queryClient) },
+    {
+      success: ({ keptSlots }) =>
+        keptSlots > 0
+          ? `Schedule updated. ${keptSlots} claimed ${keptSlots === 1 ? 'slot keeps' : 'slots keep'} the old time.`
+          : 'Schedule updated.',
+      failure: "Couldn't update the schedule.",
+    },
+  )
+}
+
+export function useDeleteExamSchedule() {
+  const queryClient = useQueryClient()
+
+  return useEditMutation(
+    { mutationFn: deleteExamSchedule, onSuccess: () => invalidateScheduleData(queryClient) },
+    { success: 'Schedule removed.', failure: "Couldn't remove the schedule." },
+  )
 }

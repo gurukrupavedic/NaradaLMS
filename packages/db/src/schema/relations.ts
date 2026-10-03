@@ -18,6 +18,7 @@ import {
   evaluation,
   exam,
   examResult,
+  examSchedule,
   examSlot,
   examSlotRequest,
   profile,
@@ -165,6 +166,7 @@ export const examResultRelations = relations(examResult, ({ one }) => ({
 
 export const examSlotRelations = relations(examSlot, ({ one, many }) => ({
   course: one(course, { fields: [examSlot.courseId], references: [course.id] }),
+  schedule: one(examSchedule, { fields: [examSlot.scheduleId], references: [examSchedule.id] }),
   openedByProfile: one(profile, { fields: [examSlot.openedBy], references: [profile.id] }),
   requests: many(examSlotRequest),
 }))

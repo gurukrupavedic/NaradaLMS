@@ -1,14 +1,15 @@
 import { fetchApi, fetchAllPages, mutateApi } from '@/lib/api/client'
-import type { ApiExamSlot, ApiExamSlotRequest, ApiExamSlotRequestStatus, ApiExamSlotRequestWithDetail, ApiExamSlotStatus } from '@/lib/api/api-types'
+import type { ApiExamSchedule, ApiExamScheduleInput, ApiUpdateExamScheduleResult, ApiExamSlot, ApiExamSlotRequest, ApiExamSlotRequestStatus, ApiExamSlotRequestWithDetail, ApiExamSlotStatus } from '@/lib/api/api-types'
 
 export type ExamSlotRow = {
   id: string
   when: string
   status: ApiExamSlotStatus
+  recurring: boolean
 }
 
 function toExamSlotRow(slot: ApiExamSlot): ExamSlotRow {
-  return { id: slot.id, when: slot.scheduledAt, status: slot.status }
+  return { id: slot.id, when: slot.scheduledAt, status: slot.status, recurring: slot.scheduleId !== null }
 }
 
 // GET /v1/exam-slots — no access check server-side (a slot carries no personal data), so this is
@@ -98,4 +99,22 @@ export async function approveExamSlotRequest(id: string): Promise<ApiExamSlotReq
 
 export async function rejectExamSlotRequest(id: string): Promise<ApiExamSlotRequest> {
   return mutateApi<ApiExamSlotRequest>(`/exam-slots/requests/${id}/reject`, 'POST')
+}
+
+// Recurring schedules — admin-only on the server. Each rule generates open slots over a rolling
+// window; see apps/api/src/examSchedules.
+export async function fetchExamSchedules(): Promise<ApiExamSchedule[]> {
+  return fetchApi<ApiExamSchedule[]>('/exam-schedules')
+}
+
+export async function createExamSchedule(input: ApiExamScheduleInput): Promise<ApiExamSchedule> {
+  return mutateApi<ApiExamSchedule>('/exam-schedules', 'POST', input)
+}
+
+export async function updateExamSchedule(input: { id: string; data: ApiExamScheduleInput }): Promise<ApiUpdateExamScheduleResult> {
+  return mutateApi<ApiUpdateExamScheduleResult>(`/exam-schedules/${input.id}`, 'PUT', input.data)
+}
+
+export async function deleteExamSchedule(id: string): Promise<void> {
+  return mutateApi<void>(`/exam-schedules/${id}`, 'DELETE')
 }

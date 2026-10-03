@@ -45,6 +45,7 @@ describe('openSlot', () => {
   const created = {
     id: 'slot-1',
     courseId: 'course-1',
+    scheduleId: null,
     scheduledAt: data.scheduledAt,
     status: 'open' as const,
     openedBy: 'admin-1',
@@ -85,6 +86,7 @@ describe('request', () => {
   const slot = {
     id: 'slot-1',
     courseId: 'course-1',
+    scheduleId: null,
     scheduledAt: new Date(),
     status: 'open' as const,
     openedBy: 'admin-1',
@@ -201,6 +203,7 @@ describe('approve', () => {
   const slot = {
     id: 'slot-1',
     courseId: 'course-1',
+    scheduleId: null,
     scheduledAt: new Date('2026-10-01T10:00:00Z'),
     status: 'requested' as const,
     openedBy: 'admin-1',
@@ -302,6 +305,7 @@ describe('reject', () => {
   const openedSlot = {
     id: 'slot-1',
     courseId: 'course-1',
+    scheduleId: null,
     scheduledAt: new Date(),
     status: 'open' as const,
     openedBy: 'admin-1',
@@ -358,6 +362,7 @@ describe('cancelSlot', () => {
   const openSlotRow = {
     id: 'slot-1',
     courseId: 'course-1',
+    scheduleId: null,
     scheduledAt: new Date(),
     status: 'open' as const,
     openedBy: 'admin-1',
