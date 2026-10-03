@@ -80,8 +80,10 @@ export function isStarted(level: ProficiencyLevel): boolean {
   return level !== 'notStarted' && level !== 'absent'
 }
 
+// L3 is mastery (see the note above PROFICIENCY_LABEL); L4 is the exam-certified
+// level above it, so it counts too.
 export function isMastered(level: ProficiencyLevel): boolean {
-  return level === 'level4'
+  return level === 'level3' || level === 'level4'
 }
 
 // A track's certification result — the level its latest graded exam granted. L3
