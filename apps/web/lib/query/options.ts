@@ -23,6 +23,7 @@ import {
   fetchEnrollmentRequests,
   fetchExams,
   fetchExamSlotRequests,
+  fetchExamSchedules,
   fetchExamSlots,
   fetchMyCourses,
   fetchMyExamSlotRequests,
@@ -94,6 +95,8 @@ export const keys = {
     all: ['examSlots'] as const,
     list: (status?: ApiExamSlotStatus) => ['examSlots', 'list', status ?? null] as const,
   },
+
+  examSchedules: ['examSchedules'] as const,
 
   examSlotRequests: {
     // Same prefix-key shape as `registrations`/`enrollmentRequests` above.
@@ -248,6 +251,12 @@ export const examSlotsQuery = (filter?: { status?: ApiExamSlotStatus }) =>
   queryOptions({
     queryKey: keys.examSlots.list(filter?.status),
     queryFn: () => fetchExamSlots(filter),
+  })
+
+export const examSchedulesQuery = () =>
+  queryOptions({
+    queryKey: keys.examSchedules,
+    queryFn: fetchExamSchedules,
   })
 
 export const examSlotRequestsQuery = (status: ApiExamSlotRequestStatus) =>

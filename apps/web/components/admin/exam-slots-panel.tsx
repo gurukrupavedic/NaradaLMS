@@ -110,6 +110,7 @@ function SlotRow({ slot }: { slot: ExamSlotRow }) {
         <span className="block text-[0.9375rem]">
           <Timestamp variant="dateTime" value={slot.when} />
         </span>
+        {slot.recurring && <span className="label mt-0.5 block text-ink-muted">Recurring</span>}
       </div>
 
       <span className={`label shrink-0 ${STATUS_CLASS[slot.status]}`}>{STATUS_LABEL[slot.status]}</span>

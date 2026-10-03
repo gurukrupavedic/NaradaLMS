@@ -626,6 +626,37 @@ export const examResult = pgTable(
   ],
 )
 
+// A recurring weekly rule for exam sittings, e.g. "Saturdays 10:00, four sittings 30 minutes apart".
+// `apps/api/src/examSchedules` materialises it into concrete `examSlot` rows over a rolling horizon,
+// so requests/approval/cancellation keep operating on real slot rows and a one-off slot is simply a
+// slot with no schedule. Wall-clock fields (`startTime` in `timeZone`) rather than an instant, so
+// "10:00" stays 10:00 across daylight-saving changes.
+export const examSchedule = pgTable(
+  'examSchedule',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    courseId: uuid('courseId')
+      .notNull()
+      .references(() => course.id),
+    dayOfWeek: integer('dayOfWeek').notNull(), // 0 = Sunday .. 6 = Saturday, in `timeZone`
+    startTime: time('startTime').notNull(), // local wall-clock time of the first sitting
+    timeZone: text('timeZone').notNull(), // IANA identifier, e.g. 'America/New_York'
+    // How many single-seat sittings each occurrence offers, and how far apart (minutes) they start.
+    slotCount: integer('slotCount').notNull(),
+    slotMinutes: integer('slotMinutes').notNull(),
+    createdBy: uuid('createdBy')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'restrict' }),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [
+    index('examSchedule_courseId_idx').on(table.courseId),
+    check('examSchedule_dayOfWeek_range', sql`${table.dayOfWeek} BETWEEN 0 AND 6`),
+    check('examSchedule_slotCount_positive', sql`${table.slotCount} BETWEEN 1 AND 24`),
+    check('examSchedule_slotMinutes_positive', sql`${table.slotMinutes} BETWEEN 5 AND 480`),
+  ],
+)
+
 // A school-admin-opened (or schedule-generated) time a student can ask to sit a certification exam
 // in — single-seat, so booking it is a claim on the one seat, not a capacity decrement. A slot is
 // generic availability: it belongs to a course, not a track, and any student who has reached L3 on
@@ -642,6 +673,9 @@ export const examSlot = pgTable(
       .references(() => course.id),
     scheduledAt: timestamp('scheduledAt').notNull(),
     status: examSlotStatus('status').notNull().default('open'),
+    // Set when a schedule generated this slot, null for a one-off an admin opened by hand. Deleting
+    // the schedule detaches its slots (they live on as one-offs) rather than taking booked ones with it.
+    scheduleId: uuid('scheduleId').references(() => examSchedule.id, { onDelete: 'set null' }),
     openedBy: uuid('openedBy')
       .notNull()
       .references(() => profile.id, { onDelete: 'restrict' }),
@@ -655,6 +689,10 @@ export const examSlot = pgTable(
       table.status,
       table.scheduledAt,
     ),
+    // Makes generation idempotent. Cancelled rows stay, so a skipped occurrence is never regenerated.
+    uniqueIndex('examSlot_scheduleId_scheduledAt_uidx')
+      .on(table.scheduleId, table.scheduledAt)
+      .where(sql`${table.scheduleId} IS NOT NULL`),
   ],
 )
 

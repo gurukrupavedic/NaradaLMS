@@ -6,19 +6,21 @@ import { useQuery } from '@tanstack/react-query'
 
 import { Standing } from '@/components/standing'
 import { ExamSlotsPanel } from '@/components/admin/exam-slots-panel'
+import { ExamSchedulePanel } from '@/components/admin/exam-schedule-panel'
 import { ExamSlotRequestReview } from '@/components/admin/exam-slot-request-review'
 import { examSlotRequestsQuery } from '@/lib/query/options'
 
-type View = 'slots' | 'requests'
+type View = 'slots' | 'schedule' | 'requests'
 
 const VIEWS: { view: View; label: string }[] = [
   { view: 'slots', label: 'Slots' },
+  { view: 'schedule', label: 'Schedule' },
   { view: 'requests', label: 'Requests' },
 ]
 
 /**
- * Booking a certification sitting, from the admin side: opening bookable appointments on a track
- * (`ExamSlotsPanel`) and deciding what to do with a student's request against one
+ * Booking a certification sitting, from the admin side: a recurring weekly schedule
+ * (`ExamSchedulePanel`), opening one-off bookable appointments (`ExamSlotsPanel`) and deciding what to do with a student's request against one
  * (`ExamSlotRequestReview`) — two different resources (apps/api/src/examSlots's `examSlot` and
  * `examSlotRequest`) that share this one page and header, the same "one screen, two switchable
  * panels" shape as `AdminRegistrationsScreen`. Deliberately separate from
@@ -37,7 +39,7 @@ export function AdminExamSlotsScreen() {
       <Standing
         eyebrow="Administration"
         headline="Exam slots"
-        meta="Open appointments for a track's certification exam, and decide what to do with a student's request to sit one."
+        meta="Set a weekly schedule of certification exam sittings, open one-off slots, and decide what to do with a student's request to sit one."
       />
 
       <div className="mx-auto max-w-5xl px-5 pt-9">
@@ -65,7 +67,7 @@ export function AdminExamSlotsScreen() {
         </div>
       </div>
 
-      {view === 'slots' ? <ExamSlotsPanel /> : <ExamSlotRequestReview />}
+      {view === 'slots' ? <ExamSlotsPanel /> : view === 'schedule' ? <ExamSchedulePanel /> : <ExamSlotRequestReview />}
     </>
   )
 }

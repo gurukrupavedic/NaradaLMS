@@ -322,11 +322,35 @@ export type ApiExamSlotStatus = 'open' | 'requested' | 'booked' | 'cancelled'
 export type ApiExamSlot = {
   id: string
   courseId: string
+  // The recurring schedule that generated this slot, or null for a one-off opened by hand.
+  scheduleId: string | null
   scheduledAt: string
   status: ApiExamSlotStatus
   openedBy: string
   createdAt: string
 }
+
+// GET/POST/PUT/DELETE /v1/exam-schedules — a weekly rule ("Saturdays 10:00, 4 sittings 30 minutes
+// apart") the API turns into concrete `ApiExamSlot`s over a rolling window of weeks.
+export type ApiExamSchedule = {
+  id: string
+  courseId: string
+  dayOfWeek: number // 0 = Sunday .. 6 = Saturday, in `timeZone`
+  startTime: string // 'HH:MM:SS'
+  timeZone: string // IANA identifier
+  slotCount: number
+  slotMinutes: number
+  createdBy: string
+  createdAt: string
+}
+
+export type ApiExamScheduleInput = Pick<
+  ApiExamSchedule,
+  'dayOfWeek' | 'timeZone' | 'slotCount' | 'slotMinutes'
+> & { startTime: string } // 'HH:MM'
+
+// Future claimed/booked slots a rule change left at their old time because a student is committed to them.
+export type ApiUpdateExamScheduleResult = { schedule: ApiExamSchedule; keptSlots: number }
 
 // A student's request to claim an open `ApiExamSlot` — pending until a school admin approves it
 // (which produces the real `ApiExam`, linked back here via `examId`) or rejects it (which frees the
