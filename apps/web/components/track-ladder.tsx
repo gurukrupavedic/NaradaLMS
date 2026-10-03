@@ -6,7 +6,9 @@ import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { ChapterLine } from '@/components/chapter-line'
 import type { ProficiencyLevel } from '@/lib/proficiency'
+import { formatLocation } from '@/lib/geo'
 import { trackTasQuery } from '@/lib/query/options'
+import { formatTimeZone } from '@/lib/timezone'
 
 export type ChapterRow = {
   id: string
@@ -106,10 +108,26 @@ export function TrackLadder({
       )}
 
       {open && tas.length > 0 && (
-        <p className="border-t border-rule-soft px-4 py-3 text-[0.8125rem] text-ink-muted">
-          <span className="label mr-2">For an L3, see</span>
-          {tas.map(ta => ta.name).join(', ')}
-        </p>
+        <div className="border-t border-rule-soft px-4 py-3">
+          <p className="label text-ink-muted">TAs for an L3</p>
+          <ul className="mt-2 space-y-2">
+            {tas.map(ta => {
+              const details = [
+                ta.phone,
+                formatLocation(null, ta.country),
+                formatTimeZone(ta.countryTimeZone),
+              ].filter(Boolean)
+              return (
+                <li key={ta.profileId} className="text-[0.875rem]">
+                  <span>{ta.name}</span>
+                  {details.length > 0 && (
+                    <span className="block font-mono text-[0.6875rem] text-ink-muted">{details.join(' · ')}</span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       )}
     </article>
   )

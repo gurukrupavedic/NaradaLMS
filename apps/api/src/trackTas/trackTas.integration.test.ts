@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { enrollment } from '@narada/db'
+import { enrollment, profile } from '@narada/db'
 
 import type { AccessPolicy } from '../utils/accessPolicy'
 import { destroyTestWorld } from '../testing/cleanup'
@@ -92,12 +92,23 @@ describe('findCandidates', () => {
 
 describe('add / findAll / remove', () => {
   it('lists an eligible TA under their track and removes them again', async () => {
-    const { track, courseId, context, makeTa } = await setup()
+    const { w, track, courseId, context, makeTa } = await setup()
     const ta = await makeTa('Eligible', ['level3', 'level3'])
+    await w.schoolDb
+      .update(profile)
+      .set({ phone: '+15551234567', country: 'US', countryTimeZone: 'America/New_York' })
+      .where(eq(profile.id, ta.id))
 
     await add(context, { trackId: track.id, profileId: ta.id }, courseId)
     expect(await findAll({ db: context.db }, courseId)).toEqual([
-      { trackId: track.id, profileId: ta.id, name: 'Eligible' },
+      {
+        trackId: track.id,
+        profileId: ta.id,
+        name: 'Eligible',
+        phone: '+15551234567',
+        country: 'US',
+        countryTimeZone: 'America/New_York',
+      },
     ])
 
     await remove(context, track.id, ta.id, courseId)

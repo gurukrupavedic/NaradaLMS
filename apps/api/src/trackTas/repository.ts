@@ -4,6 +4,16 @@ import { enrollment, profile, track, trackTa, type SchoolDb } from '@narada/db'
 
 import type { TrackTa, TrackTaCandidate } from './schema'
 
+// What a listed TA exposes to students — shared by the list and the insert's return value.
+const TA_COLUMNS = {
+  trackId: trackTa.trackId,
+  profileId: trackTa.profileId,
+  name: profile.name,
+  phone: profile.phone,
+  country: profile.country,
+  countryTimeZone: profile.countryTimeZone,
+}
+
 // "Currently a TA" — a live TA seat in some batch of the course. A TA who has stepped down (or
 // whose seat went inactive) drops off the list without the row needing cleanup.
 function activeTaOf(courseId: string) {
@@ -17,7 +27,7 @@ function activeTaOf(courseId: string) {
 /** Every listed TA across the course's tracks, still holding an active TA seat, by name. */
 export async function findAllInCourse(db: SchoolDb, courseId: string): Promise<TrackTa[]> {
   return db
-    .select({ trackId: trackTa.trackId, profileId: trackTa.profileId, name: profile.name })
+    .select(TA_COLUMNS)
     .from(trackTa)
     .innerJoin(track, eq(track.id, trackTa.trackId))
     .innerJoin(profile, eq(profile.id, trackTa.profileId))
@@ -67,7 +77,7 @@ export async function findListedProfileIds(db: SchoolDb, trackId: string): Promi
 export async function insert(db: SchoolDb, trackId: string, profileId: string): Promise<TrackTa | undefined> {
   await db.insert(trackTa).values({ trackId, profileId })
   const rows = await db
-    .select({ trackId: trackTa.trackId, profileId: trackTa.profileId, name: profile.name })
+    .select(TA_COLUMNS)
     .from(trackTa)
     .innerJoin(profile, eq(profile.id, trackTa.profileId))
     .where(and(eq(trackTa.trackId, trackId), inArray(trackTa.profileId, [profileId])))

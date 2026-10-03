@@ -315,7 +315,15 @@ export type ApiExam = {
 export type ApiStudentExamResult = ApiExamResult & { trackId: string; scheduledAt: string }
 
 // GET /v1/track-tas — a TA an admin has listed for a track: who a student can go to for an L3 on it.
-export type ApiTrackTa = { trackId: string; profileId: string; name: string }
+// `country` is an ISO code and `countryTimeZone` an IANA id, both null when the TA hasn't set them.
+export type ApiTrackTa = {
+  trackId: string
+  profileId: string
+  name: string
+  phone: string | null
+  country: string | null
+  countryTimeZone: string | null
+}
 
 // GET /v1/track-tas/candidates/:trackId — admin only: a TA who could be listed for the track now.
 export type ApiTrackTaCandidate = { profileId: string; name: string }
