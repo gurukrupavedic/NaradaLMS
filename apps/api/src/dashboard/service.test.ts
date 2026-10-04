@@ -41,6 +41,9 @@ function member(profileId: string, role: 'instructor' | 'ta' | 'student') {
     role,
     joinedAt: null,
     status: 'active' as const,
+    attendanceScore: null,
+    recitationScore: null,
+    backlogScore: null,
   }
 }
 

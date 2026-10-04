@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
-import { optionalProfileRoute } from '../naradaRoute'
+import { optionalProfileRoute, profileRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
-import { ChangeRoleSchema, CreateEnrollmentSchema, MoveEnrollmentSchema } from './schema'
-import { changeRole, enroll, moveEnrollment, putOnBreak, removeInstructor } from './service'
+import { ChangeRoleSchema, CreateEnrollmentSchema, MoveEnrollmentSchema, SetEnrollmentScoresSchema } from './schema'
+import { changeRole, enroll, moveEnrollment, putOnBreak, removeInstructor, setScores } from './service'
 
 // mergeParams: mounted at /batches/:batchId/members in routes.ts — this router needs the parent
 // mount path's :batchId, not just its own path segments. optionalProfileRoute (not profileRoute)
@@ -35,6 +35,20 @@ router.post(
     access.requireCanRemoveEnrollment(batchId)
     await putOnBreak(db, batchId, profileId)
     res.status(204).send()
+  }),
+)
+
+// A teacher's or TA's -1/0/1 call on a student's attendance, recitation or backlog. Gated like
+// grading (`evaluation:create`: the batch's instructor and TAs, plus school admins) — it is the
+// same judgement, just not tied to a chapter. Needs a profile since the writer is recorded.
+router.patch(
+  '/:profileId/scores',
+  profileRoute(async ({ req, res, db, access, profile }) => {
+    const { batchId, profileId } = await parse(MemberParamsSchema, req.params)
+    access.requireCanCreateEvaluation(batchId)
+    const scores = await parse(SetEnrollmentScoresSchema, req.body)
+    const updated = await setScores(db, batchId, profileId, scores, profile.id)
+    res.status(200).json({ data: updated })
   }),
 )
 

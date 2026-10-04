@@ -1,4 +1,5 @@
 import { fetchAllPages, fetchApi, mutateApi } from '@/lib/api/client'
+import type { Score, ScoreKey } from '@/lib/scores'
 import type { ApiCourse, ApiEnrollmentRequest, ApiEnrollmentRequestStatus, ApiOpenBatch } from '@/lib/api/api-types'
 
 // GET /v1/courses — school-scoped, no session needed. Every course in the school: names and slugs
@@ -82,6 +83,20 @@ export async function enrollProfile(
 // survive.
 export async function putStudentOnBreak(batchId: string, profileId: string): Promise<void> {
   await mutateApi(`/batches/${batchId}/members/${profileId}/break`, 'POST')
+}
+
+// PATCH /v1/batches/:batchId/members/:profileId/scores — a teacher's or TA's -1/0/1 call on one of
+// a student's three scores (apps/api/src/enrollment/service.ts::setScores). Sends only the score
+// being changed; null clears it back to "not assessed".
+export async function setStudentScore(
+  batchId: string,
+  profileId: string,
+  key: ScoreKey,
+  score: Score,
+): Promise<void> {
+  await mutateApi(`/batches/${batchId}/members/${profileId}/scores`, 'PATCH', {
+    [`${key}Score`]: score,
+  })
 }
 
 // POST /v1/batches/:batchId/members/:profileId/move — moves a profile already on this roster to a

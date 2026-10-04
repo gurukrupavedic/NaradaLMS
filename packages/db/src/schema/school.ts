@@ -15,6 +15,7 @@ import {
   uniqueIndex,
   foreignKey,
   check,
+  smallint,
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
 import { COURSE_SLUG_PATTERN, RESERVED_COURSE_SLUGS } from '../courseSlug'
@@ -486,9 +487,22 @@ export const enrollment = pgTable(
     status: enrollmentStatus('status').notNull().default('active'),
     joinedAt: timestamp('joinedAt').defaultNow(),
     leftDate: timestamp('leftDate'),
+    // Teacher/TA judgement of how this student is doing in *this* batch, each -1, 0 or 1 (null =
+    // not assessed yet, which is not the same as 0). Only meaningful for learners (`student` and
+    // class `ta`, who is a student of the class too) — the API refuses to write them on an
+    // instructor's row. Overwritten in place; `scoresUpdatedAt/By`
+    // say how stale the latest assessment is and who made it, not what it replaced.
+    attendanceScore: smallint('attendanceScore'),
+    recitationScore: smallint('recitationScore'),
+    backlogScore: smallint('backlogScore'),
+    scoresUpdatedAt: timestamp('scoresUpdatedAt'),
+    scoresUpdatedBy: uuid('scoresUpdatedBy').references(() => profile.id, { onDelete: 'set null' }),
   },
   table => [
     primaryKey({ columns: [table.profileId, table.batchId] }),
+    check('enrollment_attendanceScore_range', sql`${table.attendanceScore} IN (-1, 0, 1)`),
+    check('enrollment_recitationScore_range', sql`${table.recitationScore} IN (-1, 0, 1)`),
+    check('enrollment_backlogScore_range', sql`${table.backlogScore} IN (-1, 0, 1)`),
     index('enrollment_batchId_idx').on(table.batchId),
     foreignKey({
       name: 'enrollment_batchId_courseId_fk',

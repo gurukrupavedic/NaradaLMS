@@ -55,6 +55,7 @@ const membership = (
 })
 
 const baseDashboard = (overrides: Partial<ApiDashboard>): ApiDashboard => ({
+  profileId: 'me',
   firstName: 'Siva',
   memberships: [],
   tracks: [],
@@ -102,6 +103,44 @@ describe('buildLearningTracks', () => {
 
     expect(ladder.batchStatus).toBe('active')
     expect(ladder.batchCode).toBe('CODE-track-1-student-active')
+  })
+})
+
+describe("a learner's own scores on their ladder", () => {
+  const memberRow = (profileId: string, attendanceScore: -1 | 0 | 1 | null) => ({
+    profileId,
+    name: profileId,
+    phone: null,
+    email: null,
+    city: null,
+    role: 'student' as const,
+    joinedAt: null,
+    status: 'active' as const,
+    attendanceScore,
+    recitationScore: null,
+    backlogScore: null,
+  })
+
+  it("reads the learner's own row among the batch members, not a classmate's", () => {
+    const [ladder] = buildLearningTracks(
+      baseDashboard({
+        profileId: 'me',
+        tracks: [track('track-1', 1, 2)],
+        memberships: [
+          {
+            ...membership('track-1', 'student', 'active'),
+            members: [memberRow('classmate', -1), memberRow('me', 1)],
+          },
+        ],
+      }),
+    )
+
+    expect(ladder?.scores).toEqual({ attendance: 1, recitation: null, backlog: null })
+  })
+
+  it('is null when the learner has no batch for the track', () => {
+    const [ladder] = buildLearningTracks(baseDashboard({ tracks: [track('track-1', 1, 2)] }))
+    expect(ladder?.scores).toBeNull()
   })
 })
 
@@ -242,6 +281,9 @@ describe('buildRoster', () => {
     role,
     joinedAt: null,
     status,
+    attendanceScore: null,
+    recitationScore: null,
+    backlogScore: null,
   })
 
   const batchWith = (batchStatus: ApiBatchWithRole['status']): ApiBatchWithRole => ({
@@ -273,6 +315,19 @@ describe('buildRoster', () => {
     expect(idsFor('active')).toContain('active-ta')
     expect(idsFor('active')).not.toContain('teacher')
     expect(idsFor('completed')).not.toContain('teacher')
+  })
+
+  it("carries each student's three scores through, null when unassessed", () => {
+    const batch: ApiBatchWithRole = {
+      ...batchWith('active'),
+      members: [
+        { ...member('scored', 'student', 'active'), attendanceScore: 1, recitationScore: 0, backlogScore: -1 },
+        member('unscored', 'student', 'active'),
+      ],
+    }
+    const [scored, unscored] = buildRoster(batch, [], [])
+    expect(scored?.scores).toEqual({ attendance: 1, recitation: 0, backlog: -1 })
+    expect(unscored?.scores).toEqual({ attendance: null, recitation: null, backlog: null })
   })
 
   it('isRosterStudent agrees with the roster for every batch status, so a batch count matches its rows', () => {

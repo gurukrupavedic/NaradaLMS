@@ -3,7 +3,7 @@ import type { SchoolDb, SchoolDbClient } from '@narada/db'
 import { conflict, internalError, notFound, orInternalError, orNotFound, unprocessable } from '../error'
 import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
-import type { ChangeRoleData, CreateEnrollmentData } from './schema'
+import type { ChangeRoleData, CreateEnrollmentData, SetEnrollmentScoresData } from './schema'
 import type { Enrollment } from './repository'
 
 export { findStudentIdsInBatch, hasSharedInstructorEnrollment, isEnrolledInAnyBatch } from './repository'
@@ -94,6 +94,20 @@ export async function enroll(
  */
 export async function putOnBreak(db: SchoolDb, batchId: string, profileId: string): Promise<void> {
   orNotFound(await repository.updateEnrollmentStatus(db, batchId, profileId, 'break'))
+}
+
+/**
+ * Sets a learner's attendance / recitation / backlog scores in this batch. 404 if they aren't a
+ * student or class TA of it (an instructor has no scores to set).
+ */
+export async function setScores(
+  db: SchoolDb,
+  batchId: string,
+  profileId: string,
+  scores: SetEnrollmentScoresData,
+  updatedBy: string,
+): Promise<Enrollment> {
+  return orNotFound(await repository.updateScores(db, batchId, profileId, scores, updatedBy))
 }
 
 /**

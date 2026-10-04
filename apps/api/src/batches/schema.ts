@@ -25,6 +25,8 @@ export const BatchSchema = z.object({
 
 // A batch's roster: who is enrolled in it. Returned with the batch list that carries detail
 // (`GET /profiles/:profileId/batches?withDetail=true`) rather than through a batch-by-id read.
+const batchScoreSchema = z.union([z.literal(-1), z.literal(0), z.literal(1)]).nullable()
+
 export type BatchMember = z.infer<typeof BatchMemberSchema>
 export const BatchMemberSchema = z.object({
   profileId: z.uuid(),
@@ -40,6 +42,11 @@ export const BatchMemberSchema = z.object({
   // so a student put on a break (`enrollment/service.ts::putOnBreak`) is no longer rendered there
   // without losing their `enrollment` row.
   status: enrollmentStatusSchema,
+  // Teacher/TA judgement, -1/0/1; null = not assessed yet. Visible to everyone who can see the
+  // roster, classmates included. See `enrollment` in packages/db's school schema.
+  attendanceScore: batchScoreSchema,
+  recitationScore: batchScoreSchema,
+  backlogScore: batchScoreSchema,
 })
 
 export type ClassSlot = z.infer<typeof ClassSlotSchema>

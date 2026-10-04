@@ -10,7 +10,9 @@ import {
   moveEnrollmentToBatch,
   putStudentOnBreak,
   removeTeacher,
+  setStudentScore,
 } from '@/lib/api/resources'
+import type { Score, ScoreKey } from '@/lib/scores'
 
 /**
  * Admin "add a student" (components/admin/add-student-drawer.tsx). Besides this batch's own
@@ -146,5 +148,25 @@ export function useRemoveTeacher(code: string, batchId: string) {
       success: (_data, { profileName }) => `Removed ${profileName} from ${code}.`,
       failure: ({ profileName }) => `Couldn't remove ${profileName}.`,
     },
+  )
+}
+
+/**
+ * The mark book's three score columns (components/mark-book.tsx) — same batchId/invalidateKey
+ * shape as {@link useSetOnBreak}, since the admin batch view and the teacher's dashboard each
+ * read the roster from a different endpoint.
+ */
+export function useSetScore(batchId: string, invalidateKey: readonly unknown[]) {
+  const queryClient = useQueryClient()
+
+  return useEditMutation(
+    {
+      mutationFn: ({ studentId, key, score }: { studentId: string; key: ScoreKey; score: Score }) =>
+        setStudentScore(batchId, studentId, key, score),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: invalidateKey })
+      },
+    },
+    { success: 'Score saved.', failure: "Couldn't save that score." },
   )
 }

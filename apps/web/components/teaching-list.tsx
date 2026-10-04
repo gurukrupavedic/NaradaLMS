@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { MarkBook } from '@/components/mark-book'
 import { keys } from '@/lib/query/options'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
-import { useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
+import { useSetOnBreak, useSetScore } from '@/lib/query/use-enrollment-mutations'
 import type { TeachingBatch } from '@/lib/models/dashboard'
 import { pluralize } from '@/lib/pluralize'
 
@@ -60,6 +60,7 @@ function TeachingRow({
   const setLevel = useSetEvaluation(batch.batchId, keys.dashboard)
   const promote = useSetEvaluations(batch.batchId, keys.dashboard)
   const onBreak = useSetOnBreak(batch.batchId, keys.dashboard)
+  const scoring = useSetScore(batch.batchId, keys.dashboard)
 
   return (
     <div>
@@ -110,6 +111,7 @@ function TeachingRow({
             grading={setLevel}
             promote={promote}
             onBreak={onBreak}
+            scoring={scoring}
           />
         </div>
       )}
