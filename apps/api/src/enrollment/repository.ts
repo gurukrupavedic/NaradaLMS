@@ -2,7 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm'
 
 import { batch, enrollment, type SchoolDb } from '@narada/db'
 
-import type { CreateEnrollmentData } from './schema'
+import type { CreateEnrollmentData, SetEnrollmentScoresData } from './schema'
 
 export type Enrollment = typeof enrollment.$inferSelect
 
@@ -232,6 +232,31 @@ export async function updateEnrollmentRole(
     .update(enrollment)
     .set({ role })
     .where(and(eq(enrollment.batchId, batchId), eq(enrollment.profileId, profileId)))
+    .returning()
+
+  return rows.at(0)
+}
+
+/** Writes whichever scores `scores` carries and stamps who set them and when. Restricted to the
+ * batch's learners (student/ta) — an instructor's row never holds scores. Returns undefined when
+ * no such learner row exists, which the service turns into a 404. */
+export async function updateScores(
+  db: SchoolDb,
+  batchId: string,
+  profileId: string,
+  scores: SetEnrollmentScoresData,
+  updatedBy: string,
+): Promise<Enrollment | undefined> {
+  const rows = await db
+    .update(enrollment)
+    .set({ ...scores, scoresUpdatedAt: new Date(), scoresUpdatedBy: updatedBy })
+    .where(
+      and(
+        eq(enrollment.batchId, batchId),
+        eq(enrollment.profileId, profileId),
+        inArray(enrollment.role, LEARNER_ROLES),
+      ),
+    )
     .returning()
 
   return rows.at(0)

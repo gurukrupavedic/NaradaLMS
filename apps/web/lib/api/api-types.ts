@@ -213,7 +213,13 @@ export type ApiBatchMember = {
   // place that reads it (to drop a student put on a break off the mark book, unless the batch is
   // completed).
   status: ApiEnrollmentStatus
+  // A teacher's/TA's -1/0/1 judgement of this member in this batch; null = not assessed yet.
+  attendanceScore: ApiScore
+  recitationScore: ApiScore
+  backlogScore: ApiScore
 }
+
+export type ApiScore = -1 | 0 | 1 | null
 
 export type ApiBatch = {
   id: string
@@ -431,6 +437,7 @@ export type ApiRegistration = {
 }
 
 export type ApiDashboard = {
+  profileId: string
   firstName: string
   memberships: ApiBatchWithRole[]
   tracks: ApiTrack[]

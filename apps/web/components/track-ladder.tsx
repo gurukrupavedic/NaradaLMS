@@ -5,10 +5,12 @@ import { useQuery } from '@tanstack/react-query'
 
 import { cn } from '@/lib/utils'
 import { ChapterLine } from '@/components/chapter-line'
+import { ScoreStrip } from '@/components/score-strip'
 import type { ProficiencyLevel } from '@/lib/proficiency'
 import { formatLocation } from '@/lib/geo'
 import { trackTasQuery } from '@/lib/query/options'
 import { formatTimeZone } from '@/lib/timezone'
+import type { StudentScores } from '@/lib/scores'
 
 export type ChapterRow = {
   id: string
@@ -38,6 +40,9 @@ export type LadderTrack = {
   // The learner's own seat in `batchId` (distinct from the batch's status): a seat on a break, or
   // dropped/inactive, is a batch they belong to but are not currently sitting in.
   enrollmentStatus: 'active' | 'break' | 'dropped' | 'inactive' | null
+  // The teachers' attendance / recitation / backlog scores for this learner in `batchId` (null
+  // when they have no seat in a batch for this track).
+  scores: StudentScores | null
   started: number
   mastered: number
   total: number
@@ -98,6 +103,10 @@ export function TrackLadder({
       </button>
 
       <ProgressRule value={track.progress} mastered={track.masteredProgress} />
+
+      {track.scores && (
+        <ScoreStrip scores={track.scores} className="border-b border-rule-soft px-4 py-2.5" />
+      )}
 
       {open && (
         <ol className="border-t border-rule-soft">

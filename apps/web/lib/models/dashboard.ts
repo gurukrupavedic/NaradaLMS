@@ -1,4 +1,5 @@
 import type { ApiExamOutcome, ApiExamResult } from '@/lib/api/api-types'
+import type { StudentScores } from '@/lib/scores'
 import { getMasteredProgress, getProficiencyProgress, type ProficiencyLevel } from '@/lib/proficiency'
 
 /**
@@ -17,6 +18,7 @@ export type RosterStudent = {
   // A class TA is on the roster like any student; the row menu offers "Promote to TA" only to the
   // ones who aren't one yet.
   role: 'student' | 'ta'
+  scores: StudentScores
 }
 
 export type TeachingBatch = {

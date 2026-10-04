@@ -26,6 +26,7 @@ import {
 } from '@/lib/proficiency'
 import type { ChapterRow, LadderTrack } from '@/components/track-ladder'
 import type { CertificationRow, RosterStudent, TeachingBatch } from '@/lib/models/dashboard'
+import { scoresOf, type StudentScores } from '@/lib/scores'
 import { EMPTY, type CatalogChapter, type CatalogTrack } from '@/lib/models/catalog'
 import type { ChapterContent } from '@/lib/models/content'
 import type {
@@ -134,10 +135,19 @@ function chapterLevelsForTrack(
  * One learner's ladder for one track: the track's published chapters, each chapter's most recent
  * evaluation level, and the batch (if any) the student sits in for it.
  */
+// The learner's own three scores in `membership`'s batch — read off their own row among its
+// members, so a student sees what their teachers have recorded about them (and, since the
+// whole roster carries scores, a classmate's would be just as available to show).
+function ownScores(membership: ApiBatchWithRole | undefined, profileId: string): StudentScores | null {
+  const own = membership?.members.find(member => member.profileId === profileId)
+  return own ? scoresOf(own) : null
+}
+
 function buildLadderTrack(
   track: ApiTrack,
   evaluations: ApiEvaluation[],
   membership: ApiBatchWithRole | undefined,
+  profileId: string,
   examResult?: ApiStudentExamResult,
 ): LadderTrack {
   const chapters = buildChapterRows(
@@ -154,6 +164,7 @@ function buildLadderTrack(
     batchCode: membership?.code ?? null,
     batchStatus: membership?.status ?? null,
     enrollmentStatus: membership?.enrollmentStatus ?? null,
+    scores: ownScores(membership, profileId),
     chapters,
     started: countStarted(levels),
     mastered: countMastered(levels),
@@ -207,6 +218,7 @@ export function buildLearningTracks(dashboard: ApiDashboard): LadderTrack[] {
         track,
         dashboard.studentEvaluations,
         membershipByTrackId.get(track.id),
+        dashboard.profileId,
         examResultByTrackId.get(track.id),
       ),
     )
@@ -372,6 +384,7 @@ export function buildRoster(
       marks,
       current,
       role: student.role === 'ta' ? 'ta' : 'student',
+      scores: scoresOf(student),
     }
   })
 }

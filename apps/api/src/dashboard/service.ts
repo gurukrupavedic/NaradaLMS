@@ -87,6 +87,7 @@ export async function getDashboardData(
   }))
 
   return {
+    profileId,
     firstName: profileName.split(' ')[0] || 'there',
     memberships,
     tracks,

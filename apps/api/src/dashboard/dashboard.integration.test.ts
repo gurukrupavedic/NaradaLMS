@@ -112,6 +112,7 @@ describe('getDashboardData (real Postgres, end to end)', () => {
     const data = await getDashboardData({ db: world.schoolDb }, lonely.id, lonely.name, await defaultCourseId(world))
 
     expect(data).toEqual({
+      profileId: lonely.id,
       firstName: 'Lonely',
       memberships: [],
       tracks: [],

@@ -15,7 +15,7 @@ import { Notice } from '@/components/notice'
 import { adminBatchQuery, catalogTrackQuery, keys } from '@/lib/query/options'
 import { usePrefetch } from '@/lib/query/use-prefetch'
 import { useSetEvaluation, useSetEvaluations } from '@/lib/query/use-evaluation-mutations'
-import { useChangeMemberRole, useSetOnBreak } from '@/lib/query/use-enrollment-mutations'
+import { useChangeMemberRole, useSetOnBreak, useSetScore } from '@/lib/query/use-enrollment-mutations'
 import { summariseRoster, type AdminBatchDetail } from '@/lib/models/dashboard'
 import { useCoursePath } from '@/lib/course'
 import { pluralize } from '@/lib/pluralize'
@@ -199,6 +199,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
   const promote = useSetEvaluations(batch.id, keys.batches.detail(batch.code))
   const onBreak = useSetOnBreak(batch.id, keys.batches.detail(batch.code))
   const changeRole = useChangeMemberRole(batch.code, batch.id)
+  const scoring = useSetScore(batch.id, keys.batches.detail(batch.code))
   const [addOpen, setAddOpen] = useState(false)
 
   return (
@@ -228,6 +229,7 @@ function RosterSection({ batch }: { batch: AdminBatchDetail }) {
             promote={promote}
             onBreak={onBreak}
             promoteToTa={changeRole}
+            scoring={scoring}
           />
         </div>
       )}

@@ -132,6 +132,11 @@ describe('enroll', () => {
       status: 'active' as const,
       joinedAt: new Date(),
       leftDate: null,
+      attendanceScore: null,
+      recitationScore: null,
+      backlogScore: null,
+      scoresUpdatedAt: null,
+      scoresUpdatedBy: null,
     }
     vi.mocked(repository.insertEnrollment).mockResolvedValue(row)
 
@@ -170,6 +175,11 @@ describe('enroll', () => {
       status: 'active' as const,
       joinedAt: new Date(),
       leftDate: null,
+      attendanceScore: null,
+      recitationScore: null,
+      backlogScore: null,
+      scoresUpdatedAt: null,
+      scoresUpdatedBy: null,
     }
     vi.mocked(repository.reactivateEnrollment).mockResolvedValue(row)
 
@@ -268,6 +278,11 @@ describe('moveEnrollment', () => {
       status: 'active' as const,
       joinedAt: new Date(),
       leftDate: null,
+      attendanceScore: null,
+      recitationScore: null,
+      backlogScore: null,
+      scoresUpdatedAt: null,
+      scoresUpdatedBy: null,
     }
     vi.mocked(repository.insertEnrollment).mockResolvedValue(row)
 

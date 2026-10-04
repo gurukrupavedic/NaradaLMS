@@ -17,6 +17,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useCoursePath } from '@/lib/course'
+import { scoreInk, scoreTitle } from '@/components/score-strip'
+import {
+  formatScore,
+  SCORE_KEYS,
+  SCORE_LABEL,
+  SCORE_MEANING,
+  SCORE_SHORT,
+  SCORE_TITLE,
+  type Score,
+  type ScoreKey,
+  type ScoreValue,
+} from '@/lib/scores'
 
 /**
  * The mark book.
@@ -63,6 +75,20 @@ export type PromoteToTaMutation = {
   mutateAsync: (student: { profileId: string; profileName: string; role: 'ta' }) => Promise<unknown>
 }
 
+// Same structural-typing move again, for the three score columns — one call per cell edit.
+export type ScoreMutation = {
+  mutateAsync: (input: { studentId: string; key: ScoreKey; score: Score }) => Promise<unknown>
+}
+
+// The columns pinned to the left of the chapter marks: the student, then the three scores. Fixed
+// widths so each sticky column's `left` offset is exactly the width of what's pinned before it.
+const NAME_WIDTH = 12
+const SCORE_WIDTH = 3.25
+const scoreLeft = (index: number) => `${NAME_WIDTH + index * SCORE_WIDTH}rem`
+// A hairline after the last pinned column — a real border would vanish under `border-collapse`
+// once the column is sticky and the chapters scroll beneath it.
+const PINNED_EDGE = 'shadow-[inset_-1px_0_0_var(--rule)]'
+
 const CELL_INK: Record<ProficiencyLevel, string> = {
   notStarted: 'bg-mark-not-started text-ink-muted/35',
   absent: 'bg-mark-absent/25 text-ink-muted',
@@ -83,6 +109,7 @@ export function MarkBook({
   promote,
   onBreak,
   promoteToTa,
+  scoring,
 }: {
   chapterCodes: string[]
   // Parallel to chapterCodes — both required to enable grading (see this file's own doc comment).
@@ -98,6 +125,9 @@ export function MarkBook({
   onBreak?: OnBreakMutation
   // Admin-only (it's a staffing change) — omitted by the teacher's own dashboard, which gets no item.
   promoteToTa?: PromoteToTaMutation
+  // The three score columns are always shown; they're only editable when this is wired — the
+  // read-only history views pass nothing and get the same columns as plain numbers.
+  scoring?: ScoreMutation
 }) {
   const [target, setTarget] = useState<GradeDialogTarget | null>(null)
 
@@ -113,9 +143,29 @@ export function MarkBook({
         </caption>
         <thead>
           <tr className="border-b border-rule">
-            <th scope="col" className="label sticky left-0 bg-card py-2 pr-4 pl-4 text-ink-muted">
+            <th
+              scope="col"
+              style={{ width: `${NAME_WIDTH}rem`, minWidth: `${NAME_WIDTH}rem`, maxWidth: `${NAME_WIDTH}rem` }}
+              className="label sticky left-0 bg-card py-2 pr-4 pl-4 text-ink-muted"
+            >
               Student
             </th>
+            {SCORE_KEYS.map((key, i) => (
+              <th
+                key={key}
+                scope="col"
+                title={SCORE_TITLE[key]}
+                style={{ width: `${SCORE_WIDTH}rem`, minWidth: `${SCORE_WIDTH}rem`, left: scoreLeft(i) }}
+                className={cn(
+                  'bg-card px-0 py-2 text-center font-mono text-[0.5625rem] font-normal text-ink-muted md:sticky',
+                  i === SCORE_KEYS.length - 1 && PINNED_EDGE,
+                )}
+              >
+                <abbr title={SCORE_TITLE[key]} className="no-underline">
+                  {SCORE_SHORT[key]}
+                </abbr>
+              </th>
+            ))}
             {chapterCodes.map(code => (
               <th
                 key={code}
@@ -132,6 +182,15 @@ export function MarkBook({
             // Nobody has marked this student at all — the row the teacher opened
             // the page to find. It gets the only vermilion on the grid.
             const unevaluated = student.current === null
+
+            // An opaque tint rather than plain bg-card: the sticky columns must stay fully opaque
+            // (or the mark cells scrolling underneath them show through), but they still need to
+            // carry the same vermilion "unmarked" cue as the rest of the row, whose own
+            // bg-vermilion/[0.05] is translucent by design (it isn't the scroll-clipped sticky
+            // layer, so translucency there is harmless).
+            const pinnedBg = unevaluated
+              ? 'bg-[color-mix(in_srgb,var(--vermilion)_5%,var(--card))]'
+              : 'bg-card'
 
             // The exact rows "Promote to L3" needs to send — every chapter this student isn't
             // already at L3 or L4 on. Computed here from the grid already on screen rather than
@@ -154,16 +213,10 @@ export function MarkBook({
               >
                 <th
                   scope="row"
+                  style={{ width: `${NAME_WIDTH}rem`, minWidth: `${NAME_WIDTH}rem`, maxWidth: `${NAME_WIDTH}rem` }}
                   className={cn(
-                    'sticky left-0 max-w-45 truncate py-1.5 pr-4 pl-4 text-[0.8125rem] font-normal',
-                    // An opaque tint rather than plain bg-card: the sticky column must stay fully
-                    // opaque (or the mark cells scrolling underneath it show through), but it still
-                    // needs to carry the same vermilion "unmarked" cue as the rest of the row, whose
-                    // own bg-vermilion/[0.05] is translucent by design (it isn't the scroll-clipped
-                    // sticky layer, so translucency there is harmless).
-                    unevaluated
-                      ? 'bg-[color-mix(in_srgb,var(--vermilion)_5%,var(--card))]'
-                      : 'bg-card',
+                    'sticky left-0 truncate py-1.5 pr-4 pl-4 text-[0.8125rem] font-normal',
+                    pinnedBg,
                   )}
                 >
                   <div className="flex items-center gap-1">
@@ -185,6 +238,25 @@ export function MarkBook({
                     <span className="label block text-ink-muted">{student.city}</span>
                   )}
                 </th>
+
+                {SCORE_KEYS.map((key, i) => (
+                  <td
+                    key={key}
+                    style={{ width: `${SCORE_WIDTH}rem`, minWidth: `${SCORE_WIDTH}rem`, left: scoreLeft(i) }}
+                    className={cn(
+                      'p-1 text-center align-middle md:sticky',
+                      pinnedBg,
+                      i === SCORE_KEYS.length - 1 && PINNED_EDGE,
+                    )}
+                  >
+                    <ScoreCell
+                      student={student}
+                      scoreKey={key}
+                      score={student.scores[key]}
+                      scoring={scoring}
+                    />
+                  </td>
+                ))}
 
                 {student.marks.map((level, i) => {
                   const chapterId = chapterIds?.[i]
@@ -243,6 +315,92 @@ export function MarkBook({
         />
       )}
     </div>
+  )
+}
+
+/**
+ * One score cell: the signed number (empty when nobody has assessed it), and — where `scoring` is
+ * wired — a small menu to set it to +1 / 0 / −1 or clear it. Menu rather than click-to-cycle: a
+ * teacher setting a score means to pick a value, and a cycling cell makes −1 two accidental
+ * clicks away from +1.
+ */
+function ScoreCell({
+  student,
+  scoreKey,
+  score,
+  scoring,
+}: {
+  student: RosterStudent
+  scoreKey: ScoreKey
+  score: Score
+  scoring?: ScoreMutation
+}) {
+  const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle')
+
+  const face = cn(
+    'mx-auto grid size-9 place-items-center font-mono text-[0.8125rem] leading-none',
+    score === null && 'border border-dashed border-rule',
+    scoreInk(score),
+  )
+
+  if (!scoring) {
+    return (
+      <span title={scoreTitle(scoreKey, score)} className={face}>
+        {formatScore(score)}
+      </span>
+    )
+  }
+
+  async function choose(next: Score) {
+    if (!scoring || next === score) return
+    setStatus('pending')
+    try {
+      await scoring.mutateAsync({ studentId: student.id, key: scoreKey, score: next })
+      setStatus('idle')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  const options: Score[] = [1, 0, -1, null]
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        disabled={status === 'pending'}
+        aria-label={`${SCORE_LABEL[scoreKey]} for ${student.name}: ${score === null ? 'not assessed' : formatScore(score)}`}
+        title={status === 'error' ? 'Could not save that score — try again' : scoreTitle(scoreKey, score)}
+        className={cn(
+          face,
+          'cursor-pointer outline-none transition-colors hover:bg-ink/[0.05] data-[popup-open]:bg-ink/[0.05]',
+          status === 'error' && 'ring-1 ring-vermilion ring-inset',
+        )}
+      >
+        {status === 'pending' ? <Spinner className="size-3.5" /> : formatScore(score)}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        sideOffset={4}
+        className="min-w-44 rounded-none border border-rule bg-card p-0 shadow-none ring-0"
+      >
+        <p className="label border-b border-rule-soft px-4 py-2 text-ink-muted">{SCORE_LABEL[scoreKey]}</p>
+        {options.map(option => (
+          <DropdownMenuItem
+            key={option ?? 'clear'}
+            onClick={() => choose(option)}
+            className="flex items-center justify-between gap-4 rounded-none border-b border-rule-soft px-4 py-2 text-[0.8125rem] text-ink-muted last:border-0 focus:bg-ink/[0.03] focus:text-ink"
+          >
+            <span className="flex items-baseline gap-3">
+              <span className={cn('w-6 font-mono', scoreInk(option))}>
+                {option === null ? '—' : formatScore(option)}
+              </span>
+              {option === null ? 'Clear' : SCORE_MEANING[scoreKey][option as ScoreValue]}
+            </span>
+            {option === score && <span aria-hidden>●</span>}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

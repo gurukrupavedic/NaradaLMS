@@ -34,12 +34,20 @@ type BatchRelations = {
     role: BatchDetail['members'][number]['role']
     status: NonNullable<BatchWithRole['enrollmentStatus']>
     joinedAt: Date | null
+    attendanceScore: number | null
+    recitationScore: number | null
+    backlogScore: number | null
     profile: { name: string; phone: string | null; email: string | null; city: string | null }
   }[]
   classSlots: (typeof batchClassSlot.$inferSelect)[]
 }
 
 const WITH_DETAIL = { enrollments: { with: { profile: true } }, classSlots: true } as const
+
+// The column is a smallint held to -1/0/1 by a CHECK constraint, so the cast only narrows the type.
+function toScore(value: number | null): BatchDetail['members'][number]['attendanceScore'] {
+  return value as BatchDetail['members'][number]['attendanceScore']
+}
 
 function toBatchDetail(row: Batch & BatchRelations): BatchDetail {
   const { enrollments, classSlots, ...batchRow } = row
@@ -55,6 +63,9 @@ function toBatchDetail(row: Batch & BatchRelations): BatchDetail {
         role: e.role,
         joinedAt: e.joinedAt,
         status: e.status,
+        attendanceScore: toScore(e.attendanceScore),
+        recitationScore: toScore(e.recitationScore),
+        backlogScore: toScore(e.backlogScore),
       }))
       .sort(byRoleThenName),
     classSlots: classSlots.map(toClassSlot),

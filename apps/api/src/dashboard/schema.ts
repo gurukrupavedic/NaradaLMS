@@ -10,6 +10,8 @@ export type PastBatchesEntry = { studentId: string; batches: Batch[] }
 // parsed against this shape, so a plain composed type (matching apps/api/src's own
 // DashboardData) is enough; there's no need to re-wrap every field in its own zod schema here.
 export type DashboardData = {
+  // The caller's own profile — lets the client find their own row among a batch's `members`.
+  profileId: string
   firstName: string
   memberships: BatchWithRole[]
   tracks: TrackWithChapters[]
